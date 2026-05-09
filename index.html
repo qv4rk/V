@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TERMINAL V - INDEX</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Cormorant+Garamond:ital,wght@0,300;0,600;1,400&family=JetBrains+Mono:wght@100;400&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #030303;
+            --text-color: #e0e0e0;
+            --glass: rgba(10, 10, 12, 0.85);
+            --border: rgba(255, 255, 255, 0.1);
+            --accent-gold: #c5a059;
+            --accent-red: #8a1c1c;
+            --font-display: 'Cinzel', serif;
+            --font-body: 'Cormorant Garamond', serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        body, html {
+            margin: 0; padding: 0;
+            width: 100%; height: 100%;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: var(--font-body);
+            overflow: hidden; 
+        }
+
+        /* --- THE VISUAL ENGINE --- */
+        #canvas-bg {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            z-index: 0;
+            pointer-events: none;
+            opacity: 0.4;
+        }
+
+        /* --- NAVIGATION MENU --- */
+        .nav-menu {
+            position: fixed;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            display: flex;
+            gap: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px 20px;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+            backdrop-filter: blur(5px);
+        }
+
+        .nav-btn {
+            background: transparent;
+            color: var(--accent-gold);
+            padding: 8px 16px;
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-bottom: 1px solid transparent;
+        }
+
+        .nav-btn:hover {
+            color: #fff;
+            border-bottom: 1px solid var(--accent-red);
+            text-shadow: 0 0 8px rgba(197, 160, 89, 0.5);
+        }
+
+        /* --- MAIN CONTAINER --- */
+        .container {
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            z-index: 10;
+        }
+
+        .content-card {
+            background: var(--glass);
+            border: 1px solid var(--border);
+            padding: 4rem 5rem;
+            max-width: 800px;
+            text-align: center;
+            box-shadow: 0 0 50px rgba(0,0,0,0.8);
+            backdrop-filter: blur(8px);
+            animation: fadeIn 2s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* TYPOGRAPHY */
+        h1 {
+            font-family: var(--font-display);
+            font-size: clamp(2.5rem, 6vw, 4rem);
+            color: var(--accent-gold);
+            border-bottom: 1px solid var(--accent-red);
+            padding-bottom: 1rem;
+            margin-bottom: 0.5rem;
+            letter-spacing: 0.1em;
+        }
+
+        .subtitle {
+            font-family: var(--font-mono);
+            color: #666;
+            font-size: 0.9rem;
+            letter-spacing: 3px;
+            margin-bottom: 3rem;
+        }
+
+        p {
+            font-size: 1.3rem;
+            line-height: 1.6;
+            color: #dcdcdc;
+            margin-bottom: 2rem;
+        }
+
+        /* DIRECTORY GRID */
+        .directory-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .dir-item {
+            display: block;
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+            text-decoration: none;
+            color: #aaa;
+            transition: all 0.3s;
+            background: rgba(255, 255, 255, 0.02);
+            text-align: left;
+        }
+
+        .dir-item h3 {
+            font-family: var(--font-display);
+            color: var(--accent-gold);
+            margin: 0 0 0.5rem 0;
+            font-size: 1.2rem;
+        }
+
+        .dir-item span {
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+        }
+
+        .dir-item:hover {
+            border-color: var(--accent-red);
+            background: rgba(138, 28, 28, 0.1);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+        }
+        
+        .dir-item:hover h3 { color: #fff; }
+
+        @media (max-width: 768px) {
+            .directory-grid { grid-template-columns: 1fr; }
+            .content-card { padding: 2rem; width: 85%; }
+            .nav-menu { width: 90%; justify-content: center; flex-wrap: wrap; top: 10px; }
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="canvas-bg"></canvas>
+
+<nav class="nav-menu">
+    <a href="index.html" class="nav-btn">HOME</a>
+    <a href="articles/veilbabel.html" class="nav-btn">DOSSIER</a>
+    <a href="art/web-art.html" class="nav-btn">WEB ART</a>
+</nav>
+
+<div class="container">
+    <div class="content-card">
+        <h1>PROJECT V</h1>
+        <div class="subtitle">SYS.ARCHIVE.ROOT</div>
+        
+        <p>You have accessed the primary directory. Select a module below to proceed into the archives.</p>
+
+        <div class="directory-grid">
+            <a href="articles/article1.html" class="dir-item">
+                <h3>I. The Veil of Babel</h3>
+                <span>[ TEXT / AUDIO ] Levantine Paradox</span>
+            </a>
+            
+            <a href="art/web-art.html" class="dir-item">
+                <h3>II. Visual Synthesis</h3>
+                <span>[ CANVAS / GL ] Generative Art</span>
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+    /* --- AMBIENT ASH/DATA ENGINE --- */
+    const canvas = document.getElementById('canvas-bg');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+
+    function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    class Particle {
+        constructor() {
+            this.x = Math.random() * canvas.width;
+            this.y = Math.random() * canvas.height;
+            this.size = Math.random() * 1.5 + 0.5;
+            this.speedY = Math.random() * 0.5 + 0.1;
+            this.speedX = (Math.random() - 0.5) * 0.3;
+            // 80% gold/white, 20% red for the theme
+            this.color = Math.random() > 0.8 ? '#8a1c1c' : 'rgba(197, 160, 89, 0.5)';
+        }
+        update() {
+            this.y -= this.speedY;
+            this.x += this.speedX;
+            if (this.y < 0) {
+                this.y = canvas.height;
+                this.x = Math.random() * canvas.width;
+            }
+        }
+        draw() {
+            ctx.fillStyle = this.color;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+
+    function init() {
+        for (let i = 0; i < 150; i++) {
+            particles.push(new Particle());
+        }
+    }
+
+    function animate() {
+        ctx.fillStyle = 'rgba(3, 3, 3, 0.2)'; // Trailing effect
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        particles.forEach(p => {
+            p.update();
+            p.draw();
+        });
+        requestAnimationFrame(animate);
+    }
+
+    init();
+    animate();
+</script>
+
+</body>
+</html>
