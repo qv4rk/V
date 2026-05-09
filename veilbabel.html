@@ -1,5 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
+
+    <div id="global-menu"></div>
+
+<script>
+    fetch('/V/menu.html')
+        .then(response => response.text())
+        .then(data => {
+            document.getElementById('global-menu').innerHTML = data;
+        });
+</script>
+    
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
