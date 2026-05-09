@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THE VEIL OF BABEL</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Cormorant+Garamond:ital,wght@0,300;0,600;1,400&family=JetBrains+Mono:wght@100;400&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #030303;
+            --text-color: #e0e0e0;
+            --glass: rgba(10, 10, 12, 0.85);
+            --border: rgba(255, 255, 255, 0.1);
+            --accent-gold: #c5a059;
+            --accent-red: #8a1c1c;
+            --font-display: 'Cinzel', serif;
+            --font-body: 'Cormorant Garamond', serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        body, html {
+            margin: 0; padding: 0;
+            width: 100%; height: 100%;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: var(--font-body);
+            overflow: hidden; 
+        }
+
+        /* --- THE VISUAL ENGINE --- */
+        #canvas-bg {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            z-index: 0;
+            pointer-events: none;
+            opacity: 0.5;
+            transition: filter 0.2s;
+        }
+
+        /* --- THE GLITCH OVERLAY --- */
+        /* This activates briefly when DNA snaps or heals */
+        body.glitching #canvas-bg {
+            filter: hue-rotate(90deg) contrast(200%);
+            transform: translateX(-5px);
+        }
+        body.glitching .scroll-container {
+            filter: blur(2px);
+            transform: translateX(5px);
+        }
+
+        /* --- SCROLL CONTAINER --- */
+        .scroll-container {
+            height: 100vh;
+            overflow-y: scroll;
+            scroll-snap-type: y mandatory;
+            position: relative;
+            z-index: 10;
+            scroll-behavior: smooth;
+            transition: all 0.1s;
+        }
+
+        /* --- SECTIONS --- */
+        section {
+            height: 100vh;
+            width: 100vw;
+            scroll-snap-align: start;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            padding: 1rem;
+            box-sizing: border-box;
+        }
+
+        .content-card {
+            background: var(--glass);
+            border: 1px solid var(--border);
+            padding: 3rem 4rem;
+            max-width: 900px;
+            width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 0 50px rgba(0,0,0,0.8);
+            backdrop-filter: blur(8px);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 1s ease;
+        }
+
+        section.visible .content-card {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .content-card::-webkit-scrollbar { width: 4px; }
+        .content-card::-webkit-scrollbar-thumb { background: var(--accent-gold); border-radius: 2px; }
+
+        /* TYPOGRAPHY */
+        h1 {
+            font-family: var(--font-display);
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            color: var(--accent-gold);
+            text-align: center;
+            border-bottom: 1px solid var(--accent-red);
+            padding-bottom: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        h3 {
+            font-family: var(--font-display);
+            font-size: 1.8rem;
+            color: #fff;
+            margin-top: 2rem;
+            border-left: 3px solid var(--accent-gold);
+            padding-left: 1rem;
+        }
+
+        p {
+            font-size: 1.25rem;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+            color: #dcdcdc;
+            text-align: justify;
+        }
+
+        /* QUOTE HEADER */
+        .quote-header {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 1rem;
+        }
+
+        .mirror-quote {
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            color: #888;
+            font-style: italic;
+            border-left: 2px solid var(--accent-red);
+            padding-left: 15px;
+            background: rgba(255,255,255,0.02);
+            padding: 1rem;
+        }
+
+        /* REVEAL GRID */
+        .reveal-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            margin-top: 2rem;
+        }
+        .reveal-item { border-bottom: 1px solid #333; padding: 0.5rem; }
+        .reveal-item span { color: var(--accent-red); font-weight: bold; }
+
+        @media (max-width: 768px) {
+            .quote-header, .reveal-grid { grid-template-columns: 1fr; }
+            .content-card { padding: 1.5rem; width: 95%; }
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="canvas-bg"></canvas>
+
+<div class="scroll-container" id="scroller">
+
+    <section id="intro" data-dna-state="intact">
+        <div class="content-card" style="text-align: center;">
+            <h1>The Veil of Babel</h1>
+            <h2 style="font-family: var(--font-mono); color: var(--accent-red); font-size: 1rem; letter-spacing: 2px;">Levantine Paradox, A Dossier on Muted Fratricide</h2>
+            <p style="text-align: center; font-style: italic; border-left: none;">
+                A plea for recognition of נְשָׁמָה, of روح , of the breath of life that exists. A call for grief, not solutions. To grieve for not so distant cousins who felt briefly God's breath here. The candles, the sparks of light who never again will have a chance to say never again.
+            </p>
+            <p>This document is not a peace proposal, nor is it a political manifesto. It is a forensic pathology report on a civilization that is cannibalizing itself. The conflict in the Holy Land is widely misunderstood as a territorial dispute between distinct nations. This is a fabrication.</p>
+            <p>We are witnessing a biological bond that has been artificially severed by a "Veil" of legalism and language, then fed into a machine that converts fratricide into quarterly profit.</p>
+            <div style="margin-top:2rem; font-family:var(--font-mono); font-size:0.8rem; color:#666; animation:pulse 2s infinite;">MjF</div>
+        </div>
+    </section>
+
+    <section id="section-1" data-dna-state="split">
+        <div class="content-card">
+            <div class="quote-header">
+                <div class="mirror-quote">"We are fighting human animals and we are acting accordingly. There will be no electricity, no food, no fuel."</div>
+                <div class="mirror-quote">"We Germans... will adopt a decent attitude to these human animals... but it is a crime against our blood to worry about them."</div>
+            </div>
+
+            <h3>I. The Unbribable Witness</h3>
+            <p>The 2020 genomic analysis of the Southern Levant (Haber et al., <em>Cell</em>) serves as a witness that cannot be bribed or lobbied. By sequencing the remains of Bronze Age Canaanites—the builders of Megiddo and Hazor—and comparing them to modern populations, the study provides a clinical map of ancestry.</p>
+
+            <p>The results are unambiguous. The indigenous Muslim population is not an "invading force" from Arabia. They are the <em>Am Ha'aretz</em> (People of the Land) who never left. The Jewish Diaspora, despite centuries of exile, retains that same foundational Levantine core.</p>
+
+            <p>We are not looking at two distinct species. We are looking at a single biological family partitioned by history.</p>
+
+            <p style="border-left: 3px solid var(--accent-red); padding-left: 1rem; color: #aaa; font-style: italic;">
+                This recognition is not new. In 1918, <strong>David Ben-Gurion</strong> and <strong>Yitzhak Ben-Zvi</strong>, the future architects of the State, wrote in <em>Eretz Israel in the Past and Present</em>: "The fellahin are not descendants of the Arab conquerors... The great majority of the farmers remained attached to their soil." They acknowledged, in print, that the blood of the Hebrew peasant still flows in the veins of the local Muslim population.
+            </p>
+
+            <p>Branch A went into exile and preserved its name through ritual. Branch B stayed, evolving with the land, their ancient roots nourishing a sincere and distinct Muslim identity. The "Zionist" is displacing a cousin. The "Resistance Fighter" is striking a returned relative.</p>
+        </div>
+    </section>
+
+    <section id="section-2" data-dna-state="split">
+        <div class="content-card">
+            <div class="quote-header">
+                <div class="mirror-quote">"Rafah, Deir al-Balah, Nuseirat – total annihilation. Thou shalt blot out the remembrance... There are no half measures."</div>
+                <div class="mirror-quote">"This riffraff must be eliminated and destroyed... total annihilation. We must hasten this process with cold ruthlessness."</div>
+            </div>
+
+            <h3>II. The Autonomy Paradox</h3>
+            <p>There is a fear that recognizing this kinship demands the erasure of Palestinian history or the negation of Jewish distinctiveness. This is false. A brother does not cease to be himself simply because he acknowledges his sibling.</p>
+
+            <p>The "Arab" identity of the Palestinian is not a mistake to be corrected; it is a valid historical layer, just as the "European" experience is a valid layer of the Ashkenazi soul. But layers are not roots.</p>
+
+<p>
+    When we confuse the cultural layer for the biological root, we allow the <strong>"Archons"</strong> of war to convince us we are killing strangers. We do not ask the Palestinian to embrace Zionism, nor the Israeli to accept subjugation. We ask only that they look at the <strong>Blueprint</strong>. The validity of your autonomy does not require the negation of your biology.
+</p>
+
+        </div>
+    </section>
+
+    <section id="section-3" data-dna-state="split">
+        <div class="content-card">
+            <div class="quote-header">
+                <div class="mirror-quote">"Killing them is like eliminating cockroaches and other loathsome insects."</div>
+                <div class="mirror-quote">"Jews as rats and cockroaches emerging from sewers, spreading plague."</div>
+            </div>
+
+            <h3>III. The Glitch in the Code</h3>
+            <p>If the hardware is shared, how is the separation maintained? How does a man kill his brother without hesitation? It is engineered through software—the legal and theological codes designed to override biology.</p>
+
+            <p>The "Veil" is constructed of <em>Halakha</em> and <em>Sharia</em>. These are the firewalls. In the 2nd Century, the Rabbinic sages shifted the definition of identity from "Seed" (Patrilineal) to "Womb" (Matrilineal) as a survival mechanism—a software patch for a dispersed people.</p>
+
+            <p>But the fragility of this firewall is now exposed by the very technology the region produces. Consider the <strong>Three-Parent Baby</strong>. Mitochondrial Replacement Therapy (MRT) creates a child with Nuclear DNA from a Jewish mother, Mitochondrial DNA from a Gentile donor, and Gestation in a third surrogate.</p>
+
+            <p>In this reality, who is the mother? The Law breaks. It forces a binary "Yes/No" on a biological "All of the Above." We are enforcing copyright law on a code that has gone open-source. The Talmudic principle "The Law is not in Heaven" asserts that legal interpretation supersedes natural truth. We have prioritized a legal fiction over a blood truth.</p>
+        </div>
+    </section>
+         
+
+                <section id="section-4" data-dna-state="split">
+        <div class="content-card">
+            <div class="quote-header">
+                <div class="mirror-quote">
+                    "The Jews—brothers of the apes, assassins of the prophets... Only Islam can break the Jews."
+                </div>
+                <div class="mirror-quote">
+                    "Mothers who raise little snakes should follow their sons into death. They are all enemy combatants."
+                </div>
+            </div>
+
+            <h3>IV. The Vampire Economy</h3>
+            <p>
+                The conflict began as a territorial dispute, but it has metastasized into a global business model. In this <strong>"Vampire Economy,"</strong> the Levant is not a battlefield, but a showroom—a laboratory where blood is the currency and the loss of life is treated as R&D.
+            </p>
+            
+            <p>
+                On one side, the high-tech state uses urban populations to "field-test" AI-driven targeting systems and autonomous drone swarms. The marketing slogan of this catastrophe is the phrase "Battle Proven." A missile system tested on a range is theoretical; a system that has liquidated a neighborhood is a high-value commodity.
+            </p>
+
+            <p>
+                On the other side, a vast, clandestine network of war-profiteers monetizes the "resistance," funneling redirected aid and scrap metal into makeshift rockets. These are not merely weapons; they are marketing demos for regional sponsors, designed to prove that asymmetric chaos can be manufactured on a budget.
+            </p>
+
+            <p>
+                Every rocket launched and every interceptor fired is a transaction in a shared ledger. Both sides are co-authors of the same balance sheet. The hatred is manufactured because the ammunition is monetized, and the "targets" on both sides are often cousins—descendants of the same ancient lineage—sacrificed to calibrate sensors and test payloads.
+            </p>
+
+            <p style="border-left: 3px solid var(--accent-red); padding-left: 1rem; color: #aaa; font-style: italic;">
+                If the children were to wake up and recognize their brotherhood, the laboratory would shut down and the smuggling tunnels would collapse. Peace is a market crash that the Archons of this industry cannot afford.
+            </p>
+        </div>
+    </section>
+
+    <section id="section-5" data-dna-state="healed">
+        <div class="content-card">
+            <h3>V. The Tower Must Fall</h3>
+            <p>The ultimate horror is not the violence itself. The horror is the recognition of who is committing it, and against whom. We see peoples who carry epigenetic traumas adopting the exact linguistic syntax of their oppressors.</p>
+            <p>The "Indigenous Fighter" vowing to destroy the "Zionist Entity" is burning down the house of his own ancestors. The "Zionist Pilot" dropping the bomb is vaporizing the DNA that walked out of Egypt.</p>
+            <p>To defend yourself is a right. But to dehumanize the attacker is a lie, for the attacker is your own reflection, distorted by centuries of separation. The hands are the hands of Esau, but the voice is the voice of Jacob. And the blood on the ground belongs to both.</p>
+            <p style="text-align: center; color: var(--accent-red); margin-top: 3rem; letter-spacing: 0.2em; font-family: var(--font-display);">
+                NOT A TREATY. NOT A MAP.<br>THE TOWER MUST FALL.
+            </p>
+        </div>
+    </section>
+
+    <section id="reveal" data-dna-state="healed">
+        <div class="content-card">
+            <h1 style="font-size: 2rem; border-bottom: none;">.</h1>
+            <p style="text-align: center; font-size: 1rem; color: #888;">.</p>
+            
+            <div class="reveal-grid">
+                <div class="reveal-item"><span>¹</span> Yoav Gallant, 2023</div>
+                <div class="reveal-item"><span>²</span> Heinrich Himmler, 1943</div>
+                
+                <div class="reveal-item"><span>³</span> Bezalel Smotrich, 2024</div>
+                <div class="reveal-item"><span>⁴</span> Joseph Goebbels, 1942</div>
+                
+                <div class="reveal-item"><span>⁵</span> [Gen. Rafael Eitan/Pundit], 1983/2024</div>
+                <div class="reveal-item"><span>⁶</span> Nazi Propaganda Film, 1940</div>
+                
+                <div class="reveal-item"><span>⁷</span> Hamas Charter, 1988</div>
+                <div class="reveal-item"><span>⁸</span> Ayelet Shaked, 2014</div>
+            </div>
+
+            <div style="margin-top: 3rem; text-align: center; font-size: 0.8rem; opacity: 0.5;">
+                
+            </div>
+        </div>
+    </section>
+
+</div>
+
+<script>
+    /* --- DNA & GLITCH ENGINE --- */
+    const canvas = document.getElementById('canvas-bg');
+    const ctx = canvas.getContext('2d');
+    
+    // Config
+    let t = 0;
+    let separationLevel = 0; // 0 = intact, 150 = split
+    let targetSeparation = 0;
+    let currentState = 'intact';
+
+    function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    // Trigger Glitch Function
+    function triggerGlitch() {
+        document.body.classList.add('glitching');
+        setTimeout(() => {
+            document.body.classList.remove('glitching');
+        }, 500); // 0.5 second glitch
+    }
+
+    // Scroll Observer
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+                
+                const newState = entry.target.getAttribute('data-dna-state');
+                
+                // Only change separation if state changed
+                if (newState !== currentState) {
+                    currentState = newState;
+                    
+                    if (newState === 'intact') targetSeparation = 0;
+                    if (newState === 'split') {
+                        targetSeparation = 150; 
+                        triggerGlitch(); // GLITCH ON BREAK
+                    }
+                    if (newState === 'healed') {
+                        targetSeparation = 0; 
+                        triggerGlitch(); // GLITCH ON HEAL
+                    }
+                }
+            }
+        });
+    }, { threshold: 0.3 }); 
+
+    document.querySelectorAll('section').forEach(sec => observer.observe(sec));
+
+    // Animation Loop
+    function drawDNA() {
+        // Trails
+        ctx.fillStyle = 'rgba(3, 3, 3, 0.2)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Smooth Interpolation
+        separationLevel += (targetSeparation - separationLevel) * 0.05;
+
+        const cx = canvas.width / 2;
+        const cy = canvas.height / 2;
+
+        for (let i = 0; i < 70; i++) {
+            // Drift logic
+            const yOffset = (i * 25) - 700 + (Math.sin(t * 0.05) * 50);
+            
+            // Standard Helix Sine
+            const sine = Math.sin(t + i * 0.15);
+            
+            // --- DRAW STRAND 1 (Left) ---
+            // Intact: sine * 100
+            // Split: Move left by separationLevel
+            const x1 = cx + (sine * 100) - (separationLevel * (i%2==0?1:0.8));
+            
+            ctx.beginPath();
+            ctx.fillStyle = (i % 2 === 0) ? '#8a1c1c' : '#550000';
+            ctx.arc(x1, cy + yOffset, 4, 0, Math.PI*2);
+            ctx.fill();
+
+            // --- DRAW STRAND (Right) ---
+            const x2 = cx + (Math.sin(t + i * 0.15 + Math.PI) * 100) + (separationLevel * (i%2==0?1:0.8));
+            
+            ctx.beginPath();
+            ctx.fillStyle = (i % 2 === 0) ? '#c5a059' : '#886622';
+            ctx.arc(x2, cy + yOffset, 4, 0, Math.PI*2);
+            ctx.fill();
+
+            // --- DRAW RUNGS (The Bonds) ---
+            // Only draw if separation is low (< 50px)
+            if (separationLevel < 80 && i % 4 === 0) {
+                const opacity = 1 - (separationLevel / 80);
+                ctx.strokeStyle = `rgba(255, 255, 255, ${opacity})`;
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(x1, cy + yOffset);
+                ctx.lineTo(x2, cy + yOffset);
+                ctx.stroke();
+            }
+            
+            // --- DRAW "BROKEN" BONDS (Particles) ---
+            // If split, draw little floating particles in the middle
+            if (separationLevel > 50 && i % 4 === 0) {
+                ctx.fillStyle = `rgba(255, 255, 255, 0.2)`;
+                ctx.beginPath();
+                ctx.arc(cx, cy + yOffset, 2, 0, Math.PI*2);
+                ctx.fill();
+            }
+        }
+
+        t += 0.02;
+        requestAnimationFrame(drawDNA);
+    }
+
+    drawDNA();
+</script>
+
+<style>
+    #tts-widget-container {
+        position: fixed; bottom: 30px; right: 30px; z-index: 10000;
+        font-family: 'JetBrains Mono', monospace;
+    }
+    #tts-widget {
+        background: rgba(10, 10, 12, 0.95);
+        border: 1px solid rgba(197, 160, 89, 0.3);
+        border-radius: 4px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        padding: 15px;
+        display: none; flex-direction: column; gap: 12px; width: 280px;
+        backdrop-filter: blur(10px);
+    }
+    #tts-widget.active { display: flex; }
+    #tts-toggle-btn {
+        background: #c5a059; color: #000; border: none;
+        width: 45px; height: 45px; cursor: pointer; float: right; 
+        font-size: 20px; transition: all 0.3s;
+        box-shadow: 0 0 15px rgba(197, 160, 89, 0.2);
+    }
+    #tts-toggle-btn:hover { background: #8a1c1c; color: #fff; }
+    .tts-controls { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+    select, button.tts-btn { 
+        padding: 8px; border-radius: 2px; border: 1px solid rgba(255,255,255,0.1); 
+        background: rgba(255,255,255,0.05); color: #ccc; cursor: pointer; font-size: 11px;
+    }
+    button.tts-btn:hover { background: rgba(197, 160, 89, 0.2); color: #fff; }
+    #tts-status { font-size: 10px; color: #666; text-align: center; text-transform: uppercase; letter-spacing: 1px; }
+</style>
+
+<div id="tts-widget-container">
+    <div id="tts-widget">
+        <div id="tts-status">Initializing Engine...</div>
+        <select id="tts-voice-select"><option>Detecting Voices...</option></select>
+        <div class="tts-controls">
+            <button class="tts-btn" id="tts-prev">PREV</button>
+            <button class="tts-btn" id="tts-play-pause">PLAY</button>
+            <button class="tts-btn" id="tts-next">NEXT</button>
+        </div>
+        <button class="tts-btn" id="tts-stop" style="color: #8a1c1c; border-color: rgba(138, 28, 28, 0.3);">TERMINATE SPEECH</button>
+    </div>
+    <button id="tts-toggle-btn" title="Toggle Dossier Audio">🔊</button>
+</div>
+
+<script>
+    const synth = window.speechSynthesis;
+    const voiceSelect = document.querySelector('#tts-voice-select');
+    const widget = document.querySelector('#tts-widget');
+    const toggleBtn = document.querySelector('#tts-toggle-btn');
+    const statusDiv = document.querySelector('#tts-status');
+    
+    let paragraphs = [];
+    let currentIndex = 0;
+    let voices = [];
+
+    // FORCE LOAD NATURAL VOICES (EDGE HACK)
+    function loadVoices() {
+        voices = synth.getVoices();
+        if (voices.length === 0) return;
+
+        voiceSelect.innerHTML = '';
+        
+        // Sort to prioritize "Natural" or "Online" (Edge/Google)
+        const sortedVoices = [...voices].sort((a, b) => {
+            const aNatural = a.name.includes('Natural') || a.name.includes('Online');
+            const bNatural = b.name.includes('Natural') || b.name.includes('Online');
+            return bNatural - aNatural;
+        });
+
+        sortedVoices.forEach((voice) => {
+            const option = document.createElement('option');
+            option.textContent = voice.name.replace("Microsoft ", "").replace("Online (Natural) - ", "");
+            option.value = voice.name;
+            if (voice.name.includes('Aria') || voice.default) option.selected = true;
+            voiceSelect.appendChild(option);
+        });
+        
+        statusDiv.innerText = "Engine Ready";
+    }
+
+    if (speechSynthesis.onvoiceschanged !== undefined) {
+        speechSynthesis.onvoiceschanged = loadVoices;
+    }
+
+    // INDEX CONTENT (Including Mirror Quotes)
+    function indexContent() {
+        const selector = 'h1, h2, h3, p, .mirror-quote';
+        paragraphs = Array.from(document.querySelectorAll(selector))
+                          .filter(el => el.innerText.trim().length > 2);
+    }
+
+    function speakParagraph(index) {
+        synth.cancel();
+        if (index < 0 || index >= paragraphs.length) return;
+
+        currentIndex = index;
+        const text = paragraphs[index].innerText;
+        const utterance = new SpeechSynthesisUtterance(text);
+        
+        const selectedVoiceName = voiceSelect.value;
+        utterance.voice = voices.find(v => v.name === selectedVoiceName) || null;
+        utterance.rate = 0.95; // Slightly slower for gravity
+
+        // Visual Tracking
+        document.querySelectorAll('.tts-active').forEach(el => {
+            el.classList.remove('tts-active');
+            el.style.borderLeft = "none";
+        });
+        paragraphs[index].classList.add('tts-active');
+        paragraphs[index].style.borderLeft = "3px solid #c5a059";
+        paragraphs[index].scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        utterance.onend = () => {
+            if (currentIndex < paragraphs.length - 1) {
+                setTimeout(() => speakParagraph(currentIndex + 1), 700);
+            }
+        };
+
+        synth.speak(utterance);
+        statusDiv.innerText = `Reading Section ${index + 1}`;
+    }
+
+    // INTERACTION
+    toggleBtn.addEventListener('click', () => {
+        widget.classList.toggle('active');
+        // Force trigger for Edge/Chrome Online Voices
+        synth.speak(new SpeechSynthesisUtterance("")); 
+        loadVoices();
+    });
+
+    document.querySelector('#tts-play-pause').addEventListener('click', () => {
+        if (synth.speaking && !synth.paused) {
+            synth.pause();
+            document.querySelector('#tts-play-pause').innerText = "RESUME";
+        } else if (synth.paused) {
+            synth.resume();
+            document.querySelector('#tts-play-pause').innerText = "PAUSE";
+        } else {
+            indexContent();
+            speakParagraph(currentIndex);
+            document.querySelector('#tts-play-pause').innerText = "PAUSE";
+        }
+    });
+
+    document.querySelector('#tts-next').addEventListener('click', () => speakParagraph(currentIndex + 1));
+    document.querySelector('#tts-prev').addEventListener('click', () => speakParagraph(currentIndex - 1));
+    document.querySelector('#tts-stop').addEventListener('click', () => {
+        synth.cancel();
+        document.querySelectorAll('.tts-active').forEach(el => el.style.borderLeft = "none");
+        statusDiv.innerText = "Standby";
+        document.querySelector('#tts-play-pause').innerText = "PLAY";
+    });
+
+    document.addEventListener('dblclick', (e) => {
+        indexContent();
+        const targetPara = paragraphs.find(p => p.contains(e.target));
+        if (targetPara) {
+            if (!widget.classList.contains('active')) widget.classList.add('active');
+            speakParagraph(paragraphs.indexOf(targetPara));
+            document.querySelector('#tts-play-pause').innerText = "PAUSE";
+        }
+    });
+</script>
+
+
+
+</body>
+</html>
