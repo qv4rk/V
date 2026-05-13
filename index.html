@@ -3,267 +3,225 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TERMINAL V - INDEX</title>
-    
+    <title>SYS.ARCHIVE // V_PROJECT</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Cormorant+Garamond:ital,wght@0,300;0,600;1,400&family=JetBrains+Mono:wght@100;400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Inter:wght@300;400;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     
     <style>
         :root {
-            --bg-color: #030303;
-            --text-color: #e0e0e0;
-            --glass: rgba(10, 10, 12, 0.85);
-            --border: rgba(255, 255, 255, 0.1);
-            --accent-gold: #c5a059;
-            --accent-red: #8a1c1c;
-            --font-display: 'Cinzel', serif;
-            --font-body: 'Cormorant Garamond', serif;
+            --bg-base: #0a0a0a;
+            --bg-surface: #121212;
+            --border-hard: #333333;
+            --text-primary: #e0e0e0;
+            --text-secondary: #888888;
+            --accent: #d4af37;
+            
+            --font-serif: 'Cormorant Garamond', serif;
+            --font-sans: 'Inter', sans-serif;
             --font-mono: 'JetBrains Mono', monospace;
         }
 
-        body, html {
-            margin: 0; padding: 0;
-            width: 100%; height: 100%;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            font-family: var(--font-body);
-            overflow: hidden; 
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
-        /* --- THE VISUAL ENGINE --- */
-        #canvas-bg {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100vw; height: 100vh;
-            z-index: 0;
-            pointer-events: none;
-            opacity: 0.4;
-        }
-
-        /* --- NAVIGATION MENU --- */
-        .nav-menu {
-            position: fixed;
-            top: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 1000;
+        body {
+            background-color: var(--bg-base);
+            color: var(--text-primary);
+            font-family: var(--font-sans);
+            line-height: 1.6;
             display: flex;
-            gap: 20px;
-            background: rgba(0, 0, 0, 0.5);
-            padding: 10px 20px;
-            border-radius: 4px;
-            border: 1px solid var(--border);
-            backdrop-filter: blur(5px);
+            min-height: 100vh;
         }
 
-        .nav-btn {
-            background: transparent;
-            color: var(--accent-gold);
-            padding: 8px 16px;
-            font-family: var(--font-mono);
-            font-size: 0.9rem;
-            text-decoration: none;
-            transition: all 0.3s ease;
-            border-bottom: 1px solid transparent;
-        }
-
-        .nav-btn:hover {
-            color: #fff;
-            border-bottom: 1px solid var(--accent-red);
-            text-shadow: 0 0 8px rgba(197, 160, 89, 0.5);
-        }
-
-        /* --- MAIN CONTAINER --- */
-        .container {
+        /* NAVIGATION / MENU */
+        nav {
+            width: 280px;
+            background-color: var(--bg-surface);
+            border-right: 1px solid var(--border-hard);
+            padding: 40px 30px;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
             height: 100vh;
-            width: 100vw;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-            z-index: 10;
+            overflow-y: auto;
         }
 
-        .content-card {
-            background: var(--glass);
-            border: 1px solid var(--border);
-            padding: 4rem 5rem;
-            max-width: 800px;
-            text-align: center;
-            box-shadow: 0 0 50px rgba(0,0,0,0.8);
-            backdrop-filter: blur(8px);
-            animation: fadeIn 2s ease-out;
+        .nav-header {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            letter-spacing: 2px;
+            color: var(--text-secondary);
+            margin-bottom: 40px;
+            border-bottom: 1px solid var(--border-hard);
+            padding-bottom: 10px;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+        .nav-group {
+            margin-bottom: 30px;
         }
 
-        /* TYPOGRAPHY */
+        .nav-title {
+            font-family: var(--font-mono);
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+
+        .nav-link {
+            display: block;
+            color: var(--text-primary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            padding: 8px 0;
+            border-bottom: 1px solid transparent;
+            transition: border-color 0.2s, color 0.2s;
+        }
+
+        .nav-link:hover {
+            color: #ffffff;
+            border-bottom: 1px solid var(--border-hard);
+        }
+
+        /* MAIN CONTENT AREA */
+        main {
+            margin-left: 280px;
+            padding: 60px;
+            width: calc(100% - 280px);
+            max-width: 1200px;
+        }
+
+        header {
+            margin-bottom: 60px;
+        }
+
         h1 {
-            font-family: var(--font-display);
-            font-size: clamp(2.5rem, 6vw, 4rem);
-            color: var(--accent-gold);
-            border-bottom: 1px solid var(--accent-red);
-            padding-bottom: 1rem;
-            margin-bottom: 0.5rem;
-            letter-spacing: 0.1em;
+            font-family: var(--font-serif);
+            font-size: 3.5rem;
+            font-weight: 600;
+            line-height: 1.1;
+            margin-bottom: 10px;
         }
 
         .subtitle {
             font-family: var(--font-mono);
-            color: #666;
-            font-size: 0.9rem;
-            letter-spacing: 3px;
-            margin-bottom: 3rem;
-        }
-
-        p {
-            font-size: 1.3rem;
-            line-height: 1.6;
-            color: #dcdcdc;
-            margin-bottom: 2rem;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
         }
 
         /* DIRECTORY GRID */
-        .directory-grid {
+        .grid-container {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1.5rem;
-            margin-top: 2rem;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
         }
 
-        .dir-item {
-            display: block;
-            padding: 1.5rem;
-            border: 1px solid var(--border);
+        .card {
+            border: 1px solid var(--border-hard);
+            background-color: var(--bg-surface);
+            padding: 30px;
             text-decoration: none;
-            color: #aaa;
-            transition: all 0.3s;
-            background: rgba(255, 255, 255, 0.02);
-            text-align: left;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.2s, border-color 0.2s;
         }
 
-        .dir-item h3 {
-            font-family: var(--font-display);
-            color: var(--accent-gold);
-            margin: 0 0 0.5rem 0;
-            font-size: 1.2rem;
+        .card:hover {
+            transform: translateY(-2px);
+            border-color: var(--text-secondary);
         }
 
-        .dir-item span {
+        .card-meta {
             font-family: var(--font-mono);
-            font-size: 0.8rem;
+            font-size: 0.7rem;
+            color: var(--accent);
+            margin-bottom: 15px;
+            text-transform: uppercase;
         }
 
-        .dir-item:hover {
-            border-color: var(--accent-red);
-            background: rgba(138, 28, 28, 0.1);
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+        .card-title {
+            font-family: var(--font-serif);
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 15px;
         }
-        
-        .dir-item:hover h3 { color: #fff; }
 
-        @media (max-width: 768px) {
-            .directory-grid { grid-template-columns: 1fr; }
-            .content-card { padding: 2rem; width: 85%; }
-            .nav-menu { width: 90%; justify-content: center; flex-wrap: wrap; top: 10px; }
+        .card-desc {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            flex-grow: 1;
+        }
+
+        @media (max-width: 900px) {
+            body { flex-direction: column; }
+            nav { width: 100%; height: auto; position: relative; border-right: none; border-bottom: 1px solid var(--border-hard); }
+            main { margin-left: 0; width: 100%; padding: 30px; }
+            .grid-container { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
 
-<canvas id="canvas-bg"></canvas>
-
-<nav class="nav-menu">
-    <a href="index.html" class="nav-btn">HOME</a>
-    <a href="articles/veilbabel.html" class="nav-btn">DOSSIER</a>
-    <a href="art/web-art.html" class="nav-btn">WEB ART</a>
-</nav>
-
-<div class="container">
-    <div class="content-card">
-        <h1>PROJECT V</h1>
-        <div class="subtitle">SYS.ARCHIVE.ROOT</div>
+    <nav>
+        <div class="nav-header">V_PROJECT // ROOT</div>
         
-        <p>You have accessed the primary directory. Select a module below to proceed into the archives.</p>
+        <div class="nav-group">
+            <div class="nav-title">Critical Theory & Analysis</div>
+            <a href="articles/veil/veilofbabel.html" class="nav-link">The Veil of Babel</a>
+            <a href="articles/saving_private_MD/nitrogenfarmersguide.html" class="nav-link">Nitrogen Farmer's Guide</a>
+            <a href="articles/codex/index.html" class="nav-link">Codex Root</a>
+        </div>
 
-        <div class="directory-grid">
-            <a href="articles/veilbabel.html" class="dir-item">
-                <h3>I. The Veil of Babel</h3>
-                <span>[ TEXT / AUDIO ] Levantine Paradox</span>
+        <div class="nav-group">
+            <div class="nav-title">Drafts & Manuscripts</div>
+            <a href="articles/article1_smith_singularity.md" class="nav-link">Agent Smith Singularity</a>
+            <a href="articles/article2_first_breath.md" class="nav-link">First Breath</a>
+            <a href="articles/article3_maya.md" class="nav-link">Maya</a>
+            <a href="articles/article4_frequency.md" class="nav-link">Frequency</a>
+        </div>
+
+        <div class="nav-group">
+            <div class="nav-title">Web Applications</div>
+            <a href="apps/kalidascope/fontforge5.html" class="nav-link">Omni-Pattern Grand Forge</a>
+            <a href="apps/tts/feisttech_reader_v9.html" class="nav-link">FeistTech Reader</a>
+            <a href="apps/tts/rsvp.html" class="nav-link">RSVP Interface</a>
+        </div>
+    </nav>
+
+    <main>
+        <header>
+            <h1>System Archive</h1>
+            <div class="subtitle">PRIMARY DIRECTORY INDEX // 2026</div>
+        </header>
+
+        <div class="grid-container">
+            <a href="articles/veil/veilofbabel.html" class="card">
+                <div class="card-meta">Dossier / Biopolitics</div>
+                <div class="card-title">The Veil of Babel</div>
+                <div class="card-desc">Forensic pathology report on muted fratricide, genomic ancestry, and the terminal phase of the Levantine conflict.</div>
             </a>
-            
-            <a href="art/web-art.html" class="dir-item">
-                <h3>II. Visual Synthesis</h3>
-                <span>[ CANVAS / GL ] Generative Art</span>
+
+            <a href="articles/saving_private_MD/nitrogenfarmersguide.html" class="card">
+                <div class="card-meta">Technical Manual</div>
+                <div class="card-title">Nitrogen Farmer's Guide</div>
+                <div class="card-desc">Birkeland-Eyde rotating arc methodology for autonomous domestic nitrogen fixation via shallow gas wells.</div>
+            </a>
+
+            <a href="apps/kalidascope/fontforge5.html" class="card">
+                <div class="card-meta">Interactive Application</div>
+                <div class="card-title">Omni-Pattern Grand Forge</div>
+                <div class="card-desc">Vector rendering engine utilizing tactile joystick manipulation and kinematic font mapping.</div>
+            </a>
+
+            <a href="apps/tts/feisttech_reader_v9.html" class="card">
+                <div class="card-meta">Audio Engine</div>
+                <div class="card-title">FeistTech TTS Reader</div>
+                <div class="card-desc">Tactical audio synthesis interface for rapid document consumption and text-to-speech indexing.</div>
             </a>
         </div>
-    </div>
-</div>
-
-<script>
-    /* --- AMBIENT ASH/DATA ENGINE --- */
-    const canvas = document.getElementById('canvas-bg');
-    const ctx = canvas.getContext('2d');
-    let particles = [];
-
-    function resize() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-    }
-    window.addEventListener('resize', resize);
-    resize();
-
-    class Particle {
-        constructor() {
-            this.x = Math.random() * canvas.width;
-            this.y = Math.random() * canvas.height;
-            this.size = Math.random() * 1.5 + 0.5;
-            this.speedY = Math.random() * 0.5 + 0.1;
-            this.speedX = (Math.random() - 0.5) * 0.3;
-            // 80% gold/white, 20% red for the theme
-            this.color = Math.random() > 0.8 ? '#8a1c1c' : 'rgba(197, 160, 89, 0.5)';
-        }
-        update() {
-            this.y -= this.speedY;
-            this.x += this.speedX;
-            if (this.y < 0) {
-                this.y = canvas.height;
-                this.x = Math.random() * canvas.width;
-            }
-        }
-        draw() {
-            ctx.fillStyle = this.color;
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-            ctx.fill();
-        }
-    }
-
-    function init() {
-        for (let i = 0; i < 150; i++) {
-            particles.push(new Particle());
-        }
-    }
-
-    function animate() {
-        ctx.fillStyle = 'rgba(3, 3, 3, 0.2)'; // Trailing effect
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        
-        particles.forEach(p => {
-            p.update();
-            p.draw();
-        });
-        requestAnimationFrame(animate);
-    }
-
-    init();
-    animate();
-</script>
+    </main>
 
 </body>
 </html>

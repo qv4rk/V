@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>FeistTech Immersive Reader v9</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto+Mono:wght@300;400&family=Merriweather:wght@300;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
+    <style>
+        :root {
+            --primary: #00f3ff;
+            --secondary: #bc13fe;
+            --bg-dark: #050510;
+            --glass: rgba(10, 10, 15, 0.75);
+            --border: rgba(0, 243, 255, 0.3);
+            --font-head: 'Orbitron', sans-serif;
+            --font-body: 'Roboto Mono', monospace;
+            --font-read: 'Merriweather', serif;
+            --text-main: #e0e0e0;
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { margin: 0; background: var(--bg-dark); color: var(--text-main); font-family: var(--font-body); overflow-x: hidden; min-height: 100vh; }
+
+        #bg-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; opacity: 0.8; pointer-events: none; }
+        #app-container { position: relative; z-index: 10; min-height: 100vh; display: flex; flex-direction: column; }
+
+        /* SPLASH */
+        #splashView { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem; text-align: center; }
+        .splash-card { background: var(--glass); border: 1px solid var(--border); padding: 2rem; border-radius: 16px; max-width: 700px; width: 100%; backdrop-filter: blur(20px); box-shadow: 0 0 30px rgba(0, 243, 255, 0.2); margin-bottom: 2rem; }
+        #resumeBanner { display: none; width: 100%; max-width: 700px; background: rgba(0, 255, 65, 0.1); border: 1px solid #00ff41; color: #00ff41; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; text-align: left; align-items: center; justify-content: space-between; }
+        #resumeBanner.visible { display: flex; }
+        h1.logo { font-family: var(--font-head); font-size: 2.2rem; margin-bottom: 0.5rem; background: linear-gradient(to right, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+        /* READER */
+        #readerView { display: none; }
+        .nav { position: sticky; top: 0; z-index: 100; background: rgba(10, 10, 15, 0.95); border-bottom: 1px solid var(--border); backdrop-filter: blur(20px); padding: 0.75rem 0; }
+        .nav-inner { max-width: 1000px; margin: 0 auto; padding: 0 1rem; display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; }
+        .container { max-width: 800px; margin: 0 auto; padding: 2rem 1.5rem 6rem; background: rgba(10, 10, 15, 0.65); margin-top: 2rem; border-radius: 8px; backdrop-filter: blur(10px); }
+        .chapter h2 { font-family: var(--font-head); color: var(--primary); text-align: center; margin: 2rem 0; border-bottom: 1px solid var(--border); padding-bottom: 1rem; }
+
+        /* PARAGRAPH STYLES */
+        .chapter-content p { font-family: var(--font-read); font-size: 1.15rem; line-height: 1.8; margin-bottom: 1.5em; padding: 0.5rem 0.75rem; border-radius: 4px; transition: background 0.2s; cursor: pointer; }
+        .chapter-content p:hover { background: rgba(255,255,255,0.03); }
+        .reading { background: rgba(0, 243, 255, 0.12) !important; border-left: 3px solid var(--primary); box-shadow: 0 0 20px rgba(0, 243, 255, 0.15); }
+
+        /* SPEAKER LABEL */
+        .spkr-block { position: relative; }
+        .spkr-tag {
+            display: inline-block;
+            font-family: var(--font-head);
+            font-size: 0.62rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            color: #000;
+            background: var(--secondary);
+            padding: 2px 8px;
+            border-radius: 3px;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+        }
+        .spkr-block p { font-style: italic; color: #c8f0ff; padding-left: 1rem; border-left: 2px solid rgba(0,243,255,0.25); }
+
+        .narrator p { color: #e0e0e0; }
+
+        /* CONTROLS */
+        .btn { background: rgba(0,0,0,0.6); color: var(--primary); border: 1px solid var(--border); padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; font-family: var(--font-head); font-size: 0.8rem; }
+        .btn:hover { background: rgba(0, 243, 255, 0.1); }
+        .btn-play { background: var(--secondary); color: #fff; border: none; min-width: 80px; }
+        .btn-home { background: #ff4136; color: #fff; border: none; }
+        .btn-large { background: linear-gradient(90deg, var(--secondary), var(--primary)); color: #000; border: none; padding: 1rem; font-size: 1.1rem; border-radius: 4px; font-weight: bold; cursor: pointer; width: 100%; font-family: var(--font-head); margin-top: 1rem; }
+
+        /* PANEL */
+        .panel { position: fixed; top: 0; right: -420px; width: 420px; height: 100vh; background: rgba(5, 5, 10, 0.98); border-left: 1px solid var(--primary); transition: right 0.3s; z-index: 200; overflow-y: auto; padding: 1.5rem; backdrop-filter: blur(20px); }
+        .panel.open { right: 0; }
+        select { background: #000; color: #fff; border: 1px solid #333; padding: 8px; width: 100%; margin-bottom: 10px; border-radius: 4px; }
+        .upload-row { display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+        .upload-box { flex: 1; min-width: 140px; border: 1px dashed var(--border); border-radius: 8px; padding: 1.5rem; cursor: pointer; background: rgba(0,0,0,0.3); color: var(--primary); transition: 0.2s; }
+        .upload-box:hover { background: rgba(0, 243, 255, 0.1); border-color: var(--primary); transform: translateY(-2px); }
+        .text-input-area { width: 100%; background: rgba(0,0,0,0.5); border: 1px solid var(--border); color: #fff; padding: 1rem; border-radius: 8px; min-height: 100px; resize: vertical; font-family: var(--font-body); }
+        .voice-mapping { background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; margin-bottom: 1rem; }
+        .voice-mapping-item { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; }
+        .voice-mapping-label { min-width: 90px; color: var(--secondary); font-size: 0.85rem; flex-shrink: 0; }
+        .preview-btn { background: rgba(0,243,255,0.1); border: 1px solid var(--border); color: var(--primary); padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.7rem; white-space: nowrap; flex-shrink: 0; }
+        .preview-btn:hover { background: rgba(0,243,255,0.25); }
+
+        /* SLIDERS */
+        .slider-row { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 16px; }
+        .slider-label { color: var(--secondary); font-size: 0.8rem; min-width: 80px; }
+        .slider-val { color: var(--primary); font-size: 0.8rem; min-width: 36px; text-align: right; }
+        input[type=range] { flex: 1; accent-color: var(--primary); }
+
+        /* STATUS */
+        #ttsStatus { position: fixed; bottom: 20px; right: 20px; background: rgba(0,0,0,0.9); border: 1px solid var(--primary); padding: 1rem; border-radius: 8px; display: none; z-index: 150; backdrop-filter: blur(10px); max-width: 260px; }
+        #ttsStatus.active { display: block; }
+        #audioPlayer { display: none; }
+
+        .info-box { background: rgba(188, 19, 254, 0.1); border: 1px solid var(--secondary); border-radius: 8px; padding: 1rem; margin: 1rem 0; font-size: 0.85rem; color: #ccc; }
+        .info-box strong { color: var(--secondary); }
+        .kbd { display: inline-block; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 3px; padding: 1px 6px; font-size: 0.75rem; font-family: var(--font-body); }
+    </style>
+</head>
+<body>
+<canvas id="bg-canvas"></canvas>
+<audio id="audioPlayer" controls></audio>
+
+<div id="app-container">
+    <div id="splashView">
+        <div id="resumeBanner">
+            <div><strong>SESSION RESTORED</strong><br><span style="font-size:0.8rem">Continue reading?</span></div>
+            <button class="btn" style="background:#00ff41; color:#000; border:none;" onclick="resumeSession()">RESUME</button>
+        </div>
+        <div class="splash-card">
+            <h1 class="logo">FEISTTECH READER</h1>
+            <p style="color:#aaa; font-size:0.9rem; margin-bottom:1.5rem;">MULTI-VOICE ENGINE v9.0</p>
+            <div class="info-box">
+                <strong>📋 FORMAT:</strong><br>
+                Put <code>[SPKR: Name]</code> on its own line before each dialogue line.<br>
+                Narrator reads everything else automatically.<br><br>
+                <strong>⌨️ SHORTCUTS:</strong> <span class="kbd">Space</span> play/pause &nbsp; <span class="kbd">→</span> next &nbsp; <span class="kbd">←</span> prev
+            </div>
+            <div class="upload-row">
+                <div class="upload-box" onclick="document.getElementById('fileInput').click()">
+                    <div style="font-size:2rem; margin-bottom:0.5rem">📄</div>
+                    <strong>TEXT / MD</strong>
+                </div>
+                <div class="upload-box" onclick="document.getElementById('pdfInput').click()">
+                    <div style="font-size:2rem; margin-bottom:0.5rem">📕</div>
+                    <strong>PDF SCAN</strong>
+                </div>
+            </div>
+            <input type="file" id="fileInput" accept=".txt,.html,.md" hidden onchange="handleFileSelect(this)">
+            <input type="file" id="pdfInput" accept=".pdf" hidden onchange="handlePDFSelect(this)">
+            <textarea id="pasteArea" class="text-input-area" placeholder="Or paste content here...
+
+Example:
+The detective entered quietly.
+[SPKR: Alice]
+Hello there!
+The narrator explains what happens next.
+[SPKR: Bob]
+How are you?"></textarea>
+            <button class="btn-large" onclick="loadFromPaste()">INITIALIZE SYSTEM</button>
+            <button class="btn" style="width:100%; margin-top:1rem; background:rgba(0,243,255,0.1);" onclick="triggerVoiceLoad()">🔊 LOAD VOICES (Required for Browser TTS)</button>
+        </div>
+    </div>
+
+    <div id="readerView">
+        <nav class="nav">
+            <div class="nav-inner">
+                <div style="display:flex; gap:0.5rem;">
+                    <button class="btn btn-home" onclick="returnHome()">🏠</button>
+                    <button class="btn" onclick="togglePanel()">🎙 VOICES</button>
+                    <button class="btn" onclick="saveToDisk()">💾 EXPORT</button>
+                </div>
+                <select id="chapterSelect" onchange="jumpToChapter(this.value)" style="max-width: 200px; background:rgba(0,0,0,0.5); border:1px solid var(--border);"></select>
+                <div style="display:flex; gap:0.25rem;">
+                    <button class="btn" onclick="skipSegment(-1)">⏮</button>
+                    <button class="btn btn-play" id="playBtn" onclick="togglePlay()">▶ PLAY</button>
+                    <button class="btn" onclick="skipSegment(1)">⏭</button>
+                </div>
+            </div>
+            <div style="width:100%; height:4px; background:#111; margin-top:0.75rem;">
+                <div id="progressBar" style="height:100%; width:0%; background:var(--primary); transition:width 0.3s;"></div>
+            </div>
+        </nav>
+        <div class="container">
+            <main id="storyContainer"></main>
+        </div>
+    </div>
+</div>
+
+<div class="panel" id="settingsPanel">
+    <div style="display:flex; justify-content:space-between; color:var(--primary); font-family:var(--font-head); margin-bottom:20px;">
+        <span>VOICE MAPPING</span>
+        <button onclick="togglePanel()" class="btn">✕</button>
+    </div>
+    <div class="slider-row">
+        <span class="slider-label">SPEED</span>
+        <input type="range" min="0.5" max="3.0" step="0.1" value="1" id="speedSlider" oninput="onSpeedChange(this.value)">
+        <span class="slider-val" id="speedVal">1.0x</span>
+    </div>
+    <div class="slider-row">
+        <span class="slider-label">VOLUME</span>
+        <input type="range" min="0" max="1" step="0.05" value="1" id="volumeSlider" oninput="onVolumeChange(this.value)">
+        <span class="slider-val" id="volumeVal">100%</span>
+    </div>
+    <label style="color:var(--secondary); font-size:0.8rem;">TTS ENGINE</label>
+    <div id="engineStatus" style="margin-bottom:20px;"></div>
+    <div id="voiceMappingContainer"></div>
+    <p style="color:#666; font-size:0.75rem; margin-top:10px;">Click "LOAD VOICES" on home screen to populate browser voices.<br>Auto-fallback to browser TTS if Edge unavailable.</p>
+</div>
+
+<div id="ttsStatus">
+    <div style="color:var(--primary); font-family:var(--font-head); margin-bottom:5px; font-size:0.8rem;">TTS STATUS</div>
+    <div id="ttsStatusText" style="font-size:0.85rem;"></div>
+</div>
+
+<script type="module">
+    import { EdgeTTS, VoicesManager } from 'https://unpkg.com/edge-tts-universal@latest/dist/browser.js';
+    window.EdgeTTS = EdgeTTS;
+    window.VoicesManager = VoicesManager;
+    window.appReady = true;
+</script>
+
+<script>
+    // --- STATE ---
+    let voices = [], segments = [], currentSegmentIndex = 0;
+    let voiceMapping = { narrator: null };
+    let detectedSpkrs = new Set(['narrator']);
+    let settings = { speed: 1.0, volume: 1.0, useBrowserTTS: false, voicesLoaded: false };
+    const audioPlayer = document.getElementById('audioPlayer');
+    let nativeTTSActive = false;
+    let voiceLoadAttempted = false;
+    window.activeUtterances = [];
+
+    // --- BACKGROUND ---
+    const bgSystem = (function() {
+        const canvas = document.getElementById('bg-canvas');
+        const ctx = canvas.getContext('2d');
+        let width, height, frame = 0;
+        let target = { x: window.innerWidth/2, y: window.innerHeight/2 };
+        let current = { x: window.innerWidth/2, y: window.innerHeight/2 };
+        let particles = [];
+        function init() {
+            resize();
+            window.addEventListener('resize', resize);
+            window.addEventListener('mousemove', e => { target.x = e.clientX; target.y = e.clientY; });
+            window.addEventListener('touchmove', e => { target.x = e.touches[0].clientX; target.y = e.touches[0].clientY; });
+            for(let i=0; i<30; i++) particles.push({ x: Math.random()*width, y: Math.random()*height, vx: (Math.random()-0.5)*0.5, vy: (Math.random()-0.5)*0.5, size: Math.random()*2+1 });
+            loop();
+        }
+        function resize() { width = canvas.width = window.innerWidth; height = canvas.height = window.innerHeight; }
+        function loop() {
+            requestAnimationFrame(loop); frame++;
+            current.x += (target.x - current.x) * 0.05;
+            current.y += (target.y - current.y) * 0.05;
+            ctx.fillStyle = 'rgba(5,5,16,0.05)';
+            ctx.fillRect(0,0,width,height);
+            const mirrors=8, radius=50+Math.sin(frame*0.05)*20;
+            ctx.save(); ctx.translate(current.x, current.y); ctx.rotate(frame*0.003);
+            for(let i=0;i<mirrors;i++) {
+                ctx.save(); ctx.rotate(i*((Math.PI*2)/mirrors));
+                ctx.strokeStyle=`hsla(${(frame+i*20)%360},100%,50%,0.3)`; ctx.lineWidth=2;
+                ctx.beginPath(); ctx.moveTo(10,0); ctx.lineTo(radius,20); ctx.lineTo(radius,-20);
+                ctx.closePath(); ctx.stroke(); ctx.restore();
+            }
+            ctx.restore();
+            particles.forEach(p => {
+                p.x+=p.vx; p.y+=p.vy;
+                if(p.x<0||p.x>width) p.vx*=-1;
+                if(p.y<0||p.y>height) p.vy*=-1;
+                const dx=current.x-p.x, dy=current.y-p.y, dist=Math.sqrt(dx*dx+dy*dy);
+                if(dist<200) { ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2); ctx.fillStyle=`rgba(0,243,255,${0.3*(1-dist/200)})`; ctx.fill(); }
+            });
+        }
+        return { init };
+    })();
+
+    window.onload = () => { bgSystem.init(); checkPersistence(); waitForLib(); setupKeyboard(); };
+
+    // --- KEYBOARD SHORTCUTS ---
+    function setupKeyboard() {
+        document.addEventListener('keydown', (e) => {
+            const tag = document.activeElement.tagName;
+            if(tag === 'TEXTAREA' || tag === 'INPUT' || tag === 'SELECT') return;
+            if(e.code === 'Space') { e.preventDefault(); togglePlay(); }
+            if(e.code === 'ArrowRight') { e.preventDefault(); skipSegment(1); }
+            if(e.code === 'ArrowLeft') { e.preventDefault(); skipSegment(-1); }
+        });
+    }
+
+    // --- VOICE LOADING ---
+    function waitForLib() { if(window.appReady) loadVoices(); else setTimeout(waitForLib, 100); }
+
+    function triggerVoiceLoad() {
+        if(voiceLoadAttempted) { showTTSStatus('Voices already loaded!', 2000); return; }
+        showTTSStatus('Triggering browser TTS to load voices...', 3000);
+        voiceLoadAttempted = true;
+        const utterance = new SpeechSynthesisUtterance('');
+        utterance.volume = 0; utterance.rate = 10;
+        utterance.onstart = () => {
+            speechSynthesis.cancel();
+            setTimeout(() => { loadBrowserVoices(); showTTSStatus('✅ Voices loaded!', 2000); }, 100);
+        };
+        speechSynthesis.speak(utterance);
+    }
+
+    async function loadVoices() {
+        try {
+            const manager = await window.VoicesManager.create();
+            const edgeVoices = manager.getVoices();
+            if(edgeVoices && edgeVoices.length > 0) {
+                voices = edgeVoices.filter(v => v.Locale.startsWith('en')).sort((a,b) => {
+                    const score = v => { let s=0; if(v.Locale.includes('GB')) s+=15; else if(v.Locale.includes('US')) s+=10; else if(v.Locale.startsWith('en')) s+=5; if(v.Gender==='Female') s+=8; return s; };
+                    return score(b)-score(a);
+                });
+                voices.push(...edgeVoices.filter(v => !v.Locale.startsWith('en')));
+                settings.useBrowserTTS = false;
+            } else throw new Error("No Edge voices");
+        } catch(e) {
+            console.warn("Edge-TTS unavailable, falling back", e);
+            loadBrowserVoices();
+        }
+        initializeDefaultVoiceMapping();
+    }
+
+    function loadBrowserVoices() {
+        settings.useBrowserTTS = true;
+        const bv = speechSynthesis.getVoices();
+        if(!bv.length) { voices = []; return; }
+        voices = bv.filter(v => v.lang.startsWith('en')).map(v => ({
+            ShortName: v.name, FriendlyName: v.name,
+            Gender: (v.name.toLowerCase().includes('female')||['Samantha','Victoria','Zira'].some(n=>v.name.includes(n)))?'Female':'Male',
+            Locale: v.lang
+        })).sort((a,b) => {
+            const score = v => { let s=0; if(v.Locale.includes('GB')) s+=15; else if(v.Locale.includes('US')) s+=10; if(v.Gender==='Female') s+=5; return s; };
+            return score(b)-score(a);
+        });
+        voices.push(...bv.filter(v => !v.lang.startsWith('en')).map(v => ({ ShortName:v.name, FriendlyName:v.name, Gender:'Unknown', Locale:v.lang })));
+        settings.voicesLoaded = true;
+        if(!voiceMapping.narrator && voices.length > 0) { voiceMapping.narrator = voices[0].ShortName; setTimeout(renderVoiceMapping, 100); }
+    }
+
+    function initializeDefaultVoiceMapping() { if(voices.length > 0) voiceMapping.narrator = voices[0].ShortName; }
+
+    // --- PARSING ---
+    // Detect chapter breaks: lines that are === or --- (3+ chars) or ## headings
+    function detectChapterBreak(line) {
+        return /^(={3,}|-{3,}|#{1,3}\s)/.test(line);
+    }
+
+    function detectSpkrs(text) {
+        const matches = text.matchAll(/\[SPKR:\s*([^\]]+)\]/gi);
+        for(const match of matches) detectedSpkrs.add(match[1].trim());
+    }
+
+    function parseTextWithSpkrs(text) {
+        const segments = [];
+        const lines = text.split('\n');
+        let currentSpkr = 'narrator';
+        let chapterNum = 1;
+        let chapterTitle = null;
+
+        lines.forEach(line => {
+            const raw = line;
+            line = line.trim();
+            if(!line) return;
+
+            // Chapter break detection
+            if(detectChapterBreak(line)) {
+                chapterNum++;
+                chapterTitle = line.replace(/^#{1,3}\s*/, '').replace(/^[=\-]+$/, '').trim() || null;
+                return;
+            }
+
+            const spkrMatch = line.match(/\[SPKR:\s*([^\]]+)\]/i);
+            if(spkrMatch) {
+                currentSpkr = spkrMatch[1].trim();
+                detectedSpkrs.add(currentSpkr);
+                line = line.replace(/\[SPKR:\s*[^\]]+\]/i, '').trim();
+            }
+
+            if(line) {
+                segments.push({ spkr: currentSpkr, text: line, chapter: String(chapterNum), chapterTitle });
+                currentSpkr = 'narrator';
+            }
+        });
+        return segments;
+    }
+
+    function renderParsedSegments(parsedSegments) {
+        let html = '';
+        let currentChapter = null;
+        let currentSpkrBlock = null;
+
+        parsedSegments.forEach((seg, idx) => {
+            // Chapter heading
+            if(seg.chapter !== currentChapter) {
+                if(currentSpkrBlock) { html += '</div>'; currentSpkrBlock = null; }
+                currentChapter = seg.chapter;
+                const title = seg.chapterTitle || `Chapter ${seg.chapter}`;
+                html += `<article data-chapter="${seg.chapter}"><h2>${title}</h2><div class="chapter-content">`;
+            }
+
+            const safeText = seg.text.replace(/"/g, '&quot;');
+            const isSpkr = seg.spkr !== 'narrator';
+
+            if(isSpkr) {
+                // Open a speaker block wrapper (groups the label + p)
+                html += `<div class="spkr-block" data-chapter="${seg.chapter}">`;
+                html += `<div class="spkr-tag">${seg.spkr}</div>`;
+                html += `<p class="spkr" data-spkr="${seg.spkr}" data-text="${safeText}">${seg.text}</p>`;
+                html += `</div>`;
+            } else {
+                html += `<p class="narrator" data-spkr="narrator" data-text="${safeText}">${seg.text}</p>`;
+            }
+        });
+
+        html += '</div></article>';
+        return html;
+    }
+
+    // --- PLAYBACK ---
+    async function play() {
+        if(currentSegmentIndex >= segments.length) currentSegmentIndex = 0;
+        document.getElementById('playBtn').innerText = "⏳ LOAD";
+        const seg = segments[currentSegmentIndex];
+        highlight(seg);
+        try {
+            if(settings.useBrowserTTS) await playWithBrowserTTS(seg);
+            else await playWithEdgeTTS(seg);
+        } catch(e) {
+            console.error("Playback error:", e);
+            if(!settings.useBrowserTTS) {
+                settings.useBrowserTTS = true;
+                loadBrowserVoices();
+                try { await playWithBrowserTTS(seg); }
+                catch(e2) { document.getElementById('playBtn').innerText = "⚠ ERR"; showTTSStatus('Playback failed: '+e2.message, 3000); }
+            } else {
+                document.getElementById('playBtn').innerText = "⚠ ERR";
+                showTTSStatus('Playback failed: '+e.message, 3000);
+            }
+        }
+    }
+
+    async function playWithEdgeTTS(seg) {
+        const voice = voiceMapping[seg.spkr] || voiceMapping.narrator || voices[0]?.ShortName;
+        const tts = new window.EdgeTTS({
+            voice, text: seg.text,
+            rate: (settings.speed - 1.0) * 100 + '%',
+            pitch: '+0Hz',
+            volume: `+${Math.round((settings.volume - 1) * 100)}%`
+        });
+        const result = await tts.synthesize();
+        const blob = new Blob([result.audio], { type: 'audio/mp3' });
+        const url = URL.createObjectURL(blob);
+        audioPlayer.src = url;
+        audioPlayer.volume = settings.volume;
+        audioPlayer.playbackRate = 1.0;
+        audioPlayer.onended = () => {
+            URL.revokeObjectURL(url);
+            currentSegmentIndex++;
+            saveState(); updateProgress();
+            if(currentSegmentIndex < segments.length) play();
+            else document.getElementById('playBtn').innerText = "▶ PLAY";
+        };
+        audioPlayer.onerror = () => { throw new Error("Edge-TTS playback failed"); };
+        await audioPlayer.play();
+        document.getElementById('playBtn').innerText = "⏸ PAUSE";
+        updateMediaSession(seg);
+    }
+
+    async function playWithBrowserTTS(seg) {
+        return new Promise((resolve, reject) => {
+            if(speechSynthesis.speaking || speechSynthesis.pending) speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(seg.text);
+            const voiceName = voiceMapping[seg.spkr] || voiceMapping.narrator;
+            const selectedVoice = speechSynthesis.getVoices().find(v => v.name === voiceName);
+            if(selectedVoice) utterance.voice = selectedVoice;
+            utterance.rate = parseFloat(settings.speed);
+            utterance.volume = parseFloat(settings.volume);
+            utterance.onstart = () => {
+                nativeTTSActive = true;
+                document.getElementById('playBtn').innerText = "⏸ PAUSE";
+                showTTSStatus(`🎙 ${seg.spkr}: Playing...`, 0);
+            };
+            utterance.onend = () => {
+                nativeTTSActive = false; hideTTSStatus();
+                const idx = window.activeUtterances.indexOf(utterance);
+                if(idx > -1) window.activeUtterances.splice(idx, 1);
+                currentSegmentIndex++; saveState(); updateProgress();
+                if(currentSegmentIndex < segments.length) play();
+                else document.getElementById('playBtn').innerText = "▶ PLAY";
+                resolve();
+            };
+            utterance.onerror = (e) => {
+                nativeTTSActive = false; hideTTSStatus();
+                const idx = window.activeUtterances.indexOf(utterance);
+                if(idx > -1) window.activeUtterances.splice(idx, 1);
+                if(e.error === 'interrupted' || e.error === 'canceled') return;
+                document.getElementById('playBtn').innerText = "⚠ ERR";
+                showTTSStatus('TTS Error: ' + e.error, 3000);
+                reject(e);
+            };
+            window.activeUtterances.push(utterance);
+            setTimeout(() => { try { speechSynthesis.speak(utterance); updateMediaSession(seg); } catch(e) { nativeTTSActive = false; reject(e); } }, 50);
+        });
+    }
+
+    // --- VOICE PREVIEW ---
+    async function previewVoice(voiceName, spkr) {
+        const previewText = `Hello. I am the voice for ${spkr}.`;
+        if(settings.useBrowserTTS) {
+            const u = new SpeechSynthesisUtterance(previewText);
+            const v = speechSynthesis.getVoices().find(v => v.name === voiceName);
+            if(v) u.voice = v;
+            u.rate = settings.speed; u.volume = settings.volume;
+            speechSynthesis.cancel();
+            speechSynthesis.speak(u);
+        } else {
+            try {
+                const tts = new window.EdgeTTS({ voice: voiceName, text: previewText, rate: (settings.speed-1)*100+'%', pitch:'+0Hz', volume:'+0%' });
+                const result = await tts.synthesize();
+                const blob = new Blob([result.audio], { type:'audio/mp3' });
+                const url = URL.createObjectURL(blob);
+                const tmp = new Audio(url);
+                tmp.volume = settings.volume;
+                tmp.play();
+                tmp.onended = () => URL.revokeObjectURL(url);
+            } catch(e) { console.warn('Preview failed', e); }
+        }
+    }
+
+    // --- CONTROLS ---
+    function onSpeedChange(v) {
+        settings.speed = parseFloat(v);
+        document.getElementById('speedVal').innerText = parseFloat(v).toFixed(1) + 'x';
+        saveState();
+    }
+
+    function onVolumeChange(v) {
+        settings.volume = parseFloat(v);
+        document.getElementById('volumeVal').innerText = Math.round(v*100) + '%';
+        audioPlayer.volume = settings.volume;
+        saveState();
+    }
+
+    function updateMediaSession(seg) {
+        if('mediaSession' in navigator) {
+            navigator.mediaSession.metadata = new MediaMetadata({ title: seg.spkr==='narrator'?'Narrator':seg.spkr, artist:"FeistTech Reader", album: settings.useBrowserTTS?"Browser TTS":"Edge TTS" });
+            navigator.mediaSession.setActionHandler('nexttrack', ()=>skipSegment(1));
+            navigator.mediaSession.setActionHandler('previoustrack', ()=>skipSegment(-1));
+            navigator.mediaSession.setActionHandler('play', ()=>togglePlay());
+            navigator.mediaSession.setActionHandler('pause', ()=>togglePlay());
+        }
+    }
+
+    function updateProgress() {
+        if(segments.length > 0) document.getElementById('progressBar').style.width = (currentSegmentIndex/segments.length)*100+"%";
+    }
+
+    function togglePlay() {
+        if(settings.useBrowserTTS) {
+            if(speechSynthesis.speaking && !speechSynthesis.paused) { speechSynthesis.pause(); document.getElementById('playBtn').innerText = "▶ PLAY"; showTTSStatus('⏸ Paused', 2000); }
+            else if(speechSynthesis.paused) { speechSynthesis.resume(); document.getElementById('playBtn').innerText = "⏸ PAUSE"; hideTTSStatus(); }
+            else play();
+        } else {
+            if(!audioPlayer.paused) { audioPlayer.pause(); document.getElementById('playBtn').innerText = "▶ PLAY"; }
+            else if(audioPlayer.src) { audioPlayer.play(); document.getElementById('playBtn').innerText = "⏸ PAUSE"; }
+            else play();
+        }
+    }
+
+    function skipSegment(dir) {
+        if(settings.useBrowserTTS && speechSynthesis.speaking) speechSynthesis.cancel();
+        else if(!settings.useBrowserTTS && !audioPlayer.paused) audioPlayer.pause();
+        currentSegmentIndex = Math.max(0, Math.min(segments.length-1, currentSegmentIndex+dir));
+        play();
+    }
+
+    function showTTSStatus(msg, dur=0) {
+        document.getElementById('ttsStatusText').innerText = msg;
+        document.getElementById('ttsStatus').classList.add('active');
+        if(dur > 0) setTimeout(hideTTSStatus, dur);
+    }
+    function hideTTSStatus() { document.getElementById('ttsStatus').classList.remove('active'); }
+
+    // --- STATE PERSISTENCE ---
+    function checkPersistence() {
+        if(localStorage.getItem('feist_content')) document.getElementById('resumeBanner').classList.add('visible');
+    }
+
+    function resumeSession() {
+        const c = localStorage.getItem('feist_content');
+        const s = localStorage.getItem('feist_settings');
+        const p = localStorage.getItem('feist_progress');
+        const sp = localStorage.getItem('feist_spkrs');
+        const vm = localStorage.getItem('feist_voiceMapping');
+        if(s) settings = {...settings, ...JSON.parse(s)};
+        if(sp) detectedSpkrs = new Set(JSON.parse(sp));
+        if(vm) voiceMapping = JSON.parse(vm);
+        // Restore sliders
+        document.getElementById('speedSlider').value = settings.speed;
+        document.getElementById('speedVal').innerText = parseFloat(settings.speed).toFixed(1)+'x';
+        document.getElementById('volumeSlider').value = settings.volume || 1;
+        document.getElementById('volumeVal').innerText = Math.round((settings.volume||1)*100)+'%';
+        initReader(c, true);
+        if(p) {
+            currentSegmentIndex = parseInt(p);
+            setTimeout(() => { if(segments[currentSegmentIndex]) highlight(segments[currentSegmentIndex]); }, 500);
+        }
+    }
+
+    function saveState() {
+        localStorage.setItem('feist_settings', JSON.stringify(settings));
+        localStorage.setItem('feist_progress', currentSegmentIndex);
+        localStorage.setItem('feist_spkrs', JSON.stringify([...detectedSpkrs]));
+        localStorage.setItem('feist_voiceMapping', JSON.stringify(voiceMapping));
+        try { localStorage.setItem('feist_content', document.getElementById('storyContainer').innerHTML); } catch(e) {}
+    }
+
+    // --- LOADING ---
+    function loadFromPaste() {
+        const text = document.getElementById('pasteArea').value.trim();
+        if(!text) { alert('Paste some content first!'); return; }
+        detectSpkrs(text);
+        const parsed = parseTextWithSpkrs(text);
+        const html = renderParsedSegments(parsed);
+        initReader(html);
+    }
+
+    function handleFileSelect(input) {
+        const r = new FileReader();
+        r.onload = e => {
+            const text = e.target.result;
+            detectSpkrs(text);
+            const parsed = parseTextWithSpkrs(text);
+            const html = renderParsedSegments(parsed);
+            initReader(html);
+        };
+        r.readAsText(input.files[0]);
+    }
+
+    async function handlePDFSelect(input) {
+        document.querySelector('.logo').innerText = "PARSING PDF...";
+        try {
+            const arrayBuffer = await input.files[0].arrayBuffer();
+            const pdf = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
+            let txt = "";
+            for(let i=1; i<=pdf.numPages; i++) {
+                const page = await pdf.getPage(i);
+                const tc = await page.getTextContent();
+                txt += tc.items.map(it=>it.str).join(' ') + "\n\n";
+            }
+            detectSpkrs(txt);
+            const parsed = parseTextWithSpkrs(txt);
+            const html = renderParsedSegments(parsed);
+            initReader(html);
+        } catch(e) {
+            console.error("PDF error:", e);
+            alert("Error parsing PDF: "+e.message);
+            document.querySelector('.logo').innerText = "FEISTTECH READER";
+        }
+    }
+
+    function initReader(html, isRaw=false) {
+        if(!html) return;
+        document.getElementById('splashView').style.display = 'none';
+        document.getElementById('readerView').style.display = 'block';
+        document.getElementById('storyContainer').innerHTML = html;
+        processContent();
+        populateChapters();
+        renderVoiceMapping();
+        saveState();
+    }
+
+    function processContent() {
+        segments = [];
+        document.querySelectorAll('#storyContainer p').forEach((p, i) => {
+            const txt = p.getAttribute('data-text') || p.innerText.trim();
+            if(!txt) return;
+            const spkr = p.dataset.spkr || 'narrator';
+            const ch = p.closest('article')?.dataset.chapter || '1';
+            segments.push({ index:i, element:p, text:txt, chapter:ch, spkr });
+            p.onclick = () => { currentSegmentIndex = i; play(); };
+        });
+    }
+
+    function highlight(seg) {
+        document.querySelectorAll('.reading').forEach(e => e.classList.remove('reading'));
+        if(seg && seg.element) {
+            seg.element.classList.add('reading');
+            seg.element.scrollIntoView({ behavior:'smooth', block:'center' });
+        }
+        updateProgress();
+    }
+
+    function renderVoiceMapping() {
+        const container = document.getElementById('voiceMappingContainer');
+        container.innerHTML = '';
+        const engineDiv = document.getElementById('engineStatus');
+        engineDiv.innerHTML = '';
+
+        const engineLabel = document.createElement('div');
+        engineLabel.style.cssText = 'color:#00ff41; font-size:0.75rem; margin-bottom:10px; padding:5px; background:rgba(0,255,65,0.1); border-radius:4px; text-align:center;';
+        engineLabel.innerText = settings.useBrowserTTS ? '🌐 BROWSER TTS ENGINE' : '⚡ EDGE-TTS ENGINE';
+        engineDiv.appendChild(engineLabel);
+
+        const toggleBtn = document.createElement('button');
+        toggleBtn.className = 'btn';
+        toggleBtn.style.cssText = 'width:100%; margin-bottom:20px; font-size:0.7rem;';
+        toggleBtn.innerText = settings.useBrowserTTS ? '⚡ TRY EDGE-TTS' : '🌐 USE BROWSER TTS';
+        toggleBtn.onclick = () => {
+            settings.useBrowserTTS = !settings.useBrowserTTS;
+            if(settings.useBrowserTTS) loadBrowserVoices(); else waitForLib();
+            renderVoiceMapping();
+        };
+        engineDiv.appendChild(toggleBtn);
+
+        const mappingDiv = document.createElement('div');
+        mappingDiv.className = 'voice-mapping';
+        const title = document.createElement('div');
+        title.style.cssText = 'color:var(--primary); font-family:var(--font-head); margin-bottom:12px; font-size:0.9rem;';
+        title.innerText = '🎙 CHARACTER VOICES';
+        mappingDiv.appendChild(title);
+
+        [...detectedSpkrs].sort().forEach((spkr, idx) => {
+            const item = document.createElement('div');
+            item.className = 'voice-mapping-item';
+            item.style.flexWrap = 'wrap';
+
+            const label = document.createElement('div');
+            label.className = 'voice-mapping-label';
+            label.innerText = spkr === 'narrator' ? '📖 Narrator' : `💬 ${spkr}`;
+
+            const selectWrap = document.createElement('div');
+            selectWrap.style.cssText = 'flex:1; display:flex; gap:6px; align-items:center;';
+
+            const select = document.createElement('select');
+            select.style.marginBottom = '0';
+            voices.forEach(v => {
+                const opt = document.createElement('option');
+                opt.value = v.ShortName;
+                const gIcon = v.Gender==='Female'?'♀':'♂';
+                opt.text = `${gIcon} ${v.FriendlyName.split('-')[0]}`;
+                select.appendChild(opt);
+            });
+            select.value = voiceMapping[spkr] || voiceMapping.narrator || (voices[0]?.ShortName||'');
+            select.onchange = (e) => { voiceMapping[spkr] = e.target.value; saveState(); };
+
+            const previewBtn = document.createElement('button');
+            previewBtn.className = 'preview-btn';
+            previewBtn.innerText = '▶';
+            previewBtn.title = 'Preview this voice';
+            previewBtn.onclick = () => previewVoice(select.value, spkr);
+
+            selectWrap.appendChild(select);
+            selectWrap.appendChild(previewBtn);
+            item.appendChild(label);
+            item.appendChild(selectWrap);
+            mappingDiv.appendChild(item);
+        });
+
+        container.appendChild(mappingDiv);
+
+        // Auto-assign distinct voices
+        [...detectedSpkrs].forEach((spkr, idx) => {
+            if(!voiceMapping[spkr] && voices[idx % voices.length]) {
+                voiceMapping[spkr] = voices[idx % voices.length].ShortName;
+            }
+        });
+    }
+
+    function populateChapters() {
+        const sel = document.getElementById('chapterSelect');
+        sel.innerHTML = '<option>JUMP TO...</option>';
+        const chapters = new Set();
+        segments.forEach(seg => chapters.add(seg.chapter));
+        [...chapters].sort().forEach(ch => {
+            const firstSegIdx = segments.findIndex(s => s.chapter === ch);
+            if(firstSegIdx >= 0) sel.innerHTML += `<option value="${firstSegIdx}">Chapter ${ch}</option>`;
+        });
+    }
+
+    function jumpToChapter(v) { if(v) { currentSegmentIndex = parseInt(v); play(); } }
+    function togglePanel() { document.getElementById('settingsPanel').classList.toggle('open'); }
+
+    function returnHome() {
+        if(confirm('Return home? Session is saved.')) {
+            saveState();
+            if(settings.useBrowserTTS) speechSynthesis.cancel();
+            else audioPlayer.pause();
+            document.getElementById('readerView').style.display = 'none';
+            document.getElementById('splashView').style.display = 'flex';
+            document.getElementById('playBtn').innerText = "▶ PLAY";
+            segments = []; currentSegmentIndex = 0;
+        }
+    }
+
+    function saveToDisk() {
+        const cleanMapping = { narrator: voiceMapping.narrator };
+        detectedSpkrs.forEach(s => { if(voiceMapping[s]) cleanMapping[s] = voiceMapping[s]; });
+        const stateScript = document.createElement('script');
+        stateScript.id = 'embedded-state';
+        stateScript.textContent = `window.exportedState = { voiceMapping: ${JSON.stringify(cleanMapping)}, settings: ${JSON.stringify(settings)}, spkrs: ${JSON.stringify([...detectedSpkrs])} };`;
+        const old = document.getElementById('embedded-state');
+        if(old) old.remove();
+        document.body.appendChild(stateScript);
+        const now = new Date();
+        const ts = now.toISOString().slice(0,16).replace(/[:T]/g,'-');
+        const fn = `FeistTech_${ts}.html`;
+        const blob = new Blob([document.documentElement.outerHTML], {type:'text/html'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href=url; a.download=fn; a.click();
+        URL.revokeObjectURL(url);
+        showTTSStatus('💾 Saved: '+fn, 2000);
+    }
+</script>
+
+<!-- DEBUGGER -->
+<div id="uni-debug-icon" onclick="toggleDebugPanel()" title="Open Debugger" style="position:fixed;bottom:10px;right:10px;width:50px;height:50px;background:#ff0055;color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;z-index:999999;box-shadow:0 4px 10px rgba(0,0,0,0.5);border:2px solid white;">🐛</div>
+<div id="uni-debug-panel" style="display:none;position:fixed;bottom:70px;right:10px;width:90vw;max-width:600px;height:300px;background:rgba(13,13,13,0.95);border:1px solid #333;border-radius:8px;z-index:999999;box-shadow:0 10px 30px rgba(0,0,0,0.8);flex-direction:column;font-family:monospace;backdrop-filter:blur(10px);">
+    <div style="background:#222;padding:8px 12px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #333;color:#fff;font-size:12px;border-radius:8px 8px 0 0;">
+        <span>⚙ LIVE DEBUGGER</span>
+        <div>
+            <button onclick="copyDebugReport()" style="background:#444;border:none;color:white;padding:4px 8px;border-radius:4px;cursor:pointer;font-size:10px;margin-left:5px;">📋 COPY FOR AI</button>
+            <button onclick="clearDebugLog()" style="background:#444;border:none;color:white;padding:4px 8px;border-radius:4px;cursor:pointer;font-size:10px;margin-left:5px;">🗑 CLEAR</button>
+            <button onclick="toggleDebugPanel()" style="background:#444;border:none;color:white;padding:4px 8px;border-radius:4px;cursor:pointer;font-size:10px;margin-left:5px;">✕</button>
+        </div>
+    </div>
+    <div id="uni-debug-content" style="flex:1;overflow-y:auto;padding:10px;color:#ccc;font-size:11px;"></div>
+</div>
+<script>
+(function() {
+    const content = document.getElementById('uni-debug-content');
+    const logs = [];
+    function addLog(type, message, details='') {
+        const time = new Date().toLocaleTimeString().split(' ')[0];
+        let lineInfo = '';
+        try { const stack=new Error().stack; if(stack){const lines=stack.split('\n');const caller=lines.find(l=>!l.includes('addLog')&&!l.includes('console.')&&l.includes('.html'));if(caller){const m=caller.match(/:(\d+):\d+/);if(m)lineInfo=`L${m[1]}`;}}} catch(e){}
+        let fd=''; if(details){try{fd=typeof details==='object'?JSON.stringify(details):String(details);}catch(e){fd='[Object]';}}
+        const div=document.createElement('div');
+        div.style.cssText='margin-bottom:4px;border-bottom:1px solid #333;padding-bottom:2px;word-wrap:break-word;';
+        div.innerHTML=`<span style="color:#666">[${time}]</span> <span style="color:#444;float:right;font-size:0.9em">${lineInfo}</span><strong>${type.toUpperCase()}:</strong> ${String(message).replace(/</g,'&lt;')} <span style="color:#888">${fd}</span>`;
+        content.appendChild(div); content.scrollTop=content.scrollHeight;
+        logs.push(`[${time}][${type.toUpperCase()}] ${message} ${fd} (${lineInfo})`);
+        if(type==='error'){document.getElementById('uni-debug-panel').style.display='flex';document.getElementById('uni-debug-icon').style.background='#f00';}
+    }
+    window.debugLog=(a,d)=>addLog('info',a,d);
+    window.onerror=(msg,url,line,col,error)=>{addLog('error',msg,`L:${line}`);return false;};
+    window.onunhandledrejection=e=>addLog('error','Unhandled Promise',e.reason);
+    const ol=console.log,ow=console.warn,oe=console.error;
+    console.log=(...a)=>{ol.apply(console,a);addLog('info',a.join(' '));};
+    console.warn=(...a)=>{ow.apply(console,a);addLog('warn',a.join(' '));};
+    console.error=(...a)=>{oe.apply(console,a);addLog('error',a.join(' '));};
+    window.toggleDebugPanel=()=>{const p=document.getElementById('uni-debug-panel');p.style.display=p.style.display==='flex'?'none':'flex';};
+    window.clearDebugLog=()=>{content.innerHTML='';logs.length=0;document.getElementById('uni-debug-icon').style.background='#ff0055';};
+    window.copyDebugReport=()=>{navigator.clipboard.writeText('AI DEBUG REPORT:\n\n'+logs.join('\n')).then(()=>{const b=document.querySelector('#uni-debug-panel button');const t=b.innerText;b.innerText='✅ COPIED!';setTimeout(()=>b.innerText=t,2000);});};
+    addLog('system','FeistTech Reader v9 — Debugger Ready.');
+})();
+</script>
+</body>
+</html>

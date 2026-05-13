@@ -1,0 +1,340 @@
+<style>
+    :root {
+        --ft-bg: #05050c;
+        --ft-primary: #00f3ff;
+        --ft-accent: #bc13fe;
+        --ft-text: #e0e0e0;
+        --ft-glass: rgba(255, 255, 255, 0.05);
+    }
+
+    #ft-overlay {
+        position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+        background: var(--ft-bg); z-index: 999999; display: none;
+        flex-direction: column; align-items: center; justify-content: center;
+        font-family: 'Segoe UI', system-ui, sans-serif;
+        backdrop-filter: blur(25px); color: var(--ft-text);
+    }
+
+    #ft-stage {
+        font-size: 5.5rem; font-weight: 800; height: 180px; width: 100%;
+        display: flex; align-items: center; justify-content: center;
+        text-shadow: 0 0 25px var(--ft-primary);
+        font-family: 'Courier New', monospace; letter-spacing: -2px;
+        cursor: pointer; user-select: none;
+    }
+
+    #ft-speaker-tag {
+        color: var(--ft-accent); font-size: 1.1rem; margin-bottom: 25px;
+        text-transform: uppercase; letter-spacing: 4px; font-weight: bold;
+    }
+
+    .ft-controls {
+        position: absolute; bottom: 40px; width: 90%; max-width: 600px;
+        background: var(--ft-glass); padding: 25px; border-radius: 16px;
+        border: 1px solid rgba(0, 243, 255, 0.2); box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+    }
+
+    .ft-row { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; }
+    .ft-row label { flex: 1; font-size: 0.7rem; color: var(--ft-primary); text-transform: uppercase; }
+    
+    #ft-progress-wrap { width: 100%; height: 4px; background: #222; margin-bottom: 20px; border-radius: 2px; overflow: hidden; cursor: pointer; }
+    #ft-progress-bar { width: 0%; height: 100%; background: var(--ft-primary); transition: width 0.1s linear; }
+
+    #ft-voice-map {
+        max-height: 140px; overflow-y: auto; margin-top: 15px;
+        border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;
+    }
+
+    .ft-btn {
+        background: var(--ft-accent); border: none; color: white;
+        padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold;
+        transition: 0.2s; text-transform: uppercase; font-size: 0.7rem;
+    }
+    .ft-btn:hover { filter: brightness(1.2); }
+    .ft-btn-nav { background: #333; min-width: 40px; }
+
+    #ft-trigger {
+        position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px;
+        background: var(--ft-accent); border-radius: 50%; display: flex;
+        align-items: center; justify-content: center; cursor: pointer;
+        z-index: 999998; box-shadow: 0 0 20px var(--ft-accent);
+        border: 2px solid white; font-size: 24px;
+    }
+
+    #ft-debug-panel {
+        position: absolute; top: 20px; left: 20px; font-size: 10px;
+        color: #00ff41; font-family: monospace; display: none;
+        background: rgba(0,0,0,0.9); padding: 10px; border: 1px solid #00ff41;
+        max-width: 300px; z-index: 1000000;
+    }
+</style>
+
+<div id="ft-trigger" onclick="toggleFTReader()">⚡</div>
+
+<div id="ft-overlay">
+    <div id="ft-debug-panel">
+        <div id="ft-debug-log">SYSTEM_READY</div>
+        <button class="ft-btn" style="background:#004411; margin-top:10px; font-size:9px;" onclick="exportFTTelemetry()">EXPORT_TELEMETRY.MD</button>
+    </div>
+    
+    <div id="ft-speaker-tag">NARRATOR</div>
+    
+    <div id="ft-stage" ondblclick="seekFTWord(10)" title="Double-click to skip ahead">READY</div>
+    
+    <div class="ft-controls">
+        <div id="ft-progress-wrap" onclick="seekFTSegment(event)"><div id="ft-progress-bar"></div></div>
+        
+        <div class="ft-row" style="justify-content: center;">
+            <button class="ft-btn ft-btn-nav" onclick="skipFTSegment(-1)">«</button>
+            <button class="ft-btn" id="ft-play-btn" style="min-width: 120px;" onclick="handleFTPlayback()">INITIALIZE</button>
+            <button class="ft-btn ft-btn-nav" onclick="skipFTSegment(1)">»</button>
+        </div>
+        
+        <div class="ft-row">
+            <label>WPM: <span id="ft-wpm-display">300</span></label>
+            <input type="range" min="150" max="900" value="300" style="flex:2" id="ft-wpm-input" oninput="updateFTWPM(this.value)">
+            <button class="ft-btn" style="background:#444;" id="ft-exit-btn" onclick="toggleFTReader()">EXIT</button>
+        </div>
+
+        <div class="ft-row" style="border-top:1px solid #222; padding-top:10px; justify-content: space-between;">
+            <button class="ft-btn" style="background:#222; border:1px solid #444;" onclick="saveFTConfig()">SAVE_CONFIG</button>
+            <button class="ft-btn" style="background:#222; border:1px solid #444;" onclick="document.getElementById('ft-config-loader').click()">LOAD_CONFIG</button>
+            <input type="file" id="ft-config-loader" hidden onchange="loadFTConfig(this)">
+        </div>
+
+        <div id="ft-voice-map"></div>
+    </div>
+</div>
+
+<script>
+    const ftSynth = window.speechSynthesis;
+    let ftVoices = [];
+    let ftCharacterMap = { "NARRATOR": null };
+    let ftIsPlaying = false;
+    let ftSegments = [];
+    let ftActiveIndex = 0;
+    let ftTelemetry = [];
+    let ftCurrentUtterance = null;
+    let ftCurrentText = "";
+
+    // === MAIN CONTENT EXTRACTOR (Readability-style, zero deps) ===
+    function getMainText() {
+        const clone = document.documentElement.cloneNode(true);
+        
+        // Strip obvious junk
+        clone.querySelectorAll('nav, header, footer, aside, script, style, noscript, iframe, .advertisement, .ad, .cookie, .popup, #sidebar').forEach(el => el.remove());
+        
+        // Score containers by text length
+        let bestEl = clone.body;
+        let maxScore = 0;
+        clone.querySelectorAll('div, section, article, main, [role="main"]').forEach(el => {
+            const text = el.innerText || '';
+            const score = text.length;
+            if (score > maxScore && text.split(/\s+/).length > 50) { // bias toward real content
+                maxScore = score;
+                bestEl = el;
+            }
+        });
+        
+        return (bestEl.innerText || clone.body.innerText).replace(/\s+/g, ' ').trim();
+    }
+
+    // 1. CORE SYNC & PLAYBACK
+    function handleFTPlayback() {
+        if (ftIsPlaying) {
+            ftSynth.cancel();
+            ftIsPlaying = false;
+            document.getElementById('ft-play-btn').innerText = "RESUME";
+            logFT("Playback_Paused");
+            return;
+        }
+
+        if (ftSegments.length === 0) {
+            const rawText = getMainText();
+            ftSegments = rawText.split(/(?=%[a-zA-Z0-9]+)/g).filter(s => s.trim().length > 0);
+            logFT(`Segments_Parsed: ${ftSegments.length} (main content only)`);
+        }
+
+        ftIsPlaying = true;
+        document.getElementById('ft-play-btn').innerText = "PAUSE";
+        processFTSegment();
+    }
+
+    function processFTSegment() {
+        if (ftActiveIndex >= ftSegments.length || !ftIsPlaying) {
+            ftIsPlaying = false;
+            document.getElementById('ft-play-btn').innerText = "FINISH";
+            return;
+        }
+
+        ftCurrentText = ftSegments[ftActiveIndex].trim();
+        let speaker = "NARRATOR";
+        
+        if (ftCurrentText.startsWith('%')) {
+            const firstSpace = ftCurrentText.indexOf(' ');
+            if (firstSpace !== -1) {
+                speaker = ftCurrentText.substring(1, firstSpace).toUpperCase();
+                ftCurrentText = ftCurrentText.substring(firstSpace).trim();
+            }
+        }
+
+        document.getElementById('ft-speaker-tag').innerText = speaker;
+        ftCurrentUtterance = new SpeechSynthesisUtterance(ftCurrentText);
+        
+        const vId = ftCharacterMap[speaker] || ftCharacterMap["NARRATOR"];
+        ftCurrentUtterance.voice = ftVoices.find(v => v.id === vId)?.raw || ftVoices[0]?.raw;
+        ftCurrentUtterance.rate = document.getElementById('ft-wpm-input').value / 200;
+
+        ftCurrentUtterance.onboundary = (e) => {
+            if (e.name === 'word') {
+                document.getElementById('ft-stage').innerText = ftCurrentText.substr(e.charIndex, e.charLength);
+                updateFTProgressBar(e.charIndex / ftCurrentText.length * 100);
+            }
+        };
+
+        ftCurrentUtterance.onend = () => {
+            if (ftIsPlaying) {
+                ftActiveIndex++;
+                updateFTProgressBar(0);
+                processFTSegment();
+            }
+        };
+
+        ftSynth.speak(ftCurrentUtterance);
+    }
+
+    function updateFTProgressBar(percent) {
+        document.getElementById('ft-progress-bar').style.width = percent + "%";
+    }
+
+    // 2. NAVIGATION & SEEKING
+    function skipFTSegment(dir) {
+        ftSynth.cancel();
+        ftActiveIndex = Math.max(0, Math.min(ftSegments.length - 1, ftActiveIndex + dir));
+        logFT(`Skipped_To_Scene: ${ftActiveIndex}`);
+        updateFTProgressBar(0);
+        if (ftIsPlaying) processFTSegment();
+        else previewCurrentSegment();
+    }
+
+    function seekFTWord(count) {
+        logFT("Seek_Requested_Proxy_SegmentSkip");
+        skipFTSegment(1);
+    }
+
+    function previewCurrentSegment() {
+        let seg = ftSegments[ftActiveIndex].trim();
+        document.getElementById('ft-speaker-tag').innerText = seg.startsWith('%') ? seg.split(' ')[0].substring(1).toUpperCase() : "NARRATOR";
+        document.getElementById('ft-stage').innerText = "READY";
+    }
+
+    // 3. VOICE & CONFIG
+    function loadFTVoices() {
+        const raw = ftSynth.getVoices();
+        ftVoices = raw
+            .filter(v => v.lang.startsWith('en'))
+            .map(v => ({
+                id: v.name,
+                label: `${v.lang.split('-')[1] || 'EN'}, ${v.name.replace(/Microsoft|Online|Natural|Auto|(\(.*\))/g, '').trim()}, English`,
+                raw: v
+            }))
+            .sort((a, b) => a.label.localeCompare(b.label));
+        renderFTVoiceUI();
+    }
+
+    function saveFTConfig() {
+        const config = { characterMap: ftCharacterMap, wpm: document.getElementById('ft-wpm-input').value };
+        const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = `ft_config_${Date.now()}.json`; a.click();
+        logFT("Config_Exported");
+    }
+
+    function loadFTConfig(input) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const config = JSON.parse(e.target.result);
+            ftCharacterMap = config.characterMap || ftCharacterMap;
+            document.getElementById('ft-wpm-input').value = config.wpm || 300;
+            updateFTWPM(config.wpm || 300);
+            renderFTVoiceUI();
+            logFT("Config_Loaded");
+        };
+        reader.readAsText(input.files[0]);
+    }
+
+    // 4. UI & UTILITIES
+    function toggleFTReader() {
+        const overlay = document.getElementById('ft-overlay');
+        const isVisible = overlay.style.display === 'flex';
+        overlay.style.display = isVisible ? 'none' : 'flex';
+        if (!isVisible) scanFTCharacters();
+    }
+
+    function scanFTCharacters() {
+        const mainText = getMainText();
+        const regex = /%([a-zA-Z0-9]+)/g;
+        let match;
+        while ((match = regex.exec(mainText)) !== null) {
+            const name = match[1].toUpperCase();
+            if (!(name in ftCharacterMap)) ftCharacterMap[name] = null;
+        }
+        renderFTVoiceUI();
+    }
+
+    function renderFTVoiceUI() {
+        const container = document.getElementById('ft-voice-map');
+        container.innerHTML = '<div style="font-size:0.6rem; color:#444; margin-bottom:8px;">VOICE_ROSTER</div>';
+        Object.keys(ftCharacterMap).forEach(char => {
+            const row = document.createElement('div');
+            row.className = 'ft-row';
+            row.innerHTML = `<label style="width:90px">${char}</label>
+                             <select onchange="ftCharacterMap['${char}'] = this.value" style="flex:2; background:#111; color:#00f3ff; border:1px solid #222; font-size:0.75rem;">
+                                <option value="">Default</option>
+                                ${ftVoices.map(v => `<option value="${v.id}">${v.label}</option>`).join('')}
+                             </select>`;
+            const select = row.querySelector('select');
+            if (ftCharacterMap[char]) select.value = ftCharacterMap[char];
+            container.appendChild(row);
+        });
+    }
+
+    function updateFTWPM(val) { document.getElementById('ft-wpm-display').innerText = val; }
+
+    // === 5. DEBUGGER & TELEMETRY ===
+    function logFT(msg) {
+        const timestamp = new Date().toLocaleTimeString();
+        ftTelemetry.push(`[${timestamp}] ${msg}`);
+        const log = document.getElementById('ft-debug-log');
+        log.innerHTML = ftTelemetry.slice(-8).join('<br>');
+    }
+
+    function toggleFTDebug() {
+        const panel = document.getElementById('ft-debug-panel');
+        panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+        logFT("Debug_Toggled");
+    }
+
+    function exportFTTelemetry() {
+        const data = {
+            timestamp: new Date().toISOString(),
+            url: window.location.href,
+            segments_count: ftSegments.length,
+            voice_count: ftVoices.length,
+            character_map: Object.keys(ftCharacterMap),
+            log: ftTelemetry
+        };
+        const blob = new Blob([`# FeistTech Telemetry\n\n\`\`\`json\n${JSON.stringify(data, null, 2)}\n\`\`\``], { type: 'text/markdown' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url;
+        a.download = `ft_telemetry_${Date.now()}.md`; a.click();
+    }
+
+    document.getElementById('ft-exit-btn').addEventListener('click', (e) => {
+        if (e.detail === 3) toggleFTDebug();
+    });
+
+    if (ftSynth.onvoiceschanged !== undefined) ftSynth.onvoiceschanged = loadFTVoices;
+    loadFTVoices();
+</script>

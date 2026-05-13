@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>FeistTech: Omni-Pattern Grand Forge v8</title>
+    <!-- Three.js for 3D Plane & Warp -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-dark: #050505;
+            --glass-bg: rgba(15, 15, 20, 0.85);
+            --glass-border: rgba(0, 243, 255, 0.4);
+            --neon-cyan: #00f3ff;
+            --neon-magenta: #ff00ff;
+            --neon-gold: #ffd700;
+            --text-light: #F5F5F7;
+            --text-dark: #8A8A8E;
+        }
+
+        body, html { margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidden; background: var(--bg-dark); font-family: 'Inter', sans-serif; touch-action: none; user-select: none; }
+        canvas { display: block; position: absolute; top: 0; left: 0; z-index: 1; }
+
+        /* --- TACTILE JOYSTICKS --- */
+        .toggle-container { position: fixed; display: flex; flex-direction: column; align-items: center; z-index: 101; padding: 10px; }
+        .toggle { width: 54px; height: 54px; background-color: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 50%; cursor: grab; position: relative; transition: transform 0.1s ease; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        .toggle:active { transform: scale(0.9); cursor: grabbing; border-color: var(--neon-magenta); }
+        .toggle-stick { width: 28px; height: 28px; background-color: rgba(0, 243, 255, 0.5); border-radius: 50%; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); transition: transform 0.1s ease-out; pointer-events: none; box-shadow: inset 0 0 10px rgba(0,0,0,0.8); }
+        .toggle-status { margin-top: 8px; font-size: 0.65rem; font-weight: 800; color: var(--neon-cyan); user-select: none; text-align: center; background-color: rgba(0,0,0,0.6); padding: 4px 8px; border-radius: 6px; text-transform: uppercase; letter-spacing: 1px; border: 1px solid rgba(0, 243, 255, 0.2); white-space: nowrap;}
+        
+        #L1-container { top: 5%; left: 0; } #L2-container { top: 27%; left: 0; } #L3-container { top: 50%; left: 0; transform: translateY(-50%); } #L4-container { bottom: 27%; left: 0; } #L5-container { bottom: 5%; left: 0; }
+        #R1-container { top: 5%; right: 0; } #R2-container { top: 27%; right: 0; } #R3-container { top: 50%; right: 0; transform: translateY(-50%); } #R4-container { bottom: 27%; right: 0; } #R5-container { bottom: 5%; right: 0; }
+
+        /* --- CENTRAL HUD --- */
+        #central-display {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.95);
+            min-width: 280px; padding: 20px; background-color: var(--glass-bg);
+            border: 1px solid var(--neon-cyan); border-radius: 20px;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            text-align: center; z-index: 100; pointer-events: none; backdrop-filter: blur(20px);
+            opacity: 0; transition: opacity 0.2s ease, transform 0.2s ease; box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+        }
+        #central-display.visible { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        #central-display .title { font-size: 0.85rem; font-weight: 600; color: var(--text-dark); text-transform: uppercase; letter-spacing: 2px; }
+        #central-display .value { font-size: 1.4rem; font-weight: 800; color: var(--neon-cyan); margin-top: 8px; text-shadow: 0 0 10px rgba(0,243,255,0.4); }
+        #central-display .subtext { font-size: 0.7rem; color: var(--neon-magenta); margin-top: 5px; font-weight: 600; }
+
+        /* Minimal Header Controls */
+        #top-ui { position: absolute; top: 15px; left: 50%; transform: translateX(-50%); z-index: 200; display: flex; gap: 10px; }
+        .mini-btn { background: rgba(0,0,0,0.7); border: 1px solid var(--glass-border); color: var(--neon-cyan); padding: 8px 15px; border-radius: 8px; font-family: inherit; font-weight: 800; font-size: 0.7rem; cursor: pointer; text-transform: uppercase; backdrop-filter: blur(5px); }
+        .mini-btn:hover { background: rgba(0,243,255,0.2); }
+        .mini-btn.active { background: var(--neon-cyan); color: #000; box-shadow: 0 0 15px var(--neon-cyan); }
+        .mini-btn.recording { border-color: #ff0055; color: #ff0055; animation: pulseRed 1.5s infinite; }
+        @keyframes pulseRed { 0% { box-shadow: 0 0 0 0 rgba(255,0,85,0.4); } 70% { box-shadow: 0 0 0 10px rgba(255,0,85,0); } 100% { box-shadow: 0 0 0 0 rgba(255,0,85,0); } }
+
+        /* --- MODALS --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); backdrop-filter: blur(5px);
+            display: none; justify-content: center; align-items: center; z-index: 1000;
+        }
+        .modal-box {
+            background: var(--glass-bg); border: 2px solid var(--neon-cyan);
+            border-radius: 15px; padding: 20px; text-align: center;
+            box-shadow: 0 0 30px rgba(0,243,255,0.3); color: #fff;
+        }
+        .modal-box h2 { margin-top: 0; color: var(--neon-gold); }
+        .res-btn {
+            background: rgba(0,0,0,0.5); border: 1px solid var(--neon-cyan); color: var(--neon-cyan);
+            padding: 10px 20px; margin: 5px; border-radius: 5px; cursor: pointer;
+            font-family: inherit; font-weight: bold; font-size: 1.1rem; transition: 0.2s;
+        }
+        .res-btn:hover { background: var(--neon-cyan); color: #000; }
+        #loading-text { display: none; margin-top: 15px; color: var(--neon-magenta); font-weight: bold; animation: pulse 1s infinite; }
+        @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
+    </style>
+</head>
+<body>
+
+    <div id="canvas-container"></div>
+    <input type="file" id="import-input" accept=".json" style="display: none;" onchange="importTelemetryJSON(event)">
+
+    <div id="top-ui">
+        <button class="mini-btn" onclick="toggleRecord()" id="btn-rec">Tape Rec</button>
+        <button class="mini-btn" onclick="toggleUI()" id="btn-ui"><i class="fa-solid fa-eye-slash"></i> UI</button>
+        <button class="mini-btn" onclick="clearCanvas()">Wipe</button>
+    </div>
+
+    <!-- Joystick Containers (Injected via JS) -->
+
+    <div id="central-display">
+        <span class="title">System Online</span>
+        <span class="value">Grand Forge Ready</span>
+        <span class="subtext">Use Joysticks to Navigate</span>
+    </div>
+
+    <!-- Export Modal -->
+    <div id="export-modal" class="modal-overlay">
+        <div class="modal-box">
+            <h2>Select Vector Render Resolution</h2>
+            <p style="font-size: 0.8rem; color: #aaa; margin-bottom: 15px;">Mathematical Offline Reconstruction</p>
+            <div>
+                <button class="res-btn" onclick="renderHighRes(1)">1K</button>
+                <button class="res-btn" onclick="renderHighRes(2)">2K</button>
+                <button class="res-btn" onclick="renderHighRes(4)">4K</button>
+                <button class="res-btn" onclick="renderHighRes(8)">8K</button>
+            </div>
+            <div id="loading-text">Re-rendering Geometry. Please wait...</div>
+            <button onclick="document.getElementById('export-modal').style.display='none'" style="margin-top: 15px; background: transparent; border: none; color: #888; cursor: pointer; text-decoration: underline;">Cancel</button>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * ============================================================================
+         * [MODULE: STATE & CONFIGURATION]
+         * ============================================================================
+         */
+        const CONFIG = {
+            textureSize: 2048,
+            is3D: false, 
+            isWarp: false,
+            mirrors: 6.0,
+            gridMode: 0, 
+            fadeRate: 0.02, 
+            thickness: 1.0,
+            size: 150,
+            patternIdx: 2, // Default to Font Forge
+            paletteIdx: 0,
+            time: 0,
+            glitchMode: true,
+            isRecording: false,
+            param1: 0.5, // Dynamic Math 1
+            param2: 0.5  // Dynamic Math 2
+        };
+
+        // --- GLITCH GROUP ISOLATION ---
+        let currentGlitchGroup = 0; 
+
+        // --- FONT FORGE CLUSTER STATE ---
+        const CLUSTER = {
+            mode: 'draw', // 'off', 'set', 'draw'
+            origin: null,
+            offsets: [{dx: 0, dy: 0}]
+        };
+
+        // --- TELEMETRY & GHOSTS ---
+        let telemetryLog = [];
+        let sessionStartTime = Date.now();
+        const activeTouches = new Map(); // K: id, V: { points:[], groupId: int }
+        let gestureStack = [];           // Tape Recorder
+        let currentStroke = [];          // Live path
+        let isDrawing = false;
+        let lastUV = null;
+        let uiHidden = false;
+
+        let activeToggle = null, startX = 0, startY = 0, ticker = null, displayTimeout = null;
+        const DRAG_THRESHOLD = 15;
+
+        /**
+         * ============================================================================
+         * [MODULE: PALETTES]
+         * PASTE YOUR MASSIVE ARRAYS HERE. 
+         * ============================================================================
+         */
+        const PALETTES = {
+            "Neon Prismatic": ["#FF0000", "#FF7F00", "#FFFF00", "#7FFF00", "#00FF00", "#00FF7F", "#00FFFF", "#007FFF", "#0000FF", "#7F00FF"],
+            "Cyberpunk Core": ["#00FFFF", "#FF00FF", "#00FF00", "#FFFF00", "#FF0000", "#7D00FF"],
+            "Golden Sacred": ["#FFD700", "#FFA500", "#FF8C00", "#DAA520", "#B8860B", "#F0E68C"],
+            "Deep Ocean": ["#001d3d", "#003566", "#2196F3", "#00D9FF", "#7FD8BE", "#ffffff"],
+            "Ghost Matrix": ["rgba(255,255,255,0.8)", "rgba(0,243,255,0.6)", "rgba(255,0,255,0.6)", "rgba(255,255,0,0.5)"]
+            // Add as many as you want here...
+        };
+        const PALETTE_KEYS = Object.keys(PALETTES);
+
+        /**
+         * ============================================================================
+         * [MODULE: DYNAMIC MATH PATTERNS]
+         * ============================================================================
+         */
+        const PATTERNS = [
+            {
+                name: "Standard Line",
+                draw: (ctx, x, y, size, speed, pal, p, prev) => {
+                    if(!prev) return;
+                    ctx.beginPath(); ctx.moveTo(prev.x, prev.y); ctx.lineTo(x, y);
+                    ctx.strokeStyle = pal[0]; ctx.lineWidth = p.thickness; ctx.stroke();
+                }
+            },
+            {
+                name: "Lynchpin (Terry's Space)",
+                draw: (ctx, x, y, size, speed, pal, p, prev) => {
+                    // L5 Up/Down changes spikes (3 to 15)
+                    const points = Math.floor(3 + p.param1 * 12);
+                    // L5 Left/Right changes balloon/mace inflation
+                    const outerRadius = size * 0.5;
+                    const innerRadius = outerRadius * p.param2;
+                    
+                    ctx.beginPath();
+                    for (let i = 0; i < points * 2; i++) {
+                        const radius = i % 2 === 0 ? outerRadius : innerRadius;
+                        const angle = (i * Math.PI) / points - Math.PI / 2 + (Date.now()*0.001); 
+                        const px = x + Math.cos(angle) * radius;
+                        const py = y + Math.sin(angle) * radius;
+                        if (i === 0) ctx.moveTo(px, py);
+                        else ctx.lineTo(px, py);
+                    }
+                    ctx.closePath();
+                    ctx.strokeStyle = pal[0]; ctx.lineWidth = p.thickness; ctx.stroke();
+                }
+            },
+            {
+                name: "Font Forge (Cluster)",
+                draw: (ctx, x, y, size, speed, pal, p, prev) => {
+                    // Invisible anchor. The Angel-Hair glitch logic handles the multi-wall drawing.
+                }
+            },
+            {
+                name: "True Golden Spiral",
+                draw: (ctx, x, y, size, speed, pal, p) => {
+                    const PHI = 1.6180339887;
+                    const B = Math.log(PHI) / (Math.PI / 2); 
+                    
+                    // L5 Up/Down alters tightness (turns)
+                    const turns = 1 + p.param1 * 5; 
+                    // L5 Left/Right alters logarithmic spread
+                    const spread = 0.02 + p.param2 * 0.1;
+                    
+                    const angleStep = 0.15; 
+                    let lastX = x, lastY = y, colIdx = 0;
+                    const anim = (Date.now() / 400) % (Math.PI * 2);
+                    
+                    for(let a = 0; a < Math.PI * turns * 4; a += angleStep) {
+                        const r = size * spread * Math.exp(B * a); 
+                        const px = x + Math.cos(a + anim) * r;
+                        const py = y + Math.sin(a + anim) * r;
+                        
+                        if(a !== 0){
+                            ctx.strokeStyle = pal[colIdx++ % pal.length];
+                            ctx.lineWidth = p.thickness;
+                            ctx.beginPath(); ctx.moveTo(lastX, lastY); ctx.lineTo(px, py); ctx.stroke();
+                        }
+                        lastX = px; lastY = py;
+                    }
+                }
+            }
+            // Add as many as you want here...
+        ];
+
+        /**
+         * ============================================================================
+         * [MODULE: THREE.JS ENGINE]
+         * ============================================================================
+         */
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 0, 150);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        container.appendChild(renderer.domElement);
+
+        const drawCanvas = document.createElement('canvas');
+        drawCanvas.width = CONFIG.textureSize;
+        drawCanvas.height = CONFIG.textureSize;
+        const drawCtx = drawCanvas.getContext('2d');
+        
+        drawCtx.fillStyle = 'rgba(0,0,0,1)'; 
+        drawCtx.fillRect(0,0, drawCanvas.width, drawCanvas.height);
+
+        const drawTexture = new THREE.CanvasTexture(drawCanvas);
+        drawTexture.minFilter = THREE.LinearFilter;
+        drawTexture.magFilter = THREE.LinearFilter;
+
+        const geometry = new THREE.PlaneGeometry(100, 100, 128, 128); 
+        geometry.userData = { originalPositions: geometry.attributes.position.clone() };
+        const material = new THREE.MeshBasicMaterial({ map: drawTexture, transparent: true, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending });
+        const plane = new THREE.Mesh(geometry, material);
+        scene.add(plane);
+
+        /**
+         * ============================================================================
+         * [MODULE: KINEMATIC RENDERING & RACE CONDITION GLITCH]
+         * ============================================================================
+         */
+        function getCenters() {
+            const w = drawCanvas.width; const h = drawCanvas.height;
+            if (CONFIG.gridMode === 0) return [{x: w/2, y: h/2}];
+            if (CONFIG.gridMode === 1) return [{x: w/4, y: h/2}, {x: w*0.75, y: h/2}]; 
+            if (CONFIG.gridMode === 2) return [{x: w/4, y: h/4}, {x: w*0.75, y: h/4}, {x: w/4, y: h*0.75}, {x: w*0.75, y: h*0.75}];
+            if (CONFIG.gridMode === 3) return [ {x: w/6, y: h/6}, {x: w/2, y: h/6}, {x: w*5/6, y: h/6}, {x: w/6, y: h/2}, {x: w/2, y: h/2}, {x: w*5/6, y: h/2}, {x: w/6, y: h*5/6}, {x: w/2, y: h*5/6}, {x: w*5/6, y: h*5/6} ];
+            return [{x: w/2, y: h/2}];
+        }
+
+        // Abstraction for High-Res Vector Export compatibility
+        function coreRenderPass(ctxTarget, activePtsMap, uv, pat, pal, config, c, isStaticPass = false) {
+            const step = (Math.PI * 2) / config.mirrors;
+            const loops = Math.ceil(config.mirrors);
+
+            ctxTarget.save();
+            ctxTarget.translate(c.x, c.y);
+
+            for(let i=0; i<loops; i++) {
+                ctxTarget.save();
+                ctxTarget.rotate(i * step);
+                if(config.mirrors >= 2 && i%2===1) ctxTarget.scale(1, -1);
+                
+                // 1. Geometric Pattern (e.g. Spiral)
+                if(CLUSTER.mode === 'off' || CLUSTER.mode === 'set') {
+                    pat.draw(ctxTarget, uv.x - c.x, uv.y - c.y, config.size, 10, pal, config, null);
+                }
+
+                // 2. TRUE ANGEL-HAIR GLITCH MESH (Per-Wall Color Assignment)
+                if (config.glitchMode && activePtsMap.size > 1) {
+                    ctxTarget.lineWidth = isStaticPass ? config.thickness * 0.5 : 0.5; // Razor thin bounding polygon
+                    ctxTarget.lineCap = "round";
+                    ctxTarget.lineJoin = "round";
+
+                    const groupMap = new Map();
+                    activePtsMap.forEach(t => {
+                        if(!groupMap.has(t.groupId)) groupMap.set(t.groupId, []);
+                        groupMap.get(t.groupId).push(t);
+                    });
+
+                    groupMap.forEach((groupTouches) => {
+                        const pts = groupTouches.map(t => t.points[t.points.length - 1]).filter(p => p);
+                        
+                        if(pts.length > 1) {
+                            // Exact mapping: Wall J gets Palette Color J
+                            for(let j=0; j<pts.length; j++) {
+                                let nextJ = (j+1) % pts.length;
+                                
+                                ctxTarget.beginPath();
+                                ctxTarget.strokeStyle = pal[j % pal.length];
+                                ctxTarget.moveTo(pts[j].x - c.x, pts[j].y - c.y);
+                                ctxTarget.lineTo(pts[nextJ].x - c.x, pts[nextJ].y - c.y);
+                                ctxTarget.stroke();
+                            }
+                        }
+                    });
+                }
+                ctxTarget.restore();
+            }
+            ctxTarget.restore();
+        }
+
+        function drawOnTexture(uv) {
+            const w = drawCanvas.width;
+            const h = drawCanvas.height;
+            const pat = PATTERNS[CONFIG.patternIdx];
+            const pal = PALETTES[PALETTE_KEYS[CONFIG.paletteIdx]];
+
+            const absX = uv.x * w;
+            const absY = (1 - uv.y) * h;
+            const centers = getCenters();
+
+            centers.forEach(c => {
+                coreRenderPass(drawCtx, activeTouches, {x: absX, y: absY}, pat, pal, CONFIG, c, false);
+            });
+            drawTexture.needsUpdate = true;
+        }
+
+        /**
+         * ============================================================================
+         * [MODULE: POINTER EVENTS & DYNAMIC KINEMATICS]
+         * ============================================================================
+         */
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+        const pointerLocs = new Map(); 
+        
+        let tapStartPos = null; 
+        let maxDragDist = 0;
+
+        function onPointerDown(e) {
+            if(e.target.closest('.toggle') || e.target.closest('.modal-overlay') || e.target.closest('.mini-btn')) return;
+            isDrawing = true;
+            maxDragDist = 0;
+            tapStartPos = {x: e.clientX, y: e.clientY};
+            pointerLocs.set(e.pointerId, {x: e.clientX, y: e.clientY, time: Date.now()});
+            
+            if (CLUSTER.mode === 'set') {
+                raycaster.setFromCamera(new THREE.Vector2((e.clientX / window.innerWidth) * 2 - 1, -(e.clientY / window.innerHeight) * 2 + 1), camera);
+                const intersects = raycaster.intersectObject(plane);
+                if (intersects.length > 0) {
+                    const uv = intersects[0].uv;
+                    if(!CLUSTER.origin) {
+                        CLUSTER.origin = {x: uv.x, y: uv.y};
+                        CLUSTER.offsets = [{dx: 0, dy: 0}]; 
+                        showHUD("Anchor Set", "Tap to add fingers");
+                    } else {
+                        CLUSTER.offsets.push({ dx: uv.x - CLUSTER.origin.x, dy: uv.y - CLUSTER.origin.y });
+                        showHUD("Finger Added", `Total control points: ${CLUSTER.offsets.length}`);
+                    }
+                }
+                isDrawing = false; 
+                return;
+            }
+            onPointerMove(e); 
+        }
+
+        function onPointerMove(e) {
+            if (!isDrawing || CLUSTER.mode === 'set') return;
+            e.preventDefault(); 
+            
+            const pId = e.pointerId;
+            const cx = e.clientX; const cy = e.clientY;
+            const pressure = e.pointerType === 'pen' ? e.pressure : (e.pressure || 0.5);
+
+            let velocity = 0; let heading = 0; 
+            const now = Date.now();
+            
+            if(pointerLocs.has(pId)) {
+                const prev = pointerLocs.get(pId);
+                const dt = now - prev.time;
+                if(dt > 0) {
+                    const dx = cx - prev.x; const dy = cy - prev.y;
+                    velocity = Math.hypot(dx, dy) / dt;
+                    heading = Math.atan2(dy, dx); // INDY 500 Steering Logic
+                }
+            }
+            pointerLocs.set(pId, {x: cx, y: cy, time: now});
+
+            if(tapStartPos) {
+                const dragDist = Math.hypot(cx - tapStartPos.x, cy - tapStartPos.y);
+                if(dragDist > maxDragDist) maxDragDist = dragDist;
+            }
+
+            mouse.x = (cx / window.innerWidth) * 2 - 1;
+            mouse.y = -(cy / window.innerHeight) * 2 + 1;
+
+            if (CONFIG.is3D && e.buttons === 2) {
+                plane.rotation.y += e.movementX * 0.005 || 0;
+                plane.rotation.x += e.movementY * 0.005 || 0;
+            } else if (isDrawing) {
+                raycaster.setFromCamera(mouse, camera);
+                const intersects = raycaster.intersectObject(plane);
+                
+                if (intersects.length > 0) {
+                    const uv = intersects[0].uv;
+                    
+                    if(CONFIG.isRecording) {
+                        telemetryLog.push({
+                            t: Date.now() - sessionStartTime,
+                            id: pId, x: parseFloat(uv.x.toFixed(4)), y: parseFloat(uv.y.toFixed(4)),
+                            p: parseFloat(pressure.toFixed(3)), v: parseFloat(velocity.toFixed(3)), h: parseFloat(heading.toFixed(3))
+                        });
+                    }
+
+                    // Save Live Stroke
+                    currentStroke.push({x: uv.x, y: uv.y, p: pressure, v: velocity, h: heading, id: pId, gId: currentGlitchGroup});
+
+                    if(!activeTouches.has(pId)) activeTouches.set(pId, { points:[], rawId: pId, groupId: currentGlitchGroup });
+                    activeTouches.get(pId).points.push({x: uv.x * drawCanvas.width, y: (1-uv.y) * drawCanvas.height});
+                    
+                    // --- KINEMATIC FONT FORGE ---
+                    if (CLUSTER.mode === 'draw' && PATTERNS[CONFIG.patternIdx].name.includes("Cluster")) {
+                        CLUSTER.offsets.forEach((offset, idx) => {
+                            if(idx === 0) return; 
+                            
+                            const spread = 0.2 + (pressure * 2.5); // Pressure = Spread
+                            const cosH = Math.cos(heading);        // Velocity Angle = Steering
+                            const sinH = Math.sin(heading);
+                            
+                            const dynDx = (offset.dx * cosH - offset.dy * sinH) * spread;
+                            const dynDy = (offset.dx * sinH + offset.dy * cosH) * spread;
+                            
+                            const vId = pId + "_v" + idx;
+                            if(!activeTouches.has(vId)) activeTouches.set(vId, { points:[], rawId: pId + idx, groupId: currentGlitchGroup });
+                            
+                            activeTouches.get(vId).points.push({
+                                x: (uv.x + dynDx) * drawCanvas.width, 
+                                y: (1 - (uv.y + dynDy)) * drawCanvas.height
+                            });
+                        });
+                    }
+                    
+                    drawOnTexture(intersects[0].uv);
+                }
+            }
+        }
+
+        function trimPoints(touchObj) {
+            if(touchObj.points.length > 2) touchObj.points.shift();
+        }
+
+         function onPointerUp(e) {
+            isDrawing = false;
+            
+            // PING-PONG GHOST SAVE: Snapshot the exact cluster setup
+            if(currentStroke.length > 5) { 
+                gestureStack.push({
+                    points: [...currentStroke], 
+                    curIdx: currentStroke.length - 1, 
+                    dir: -1,                          
+                    id: "ghost_" + Date.now(),
+                    groupId: currentGlitchGroup,
+                    isCluster: CLUSTER.mode === 'draw' && PATTERNS[CONFIG.patternIdx].name.includes("Cluster"),
+                    clusterOffsets: JSON.parse(JSON.stringify(CLUSTER.offsets)) // Save the cluster math
+                });
+            }
+            currentStroke = [];
+            activeTouches.clear();
+            pointerLocs.delete(e.pointerId);
+        }
+
+        /**
+         * ============================================================================
+         * [MODULE: TACTILE JOYSTICK MAP]
+         * ============================================================================
+         */
+        function createToggles() {
+            const sides = ['L', 'R']; const positions = [1, 2, 3, 4, 5];
+            const labels = {
+                'L1': 'Mirrors/Grid', 'L2': 'Size/Thick', 'L3': 'Pattern/Color', 'L4': 'Screen/Data', 'L5': 'Math Mods',
+                'R1': 'Font Forge', 'R2': 'Glitch Isolate', 'R3': '3D/Warp', 'R4': 'Fade Rate', 'R5': 'Unassigned'
+            };
+            sides.forEach(side => {
+                positions.forEach(num => {
+                    const id = `${side}${num}`;
+                    const div = document.createElement('div');
+                    div.id = `${id}-container`; div.className = 'toggle-container';
+                    div.innerHTML = `<div id="${id}" class="toggle"><div class="toggle-stick"></div></div><div id="${id}-status" class="toggle-status">${labels[id]}</div>`;
+                    document.body.appendChild(div);
+                    div.querySelector('.toggle').addEventListener('pointerdown', startDrag);
+                    div.querySelector('.toggle').addEventListener('touchstart', startDrag, {passive:false});
+                });
+            });
+        }
+
+        function updateState(direction) {
+            if (!activeToggle) return;
+            const id = activeToggle.id;
+            
+            // L-SIDE
+            if(id === 'L1') { 
+                if(direction === 'up') CONFIG.mirrors = Math.min(32, CONFIG.mirrors + 0.1);
+                if(direction === 'down') CONFIG.mirrors = Math.max(1, CONFIG.mirrors - 0.1);
+                if(direction === 'right') CONFIG.gridMode = (CONFIG.gridMode + 1) % 4;
+                if(direction === 'left') CONFIG.gridMode = (CONFIG.gridMode - 1 + 4) % 4;
+            }
+            if(id === 'L2') {
+                if(direction === 'right') CONFIG.size = Math.min(500, CONFIG.size + 5);
+                if(direction === 'left') CONFIG.size = Math.max(5, CONFIG.size - 5);
+                if(direction === 'up') CONFIG.thickness = Math.min(20, CONFIG.thickness + 0.1);
+                if(direction === 'down') CONFIG.thickness = Math.max(0.1, CONFIG.thickness - 0.1);
+            }
+            if(id === 'L3') {
+                if(direction === 'up') CONFIG.patternIdx = (CONFIG.patternIdx + 1) % PATTERNS.length;
+                if(direction === 'down') CONFIG.patternIdx = (CONFIG.patternIdx - 1 + PATTERNS.length) % PATTERNS.length;
+                if(direction === 'right') CONFIG.paletteIdx = (CONFIG.paletteIdx + 1) % PALETTE_KEYS.length;
+                if(direction === 'left') CONFIG.paletteIdx = (CONFIG.paletteIdx - 1 + PALETTE_KEYS.length) % PALETTE_KEYS.length;
+            }
+            if(id === 'L4') { // SCREEN & DATA
+                if(direction === 'up') toggleFullscreen();
+                if(direction === 'down') document.getElementById('export-modal').style.display = 'flex';
+                if(direction === 'left') exportTelemetryJSON();
+                if(direction === 'right') document.getElementById('import-input').click();
+            }
+            if(id === 'L5') { // DYNAMIC MATH
+                if(direction === 'up') CONFIG.param1 = Math.min(1, CONFIG.param1 + 0.05);
+                if(direction === 'down') CONFIG.param1 = Math.max(0, CONFIG.param1 - 0.05);
+                if(direction === 'right') CONFIG.param2 = Math.min(1, CONFIG.param2 + 0.05);
+                if(direction === 'left') CONFIG.param2 = Math.max(0, CONFIG.param2 - 0.05);
+            }
+
+            // R-SIDE
+            if(id === 'R1') { // FONT FORGE
+                if(direction === 'up') { CLUSTER.mode = 'draw'; showHUD("Cluster Mode", "ON"); }
+                if(direction === 'down') { CLUSTER.mode = 'off'; showHUD("Cluster Mode", "OFF"); }
+                if(direction === 'left') { CLUSTER.mode = 'set'; CLUSTER.origin = null; CLUSTER.offsets = [{dx:0, dy:0}]; showHUD("Cluster SET", "Tap to add virtual fingers"); }
+                if(direction === 'right') { CLUSTER.mode = 'draw'; showHUD("Cluster DRAW", "Locked"); }
+            }
+            if(id === 'R2') { // GLITCH ISOLATION
+                if(direction === 'up') { currentGlitchGroup++; showHUD("Glitch Group Isolated", `Group ${currentGlitchGroup}`); }
+                if(direction === 'down') { currentGlitchGroup = 0; clearCanvas(); showHUD("Memory Wiped", "All Groups Cleared"); }
+                if(direction === 'left' || direction === 'right') { CONFIG.glitchMode = !CONFIG.glitchMode; showHUD("Glitch Mesh", CONFIG.glitchMode ? "ON" : "OFF"); }
+            }
+            if(id === 'R3') {
+                if(direction === 'up' || direction === 'down') { CONFIG.is3D = !CONFIG.is3D; if(!CONFIG.is3D) plane.rotation.set(0,0,0); showHUD("View", CONFIG.is3D ? "3D Orbit" : "2D"); }
+                if(direction === 'left' || direction === 'right') { CONFIG.isWarp = !CONFIG.isWarp; showHUD("Hardware Warp", CONFIG.isWarp ? "ON" : "OFF"); }
+            }
+            if(id === 'R4') {
+                if(direction === 'up') CONFIG.fadeRate = Math.min(0.2, CONFIG.fadeRate + 0.005);
+                if(direction === 'down') CONFIG.fadeRate = Math.max(0, CONFIG.fadeRate - 0.005);
+            }
+
+            updateUI(direction);
+        }
+
+        function updateUI(direction) {
+            if(!activeToggle) return;
+            const id = activeToggle.id;
+            let title = "", value = "", subtext = "";
+            
+            if(id==='L1') { title="Symmetry"; value=`${CONFIG.mirrors.toFixed(1)} Mirrors`; subtext=`Grid: ${CONFIG.gridMode}`; }
+            if(id==='L2') { title="Physics"; value=`Thick: ${CONFIG.thickness.toFixed(1)}`; subtext=`Size: ${CONFIG.size}`; }
+            if(id==='L3') { title="Style"; value=PATTERNS[CONFIG.patternIdx].name; subtext=PALETTE_KEYS[CONFIG.paletteIdx]; }
+            if(id==='L4') { title="Data"; value="File / Screen"; subtext="Up=Full, Dn=PNG, L=JSON, R=Import"; }
+            if(id==='L5') { title="Math Modifiers"; value=`P1: ${CONFIG.param1.toFixed(2)}`; subtext=`P2: ${CONFIG.param2.toFixed(2)}`; }
+            if(id==='R1') { title="Font Forge"; value=`Mode: ${CLUSTER.mode.toUpperCase()}`; subtext=`Tendrils: ${CLUSTER.offsets.length}`; }
+            if(id==='R2') { title="Glitch Logic"; value=`Group: ${currentGlitchGroup}`; subtext=`Mesh: ${CONFIG.glitchMode ? "ON" : "OFF"}`; }
+            if(id==='R3') { title="Space-Time"; value=CONFIG.is3D ? "3D" : "2D"; subtext=`Warp: ${CONFIG.isWarp ? "ON" : "OFF"}`; }
+            if(id==='R4') { title="Persistence"; value=CONFIG.fadeRate === 0 ? "PERMANENT" : `Fade: ${CONFIG.fadeRate.toFixed(3)}`; }
+
+            showHUD(title, value);
+
+            const stick = activeToggle.querySelector('.toggle-stick');
+            let tx=0, ty=0; const amt = 15;
+            if(direction==='up') ty = -amt; if(direction==='down') ty = amt;
+            if(direction==='left') tx = -amt; if(direction==='right') tx = amt;
+            stick.style.transform = `translate(-50%, -50%) translate(${tx}px, ${ty}px)`;
+        }
+
+        function startDrag(e) {
+            e.preventDefault(); activeToggle = e.currentTarget;
+            startX = e.clientX || e.touches[0].clientX; startY = e.clientY || e.touches[0].clientY;
+            window.addEventListener('pointermove', onDrag); window.addEventListener('touchmove', onDrag, {passive:false});
+            window.addEventListener('pointerup', endDrag); window.addEventListener('touchend', endDrag);
+        }
+
+        function onDrag(e) {
+            if(!activeToggle) return; e.preventDefault();
+            const cx = e.clientX || e.touches[0].clientX; const cy = e.clientY || e.touches[0].clientY;
+            const dx = cx - startX, dy = cy - startY; let dir = null;
+            if(Math.abs(dx) > Math.abs(dy)) { if(Math.abs(dx)>DRAG_THRESHOLD) dir = dx>0?'right':'left'; }
+            else { if(Math.abs(dy)>DRAG_THRESHOLD) dir = dy>0?'down':'up'; }
+            
+            if(dir) {
+                if(ticker) clearInterval(ticker); updateState(dir);
+                ticker = setInterval(() => updateState(dir), 100);
+                startX = cx; startY = cy; 
+            }
+        }
+
+        function endDrag() {
+            if(!activeToggle) return;
+            activeToggle.querySelector('.toggle-stick').style.transform = `translate(-50%, -50%)`;
+            clearInterval(ticker); ticker = null; activeToggle = null;
+            window.removeEventListener('pointermove', onDrag); window.removeEventListener('touchmove', onDrag);
+            window.removeEventListener('pointerup', endDrag); window.removeEventListener('touchend', endDrag);
+        }
+
+        function showHUD(title, sub) {
+            const h = document.getElementById('central-display');
+            h.querySelector('.title').textContent = title; h.querySelector('.value').textContent = sub;
+            h.classList.add('visible'); clearTimeout(displayTimeout);
+            displayTimeout = setTimeout(() => h.classList.remove('visible'), 2000);
+        }
+
+        /**
+         * ============================================================================
+         * [MODULE: ANIMATION & REPLAY ENGINE]
+         * Reconstructs the Font Forge cluster perfectly during Ghost playback!
+         * ============================================================================
+         */
+        function animate() {
+            requestAnimationFrame(animate);
+            CONFIG.time += 0.01;
+
+            const w = drawCanvas.width;
+            const h = drawCanvas.height;
+
+            // 1. PING-PONG REPLAY (WITH CLUSTER RECONSTRUCTION)
+            if (gestureStack.length > 0) {
+                gestureStack.forEach(layer => {
+                    layer.curIdx += layer.dir;
+                    if (layer.curIdx >= layer.points.length - 1) { layer.curIdx = layer.points.length - 1; layer.dir = -1; } 
+                    else if (layer.curIdx <= 0) { layer.curIdx = 0; layer.dir = 1; }
+
+                    const pt = layer.points[layer.curIdx];
+                    let ghostId = layer.id;
+
+                    // Main ghost
+                    if (!activeTouches.has(ghostId)) activeTouches.set(ghostId, { points: [], rawId: layer.id, groupId: layer.groupId });
+                    activeTouches.get(ghostId).points.push({x: pt.x * w, y: (1-pt.y) * h});
+                    trimPoints(activeTouches.get(ghostId));
+
+                    // RECONSTRUCT CLUSTER FOR GLITCH MESH
+                    if (layer.isCluster) {
+                        layer.clusterOffsets.forEach((offset, idx) => {
+                            if(idx === 0) return; 
+                            const spread = 0.2 + (pt.p * 2.5); 
+                            const cosH = Math.cos(pt.h); 
+                            const sinH = Math.sin(pt.h);
+                            
+                            const dynDx = (offset.dx * cosH - offset.dy * sinH) * spread;
+                            const dynDy = (offset.dx * sinH + offset.dy * cosH) * spread;
+                            
+                            const vId = ghostId + "_v" + idx;
+                            if(!activeTouches.has(vId)) activeTouches.set(vId, { points:[], rawId: ghostId + idx, groupId: layer.groupId });
+                            activeTouches.get(vId).points.push({ x: (pt.x + dynDx) * w, y: (1 - (pt.y + dynDy)) * h });
+                            trimPoints(activeTouches.get(vId));
+                        });
+                    }
+                    
+                    drawOnTexture(pt); // Triggers glitch logic
+                });
+            }
+            
+            // 2. FADE
+            if(CONFIG.fadeRate > 0) {
+                drawCtx.fillStyle = `rgba(0, 0, 0, ${CONFIG.fadeRate})`;
+                drawCtx.fillRect(0, 0, drawCanvas.width, drawCanvas.height);
+                drawTexture.needsUpdate = true;
+            }
+
+            // 3. WARP
+            if(CONFIG.isWarp) {
+                const pos = plane.geometry.attributes.position;
+                const orig = plane.geometry.userData.originalPositions;
+                for(let i=0; i < pos.count; i++) {
+                    const x = orig.getX(i), y = orig.getY(i), z = orig.getZ(i);
+                    pos.setZ(i, z + Math.sin(x * 0.1 + CONFIG.time * 2) * Math.cos(y * 0.1 + CONFIG.time) * 5);
+                }
+                pos.needsUpdate = true;
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        /**
+         * ============================================================================
+         * [MODULE: VECTOR HIGH-RES EXPORT & IMPORT]
+         * ============================================================================
+         */
+        function renderHighRes(scaleMulti) {
+            document.getElementById('loading-text').style.display = 'block';
+            
+            setTimeout(() => {
+                const dim = 1024 * scaleMulti;
+                const hCanvas = document.createElement('canvas');
+                hCanvas.width = dim; hCanvas.height = dim;
+                const hCtx = hCanvas.getContext('2d');
+                hCtx.fillStyle = '#000'; hCtx.fillRect(0, 0, dim, dim);
+                
+                const pat = PATTERNS[CONFIG.patternIdx];
+                const pal = PALETTES[PALETTE_KEYS[CONFIG.paletteIdx]];
+                const center = {x: dim/2, y: dim/2}; // Export uses pure center
+                const exportConfig = {...CONFIG, size: CONFIG.size * (dim/2048), thickness: CONFIG.thickness * (dim/2048)};
+
+                // Fast Forward Replay Engine strictly for static render
+                gestureStack.forEach(stroke => {
+                    const staticPtsMap = new Map();
+                    stroke.points.forEach(pt => {
+                        const absX = pt.x * dim; const absY = (1 - pt.y) * dim;
+                        
+                        if(!staticPtsMap.has('m')) staticPtsMap.set('m', {points:[], rawId:0, groupId:stroke.groupId});
+                        staticPtsMap.get('m').points.push({x: absX, y: absY});
+                        trimPoints(staticPtsMap.get('m'));
+
+                        if (stroke.isCluster) {
+                            stroke.clusterOffsets.forEach((offset, idx) => {
+                                if(idx===0) return;
+                                const spread = 0.2 + (pt.p * 2.5); 
+                                const cosH = Math.cos(pt.h); const sinH = Math.sin(pt.h);
+                                const dynDx = (offset.dx * cosH - offset.dy * sinH) * spread;
+                                const dynDy = (offset.dx * sinH + offset.dy * cosH) * spread;
+                                
+                                const vId = 'v'+idx;
+                                if(!staticPtsMap.has(vId)) staticPtsMap.set(vId, {points:[], rawId:idx, groupId:stroke.groupId});
+                                staticPtsMap.get(vId).points.push({ x: (pt.x + dynDx)*dim, y: (1 - (pt.y + dynDy))*dim });
+                                trimPoints(staticPtsMap.get(vId));
+                            });
+                        }
+                        coreRenderPass(hCtx, staticPtsMap, {x: absX, y: absY}, pat, pal, exportConfig, center, true);
+                    });
+                });
+
+                const link = document.createElement('a'); link.download = `KEYFORGE_${scaleMulti}K_${Date.now()}.png`;
+                link.href = hCanvas.toDataURL('image/png'); link.click();
+                
+                document.getElementById('loading-text').style.display = 'none';
+                document.getElementById('export-modal').style.display = 'none';
+            }, 100);
+        }
+
+        function exportTelemetryJSON() {
+            if(telemetryLog.length === 0) return showHUD("Error", "Hit Tape Rec and draw first.");
+            const data = { metadata: { date: Date.now(), config: CONFIG }, telemetry: telemetryLog };
+            const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `Telemetry_${Date.now()}.json`; a.click();
+        }
+
+        function importTelemetryJSON(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    const map = new Map();
+                    data.telemetry.forEach(p => {
+                        if(!map.has(p.id)) map.set(p.id, []);
+                        map.get(p.id).push(p);
+                    });
+                    map.forEach((pts, id) => {
+                        gestureStack.push({ points: pts, curIdx: 0, dir: 1, id: "import_"+id, groupId: 99, isCluster: false, clusterOffsets: [] });
+                    });
+                    showHUD("Imported", `${data.telemetry.length} Vectors Restored`);
+                } catch(err) { showHUD("Import Failed", "Corrupt JSON"); }
+            };
+            reader.readAsText(file);
+        }
+
+        function toggleRecord() { 
+            CONFIG.isRecording = !CONFIG.isRecording; 
+            const btn = document.getElementById('btn-rec');
+            if(CONFIG.isRecording) { telemetryLog = []; sessionStartTime = Date.now(); btn.classList.add('recording'); btn.innerHTML = 'Stop Rec'; showHUD("Recording", "Capturing Vectors"); } 
+            else { btn.classList.remove('recording'); btn.innerHTML = 'Tape Rec'; showHUD("Stopped", `${telemetryLog.length} points logged`); }
+        }
+
+        function clearCanvas() {
+            drawCtx.fillStyle = 'rgba(0,0,0,1)'; drawCtx.fillRect(0,0,drawCanvas.width, drawCanvas.height);
+            drawTexture.needsUpdate = true; gestureStack = []; telemetryLog = []; activeTouches.clear();
+            currentGlitchGroup = 0; CLUSTER.origin = null; CLUSTER.offsets = [{dx: 0, dy: 0}];
+            showHUD("Wiped", "Canvas & Memory Cleared");
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+            else document.exitFullscreen();
+        }
+
+        function toggleUI(show) {
+            uiHidden = !show;
+            document.querySelectorAll('.toggle-container').forEach(el => el.style.display = show ? 'flex' : 'none');
+            document.getElementById('top-ui').style.display = show ? 'flex' : 'none';
+            document.getElementById('menu-trigger').style.display = show ? 'none' : 'block';
+        }
+
+        // INIT
+        createToggles();
+        window.addEventListener('pointerdown', onPointerDown, {passive: false}); 
+        window.addEventListener('pointermove', onPointerMove, {passive: false}); 
+        window.addEventListener('pointerup', onPointerUp, {passive: false});
+        window.addEventListener('pointercancel', onPointerUp, {passive: false});
+        window.addEventListener('resize', () => { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); });
+        
+        animate();
+    </script>
+</body>
+</html>
