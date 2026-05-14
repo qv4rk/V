@@ -1,0 +1,273 @@
+.leftPage,
+.rightPage {
+  flex: 1;
+  padding: 44px 52px;
+  overflow-y: auto;
+  position: relative;
+  height: 100%;
+  animation: fadeIn 0.35s ease both;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.leftPage {
+  border-radius: 12px 0 0 12px;
+  box-shadow: inset 20px 0 40px rgba(0, 0, 0, 0.06);
+  display: flex;
+  flex-direction: column;
+}
+
+.rightPage {
+  border-radius: 0 12px 12px 0;
+  box-shadow: inset -20px 0 40px rgba(0, 0, 0, 0.06);
+}
+
+.texture {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.12;
+  background-image: url('https://www.transparenttextures.com/patterns/paper-fibers.png');
+  border-radius: inherit;
+}
+
+/* Header */
+.recipeHeader {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.ornament {
+  font-size: 0.9rem;
+  color: var(--gold);
+  margin-bottom: 8px;
+}
+
+.yiddishTitle {
+  font-family: 'UnifrakturMaguntia', serif;
+  font-size: 2.4rem;
+  color: var(--accent);
+  line-height: 1.1;
+  margin-bottom: 4px;
+}
+
+.recipeName {
+  font-family: 'Old Standard TT', serif;
+  font-size: 1.35rem;
+  font-weight: 400;
+  font-style: italic;
+  color: var(--ink-light);
+  margin-bottom: 4px;
+}
+
+.subtitle {
+  font-family: 'Special Elite', serif;
+  font-size: 0.82rem;
+  color: var(--gold);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.headerDivider {
+  width: 70%;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--accent), transparent);
+  margin: 12px auto 0;
+}
+
+/* Version badge */
+.versionBadge {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.versionLabel {
+  font-family: 'Special Elite', serif;
+  font-size: 0.78rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--paper);
+  background: var(--accent);
+  padding: 4px 18px;
+  border-radius: 2px;
+  border: 1px solid var(--gold);
+}
+
+/* Section heads */
+.sectionHead {
+  font-family: 'UnifrakturMaguntia', serif;
+  font-size: 1.6rem;
+  color: var(--ink);
+  border-bottom: 1px solid rgba(107, 28, 24, 0.25);
+  padding-bottom: 6px;
+  margin-bottom: 14px;
+}
+
+/* Ingredients */
+.ingList {
+  list-style: none;
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ingItem {
+  font-size: 1.05rem;
+  line-height: 1.4;
+  color: var(--ink);
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.ingBullet {
+  font-size: 0.45rem;
+  color: var(--accent);
+  flex-shrink: 0;
+  position: relative;
+  top: -2px;
+}
+
+/* Check block */
+.checkBlock {
+  background: rgba(107, 28, 24, 0.05);
+  border-left: 3px solid var(--accent);
+  padding: 12px 16px;
+  margin-top: auto;
+  margin-bottom: 20px;
+  border-radius: 0 4px 4px 0;
+}
+
+.checkLabel {
+  font-family: 'Special Elite', serif;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.checkText {
+  font-size: 1rem;
+  line-height: 1.65;
+  color: var(--ink);
+  font-style: italic;
+}
+
+/* Navigation */
+.pageNav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 16px;
+  border-top: 1px solid rgba(107, 28, 24, 0.2);
+  gap: 12px;
+}
+
+.navBtn {
+  font-family: 'UnifrakturMaguntia', serif;
+  font-size: 1.1rem;
+  color: var(--gold);
+  background: none;
+  border: 1px solid rgba(154, 112, 34, 0.4);
+  padding: 6px 20px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 0.03em;
+}
+
+.navBtn:hover:not(:disabled) {
+  background: var(--gold);
+  color: var(--spine);
+  border-color: var(--gold);
+}
+
+.navBtn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.pageCount {
+  font-family: 'Special Elite', serif;
+  font-size: 0.82rem;
+  color: var(--ink-light);
+  letter-spacing: 0.1em;
+}
+
+/* Method text */
+.methodText {
+  font-size: 1.08rem;
+  line-height: 1.85;
+  color: var(--ink);
+  text-align: justify;
+  hyphens: auto;
+  margin-bottom: 28px;
+}
+
+/* Grandmother's note */
+.grandmaNote {
+  background: rgba(107, 28, 24, 0.04);
+  border: 1px solid rgba(107, 28, 24, 0.15);
+  padding: 18px 20px;
+  border-radius: 4px;
+  margin-bottom: 24px;
+}
+
+.noteLabel {
+  font-family: 'Special Elite', serif;
+  font-size: 0.78rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+  display: block;
+  margin-bottom: 8px;
+}
+
+.noteText {
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--ink-light);
+  font-style: italic;
+}
+
+.decorativeRule {
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--gold), transparent);
+  margin-bottom: 12px;
+}
+
+.footnoteArea {
+  text-align: center;
+}
+
+.footnoteRecipe {
+  font-family: 'Special Elite', serif;
+  font-size: 0.75rem;
+  color: var(--ink-light);
+  letter-spacing: 0.12em;
+  opacity: 0.5;
+  text-transform: uppercase;
+}
+
+@media (max-width: 900px) {
+  .leftPage,
+  .rightPage {
+    padding: 28px 24px;
+  }
+
+  .yiddishTitle {
+    font-size: 1.8rem;
+  }
+
+  .methodText {
+    font-size: 0.95rem;
+  }
+}
