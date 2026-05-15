@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Kiev Heirloom — Imperial Edition</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&family=IM+Fell+English:ital@0;1&family=IM+Fell+English+SC&display=swap" rel="stylesheet">
+<style>
+:root {
+  --parchment:#f0e6c8; --parchment-dark:#e4d5a8; --parchment-deep:#d6c48a;
+  --ink:#1e0e06; --ink-light:#3d2010;
+  --burgundy:#7a1c2e; --burgundy-light:#9a2540;
+  --forest:#2d4a1e; --forest-light:#3d6228;
+  --gold:#b8860b; --gold-light:#d4a017;
+  --walnut:#3c1f0d; --walnut-dark:#1a0b04;
+  --cream:#faf6ec;
+  --font-fraktur:'UnifrakturMaguntia',cursive;
+  --font-fell:'IM Fell English',serif;
+  --font-sc:'IM Fell English SC',serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:16px;scroll-behavior:smooth}
+body{
+  background-color:var(--walnut-dark);
+  background-image:radial-gradient(ellipse at 20% 20%,rgba(122,28,46,.15) 0%,transparent 60%),radial-gradient(ellipse at 80% 80%,rgba(45,74,30,.12) 0%,transparent 60%);
+  color:var(--ink);font-family:var(--font-fell);min-height:100vh;overflow-x:hidden;
+}
+::-webkit-scrollbar{width:8px}
+::-webkit-scrollbar-track{background:var(--walnut-dark)}
+::-webkit-scrollbar-thumb{background:var(--burgundy);border-radius:4px}
+::selection{background:var(--burgundy);color:var(--parchment)}
+
+/* SHELL */
+.app-shell{min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:2rem 1rem 4rem}
+
+/* MASTHEAD */
+.masthead{text-align:center;padding:2.5rem 2rem 1.5rem;max-width:800px;width:100%;position:relative;animation:fadeIn .8s ease both}
+.masthead::before,.masthead::after{content:'';display:block;height:2px;background:linear-gradient(90deg,transparent,var(--gold),var(--burgundy),var(--gold),transparent);margin:.75rem auto;max-width:500px}
+.masthead-byline{font-family:var(--font-sc);font-size:.72rem;letter-spacing:.25em;color:var(--gold-light);text-transform:uppercase;margin-bottom:.6rem}
+.masthead-title{font-family:var(--font-fraktur);font-size:clamp(2.2rem,6vw,4rem);color:var(--parchment);line-height:1.1;text-shadow:0 0 40px rgba(184,134,11,.4),2px 3px 8px rgba(0,0,0,.8);margin-bottom:.4rem}
+.masthead-subtitle{font-family:var(--font-fell);font-style:italic;font-size:.95rem;color:var(--parchment-deep);letter-spacing:.05em;margin-bottom:.3rem}
+.masthead-edition{font-family:var(--font-sc);font-size:.68rem;letter-spacing:.3em;color:var(--gold);text-transform:uppercase}
+
+/* TABLE OF CONTENTS */
+.toc-wrapper{max-width:700px;width:100%;margin:1.5rem auto;background:var(--parchment);border:1px solid var(--parchment-deep);border-radius:2px;box-shadow:0 0 0 3px var(--walnut),0 0 0 5px var(--gold),0 8px 40px rgba(20,8,2,.6);overflow:hidden;animation:fadeIn .6s ease both}
+.toc-header{background:var(--walnut);padding:1.25rem 2rem;text-align:center;border-bottom:3px double var(--gold)}
+.toc-header h2{font-family:var(--font-fraktur);font-size:1.7rem;color:var(--gold-light);font-weight:normal}
+.toc-header p{font-family:var(--font-fell);font-style:italic;color:var(--parchment-deep);font-size:.82rem;margin-top:.2rem}
+.toc-body{padding:1rem 2rem 1.5rem}
+.toc-chapter-head{font-family:var(--font-sc);font-size:.65rem;letter-spacing:.25em;text-transform:uppercase;color:var(--burgundy);border-top:1px solid var(--parchment-deep);padding-top:.9rem;margin-top:.9rem;margin-bottom:.4rem}
+.toc-chapter-head:first-child{border-top:none;margin-top:0;padding-top:0}
+.toc-item{display:flex;align-items:baseline;gap:.4rem;padding:.45rem 0;border-bottom:1px dotted var(--parchment-deep);cursor:pointer;transition:all .18s}
+.toc-item:last-child{border-bottom:none}
+.toc-item:hover .toc-recipe-name{color:var(--burgundy)}
+.toc-item-num{font-family:var(--font-sc);font-size:.72rem;color:var(--gold);min-width:1.5rem;flex-shrink:0}
+.toc-recipe-name{font-family:var(--font-fell);font-size:.95rem;color:var(--ink);flex:1;transition:color .18s}
+.toc-dots{flex:1;border-bottom:1px dotted var(--parchment-deep);margin:0 .4rem;min-width:20px;max-width:80px}
+.toc-recipe-yiddish{font-family:var(--font-fell);font-style:italic;font-size:.8rem;color:var(--ink-light)}
+.toc-strawberry{background:rgba(122,28,46,.04);border-left:3px solid var(--burgundy);padding-left:.75rem;border-radius:0 2px 2px 0}
+.toc-strawberry .toc-recipe-name{font-weight:normal}
+
+/* BOOK */
+.book-scene{perspective:2000px;width:100%;max-width:960px;margin:1.5rem auto}
+.book-wrapper{transform:rotateX(7deg);transform-style:preserve-3d;position:relative}
+.page-stack{position:absolute;bottom:-8px;left:50%;transform:translateX(-50%);width:96%;height:100%;background:var(--walnut);border-radius:1px 4px 4px 1px;box-shadow:4px 4px 0 #0a0402,8px 8px 0 #0d0603,0 20px 60px rgba(20,8,2,.6);z-index:0}
+.open-book{display:grid;grid-template-columns:1fr 1fr;min-height:640px;position:relative;z-index:1;box-shadow:-8px 0 20px rgba(0,0,0,.5),8px 0 20px rgba(0,0,0,.5),0 20px 60px rgba(20,8,2,.6);border-radius:2px}
+.open-book::after{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:48px;height:100%;background:linear-gradient(90deg,transparent 0%,rgba(10,4,2,.25) 35%,rgba(5,2,1,.55) 50%,rgba(10,4,2,.25) 65%,transparent 100%);pointer-events:none;z-index:10}
+.page{background:var(--parchment);padding:2.2rem 2.2rem 3rem;position:relative;overflow:hidden;min-height:640px}
+.page::before{content:'';position:absolute;inset:0;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='.055'/%3E%3C/svg%3E");pointer-events:none}
+.page-left{background:linear-gradient(102deg,var(--cream) 0%,var(--parchment) 40%,var(--parchment-dark) 100%)}
+.page-right{background:linear-gradient(78deg,var(--parchment-dark) 0%,var(--parchment) 60%,var(--cream) 100%)}
+.page-number{position:absolute;bottom:1.2rem;font-family:var(--font-sc);font-size:.65rem;color:var(--ink-light);letter-spacing:.1em}
+.page-left .page-number{left:2.2rem}
+.page-right .page-number{right:2.2rem}
+
+/* RECIPE CONTENT */
+.recipe-chapter{font-family:var(--font-sc);font-size:.62rem;letter-spacing:.28em;text-transform:uppercase;color:var(--gold);margin-bottom:.35rem}
+.recipe-title{font-family:var(--font-fraktur);font-size:clamp(1.5rem,3vw,2.1rem);color:var(--ink);line-height:1.2;margin-bottom:.2rem;font-weight:normal}
+.recipe-yiddish{font-family:var(--font-fell);font-style:italic;font-size:.88rem;color:var(--ink-light);margin-bottom:.6rem}
+.recipe-divider{border:none;height:1px;background:linear-gradient(90deg,transparent,var(--gold),var(--burgundy),var(--gold),transparent);margin:.6rem 0}
+.recipe-epigraph{font-family:var(--font-fell);font-style:italic;font-size:.82rem;color:var(--ink-light);border-left:2px solid var(--burgundy);padding-left:.9rem;margin:.6rem 0 .9rem;line-height:1.6}
+.recipe-epigraph cite{display:block;font-size:.72rem;margin-top:.25rem;color:var(--gold);font-style:normal;font-family:var(--font-sc)}
+.recipe-illustration{margin:.5rem 0 .8rem;width:100%;border:1px solid var(--parchment-deep);border-radius:2px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.12)}
+.recipe-illustration svg{width:100%;height:auto;display:block}
+
+.method-heading{font-family:var(--font-fraktur);font-size:1.3rem;color:var(--ink);margin-bottom:.15rem;font-weight:normal}
+.method-subheading{font-family:var(--font-fell);font-style:italic;font-size:.8rem;color:var(--ink-light);margin-bottom:.4rem}
+.method-intro{font-family:var(--font-fell);font-size:.88rem;color:var(--ink);line-height:1.65;margin-bottom:.65rem}
+
+.provisions-heading,.steps-heading{font-family:var(--font-sc);font-size:.65rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:.35rem;margin-top:.5rem}
+.provisions-list{list-style:none;margin-bottom:.8rem}
+.provisions-list li{font-family:var(--font-fell);font-size:.86rem;color:var(--ink);padding:.18rem 0 .18rem 1.1rem;position:relative;line-height:1.45}
+.provisions-list li::before{content:'·';position:absolute;left:0;color:var(--burgundy);font-size:1.1rem;line-height:1;top:.08rem}
+.modern-way .provisions-list li::before{color:var(--forest)}
+.steps-list{list-style:none;counter-reset:step}
+.steps-list li{counter-increment:step;font-family:var(--font-fell);font-size:.86rem;color:var(--ink);padding:.3rem 0 .3rem 2rem;position:relative;line-height:1.62;border-bottom:1px dotted rgba(0,0,0,.09)}
+.steps-list li:last-child{border-bottom:none}
+.steps-list li::before{content:counter(step);position:absolute;left:0;top:.28rem;font-family:var(--font-sc);font-size:.65rem;color:var(--parchment);background:var(--burgundy);width:1.35rem;height:1.35rem;display:flex;align-items:center;justify-content:center;border-radius:50%}
+.modern-way .steps-list li::before{background:var(--forest)}
+.wisdom-box{margin-top:.9rem;padding:.65rem .9rem;background:rgba(122,28,46,.07);border:1px solid rgba(122,28,46,.2);border-left:3px solid var(--burgundy)}
+.wisdom-box.modern{background:rgba(45,74,30,.07);border-color:rgba(45,74,30,.2);border-left-color:var(--forest)}
+.wisdom-heading{font-family:var(--font-sc);font-size:.62rem;letter-spacing:.18em;color:var(--burgundy);text-transform:uppercase;margin-bottom:.25rem}
+.wisdom-box.modern .wisdom-heading{color:var(--forest)}
+.wisdom-text{font-family:var(--font-fell);font-style:italic;font-size:.83rem;color:var(--ink-light);line-height:1.6}
+
+/* NAV */
+.book-nav{display:flex;align-items:center;justify-content:center;gap:2rem;margin-top:1.2rem}
+.nav-btn{display:flex;align-items:center;gap:.5rem;padding:.55rem 1.4rem;font-family:var(--font-sc);font-size:.72rem;letter-spacing:.15em;color:var(--parchment);background:var(--walnut);border:1px solid var(--gold);cursor:pointer;transition:all .2s;text-transform:uppercase}
+.nav-btn:hover:not(:disabled){background:var(--burgundy);border-color:var(--gold-light);transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,.4)}
+.nav-btn:disabled{opacity:.32;cursor:not-allowed}
+.nav-toc-btn{background:transparent;border-color:rgba(184,134,11,.5);color:var(--gold)}
+.nav-toc-btn:hover{background:rgba(184,134,11,.12)!important;border-color:var(--gold)!important;color:var(--gold-light)!important;transform:none!important}
+.nav-indicator{font-family:var(--font-fell);font-style:italic;font-size:.82rem;color:var(--parchment-dark);text-align:center;min-width:130px}
+.nav-indicator span{display:block;font-size:.68rem;font-style:normal;font-family:var(--font-sc);letter-spacing:.1em;color:var(--gold);margin-top:.12rem}
+
+/* COLOPHON */
+.colophon{max-width:680px;width:100%;margin:2.5rem auto 1rem;padding:1.5rem 2rem;text-align:center;border-top:1px solid rgba(184,134,11,.3)}
+.colophon-ornament{font-size:1.3rem;color:var(--gold);margin-bottom:.6rem}
+.colophon-text{font-family:var(--font-fell);font-style:italic;font-size:.78rem;color:rgba(240,230,200,.45);line-height:1.8}
+
+/* ANIMATIONS */
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.page{animation:fadeIn .35s ease both}
+.toc-wrapper{animation:fadeIn .5s ease both}
+
+/* RESPONSIVE */
+@media(max-width:720px){
+  .open-book{grid-template-columns:1fr}
+  .open-book::after{display:none}
+  .page-right{border-top:3px double var(--parchment-deep)}
+  .page-stack{display:none}
+  .book-wrapper{transform:none}
+  .page{padding:1.5rem 1.2rem 2.5rem;min-height:auto}
+  .book-nav{gap:1rem}
+  .nav-btn{padding:.45rem .9rem;font-size:.65rem}
+  .toc-body{padding:.8rem 1.2rem 1.2rem}
+}
+</style>
+</head>
+<body>
+<div class="app-shell">
+
+  <div class="masthead">
+    <div class="masthead-byline">An Heirloom Cookbook of the Pale of Settlement</div>
+    <div class="masthead-title">The Kiev Heirloom</div>
+    <div class="masthead-subtitle">Recipes of the Jewish Kitchen, 1880–1940</div>
+    <div class="masthead-edition">Imperial Edition &nbsp;·&nbsp; Philadelphia Remembrance</div>
+  </div>
+
+  <div id="toc-view"></div>
+
+  <div id="book-view" style="display:none">
+    <div class="book-scene">
+      <div class="book-wrapper">
+        <div class="page-stack"></div>
+        <div class="open-book">
+          <div class="page page-left" id="page-left"></div>
+          <div class="page page-right" id="page-right"></div>
+        </div>
+      </div>
+    </div>
+    <div class="book-nav">
+      <button class="nav-btn" id="btn-prev" onclick="prevRecipe()">&#8592; Previous</button>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:.5rem">
+        <div class="nav-indicator" id="nav-indicator"></div>
+        <button class="nav-btn nav-toc-btn" onclick="showTOC()">&#9776; Contents</button>
+      </div>
+      <button class="nav-btn" id="btn-next" onclick="nextRecipe()">Next &#8594;</button>
+    </div>
+  </div>
+
+  <div class="colophon">
+    <div class="colophon-ornament">✦ ✦ ✦</div>
+    <div class="colophon-text">
+      These recipes belong to the era before the great scarcity — the Pale of Settlement in its last years of fat-heavy, fermented abundance.<br>
+      Dedicated to the grandmothers of Strawberry Mansion, Philadelphia, who cooked from memory and never wrote it down.
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ============================================================
+   SVG ILLUSTRATIONS
+   ============================================================ */
+const SVGS = {};
+
+SVGS.blintzes = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200"><rect width="320" height="200" fill="#f0e6c8"/><rect x="5" y="5" width="310" height="190" fill="none" stroke="#b8860b" stroke-width="1" stroke-dasharray="4,3"/><ellipse cx="160" cy="162" rx="128" ry="20" fill="#e4d5a8" stroke="#1e0e06" stroke-width="1.2"/><rect x="78" y="112" width="84" height="28" rx="14" fill="#c8a86a" stroke="#1e0e06" stroke-width="1.2"/><path d="M78,126 Q120,120 162,126" fill="none" stroke="#1e0e06" stroke-width=".6" opacity=".4"/><rect x="98" y="124" width="84" height="28" rx="14" fill="#d4a050" stroke="#1e0e06" stroke-width="1.4"/><path d="M98,138 Q140,132 182,138" fill="none" stroke="#1e0e06" stroke-width=".6" opacity=".4"/><rect x="118" y="136" width="84" height="28" rx="14" fill="#c89040" stroke="#1e0e06" stroke-width="1.5"/><path d="M118,150 Q160,144 202,150" fill="none" stroke="#1e0e06" stroke-width=".6" opacity=".4"/><ellipse cx="250" cy="152" rx="22" ry="11" fill="#faf6ec" stroke="#1e0e06" stroke-width=".9"/><path d="M128,105 Q124,93 128,81" fill="none" stroke="#1e0e06" stroke-width="1" stroke-linecap="round" opacity=".3"/><path d="M158,100 Q154,87 158,74" fill="none" stroke="#1e0e06" stroke-width="1" stroke-linecap="round" opacity=".28"/><path d="M188,105 Q184,92 188,79" fill="none" stroke="#1e0e06" stroke-width="1" stroke-linecap="round" opacity=".3"/><text x="160" y="30" text-anchor="middle" font-family="Georgia,serif" font-size="12" fill="#7a1c2e" font-style="italic">Sweet Potato Blintzes</text><line x1="55" y1="36" x2="265" y2="36" stroke="#b8860b" stroke-width=".7"/><text x="160" y="50" text-anchor="middle" font-family="Georgia,serif" font-size="8" fill="#b8860b" letter-spacing="2">✦ KARTOFFL BLINTZEN ✦</text></svg>`;
+
+SVGS.soup = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200"><rect width="320" height="200" fill="#f0e6c8"/><rect x="5" y="5" width="310" height="190" fill="none" stroke="#b8860b" stroke-width="1" stroke-dasharray="4,3"/><path d="M58,92 Q58,168 160,168 Q262,168 262,92 Z" fill="#e8c870" stroke="#1e0e06" stroke-width="1.4"/><ellipse cx="160" cy="92" rx="102" ry="20" fill="#f0d888" stroke="#1e0e06" stroke-width="1.4"/><ellipse cx="160" cy="92" rx="98" ry="17" fill="#e4be58"/><path d="M68,102 Q68,158 160,158 Q252,158 252,102" fill="#d4a030"/><circle cx="128" cy="102" r="23" fill="#f0e0b0" stroke="#1e0e06" stroke-width="1.2"/><path d="M116,97 Q128,92 140,97" fill="none" stroke="#1e0e06" stroke-width=".6" opacity=".45"/><circle cx="194" cy="106" r="18" fill="#eed8a8" stroke="#1e0e06" stroke-width="1.2"/><path d="M184,101 Q194,96 204,101" fill="none" stroke="#1e0e06" stroke-width=".6" opacity=".45"/><path d="M153,88 Q148,78 142,66" fill="none" stroke="#3d6228" stroke-width="1.5" stroke-linecap="round"/><circle cx="140" cy="63" r="4" fill="#2d4a1e" opacity=".8"/><circle cx="145" cy="70" r="3" fill="#2d4a1e" opacity=".7"/><path d="M120,66 Q116,54 120,42" fill="none" stroke="#1e0e06" stroke-width=".9" stroke-linecap="round" opacity=".25"/><path d="M160,60 Q156,47 160,34" fill="none" stroke="#1e0e06" stroke-width=".9" stroke-linecap="round" opacity=".22"/><path d="M200,64 Q196,52 200,40" fill="none" stroke="#1e0e06" stroke-width=".9" stroke-linecap="round" opacity=".25"/><ellipse cx="160" cy="168" rx="62" ry="8" fill="#c8a040" stroke="#1e0e06" stroke-width="1"/><text x="160" y="30" text-anchor="middle" font-family="Georgia,serif" font-size="12" fill="#7a1c2e" font-style="italic">Golden Chicken Soup</text><line x1="55" y1="36" x2="265" y2="36" stroke="#b8860b" stroke-width=".7"/><text x="160" y="50" text-anchor="middle" font-family="Georgia,serif" font-size="8" fill="#b8860b" letter-spacing="2">✦ MIT KNEYDLAKH ✦</text></svg>`;
+
+SVGS.latkes = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200"><rect width="320" height="200" fill="#f0e6c8"/><rect x="5" y="5" width="310" height="190" fill="none" stroke="#b8860b" stroke-width="1" stroke-dasharray="4,3"/><ellipse cx="152" cy="162" rx="122" ry="18" fill="#e4d5a8" stroke="#1e0e06" stroke-width="1.2"/><ellipse cx="148" cy="152" rx="72" ry="14" fill="#7a4a10" stroke="#1e0e06" stroke-width="1.2"/><path d="M90,149 Q120,145 148,149 Q165,151 178,148" fill="none" stroke="#1e0e06" stroke-width=".5" opacity=".35"/><ellipse cx="146" cy="137" rx="70" ry="13" fill="#8a5818" stroke="#1e0e06" stroke-width="1.3"/><path d="M89,134 Q118,130 145,134 Q161,136 174,133" fill="none" stroke="#1e0e06" stroke-width=".5" opacity=".35"/><ellipse cx="144" cy="123" rx="67" ry="12" fill="#a86820" stroke="#1e0e06" stroke-width="1.4"/><circle cx="118" cy="121" r="2" fill="#5a3208" opacity=".5"/><circle cx="135" cy="118" r="1.5" fill="#5a3208" opacity=".5"/><circle cx="152" cy="121" r="2" fill="#5a3208" opacity=".45"/><circle cx="167" cy="122" r="1.5" fill="#5a3208" opacity=".5"/><ellipse cx="234" cy="150" rx="30" ry="15" fill="#faf6ec" stroke="#1e0e06" stroke-width=".9"/><path d="M220,147 Q234,142 248,147" fill="none" stroke="#b8860b" stroke-width=".7"/><path d="M128,106 Q124,93 128,80" fill="none" stroke="#1e0e06" stroke-width=".9" stroke-linecap="round" opacity=".28"/><path d="M154,102 Q150,88 154,74" fill="none" stroke="#1e0e06" stroke-width=".9" stroke-linecap="round" opacity=".26"/><path d="M178,106 Q174,93 178,80" fill="none" stroke="#1e0e06" stroke-width=".9" stroke-linecap="round" opacity=".28"/><text x="160" y="30" text-anchor="middle" font-family="Georgia,serif" font-size="12" fill="#7a1c2e" font-style="italic">Potato Latkes</text><line x1="60" y1="36" x2="260" y2="36" stroke="#b8860b" stroke-width=".7"/><text x="160" y="50" text-anchor="middle" font-family="Georgia,serif" font-size="8" fill="#b8860b" letter-spacing="2">✦ KARTOFELPANKEKHES ✦</text></svg>`;
+
+SVGS.challah = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200"><rect width="320" height="200" fill="#f0e6c8"/><rect x="5" y="5" width="310" height="190" fill="none" stroke="#b8860b" stroke-width="1" stroke-dasharray="4,3"/><ellipse cx="160" cy="168" rx="88" ry="11" fill="#c8a040" opacity=".4"/><ellipse cx="160" cy="138" rx="84" ry="42" fill="#c8881a"/><path d="M78,132 Q80,92 118,80 Q160,70 202,80 Q240,92 242,132 Q240,166 202,173 Q160,179 118,173 Q80,166 78,132 Z" fill="none" stroke="#1e0e06" stroke-width="2"/><path d="M80,122 Q88,107 103,97" fill="none" stroke="#9a5810" stroke-width="3.5" stroke-linecap="round" opacity=".65"/><path d="M98,157 Q108,144 118,134" fill="none" stroke="#b87020" stroke-width="3" stroke-linecap="round" opacity=".6"/><path d="M122,167 Q134,158 144,148" fill="none" stroke="#9a5810" stroke-width="3.5" stroke-linecap="round" opacity=".65"/><path d="M148,172 Q160,165 168,155" fill="none" stroke="#b87020" stroke-width="3" stroke-linecap="round" opacity=".6"/><path d="M174,170 Q186,162 192,151" fill="none" stroke="#9a5810" stroke-width="3.5" stroke-linecap="round" opacity=".65"/><path d="M200,160 Q210,148 214,136" fill="none" stroke="#b87020" stroke-width="3" stroke-linecap="round" opacity=".6"/><path d="M218,122 Q215,98 208,90" fill="none" stroke="#9a5810" stroke-width="3.5" stroke-linecap="round" opacity=".65"/><path d="M196,82 Q180,76 164,76" fill="none" stroke="#b87020" stroke-width="3" stroke-linecap="round" opacity=".6"/><path d="M144,78 Q128,80 116,90" fill="none" stroke="#9a5810" stroke-width="3.5" stroke-linecap="round" opacity=".65"/><ellipse cx="160" cy="120" rx="66" ry="33" fill="#e8a030" opacity=".35"/><ellipse cx="147" cy="103" rx="2.5" ry="1.2" fill="#1e0e06" opacity=".55" transform="rotate(-20,147,103)"/><ellipse cx="162" cy="97" rx="2.5" ry="1.2" fill="#1e0e06" opacity=".55" transform="rotate(10,162,97)"/><ellipse cx="174" cy="100" rx="2.5" ry="1.2" fill="#1e0e06" opacity=".55" transform="rotate(-30,174,100)"/><ellipse cx="140" cy="111" rx="2.5" ry="1.2" fill="#1e0e06" opacity=".5" transform="rotate(15,140,111)"/><ellipse cx="180" cy="109" rx="2.5" ry="1.2" fill="#1e0e06" opacity=".5" transform="rotate(-10,180,109)"/><text x="160" y="30" text-anchor="middle" font-family="Georgia,serif" font-size="12" fill="#7a1c2e" font-style="italic">Sabbath Challah</text><line x1="60" y1="36" x2="260" y2="36" stroke="#b8860b" stroke-width=".7"/><text x="160" y="50" text-anchor="middle" font-family="Georgia,serif" font-size="8" fill="#b8860b" letter-spacing="2">✦ KHALE ✦</text></svg>`;
+
+SVGS.borscht = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200"><rect width="320" height="200" fill="#f0e6c8"/><rect x="5" y="5" width="310" height="190" fill="none" stroke="#b8860b" stroke-width="1" stroke-dasharray="4,3"/><path d="M53,96 Q53,170 160,170 Q267,170 267,96 Z" fill="#8b1a3a" stroke="#1e0e06" stroke-width="1.4"/><ellipse cx="160" cy="96" rx="107" ry="21" fill="#b02040" stroke="#1e0e06" stroke-width="1.4"/><ellipse cx="160" cy="96" rx="103" ry="18" fill="#9a1830"/><path d="M63,106 Q63,158 160,158 Q257,158 257,106" fill="#7a1228"/><ellipse cx="128" cy="93" rx="28" ry="7" fill="#c02848" opacity=".35"/><circle cx="160" cy="102" r="28" fill="none" stroke="#f0e6c8" stroke-width="2.5" stroke-dasharray="5,4"/><circle cx="160" cy="102" r="16" fill="#faf6ec"/><path d="M160,86 Q172,102 160,118 Q148,102 160,86Z" fill="#f0e6c8" opacity=".55"/><path d="M153,94 Q160,102 167,94 Q160,86 153,94" fill="none" stroke="#e4d5a8" stroke-width="1.5"/><path d="M186,84 Q190,76 194,68" fill="none" stroke="#2d4a1e" stroke-width="1.5"/><circle cx="194" cy="67" r="3.5" fill="#2d4a1e" opacity=".85"/><circle cx="190" cy="73" r="2.5" fill="#2d4a1e" opacity=".75"/><ellipse cx="160" cy="170" rx="65" ry="9" fill="#6a1430" stroke="#1e0e06" stroke-width="1"/><path d="M134,73 Q130,60 134,47" fill="none" stroke="#1e0e06" stroke-width=".9" stroke-linecap="round" opacity=".24"/><path d="M160,68 Q156,54 160,40" fill="none" stroke="#1e0e06" stroke-width=".9" stroke-linecap="round" opacity=".22"/><path d="M186,72 Q182,59 186,46" fill="none" stroke="#1e0e06" stroke-width=".9" stroke-linecap="round" opacity=".24"/><text x="160" y="30" text-anchor="middle" font-family="Georgia,serif" font-size="12" fill="#7a1c2e" font-style="italic">Imperial Beet Borscht</text><line x1="52" y1="36" x2="268" y2="36" stroke="#b8860b" stroke-width=".7"/><text x="160" y="50" text-anchor="middle" font-family="Georgia,serif" font-size="8" fill="#b8860b" letter-spacing="2">✦ DER ROYTE BORSCH ✦</text></svg>`;
+
+SVGS.kugel = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200"><rect width="320" height="200" fill="#f0e6c8"/><rect x="5" y="5" width="310" height="190" fill="none" stroke="#b8860b" stroke-width="1" stroke-dasharray="4,3"/><rect x="60" y="90" width="200" height="80" rx="3" fill="#8a5c18" stroke="#1e0e06" stroke-width="1.5"/><rect x="60" y="90" width="200" height="15" rx="3" fill="#6a3c08"/><path d="M60,105 L260,105" stroke="#1e0e06" stroke-width=".5" opacity=".4"/><path d="M75,110 Q90,115 105,108 Q120,115 135,108 Q150,115 165,108 Q180,115 195,108 Q210,115 225,108 Q240,115 245,110" fill="none" stroke="#d4a040" stroke-width="1.2" opacity=".6"/><path d="M75,118 Q90,123 105,116 Q120,123 135,116 Q150,123 165,116 Q180,123 195,116 Q210,123 225,116 Q240,123 245,118" fill="none" stroke="#d4a040" stroke-width="1.2" opacity=".55"/><path d="M75,126 Q90,131 105,124 Q120,131 135,124 Q150,131 165,124 Q180,131 195,124 Q210,131 225,124 Q240,131 245,126" fill="none" stroke="#d4a040" stroke-width="1.2" opacity=".5"/><path d="M75,134 Q90,139 105,132 Q120,139 135,132 Q150,139 165,132 Q180,139 195,132 Q210,139 225,132 Q240,139 245,134" fill="none" stroke="#d4a040" stroke-width="1.2" opacity=".45"/><rect x="60" y="165" width="200" height="8" rx="2" fill="#5a3008" stroke="#1e0e06" stroke-width="1"/><line x1="130" y1="90" x2="130" y2="173" stroke="#1e0e06" stroke-width=".6" opacity=".25"/><line x1="195" y1="90" x2="195" y2="173" stroke="#1e0e06" stroke-width=".6" opacity=".25"/><rect x="60" y="170" width="200" height="5" rx="2" fill="#7a4a18" stroke="#1e0e06" stroke-width=".8"/><text x="160" y="30" text-anchor="middle" font-family="Georgia,serif" font-size="12" fill="#7a1c2e" font-style="italic">Noodle Kugel</text><line x1="60" y1="36" x2="260" y2="36" stroke="#b8860b" stroke-width=".7"/><text x="160" y="50" text-anchor="middle" font-family="Georgia,serif" font-size="8" fill="#b8860b" letter-spacing="2">✦ LOKSHEN KUGEL ✦</text><text x="160" y="76" text-anchor="middle" font-family="Georgia,serif" font-size="9" fill="#3d2010" font-style="italic" opacity=".6">Golden noodles, raisins &amp; cinnamon</text></svg>`;
+
+SVGS.knish = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200"><rect width="320" height="200" fill="#f0e6c8"/><rect x="5" y="5" width="310" height="190" fill="none" stroke="#b8860b" stroke-width="1" stroke-dasharray="4,3"/><ellipse cx="160" cy="165" rx="120" ry="14" fill="#c8a040" opacity=".35"/><ellipse cx="120" cy="130" rx="56" ry="42" fill="#b87828" stroke="#1e0e06" stroke-width="1.5"/><ellipse cx="120" cy="118" rx="50" ry="32" fill="#d49040" opacity=".5"/><circle cx="120" cy="115" r="6" fill="#8a5010" opacity=".4"/><circle cx="108" cy="125" r="3" fill="#8a5010" opacity=".3"/><circle cx="133" cy="122" r="4" fill="#8a5010" opacity=".35"/><path d="M80,140 Q120,165 160,140" fill="none" stroke="#1e0e06" stroke-width="1" opacity=".3"/><ellipse cx="210" cy="138" rx="52" ry="38" fill="#c87020" stroke="#1e0e06" stroke-width="1.5"/><ellipse cx="210" cy="127" rx="46" ry="28" fill="#e09038" opacity=".45"/><circle cx="210" cy="124" r="5" fill="#8a5010" opacity=".4"/><path d="M172,145 Q210,168 248,145" fill="none" stroke="#1e0e06" stroke-width="1" opacity=".3"/><text x="160" y="30" text-anchor="middle" font-family="Georgia,serif" font-size="12" fill="#7a1c2e" font-style="italic">Potato Knishes</text><line x1="60" y1="36" x2="260" y2="36" stroke="#b8860b" stroke-width=".7"/><text x="160" y="50" text-anchor="middle" font-family="Georgia,serif" font-size="8" fill="#b8860b" letter-spacing="2">✦ KNISHE ✦</text></svg>`;
+
+SVGS.honey = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200"><rect width="320" height="200" fill="#f0e6c8"/><rect x="5" y="5" width="310" height="190" fill="none" stroke="#b8860b" stroke-width="1" stroke-dasharray="4,3"/><rect x="68" y="80" width="130" height="88" rx="4" fill="#8a5010" stroke="#1e0e06" stroke-width="1.5"/><rect x="68" y="80" width="130" height="16" rx="4" fill="#6a3800"/><rect x="68" y="92" width="130" height="5" fill="#6a3800"/><path d="M78,103 L188,103" stroke="#d4a040" stroke-width=".7" opacity=".4"/><path d="M78,112 L188,112" stroke="#d4a040" stroke-width=".7" opacity=".35"/><path d="M78,121 L188,121" stroke="#d4a040" stroke-width=".7" opacity=".3"/><path d="M78,130 L188,130" stroke="#d4a040" stroke-width=".7" opacity=".25"/><rect x="198" y="86" width="52" height="82" rx="4" fill="#a06018" stroke="#1e0e06" stroke-width="1.5"/><rect x="198" y="86" width="52" height="14" rx="4" fill="#7a4010"/><path d="M224,70 Q226,62 224,54" fill="none" stroke="#d4a017" stroke-width="2" stroke-linecap="round"/><path d="M224,70 Q218,75 216,80 Q222,78 224,70Z" fill="#d4a017"/><path d="M224,70 Q230,74 232,80 Q226,77 224,70Z" fill="#d4a017"/><circle cx="224" cy="53" r="5" fill="#d4a017"/><ellipse cx="180" cy="168" rx="110" ry="10" fill="#c8a040" opacity=".3"/><text x="160" y="30" text-anchor="middle" font-family="Georgia,serif" font-size="12" fill="#7a1c2e" font-style="italic">Honey Cake</text><line x1="60" y1="36" x2="260" y2="36" stroke="#b8860b" stroke-width=".7"/><text x="160" y="50" text-anchor="middle" font-family="Georgia,serif" font-size="8" fill="#b8860b" letter-spacing="2">✦ LEKACH ✦</text></svg>`;
+
+SVGS.holishkes = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200"><rect width="320" height="200" fill="#f0e6c8"/><rect x="5" y="5" width="310" height="190" fill="none" stroke="#b8860b" stroke-width="1" stroke-dasharray="4,3"/><rect x="42" y="115" width="236" height="60" rx="6" fill="#a83020" stroke="#1e0e06" stroke-width="1.2" opacity=".85"/><rect x="42" y="115" width="236" height="8" rx="6" fill="#8a1a10" opacity=".7"/><ellipse cx="108" cy="128" rx="54" ry="28" fill="#5a8830" stroke="#1e0e06" stroke-width="1.5"/><path d="M60,130 Q108,118 156,130" fill="none" stroke="#1e0e06" stroke-width=".8" opacity=".4"/><path d="M62,136 Q108,125 154,136" fill="none" stroke="#1e0e06" stroke-width=".6" opacity=".3"/><ellipse cx="212" cy="128" rx="54" ry="28" fill="#4a7820" stroke="#1e0e06" stroke-width="1.5"/><path d="M163,130 Q212,118 260,130" fill="none" stroke="#1e0e06" stroke-width=".8" opacity=".4"/><ellipse cx="160" cy="158" rx="118" ry="17" fill="#901818" stroke="#1e0e06" stroke-width="1" opacity=".7"/><path d="M100,100 Q108,88 115,78" fill="none" stroke="#2d4a1e" stroke-width="1.5" stroke-linecap="round" opacity=".7"/><circle cx="116" cy="76" r="3.5" fill="#2d4a1e" opacity=".8"/><text x="160" y="30" text-anchor="middle" font-family="Georgia,serif" font-size="12" fill="#7a1c2e" font-style="italic">Stuffed Cabbage</text><line x1="60" y1="36" x2="260" y2="36" stroke="#b8860b" stroke-width=".7"/><text x="160" y="50" text-anchor="middle" font-family="Georgia,serif" font-size="8" fill="#b8860b" letter-spacing="2">✦ HOLISHKES ✦</text></svg>`;
+
+SVGS.gefilte = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200"><rect width="320" height="200" fill="#f0e6c8"/><rect x="5" y="5" width="310" height="190" fill="none" stroke="#b8860b" stroke-width="1" stroke-dasharray="4,3"/><ellipse cx="160" cy="158" rx="130" ry="22" fill="#d4b870" stroke="#1e0e06" stroke-width="1.2"/><ellipse cx="160" cy="152" rx="126" ry="18" fill="none" stroke="#b8860b" stroke-width=".5"/><ellipse cx="108" cy="128" rx="56" ry="22" fill="#e8d8a8" stroke="#1e0e06" stroke-width="1.4"/><path d="M60,128 Q108,116 156,128" fill="none" stroke="#1e0e06" stroke-width=".7" opacity=".4"/><path d="M62,134 Q108,123 154,134" fill="none" stroke="#1e0e06" stroke-width=".5" opacity=".3"/><ellipse cx="212" cy="132" rx="56" ry="22" fill="#dece9e" stroke="#1e0e06" stroke-width="1.4"/><path d="M162,132 Q212,120 260,132" fill="none" stroke="#1e0e06" stroke-width=".7" opacity=".4"/><ellipse cx="58" cy="152" rx="22" ry="12" fill="#c83030" stroke="#1e0e06" stroke-width=".9"/><path d="M48,149 Q58,145 68,149" fill="none" stroke="#1e0e06" stroke-width=".6" opacity=".4"/><ellipse cx="262" cy="152" rx="22" ry="12" fill="#c83030" stroke="#1e0e06" stroke-width=".9"/><text x="160" y="30" text-anchor="middle" font-family="Georgia,serif" font-size="12" fill="#7a1c2e" font-style="italic">Gefilte Fish</text><line x1="60" y1="36" x2="260" y2="36" stroke="#b8860b" stroke-width=".7"/><text x="160" y="50" text-anchor="middle" font-family="Georgia,serif" font-size="8" fill="#b8860b" letter-spacing="2">✦ GEFILTE FISH IN ZALTS ✦</text></svg>`;
+
+SVGS.ornament = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 110"><rect width="320" height="110" fill="#f0e6c8"/><rect x="5" y="5" width="310" height="100" fill="none" stroke="#b8860b" stroke-width="1" stroke-dasharray="4,3"/><text x="160" y="62" text-anchor="middle" font-family="Georgia,serif" font-size="38" fill="#b8860b" opacity=".22">✦</text><text x="90" y="60" text-anchor="middle" font-family="Georgia,serif" font-size="18" fill="#b8860b" opacity=".15">✦</text><text x="230" y="60" text-anchor="middle" font-family="Georgia,serif" font-size="18" fill="#b8860b" opacity=".15">✦</text><line x1="40" y1="55" x2="120" y2="55" stroke="#b8860b" stroke-width=".6" opacity=".3"/><line x1="200" y1="55" x2="280" y2="55" stroke="#b8860b" stroke-width=".6" opacity=".3"/><text x="160" y="90" text-anchor="middle" font-family="Georgia,serif" font-size="7" fill="#7a1c2e" letter-spacing="3" opacity=".4">THE KIEV HEIRLOOM</text></svg>`;
+
+/* ============================================================
+   RECIPE DATA — 24 recipes · His dishes first
+   ============================================================ */
+const RECIPES = [
+
+/* ── CHAPTER I: STRAWBERRY MANSION ────────────────────────── */
+{
+  id:'blintzes', chapter:'I. Strawberry Mansion, Philadelphia — The Dishes He Remembers',
+  title:'Sweet Potato Blintzes', yiddish:'Kartoffl Blintzen',
+  image:'blintzes',
+  epigraph:'She never measured. Her hands knew the weight of the filling, the heat of the pan, the right color. That knowledge is the thing we are trying to recover.',
+  epigraphSource:'— Page Street, Strawberry Mansion, c. 1940',
+  left:{
+    heading:'The Old Way — Rolled', subheading:'"As Grandmother Made It: The Cigar Shape"',
+    intro:'This is the dish he remembers. Hot with the meal, sweet but not dessert, tan outside and soft all the way through. Three-quarters of an inch square, four inches long. She rolled them tight — each one a sealed log, seam down in the schmaltz.',
+    provisions:['2 lb yellow potatoes, boiled and riced hot','3 tbsp schmaltz (chicken fat) or butter','2 tbsp honey or sugar','½ tsp cinnamon','Pinch of salt and nutmeg','Optional: ¼ cup raisins, plumped in warm water','— For the crepes —','1½ cups flour','3 eggs','1½ cups whole milk','Pinch of salt','Butter or schmaltz for the pan and frying'],
+    steps:['Boil potatoes until completely tender; rice them immediately while hot into a bowl. Fold in schmaltz, honey, cinnamon, salt, and nutmeg. If using raisins, fold them in now. The filling must be firm enough to hold its shape — not stiff, but holdable.','Make the crepe batter: whisk together flour, eggs, milk, and salt until completely smooth. Rest 20 minutes. The batter should be thin as cream.','Cook crepes in a lightly greased pan over medium heat — one side only, until the surface turns matte and dry. Stack them cooked-side up.','Place a generous log of filling (roughly ¾" diameter) along the lower third of each crepe, leaving a 1" margin on each end. This is the key step: the filling log determines the final shape.','Fold the two short ends in over the filling, then roll tightly away from you — as tight as you can — seam side down. The result: a firm, sealed cylinder, roughly ¾" square in cross-section and 4" long.','Fry seam-side down in butter or schmaltz over medium heat until the underside is tan and sealed. Turn carefully. Fry until all sides are golden. Serve immediately, hot from the pan.'],
+    wisdom:{heading:"Grandmother's Instruction", text:'The rolling is everything. A loose roll opens in the pan and spills its filling into the fat. Press the filling into a compact shape before rolling. Confidence in the roll. No hesitation.'}
+  },
+  right:{
+    heading:'The Modern Way — Folded', subheading:'"The Envelope: Easier to Seal, Different in Character"',
+    intro:'The folded blintz is the version most commonly known today — a neat rectangular packet rather than a tight roll. It is faster, more forgiving, and holds its shape easily. Different from what he remembers, but in the same spirit.',
+    provisions:['2 lb Yukon Gold potatoes','4 tbsp unsalted butter','3 tbsp sour cream','2 tbsp brown sugar','½ tsp cinnamon, ¼ tsp nutmeg','Pinch of salt','Zest of half an orange (optional)','— For the crepes —','1 cup flour','3 eggs','1¼ cups whole milk','1 tbsp melted butter, pinch of salt','Butter for frying','Sour cream and honey to serve'],
+    steps:['Boil and rice the potatoes while hot. Beat in butter and sour cream until smooth. Add brown sugar, cinnamon, nutmeg, salt, and orange zest. Cool completely before filling — hot filling tears the crepe.','Make crepe batter; rest 30 minutes. Cook as above, one side only.','Lay a crepe cooked-side up. Place 2 tablespoons of filling in the center.','Fold the bottom third up over the filling. Fold the left and right sides inward. Roll the top third down to close — the result is a sealed rectangular packet, like an envelope.','Fry in butter over medium heat, seam-side down first, 2–3 minutes per side until evenly golden.','Serve with a spoonful of sour cream and a drizzle of honey.'],
+    wisdom:{heading:'The Modern Note', text:'The folded version holds together more reliably, which is why it became the standard. But the rolled version — his grandmother\'s version — is structurally different: the filling distributes evenly through the length, and every bite is the same.'}
+  }
+},
+{
+  id:'soup', chapter:'I. Strawberry Mansion, Philadelphia — The Dishes He Remembers',
+  title:'Golden Chicken Soup with Matzo Balls', yiddish:'Goldene Yoikh mit Kneydlakh',
+  image:'soup',
+  epigraph:'There are soups that feed you and soups that heal you. This one does both, and a third thing besides: it makes you remember every kitchen you have ever been warm in.',
+  epigraphSource:'— Common saying, every Pale of Settlement household',
+  left:{
+    heading:'The Old Way', subheading:'"The Stewing Hen, The Long Simmer"',
+    intro:'A stewing hen — old, spent, past her laying years — gives a depth of flavor a young broiler cannot. The charred onion is the trick that turns the broth from good to golden.',
+    provisions:['1 whole stewing hen, or 3 lb bone-in backs and thighs','3 large carrots, whole','2 parsnips, whole','2 celery stalks with leaves','1 onion, halved and charred over flame until blackened','Fresh dill, parsley stems, peppercorns, bay leaf','— For the kneydlakh —','1 cup matzo meal','4 eggs, beaten','4 tbsp schmaltz, melted','1 tsp salt, white pepper, pinch of ginger'],
+    steps:['Char the onion halves directly over a gas flame or in a dry cast iron pan until the cut sides are completely black. This is not optional — it is the reason the broth is golden, not grey.','Place chicken in a large pot, cover with cold water. Bring slowly to a simmer — never a boil — skimming the grey foam for the first 20 minutes with devotion.','Add the charred onion, carrots, parsnips, celery, dill, parsley stems, peppercorns, and bay leaf. Simmer, barely trembling, for 3 to 4 hours.','Strain the broth through a fine cloth. Return the broth to the pot. The broth should be a deep, trembling gold.','For kneydlakh: combine matzo meal, eggs, schmaltz, salt, pepper, and ginger. Mix well and refrigerate 30 minutes — the mixture will firm considerably.','With wet hands, roll into balls the size of a golf ball. Drop into a separate pot of simmering salted water. Cover and cook 20 minutes — never less. Transfer to the warm broth only when ready to serve.'],
+    wisdom:{heading:"Grandmother's Wisdom", text:'The charred onion is the oldest trick in the Jewish kitchen. Drop a spoonful of broth on a cold plate after three hours: if it gels in five minutes, the soup is ready. If it stays liquid, cook another hour.'}
+  },
+  right:{
+    heading:'The Modern Way', subheading:'"Pressure Cooker, Seltzer for Light Kneidlakh"',
+    intro:'The pressure cooker compresses the long simmer into 45 minutes. The seltzer in the matzo balls — one small modern addition — introduces bubbles that expand in the heat and produce a noticeably lighter, more open result.',
+    provisions:['1 whole chicken, or 3 lb bone-in thighs and backs','4 carrots','2 parsnips','1 onion, halved and charred in a dry skillet','Fresh dill, parsley, thyme','Peppercorns, bay, salt','— For the kneydlakh —','1 cup matzo meal','4 eggs','¼ cup chicken fat, butter, or oil','¼ cup plain seltzer water','1 tsp salt, white pepper, dill'],
+    steps:['Char the onion in a dry skillet over high heat. Combine chicken, vegetables, charred onion, herbs, and water to cover in a pressure cooker.','Pressure cook at high for 45 minutes. Natural release 15 minutes. Strain the broth; taste and adjust salt. The broth should coat a spoon lightly.','For kneydlakh: mix matzo meal, eggs, fat, and seltzer together — do not overmix. Season with salt, pepper, and dill. Refrigerate 30 minutes.','Roll gently into balls — handle them as little as possible. Drop into a separate pot of simmering salted water. Cover and cook exactly 20 minutes.','Move kneydlakh to the warm broth only when ready to serve. They absorb broth and grow.'],
+    wisdom:{heading:'The Modern Note', text:'The seltzer is the great upgrade. The tiny bubbles expand in the heat and give the kneydlakh a lighter, more open texture. Cool the matzo ball mixture fully before rolling — warm mixture produces dense balls.'}
+  }
+},
+{
+  id:'latkes', chapter:'I. Strawberry Mansion, Philadelphia — The Dishes He Remembers',
+  title:'Potato Latkes', yiddish:'Kartofelpankekhes',
+  image:'latkes',
+  epigraph:'Frying in insufficient fat is not economy — it is tragedy. The oil is the point. The oil is the holiday.',
+  epigraphSource:'— Hanukkah teaching, attributed to many grandmothers',
+  left:{
+    heading:'The Old Way', subheading:'"The Schmaltz, The Box Grater, The Iron Pan"',
+    intro:'Latkes were a Hanukkah food — the oil in which they fry being the entire religious point, not the potato. A latke fried in insufficient fat is a latke that has not understood itself.',
+    provisions:['3 lb russet potatoes, peeled','1 large onion','2 eggs, beaten','3 tbsp flour or matzo meal','1½ tsp salt, black pepper','Schmaltz or goose fat for frying — a generous depth','Thick smetana (sour cream) and applesauce to serve'],
+    steps:['Grate the potatoes and onion on the large holes of a box grater. Working in fistfuls, squeeze the mixture over a bowl with tremendous force. Let the liquid rest — the white starch that settles at the bottom is your binder. Pour off the water; return the starch to the potato mixture.','Mix in eggs, flour, salt, and pepper until combined.','Heat a generous depth of schmaltz in a heavy iron pan until shimmering and almost smoking. Drop large spoonfuls of the potato mixture; press flat immediately with the back of a spoon.','Do not touch them for 3 minutes. They will release when the crust has formed — attempting to move them earlier tears the crust. Turn once. Fry 2–3 minutes more until mahogany on both sides.','Drain on a wire rack, never paper towels — paper steams the crust soft. Season with salt immediately while they are still blistering.'],
+    wisdom:{heading:"Grandmother's Wisdom", text:'If a latke tears when you try to flip it, it is not ready. It will release when it wants to. The crust forms on its own schedule. Patience is the entire technique.'}
+  },
+  right:{
+    heading:'The Modern Way', subheading:'"Cast Iron, Wire Rack, Cornstarch"',
+    intro:'Cornstarch in place of flour produces a crispier, more glass-like crust. The wire rack is the single most important modern upgrade — it keeps the crust intact where paper towels destroy it.',
+    provisions:['2 lb russet potatoes, peeled','1 small onion','2 eggs, beaten','2 tbsp cornstarch','1 tsp salt, white pepper','Neutral oil or clarified butter for frying','Crème fraîche and smoked salmon, or sour cream and applesauce to serve'],
+    steps:['Grate potatoes and onion using a food processor or box grater. Transfer to a clean kitchen towel and wring very hard — work in two batches. The more liquid you remove, the crispier the result.','Mix wrung potato and onion with eggs, cornstarch, salt, and pepper.','Heat ½ inch of oil in a heavy cast iron or stainless skillet over medium-high until shimmering. Drop large spoonfuls; press flat. Cook 4 minutes undisturbed; flip; cook 3 more.','Transfer directly to a wire rack set over a sheet pan. Season with flaky salt immediately. Keep warm in a 200°F oven on the rack while frying the rest.','Serve with crème fraîche and smoked salmon for a modern appetizer, or sour cream and applesauce in the traditional way.'],
+    wisdom:{heading:'The Modern Note', text:'The rack is everything. Paper towels trap steam and soften the crust within minutes. Flaky salt immediately out of the pan penetrates the hot crust rather than sitting on it. These two adjustments are the difference between good and extraordinary.'}
+  }
+},
+{
+  id:'challah', chapter:'I. Strawberry Mansion, Philadelphia — The Dishes He Remembers',
+  title:'Sabbath Challah', yiddish:'Khale',
+  image:'challah',
+  epigraph:'The braided loaf on the white cloth under the embroidered cover: this is what the Sabbath looked like, for a thousand years, in a thousand cities.',
+  epigraphSource:'— Common observation, Pale of Settlement',
+  left:{
+    heading:'The Old Way', subheading:'"The Braided Covenant"',
+    intro:'The challah must be made with the intention it deserves. It is not bread — it is the Sabbath made edible, braided to represent the interweaving of the weekday with the sacred.',
+    provisions:['4 cups bread flour','2¼ tsp active dry yeast','¾ cup warm water','2 eggs plus 1 yolk (reserve 1 white for wash)','¼ cup honey','⅓ cup neutral oil','1½ tsp salt','Sesame or poppy seeds for the top'],
+    steps:['Proof the yeast in warm water with a pinch of sugar until foamy — 10 minutes. A yeast that does not foam is a yeast that is dead, and the bread will not rise.','Combine flour and salt; make a well. Add yeast mixture, eggs and yolk, honey, and oil. Mix until a shaggy dough forms; knead 10 minutes until smooth, elastic, and slightly tacky.','Rise in an oiled bowl, covered, 90 minutes until doubled. Punch down gently.','Divide into three ropes of equal length — longer than you expect. Braid from the center outward; this keeps the ends from pulling apart. Pinch and tuck the ends.','Second rise, 45 minutes. Brush twice with beaten egg white (once before rising, once just before baking). Scatter seeds.','Bake at 375°F for 30–35 minutes. Tap the bottom — it should sound hollow throughout.'],
+    wisdom:{heading:"Grandmother's Wisdom", text:'The double egg wash — once before the rise, once before baking — is the difference between a pale challah and the lacquered, mahogany crust that signals a properly made loaf. Do not skip the second application.'}
+  },
+  right:{
+    heading:'The Modern Way', subheading:'"The Round Rosh Hashanah Loaf"',
+    intro:'For Rosh Hashanah, the challah is round — coiled into a crown to symbolize the cycle of the year. It is loaded with raisins for sweetness. A completely different character from the long Sabbath braid.',
+    provisions:['4 cups bread flour','2¼ tsp instant yeast','¾ cup warm water','2 eggs plus 1 yolk','⅓ cup honey (more than for a plain challah)','⅓ cup neutral oil','1½ tsp salt','1 cup raisins, soaked in warm water 20 minutes','1 egg for wash'],
+    steps:['Combine all ingredients except raisins and egg wash in a stand mixer with the dough hook. Knead 8 minutes until smooth and glossy. The dough should clear the sides of the bowl.','Drain and pat dry the raisins; fold in gently by hand.','First rise: 1.5 hours at room temperature, or overnight in the refrigerator — a cold-proofed challah has deeper flavor.','To shape the round: roll the dough into one long rope (at least 24 inches). Starting from the center, coil it in concentric circles, tucking the end underneath.','Final rise 45 minutes. Brush generously with beaten egg. Bake at 375°F, tenting with foil after 20 minutes if the top browns too fast. Internal temperature 190°F when done.'],
+    wisdom:{heading:'The Modern Note', text:'The round challah is richer and sweeter than the Sabbath loaf — the extra honey and the raisins make it almost a dessert bread. It is specific to Rosh Hashanah and should not be made at other times; the occasion makes it what it is.'}
+  }
+},
+{
+  id:'lokshen', chapter:'I. Strawberry Mansion, Philadelphia — The Dishes He Remembers',
+  title:'Noodle Kugel', yiddish:'Lokshen Kugel',
+  image:'kugel',
+  epigraph:'A kugel served at the Sabbath table sits between the soup and the meat and no one questions this. It is sweet but it is not dessert. It belongs nowhere, which is why it belongs everywhere.',
+  epigraphSource:'— Overheard at a Philadelphia seder, c. 1948',
+  left:{
+    heading:'The Old Way', subheading:'"Schmaltz, Raisins, Cinnamon"',
+    intro:'The old way is pareve — no dairy — so it could sit alongside the meat on the Sabbath table. The schmaltz enriches it; the raisins sweeten it; the cinnamon makes the whole kitchen smell of the holiday.',
+    provisions:['1 lb wide egg noodles','4 eggs, beaten','½ cup schmaltz or neutral oil, melted','½ cup sugar','1 tsp cinnamon','½ cup raisins, plumped in warm black tea','1 tsp vanilla','Pinch of salt','Cinnamon-sugar for the top'],
+    steps:['Cook noodles in heavily salted boiling water to just barely tender — they continue cooking in the oven and must not be soft now. Drain and rinse with cold water immediately.','Plump the raisins in warm black tea for 10 minutes until swollen. Drain.','Combine beaten eggs, schmaltz, sugar, cinnamon, vanilla, and salt in a large bowl. Add the drained noodles and raisins; toss until every strand is coated.','Pour into a well-greased baking dish. Dust the top generously with cinnamon-sugar.','Bake at 350°F for 55–65 minutes until the top is deep golden-brown and the center is set. Shake the pan: it should jiggle as a single mass, not slosh.','Rest 10 minutes before cutting. Serve hot.'],
+    wisdom:{heading:"Grandmother's Wisdom", text:'The raisins must be plumped — dry raisins steal moisture from everything around them and remain hard in the finished kugel. Black tea adds a subtle depth to the raisins themselves. This step cannot be skipped.'}
+  },
+  right:{
+    heading:'The Modern Way', subheading:'"Cream Cheese, Cornflake Crust"',
+    intro:'The cream cheese and sour cream base is the American Jewish innovation that has become so beloved it feels traditional. The cornflake crust — a Mid-Century Ashkenazi flourish — is entirely correct and must not be omitted.',
+    provisions:['12 oz wide egg noodles','8 oz cream cheese, softened','1 cup sour cream','4 eggs','½ cup sugar','4 tbsp unsalted butter, browned','1 tsp vanilla','½ tsp cinnamon, pinch of nutmeg, pinch of salt','— Crust —','1 cup cornflakes, lightly crushed','3 tbsp melted butter','2 tbsp sugar, ½ tsp cinnamon'],
+    steps:['Brown the butter: melt in a light-colored pan, swirling, until the milk solids turn hazelnut-brown and the kitchen smells of toffee. Cool slightly.','Cook noodles to al dente. Drain.','Beat cream cheese and sour cream together until completely smooth — any lumps remain as lumps in the finished kugel. Add eggs, sugar, browned butter, vanilla, cinnamon, and salt. Beat until unified.','Fold in the drained noodles. Pour into a buttered 9×13 pan.','Toss cornflakes with melted butter, sugar, and cinnamon; scatter evenly over the top.','Bake at 350°F for 60–70 minutes until the crust is deeply golden and the center is just set. Cool 15 minutes before cutting.'],
+    wisdom:{heading:'The Modern Note', text:'The browned butter is the secret upgrade — it takes the kugel from merely good to something people ask about. The cornflake crust should shatter when pressed with a spoon. If it yields softly, the kugel needs more time uncovered.'}
+  }
+},
+
+/* ── CHAPTER II: THE SOUL OF THE POT ──────────────────────── */
+{
+  id:'borscht', chapter:'II. The Soul of the Pot',
+  title:'Kiev Beet Borscht', yiddish:'Rote-Betn Borscht',
+  image:'borscht',
+  epigraph:'There are two kinds of people in the world: those who have tasted a proper borscht made with kvass, and those who merely think they have eaten borscht.',
+  epigraphSource:'— Attributed to Reb Menachem of Podil, c. 1918',
+  left:{
+    heading:'The Old Way', subheading:'"As Our Mothers Knew It"',
+    intro:'This is the recipe as it existed before lemon juice, before shortcut vinegar, before the Soviet canteen. It requires patience and beet kvass — the living, fermented backbone of authentic Kievan borscht.',
+    provisions:['1.5 kg bone-in beef brisket or short rib','6 medium beets, scrubbed but unpeeled','500 ml Beet Kvass (see next recipe)','3 large yellow onions, quartered','1 small head cabbage, coarsely shredded','3 carrots and 2 parsnips, rough chopped','3 tbsp rendered goose fat','Bay leaf, thyme sprigs, salt, pepper, pinch of sugar','Fresh dill and sour cream to serve'],
+    steps:['Cover the brisket in cold water. Bring slowly to a simmer, skimming the grey foam with devotion for 30 minutes.','Add onions, carrots, parsnips, and bay leaves. Simmer uncovered 2 hours.','Roast three beets directly in ashes or flame until tender; peel and grate coarsely. Grate the remaining three raw. Reserve separately.','Remove beef; strain broth; pull meat from bones in large pieces; return to pot.','Add cabbage, roasted beet, and raw grated beet. Melt in the goose fat. Simmer 20 minutes.','Pour in the kvass — slowly, reverently — tasting as you go. Season with salt, sugar, and pepper. Rest covered at least one hour. Borscht is always better the next day.'],
+    wisdom:{heading:"Grandma's Wisdom", text:'Never boil after the kvass is added. A boil murders the living culture. A whisper of heat only. The sour, fermented depth kvass adds cannot be duplicated by vinegar — vinegar is sharp, kvass is alive.'}
+  },
+  right:{
+    heading:'The Modern Way', subheading:'"For the Busy Household, Without Shame"',
+    intro:'The pressure cooker compresses time but not soul — if you use good beets and proper sour. Apple cider vinegar is an honest substitute when kvass is unavailable.',
+    provisions:['1.2 kg beef short ribs or chuck','6 medium beets, roasted and peeled','3 tbsp apple cider vinegar','2 onions, 2 carrots, 1 parsnip — diced','300g cabbage, thinly sliced','3 garlic cloves, 1 tbsp tomato paste','2 tbsp schmaltz or oil','1.5 L beef or chicken stock','Salt, pepper, 1 tsp sugar','Dill, sour cream, rye bread to serve'],
+    steps:['Roast beets wrapped in foil at 400°F for 1 hour. Peel and grate when cool.','Season and sear the beef in a heavy Dutch oven until well browned. Remove.','Soften onions, carrots, and parsnip in the same fat 8 minutes. Add garlic and tomato paste; cook 2 more minutes.','Return beef. Add stock. Pressure cook 45 minutes, or braise at 325°F for 2.5 hours.','Shred beef; return to the pot with cabbage and grated beets. Simmer 15 minutes.','Add vinegar in stages, tasting. Adjust salt and sugar. Rest 30 minutes before serving.'],
+    wisdom:{heading:'The Modern Note', text:'If you can plan three days ahead, make the kvass. A quick ferment transforms this from excellent to ancestral. Pre-cooked beets from a grocery store are entirely acceptable for the rest of the recipe.'}
+  }
+},
+{
+  id:'kvass', chapter:'II. The Soul of the Pot',
+  title:'Beet Kvass', yiddish:'Rote-Betn Kvas',
+  image:'ornament',
+  epigraph:'Before the lemon boat arrived, before the vinegar jug was commonplace — the beet fermented quietly in the cellar, and it was enough. It was everything.',
+  epigraphSource:'— Kitchen Journal of Leah Horowitz, Kiev, 1922',
+  left:{
+    heading:'The Old Way', subheading:'"The Cellar Brew"',
+    intro:'Beet kvass is the ancient sour-water of Eastern European cooking. Every housewife in the Pale kept a crock. It was used in borscht, in braised meats, and drunk as a morning tonic.',
+    provisions:['1 kg raw beets (3–4 medium), peeled, cut in 2cm cubes','1 litre filtered water','1 tsp coarse non-iodized salt','2 slices dark rye bread, crusts only (seeds the wild yeast)','1 ceramic or glass crock'],
+    steps:['Do not wash the beets aggressively — the wild yeasts and bacteria on the skin are your fermentation agents.','Place cubed beets and rye crusts in the crock. Dissolve salt in water; pour over beets until fully submerged. Weight them down with a plate.','Cover with a clean cloth, tied at the neck. Do not seal airtight.','Leave in a cool pantry (15–18°C ideal). After 3 days, the liquid will foam and smell pleasantly sour and earthy.','Ferment 5–7 days total. Strain. The kvass is a deep ruby, sour, mineral liquid. Reserve some beet scraps to seed your next batch.'],
+    wisdom:{heading:'The Cellar Rule', text:'If it smells of vinegar — too long. If it smells of dirt — not long enough. The correct moment smells of something ancient and alive. Trust your nose above any timeline.'}
+  },
+  right:{
+    heading:'The Modern Way', subheading:'"The Quick Brew — Three Days"',
+    intro:'Apple cider vinegar as a starter makes fermentation faster and more predictable. Three days at room temperature yields a usable kvass.',
+    provisions:['500g raw beets, peeled, cut in 1.5cm cubes','750 ml filtered water','1 tsp non-iodized salt','2 tbsp raw apple cider vinegar (as starter)','1 large mason jar (1-litre)'],
+    steps:['Dissolve salt in water in the mason jar. Add cubed beets and apple cider vinegar.','Leave 2cm headspace. Cover loosely — not sealed.','Place on a kitchen counter out of direct sunlight (20–24°C ideal).','After 48 hours, taste: pleasantly sour, earthy, lightly salty. For more tang, leave another 12–24 hours.','Strain into a clean jar. Refrigerate. Keeps for 2 weeks.'],
+    wisdom:{heading:'The Modern Note', text:'The spent beet cubes after straining are deeply flavored — dress them with horseradish and walnut oil for a side dish. Waste nothing.'}
+  }
+},
+
+/* ── CHAPTER III: THE STAFF OF LIFE ───────────────────────── */
+{
+  id:'kasha', chapter:'III. The Staff of Life',
+  title:'Kasha with Gribenes', yiddish:'Kashe mit Grivn',
+  image:'ornament',
+  epigraph:'The goose gave everything. Her fat kept the winter lamps burning. Her skin, rendered slowly until crackling and gold, was the reward for the long labor.',
+  epigraphSource:'— Folk saying, Berdichev district, c. 1900',
+  left:{
+    heading:'The Old Way', subheading:'"The Whole Goose Protocol"',
+    intro:'Before the chicken became the universal bird, the goose reigned in Kiev. Her skin, rendered with onion until crisp and gold, is called gribenes — the great forgotten luxury of Ashkenazi cooking.',
+    provisions:['250g whole buckwheat groats (kasha), dark roasted','1 egg, beaten','500 ml rich poultry stock, boiling hot','1 tbsp rendered goose fat','1 tsp salt','— Gribenes —','300g raw goose or duck skin with fat, cut in 2cm pieces','2 large yellow onions, thinly sliced','½ tsp coarse salt'],
+    steps:['Gribenes: place skin in a cold heavy skillet; heat low. As the fat renders, the pieces shrink and the pan fills with schmaltz — 20 minutes. Add onions and salt; continue 25–35 more minutes until skin is dark and crackling and onions are deeply caramelized. Drain; reserve the liquid schmaltz.','Toast dry kasha in a dry pan over medium heat, stirring, until darkened and nutty, 5 minutes.','Off heat, coat the hot kasha with beaten egg — stir vigorously until each grain is dressed and separated. This sets the starch and keeps grains individual.','Return to heat. Pour boiling stock over immediately. Add goose fat. Salt. Cover tightly. Cook on lowest heat 15 minutes. Do not lift the lid.','Steam off heat, covered, 10 more minutes. Fluff. Serve heaped, crowned with gribenes and caramelized onions.'],
+    wisdom:{heading:"Grandma's Wisdom", text:'The egg coating is not optional — it is the secret that keeps each grain separate. Without it you have porridge. With it, you have kasha. The difference is everything.'}
+  },
+  right:{
+    heading:'The Modern Way', subheading:'"Duck Fat and Cast Iron"',
+    intro:'Duck legs or chicken thighs provide the fat if goose is unavailable. The principle is identical: low heat, patience, and the willingness to wait for the color.',
+    provisions:['250g whole buckwheat groats','1 egg, beaten','480 ml good chicken or vegetable stock','1 tbsp duck fat or butter','1 tsp salt, black pepper','— Crispy bits —','200g chicken thigh skin','2 onions, thinly sliced','1 tsp fresh thyme leaves','Flaky salt to finish'],
+    steps:['Lay chicken skin flat in a cold cast iron skillet; press another heavy pan on top as a weight. Cook medium-low, 15–20 minutes, until golden and crisp. Remove skins; drain most fat.','Add onions and thyme to the pan. Cook over medium heat 20 minutes until deeply caramelized. Combine with crumbled crispy skin; season with flaky salt.','Toast buckwheat in a dry saucepan 4–5 minutes until nutty. Off heat, coat with beaten egg; stir vigorously.','Return to heat; pour in boiling stock. Add fat. Cover tightly. Cook 12 minutes on low. Rest covered 10 minutes. Fluff. Serve topped with the crispy onion mixture.'],
+    wisdom:{heading:'The Modern Note', text:'Leftover kasha is extraordinary pan-fried in butter the next morning with a fried egg on top. This is not a compromise — it may be better than the original.'}
+  }
+},
+{
+  id:'potato-kugel', chapter:'III. The Staff of Life',
+  title:'Potato Kugel', yiddish:'Bulbe Kugel',
+  image:'ornament',
+  epigraph:'A kugel that is soft in the center and nearly burnt at the edges is not a failed kugel. It is a perfect kugel. Anyone who tells you otherwise has never known hunger.',
+  epigraphSource:'— Overheard at a Berdichev market, 1919',
+  left:{
+    heading:'The Old Way', subheading:'"The Hand-Grater\'s Penance"',
+    intro:'This dish is born from labor. Grating 2 kg of potatoes by hand is a meditative, arm-burning act that releases exactly the starch the recipe depends upon.',
+    provisions:['2 kg russet potatoes, peeled','2 large yellow onions','4 eggs, beaten','4 tbsp schmaltz or goose fat, melted','1½ tsp salt, 1 tsp black pepper','3 tbsp matzo meal','Additional schmaltz to grease the pan'],
+    steps:['Preheat the oven to its hottest setting (425–450°F). Grease a large deep pan generously with schmaltz; place in the oven to heat.','Grate potatoes and onions on the large holes of a box grater. Working in fistfuls, wring out as much liquid as possible. Save this liquid.','Let the saved liquid rest 5 minutes; the white starch sinks. Pour off the water; return the starch to the potato mixture.','Combine everything with eggs, melted schmaltz, salt, pepper, and matzo meal.','Remove the smoking-hot pan from the oven; pour in the potato mixture — it should sizzle violently. This creates the essential crust immediately.','Bake at 425°F, 45 minutes covered with foil; then uncover and cook 30 more minutes until the top is deep mahogany-brown.'],
+    wisdom:{heading:"Grandma's Wisdom", text:'The crust must be nearly black at the edges. A pale kugel is an underbaked kugel. The kugel should rest 15 minutes before cutting or it will fall apart. Use this time to compose yourself after making it.'}
+  },
+  right:{
+    heading:'The Modern Way', subheading:'"Food Processor, Individual Cups"',
+    intro:'A food processor with grating disc reduces 30 minutes of hand labor to 5. The result is indistinguishable — which is humbling and liberating in equal measure.',
+    provisions:['1.5 kg russet or Yukon Gold potatoes, peeled','1 large onion','3 eggs, beaten','3 tbsp schmaltz, duck fat, or oil','1 tsp salt, ¾ tsp black pepper','2 tbsp potato starch or flour','Oil or schmaltz for the pan'],
+    steps:['Preheat oven to 425°F. Place a 9×13 pan with 2 tbsp oil in the oven while it preheats.','Grate potatoes and onion using the food processor\'s grating disc. Transfer to a kitchen towel and wring very firmly — discard the liquid.','Combine grated potato-onion with eggs, melted fat, salt, pepper, and starch.','Carefully remove the very hot pan. Pour in the potato mixture — it should sizzle vigorously. Return to oven.','Bake 30 minutes. Reduce heat to 375°F. Bake another 30–35 minutes until top is mahogany-brown and a knife at the center comes out clean.'],
+    wisdom:{heading:'The Modern Note', text:'For individual kugel cups: pour into greased muffin tins and bake 30–35 minutes at 425°F. Each cup will be entirely crust — which is the best possible outcome and requires no sharing.'}
+  }
+},
+{
+  id:'knishes', chapter:'III. The Staff of Life',
+  title:'Potato Knishes', yiddish:'Knishe',
+  image:'knish',
+  epigraph:'In Kiev, knishes were sold from street carts wrapped in newspaper. The liver version was the mark of a prosperous household. The potato version was for everyone else, which is to say: for us.',
+  epigraphSource:'— Common market memory, Podil district, c. 1915',
+  left:{
+    heading:'The Old Way', subheading:'"The Street Corner Sacrament"',
+    intro:'The dough must be elastic enough to stretch paper-thin without tearing. This is the test of patience. The filling must be the most honest potato-and-schmaltz you can make.',
+    provisions:['3 cups flour','½ cup warm schmaltz or fat','2 eggs','½ cup warm water','1 tsp salt, pinch of baking powder','— Filling —','3 lb yellow potatoes, boiled and riced','3 large onions, slowly caramelized in schmaltz','Salt, white pepper, pinch of nutmeg','1 egg, beaten (for wash)'],
+    steps:['Combine flour, schmaltz, eggs, warm water, and salt; knead until smooth and silky, at least 10 minutes. Rest under a damp cloth 30 minutes.','For the filling: fold the riced potato into the deeply caramelized onion with enough schmaltz to make it cohesive. Season generously with salt, pepper, and nutmeg.','Roll the dough thin on a floured surface. Cut into 4-inch rounds.','Place a generous mound of filling in the center of each round. Fold and pinch the dough tightly around it — no gaps, or the filling escapes.','Brush with beaten egg. Bake at 375°F until deeply golden, 25–30 minutes. The bottom must be as golden as the top.'],
+    wisdom:{heading:"Grandmother's Wisdom", text:'The filling must be properly seasoned — taste it aggressively before it goes into the dough. Once the dough is sealed, there is nothing to be done about underseasoned filling.'}
+  },
+  right:{
+    heading:'The Modern Way', subheading:'"Puff Pastry, Roasted Garlic"',
+    intro:'Puff pastry is an honest shortcut that produces a flakier, richer knish than the traditional dough. The roasted garlic is a modern addition that the original filling always deserved.',
+    provisions:['1 sheet good-quality puff pastry, thawed','2 lb Yukon Gold potatoes','1 head garlic, roasted','4 tbsp unsalted butter','¼ cup sour cream','2 large onions, caramelized 45 minutes','Fresh chives and dill','Flaky salt, white pepper, 1 egg for wash'],
+    steps:['Boil potatoes until completely tender; rice immediately while hot. Squeeze roasted garlic from its papery skin and fold into the potato with butter, sour cream, caramelized onions, and herbs. Season aggressively.','Unfurl puff pastry on a lightly floured surface. Cut into 4-inch squares.','Place a heaping spoonful of filling at center; fold into a pillow, pressing edges firmly. Brush with beaten egg.','Score the top lightly with a knife. Refrigerate the shaped knishes 20 minutes before baking — this helps the pastry hold its shape.','Bake at 400°F for 22–25 minutes until deeply puffed and golden.'],
+    wisdom:{heading:'The Modern Note', text:'Tap the bottom of a finished knish — it should sound hollow, not dense. If it sounds wet, give it 5 more minutes. The bottom crust is as important as the top.'}
+  }
+},
+{
+  id:'holishkes', chapter:'III. The Staff of Life',
+  title:'Stuffed Cabbage', yiddish:'Holishkes',
+  image:'holishkes',
+  epigraph:'Why make a big holishkes out of everything? Because some things deserve the full production. The sweet carrot, the slow honey, the long braise — these deserve the fuss.',
+  epigraphSource:'— Adapting the Yiddish idiom, attributed to many',
+  left:{
+    heading:'The Old Way', subheading:'"Sweet-Sour, Kiev Style"',
+    intro:'The sweet-sour balance is the signature of Kiev cooking — neither Galician-sweet nor Lithuanian-sour. The sauce must make the tongue argue with itself before it agrees.',
+    provisions:['1 large head savoy cabbage','2 lb ground beef (fatty cut, not lean)','1 cup cooked white rice','2 onions, grated on a box grater','2 lb ripe tomatoes, crushed by hand','¼ cup dark brown sugar','Juice of 1 large lemon','A fistful of golden raisins','Salt, black pepper, ground ginger'],
+    steps:['Freeze the whole cabbage overnight; thaw at room temperature. The leaves will peel away without blanching, already limp and pliable.','Mix beef with rice, grated onion, salt, pepper, and ginger — work with your hands until a single mass with no streaks.','Roll tightly: place a generous fistful of filling on each leaf over the thick vein. Fold the sides inward first, then roll away from you. Pack tightly in a cast iron pot, seam-down.','Pour over the hand-crushed tomatoes; add sugar, lemon, and raisins. The sauce must be both sour and sweet — taste and adjust until it argues.','Braise covered 2 hours; then uncover 30 minutes so the sauce reduces to a thick glaze.'],
+    wisdom:{heading:"Grandmother's Wisdom", text:'The sauce should coat a spoon thickly by the end. A thin sauce means the lid came off too late, or the heat was too low. The rolls should yield entirely to a gentle spoon — not fall apart, but offer no resistance.'}
+  },
+  right:{
+    heading:'The Modern Way', subheading:'"Lamb, Barley, Pomegranate"',
+    intro:'Pomegranate molasses carries the sweet-sour tension of the original tomato sauce but with deeper, jewel-like complexity. Lamb in place of beef brings a richness that reads as more authentically Eastern.',
+    provisions:['1 head Napa cabbage','1 lb ground lamb','½ cup pearl barley or farro, cooked','1 can whole San Marzano tomatoes','2 tbsp pomegranate molasses','1 tbsp apple cider vinegar','Fresh mint and flat-leaf parsley','Smoked paprika, allspice, cinnamon, olive oil'],
+    steps:['Blanch the cabbage: submerge in boiling water 5 minutes, peeling leaves as they soften.','Mix lamb with cooked barley, chopped herbs, warm spices, and salt. Roll into tight bundles.','Sear the rolls seam-down in olive oil until golden — this creates a crust that holds them through the braise.','Blend tomatoes with pomegranate molasses and vinegar; pour over rolls in a Dutch oven. Braise covered at 325°F for 1.5 hours; remove lid for final 20 minutes.','Serve over a spoonful of labne or Greek yogurt; finish with fresh mint.'],
+    wisdom:{heading:'The Modern Note', text:'The pomegranate molasses is the key: it gives the sauce a depth and roundness that tomato and sugar alone cannot achieve. Start with one tablespoon and taste before adding more.'}
+  }
+},
+
+/* ── CHAPTER IV: THE SABBATH TABLE ────────────────────────── */
+{
+  id:'cholent', chapter:'IV. The Sabbath Table',
+  title:'Sabbath Cholent', yiddish:'Tshulent',
+  image:'ornament',
+  epigraph:'This dish is built on a prohibition, not a preference. No fire may be lit on the Sabbath. The cholent must be assembled Friday before sundown and trusted to the overnight heat.',
+  epigraphSource:'— Sabbath teaching, attributed to every rabbi',
+  left:{
+    heading:'The Old Way', subheading:'"The Fire That Never Died"',
+    intro:'The cholent is the original slow cooker. Its genius was practical before it was culinary. A hot meal without Sabbath labor. Sixteen hours of uninterrupted, patient heat.',
+    provisions:['2 lb beef brisket or fatty chuck, cubed','1 lb dried kidney or lima beans, soaked overnight','6 medium potatoes, whole and unpeeled','2 large onions, quartered','½ cup pearl barley','4 cloves garlic, whole','Sweet paprika, cumin, black pepper, bay leaf, salt'],
+    steps:['Layer the soaked beans at the bottom of a heavy clay or iron pot.','Add the cubed meat, then the potatoes on top. Nestle in the onions and garlic.','Season generously with paprika and cumin. Add enough water to cover entirely. The lid must be sealed tightly.','Place in the lowest possible oven (200°F) Friday before sundown. Leave entirely undisturbed until Saturday lunch — twelve to sixteen hours of uninterrupted heat.','After twelve hours, the beans should be silky and the brisket should pull apart with no resistance whatsoever.'],
+    wisdom:{heading:"Grandmother's Wisdom", text:'Every community\'s cholent is distinct. A Kiev cholent uses more paprika than a Polish one. The geography lives in the spice rack. The cholent is where you can taste the village your grandmother came from.'}
+  },
+  right:{
+    heading:'The Modern Way', subheading:'"Dutch Oven, Dark Beer, Overnight"',
+    intro:'The slow cooker on low overnight is the honest modern equivalent of the community baker\'s oven. The short ribs and dark beer produce a cholent of extraordinary depth.',
+    provisions:['2 lb bone-in short ribs','1 can chickpeas, drained','4 Yukon Gold potatoes, halved','½ cup farro or pearl barley','1 head garlic, halved crosswise','2 tbsp tomato paste','1 tsp smoked paprika','Fresh thyme and rosemary','1 cup dark beer or red wine','3 cups beef stock'],
+    steps:['Brown short ribs on all sides in a Dutch oven; set aside. Sauté onion in the rendered fat until golden; add tomato paste and cook 2 minutes.','Deglaze with beer; scrape up every brown bit. Return ribs; nestle in garlic, herbs, farro, and chickpeas. Lay potatoes on top.','Pour stock to cover the meat. Seal tightly with foil, then the lid.','Place in a 225°F oven for 8–10 hours, or set a slow cooker on low overnight.','The short rib meat should surrender at the touch of a spoon. The farro should be creamy, not broken.'],
+    wisdom:{heading:'The Modern Note', text:'The cholent reheats beautifully — it is always better the second day, and arguably the third. A pot of cholent fed and feeds. Plan it as a two-day dish.'}
+  }
+},
+{
+  id:'liver', chapter:'IV. The Sabbath Table',
+  title:'Hand-Hacked Liver', yiddish:'Gehakte Leber',
+  image:'ornament',
+  epigraph:'The food processor makes a paste for babies. A Kiev man needs to feel the work of the cook in every bite.',
+  epigraphSource:'— Market wisdom, Kiev, attributed to many',
+  left:{
+    heading:'The Old Way', subheading:'"The Woodsman\'s Art"',
+    intro:'Kashering the liver requires fire — not an oven, not steam, but direct flame. The law is specific on this point. Only then does the hacking begin.',
+    provisions:['1 lb fresh chicken livers, whole','3 large yellow onions, peeled','4 tbsp golden schmaltz (rendered chicken fat)','4 hard-boiled eggs','Coarse salt and black pepper'],
+    steps:['Kasher the livers: broil on an open wire rack above direct flame or under a broiler — the law requires fire, and the oven without direct heat will not satisfy it. Cool.','In the heavy wooden bowl — the malkesh — begin hacking with the double-blade chopper. Add the onions, raw.','Add the hard-boiled eggs. The schmaltz goes in while the blade is still moving.','Hack until the onions and liver become a single spirit — but not further. The texture must be like a gravel road: rough, with the memory of effort.','Season with coarse salt and pepper. Taste. Adjust.'],
+    wisdom:{heading:"Grandmother's Wisdom", text:'Press a spoonful against the roof of your mouth. If it requires no effort to chew, you have gone too far. The texture is the point — it tells you a cook was here.'}
+  },
+  right:{
+    heading:'The Modern Way', subheading:'"Cast Iron Sear, Four Pulses Only"',
+    intro:'The modern method sears the liver hot and fast to keep it pink within. The food processor — if used — receives exactly four pulses and then stops. This is not a rule. It is a law.',
+    provisions:['1 lb chicken livers, trimmed of sinew','2 large shallots, sliced','3 tbsp rendered chicken fat or butter','2 tbsp good cognac or dry sherry','2 hard-boiled eggs','1 tsp fresh thyme','Fleur de sel, white pepper','Challah toast and pickles to serve'],
+    steps:['Pat livers completely dry and season aggressively. Sear in a screaming-hot cast iron skillet in batches — never crowded. One minute per side: mahogany outside, blush-pink within. Remove.','In the same pan, sweat shallots in fat until jammy and sweet, about 8 minutes. Deglaze with cognac — stand back. Reduce by half.','Pulse livers in a food processor exactly 4–5 times. No more.','Fold in the shallot mixture and roughly chopped hard-boiled egg by hand. Season generously.'],
+    wisdom:{heading:'The Modern Note', text:'The interior of the liver must show a blush of pink. Fully grey liver is the failure state — it will be chalky and dry regardless of what you do to it afterward. The sear is everything.'}
+  }
+},
+
+/* ── CHAPTER V: FROM THE RIVER ────────────────────────────── */
+{
+  id:'gefilte', chapter:'V. From the River',
+  title:'Gefilte Fish in Aspic', yiddish:'Gefilte Fish in Zalts',
+  image:'gefilte',
+  epigraph:'The fishmonger kept his carp alive in a barrel. You chose your fish the way a doctor chooses his instruments — with full intention.',
+  epigraphSource:'— Malka Bernstein, Kiev, dictated to her daughter, 1931',
+  left:{
+    heading:'The Old Way', subheading:'"From the Living Barrel"',
+    intro:'Proper gefilte fish requires a mix of freshwater fish — carp for fat, pike for texture, whitefish for sweetness. The aspic, made from the fish bones and skin, should set solid enough to slice.',
+    provisions:['1.2 kg freshwater fish fillets: ½ carp, ¼ pike, ¼ whitefish','Fish bones, heads (gills removed), skin','2 large onions: 1 for fish, 1 for stock','2 eggs, beaten','2 tbsp matzo meal','1 tsp sugar, 1 tsp salt, ½ tsp white pepper','3 carrots, sliced in rounds','2 celery stalks, bay leaves, peppercorns','Horseradish (khreyn) to serve'],
+    steps:['Make the stock: cover fish bones, head, skin, one quartered onion, celery, bay, and peppercorns with 2 litres cold water. Simmer 45 minutes. Strain well. The stock must be clear.','Grind the fish fillets twice through a meat grinder with the second onion, or hand-chop very finely.','Mix ground fish with egg, matzo meal, sugar, salt, and white pepper. Wet your hands for shaping.','Shape into oval cakes, about 80g each. Lower into simmering stock with carrot rounds. Cover; simmer gently — never boil — for 1 hour 15 minutes.','Remove fish carefully. Pour strained stock and carrots over them in a dish. Refrigerate overnight. The stock will set to a golden aspic.'],
+    wisdom:{heading:"Grandma's Wisdom", text:'The Kiev style is faintly sweet, in contrast to the peppery Lithuanian version. The sugar is not optional — it is the regional signature. The aspic that sets around the fish is prized above the fish itself.'}
+  },
+  right:{
+    heading:'The Modern Way', subheading:'"Food Processor, Salmon Addition"',
+    intro:'Adding salmon to the traditional all-white recipe is contemporary, but it provides both color and the richness that the original carp would have given. The food processor brings this dish within reach of any kitchen.',
+    provisions:['1.5 lb skinless whitefish or cod','½ lb salmon fillet','1 large onion','2 eggs, 3 tbsp matzo meal','Pinch of sugar, salt, white pepper, dried dill','For poaching: carrot, celery, onion, dill, peppercorns','Prepared horseradish to serve'],
+    steps:['Pulse fish and onion in a food processor until roughly ground — not paste, about 15 pulses. Transfer to a bowl; fold in eggs, matzo meal, sugar, salt, pepper, and dill. Refrigerate 30 minutes.','Make a simple court bouillon with vegetables and water; simmer 20 minutes.','Form fish mixture into ovals with wet hands. Lower gently into simmering — not boiling — liquid. Cover; poach 25 minutes.','Cool in the liquid; refrigerate overnight. Serve cold with sharp horseradish.'],
+    wisdom:{heading:'The Modern Note', text:'The fish should be firm and moist, never grainy. Graininess signals overworking or overcooking — the food processor pulse count matters more than you expect.'}
+  }
+},
+{
+  id:'holodets', chapter:'V. From the River',
+  title:'Holodets — Meat in Aspic', yiddish:'Khalodets',
+  image:'ornament',
+  epigraph:'After a Shabbat of warmth, Monday morning belongs to the cold plate. The meat, arrested in its clarity, is an act of preservation — of food, and of memory.',
+  epigraphSource:'— Common saying, Kiev, attributed to many',
+  left:{
+    heading:'The Old Way', subheading:'"The All-Day Simmer"',
+    intro:'Holodets is patience made visible. It requires the most collagen-rich cuts and a full day of slow simmering to release the natural gelatin that will set the dish solid.',
+    provisions:['1 kg beef shank (osso buco cut) or veal knuckle','500g beef or veal feet, split','2 large onions, halved with skins on','1 head garlic, halved crosswise','3 carrots, celery, peppercorns, bay, salt','Fresh parsley and hard-boiled eggs to garnish','Prepared horseradish to serve'],
+    steps:['Cover all meat and feet with cold water. Boil; discard this first water entirely. This removes impurities and ensures a clear aspic.','Refill with 3 litres cold water. Add onion (skins on for color), garlic, carrot, celery, peppercorns, bay, and salt. Bring to the lowest possible simmer.','Cook 5–6 hours. The liquid should barely move. Add hot water if needed to keep meat submerged.','Remove all meat; strain the broth through fine cloth. Pick the meat from the bones in small pieces; discard fat and cartilage.','Arrange meat in a loaf pan. Add sliced carrot and halved eggs. Pour strained broth over. Refrigerate overnight. Unmold and slice.'],
+    wisdom:{heading:"Grandma's Wisdom", text:'Drop a spoonful of broth on a cold plate. When it gels in five minutes — the stock is ready. If it remains liquid — cook further. The gel test cannot be argued with.'}
+  },
+  right:{
+    heading:'The Modern Way', subheading:'"Pressure Cooker, Two Hours"',
+    intro:'The pressure cooker reduces six hours to under two. A small amount of unflavored gelatin is the safety net if your cuts lack sufficient collagen.',
+    provisions:['1.2 kg chicken thighs and drumsticks, bone-in','500g pork hock or beef shank','1 onion, 1 head garlic, 3 carrots, bay, peppercorns','1.5 L water or light chicken stock','1.5 tsp salt','2 tsp unflavored powdered gelatin, optional','Hard-boiled eggs, parsley, lemon to garnish'],
+    steps:['Place all meats and vegetables in the pressure cooker. Add water or stock and salt. Cook on high pressure 70 minutes; natural release 20 minutes.','Remove solids; strain broth through cheesecloth-lined mesh. Pick meat from bones while warm.','Taste the broth. Skim fat. If using gelatin: bloom in 3 tbsp cold water; stir into warm broth.','Arrange meat in a mold or loaf pan with decorative carrot slices and egg halves. Pour broth over. Refrigerate 4 hours minimum.','Unmold and slice, or serve from the dish with horseradish.'],
+    wisdom:{heading:'The Modern Note', text:'A squeeze of lemon and a scatter of fresh dill stirred into the broth just before pouring brightens the aspic considerably — a concession to modernity that is easy to justify.'}
+  }
+},
+
+/* ── CHAPTER VI: THE SWEET & THE SAVORY ───────────────────── */
+{
+  id:'tzimmes', chapter:'VI. The Sweet and the Savory',
+  title:'Tzimmes — Sweet Carrot Braise', yiddish:'Tsimes',
+  image:'ornament',
+  epigraph:'Why make a big tzimmes out of everything? Because some things deserve it. The sweet carrot, the prune, the slow honey — these deserve the full production.',
+  epigraphSource:'— Yiddish folk expression, meaning: to make a fuss',
+  left:{
+    heading:'The Old Way', subheading:'"The Long Braise"',
+    intro:'Tzimmes is the slow alchemy of root vegetables, dried fruit, and rendered fat under low heat, transforming the humble into the profound. Served at Rosh Hashanah for a sweet new year.',
+    provisions:['1 kg large carrots, cut in 3cm rounds','500g bone-in brisket or short rib (optional)','200g pitted prunes, 100g dried apricots','3 tbsp dark buckwheat honey','2 tbsp goose fat or beef tallow','1 large onion, sliced','1 tsp cinnamon, ¼ tsp ginger','½ tsp salt, juice of ½ lemon to taste'],
+    steps:['Sear the brisket in fat until dark on all sides. Remove. Sauté onion in the same fat until golden.','Add the carrots, prunes, apricots, and the meat back among the vegetables.','Dissolve honey in 250ml water; pour over. Add cinnamon, ginger, salt. Bring to a simmer.','Cover tightly. Cook at 150°C for 2 hours. Then uncover and cook 30–45 minutes more, basting, until the liquid reduces to a syrupy glaze.','Taste. If too sweet, add the lemon. The balance of sweet-sour is the entire point.'],
+    wisdom:{heading:"Grandma's Wisdom", text:'A tzimmes that is not slightly scorched at the bottom has not tried hard enough. The caramelized bits on the pot bottom are the prize — stir them in before serving.'}
+  },
+  right:{
+    heading:'The Modern Way', subheading:'"Sheet Pan, Medjool Dates"',
+    intro:'Roasting concentrates the sugars of the carrot more dramatically than braising. Medjool dates in place of prunes bring a deeper sweetness and a more luxurious texture.',
+    provisions:['4 large carrots, split lengthwise','2 sweet potatoes, cubed','1 cup Medjool dates, pitted and halved','3 tbsp orange blossom honey','Zest and juice of 1 orange','1 tbsp fresh ginger, grated','2 tbsp olive oil','Za\'atar and flaky salt for finish'],
+    steps:['Toss carrots and sweet potato in olive oil, honey, orange zest, and grated ginger.','Spread in a single layer on a sheet tray. Roast at 425°F for 25 minutes until caramelized at the edges.','Warm dates gently in orange juice for 10 minutes until glossy.','Arrange roasted vegetables on a platter; scatter dates and their syrup. Dust with za\'atar and flaky salt.'],
+    wisdom:{heading:'The Modern Note', text:'The edges of the carrots should be nearly charred — that caramelization is the dish\'s entire personality. Za\'atar\'s herbal bitterness is the counterpoint the sweetness always needed.'}
+  }
+},
+{
+  id:'meatballs', chapter:'VI. The Sweet and the Savory',
+  title:'Sweet & Sour Meatballs', yiddish:'Zoyere-Zise Fleysh-Beygelekh',
+  image:'ornament',
+  epigraph:'The weeknight dish of the Jewish working-class kitchen: simple, filling, and so perfectly balanced between sour and sweet that one can never decide which is winning.',
+  epigraphSource:'— Common table memory, Philadelphia, 1940s',
+  left:{
+    heading:'The Old Way', subheading:'"The Gingersnap Sauce"',
+    intro:'The old sweet-sour meatball sauce used crushed gingersnap cookies — already sweet and spiced — dissolved in the braising liquid. A clever shortcut that is also the correct method.',
+    provisions:['2 lb ground beef (80/20)','1 egg, 2 tbsp breadcrumbs, 1 small onion grated','Salt, pepper, pinch of ginger','— Sauce —','1 can crushed tomatoes','8 gingersnap cookies, crushed fine','¼ cup brown sugar','¼ cup lemon juice or cider vinegar','1 cup water or light stock'],
+    steps:['Mix beef with egg, breadcrumbs, grated onion, salt, and pepper. Roll into balls the size of a walnut — no bigger, or the center will not cook through in the sauce.','Combine crushed tomatoes, crushed gingersnaps, brown sugar, lemon juice, and water in a wide saucepan. Bring to a simmer, stirring until the gingersnaps dissolve and the sauce thickens.','Taste the sauce: it should argue between sweet and sour — neither should win decisively. Adjust with more sugar or more lemon.','Lower the raw meatballs carefully into the simmering sauce. Cover. Cook on low heat 45 minutes, turning once gently at the halfway point.'],
+    wisdom:{heading:"Grandmother's Wisdom", text:'The gingersnap sauce is the signature. Do not substitute tomato paste and spices — the cookies provide a particular sweetness and body that cannot be replicated any other way. Use real gingersnaps.'}
+  },
+  right:{
+    heading:'The Modern Way', subheading:'"Pomegranate, Lamb-Beef Mix"',
+    intro:'A lamb-beef mixture produces meatballs of richer flavor and a softer texture. Pomegranate molasses in place of some of the vinegar rounds the acidity while adding jewel-like depth.',
+    provisions:['1 lb ground lamb, 1 lb ground beef','1 egg, ¼ cup breadcrumbs, 1 shallot grated','Salt, pepper, cumin, cinnamon','— Sauce —','1 can San Marzano tomatoes, crushed by hand','2 tbsp pomegranate molasses','1 tbsp apple cider vinegar','2 tbsp brown sugar','Fresh thyme'],
+    steps:['Mix lamb and beef with egg, breadcrumbs, grated shallot, salt, pepper, cumin, and cinnamon. Roll into 1.5-inch balls.','Brown the meatballs in batches in a hot skillet — this crust is what holds them together in the sauce. Do not cook through, just color them.','Make the sauce: combine tomatoes, pomegranate molasses, vinegar, brown sugar, and thyme in the same skillet. Simmer 10 minutes; taste and adjust the sweet-sour balance.','Return browned meatballs to the sauce. Cover and braise on low heat 35 minutes.'],
+    wisdom:{heading:'The Modern Note', text:'The pomegranate molasses brings a wine-like depth to the sweet-sour tension. Start with one tablespoon, taste, and add more if needed. It is easier to add than to remove.'}
+  }
+},
+
+/* ── CHAPTER VII: FROM THE BAKERY ─────────────────────────── */
+{
+  id:'lekach', chapter:'VII. From the Bakery',
+  title:'Honey Cake', yiddish:'Lekach',
+  image:'honey',
+  epigraph:'Honey cake was baked before Rosh Hashanah and given as gifts. An elder who received a piece was expected to give a slice of their own cake in return — a loop of sweetness, closing.',
+  epigraphSource:'— Rosh Hashanah custom, Pale of Settlement',
+  left:{
+    heading:'The Old Way', subheading:'"Dark Rye, Black Tea, Slivovitz"',
+    intro:'The strength of this cake comes from the tea and the spirits. The tea is not for drinking — it is dark as night, and it carries the honey into every corner of the crumb.',
+    provisions:['3 cups dark rye flour','1 cup dark buckwheat honey','3 eggs','1 cup very strong black tea, cooled','½ cup rendered goose fat or neutral oil','1 tsp baking soda','Ground cinnamon, cloves, ginger, allspice','A generous glass of whiskey or slivovitz'],
+    steps:['Brew the tea very dark — three times the normal amount. Cool. Whisk honey into warm tea until fully dissolved.','Beat eggs with fat. Stir together dry ingredients. Combine wet into dry in two additions.','Add the whiskey last — it both leavens the spirit of the baker and preserves the cake.','Pour into a greased loaf pan. Bake at 350°F for 55–60 minutes. A skewer should come out with moist crumbs, not wet batter.','Do not touch it for three days. The cake improves. This is a law.'],
+    wisdom:{heading:"Grandmother's Wisdom", text:'This cake is better on day two and transcendent on day three. Wrap it in wax paper and leave it. The anticipation is part of the recipe.'}
+  },
+  right:{
+    heading:'The Modern Way', subheading:'"Espresso, Bourbon, Black Pepper"',
+    intro:'Espresso replaces the black tea and deepens the honey\'s floral notes. Black pepper in the spice mix lifts every other flavor without announcing itself. This is the secret ingredient.',
+    provisions:['2 cups all-purpose flour','1 cup dark floral honey (buckwheat or chestnut)','3 eggs','¾ cup strong brewed coffee','½ cup neutral oil','½ cup bourbon or dark rum','1 tsp cinnamon, 1 tsp ginger','½ tsp black pepper, ½ tsp ground cloves','1 tsp baking powder, ½ tsp baking soda'],
+    steps:['Whisk honey, oil, eggs, and coffee until emulsified and glossy.','Stir together flour with all spices and leaveners. Fold wet into dry gently; add bourbon last. The batter will be thin — this is correct.','Pour into a parchment-lined 9×13 pan. Bake at 325°F for 45 minutes.','While the cake is still warm, brush generously with a honey-bourbon glaze: equal parts, warmed together.','Cool completely before cutting — at least 2 hours. Day two is better.'],
+    wisdom:{heading:'The Modern Note', text:'The black pepper is the secret. Add it and say nothing. People will not identify it, but they will notice something is present that makes everything else taste more like itself.'}
+  }
+},
+{
+  id:'homentashn', chapter:'VII. From the Bakery',
+  title:'Hamantaschen', yiddish:'Homentashn',
+  image:'ornament',
+  epigraph:'Triangular — some say for Haman\'s ears, some for his hat, some for his pockets. The filling is the point. The theology can be argued later.',
+  epigraphSource:'— Purim teaching, attributed to many',
+  left:{
+    heading:'The Old Way', subheading:'"The Mohn Filling — Poppy Seed and Honey"',
+    intro:'The mohn filling is the original and correct filling. Fruit fillings came later. Chocolate came later still. Begin with the poppy seed and know what these pastries are.',
+    provisions:['3 cups flour','½ cup neutral oil','½ cup sugar','2 eggs','2 tbsp orange juice','1 tsp vanilla, 1 tsp baking powder','— Mohn filling —','1 cup poppy seeds, ground twice','½ cup honey','¼ cup raisins, plumped in black tea','1 tbsp lemon zest, 2 tbsp butter'],
+    steps:['For the mohn: warm honey in a small pan. Stir in ground poppy seeds, plumped raisins, lemon zest, and butter. Cook 3 minutes until thick. Cool completely before using.','For the dough: beat oil, sugar, and eggs. Stir in orange juice and vanilla. Fold in flour and baking powder to a soft dough. Chill 1 hour.','Roll to ⅛-inch thickness. Cut 3-inch rounds. Place 1 teaspoon mohn in the center.','Fold three sides up to form a triangle, pinching each corner firmly. The corners must stay pinched.','Bake at 350°F for 16–18 minutes until the edges are just golden.'],
+    wisdom:{heading:"Grandmother's Wisdom", text:'The corners must hold through baking. If they open, the dough was too warm or the filling too wet. Refrigerate the shaped cookies 15 minutes before baking — this helps them hold their shape.'}
+  },
+  right:{
+    heading:'The Modern Way', subheading:'"Cream Cheese Dough, Three Fillings"',
+    intro:'The cream cheese dough is a revelation — flaky, slightly tangy, and far more forgiving than the traditional oil dough. Make all three fillings and serve a mixed tray.',
+    provisions:['8 oz cream cheese, cold','8 oz unsalted butter, cold','2 cups flour, 2 tbsp sugar, ¼ tsp salt','— Filling options —','Apricot: good apricot jam, simmered thick','Halva: crumbled halva mixed with tahini and honey','Chocolate: dark chocolate ganache with fleur de sel'],
+    steps:['Pulse cold cream cheese and cold butter with flour, sugar, and salt until crumbly but cohesive. Do not overwork it. Flatten into a disk; chill 2 hours minimum.','Roll to ¼-inch on a floured surface. Cut 3-inch rounds.','Place a scant teaspoon of filling at center — resist the urge to overfill. Fold and pinch corners tightly.','Refrigerate the shaped cookies 20 minutes before baking. Bake at 375°F for 14–16 minutes until edges are golden.'],
+    wisdom:{heading:'The Modern Note', text:'The halva filling is the most distinctly Kievian of the modern options — halva was everywhere in the old city markets. The cream cheese dough is not traditional, but it may now be traditional enough.'}
+  }
+},
+{
+  id:'rugalach', chapter:'VII. From the Bakery',
+  title:'Rugalach', yiddish:'Rugelakh',
+  image:'ornament',
+  epigraph:'Rugelakh were the everyday pastry — made weekly, disappeared within a day. They were never given the occasion they deserved, because they were always gone.',
+  epigraphSource:'— Common kitchen memory, attributed to grandchildren everywhere',
+  left:{
+    heading:'The Old Way', subheading:'"Oil Dough, Walnut and Raisin"',
+    intro:'The oil-based yeast dough was the pareve solution for a kitchen that could not mix dairy and meat — these could appear at any meal, at any table.',
+    provisions:['2 cups flour','½ cup warm oil','½ cup warm water','2 tbsp sugar','1 tsp active dry yeast','½ tsp salt','— Filling —','1 cup walnuts, finely chopped','½ cup raisins','¼ cup sugar, 1 tsp cinnamon','2 tbsp apricot jam'],
+    steps:['Proof yeast in warm water with sugar until foamy. Combine with flour, oil, and salt; knead 5 minutes to a soft pliable dough. Rest 30 minutes.','Divide into 4 balls. Roll each into a thin circle. Spread with a thin layer of apricot jam.','Scatter the walnut, raisin, sugar, and cinnamon mixture over the surface. Cut into 12 wedges like a pizza.','Roll each wedge from the wide end toward the point, curling into a crescent.','Bake at 350°F for 20–25 minutes until golden.'],
+    wisdom:{heading:"Grandmother's Wisdom", text:'The filling must not leak. If it does, the jam layer was too thick or the rolls were wound too loosely. Tight rolls from the start — there is no correcting it afterward.'}
+  },
+  right:{
+    heading:'The Modern Way', subheading:'"Cream Cheese Dough, Chocolate"',
+    intro:'The cream cheese dough produces a rugelach that is flakier, more tender, and almost impossible to overbake. Chocolate chips are not traditional — they are nonetheless correct.',
+    provisions:['8 oz cream cheese, cold','8 oz unsalted butter, cold','2 cups flour, 2 tbsp sugar, ¼ tsp salt','— Filling —','½ cup apricot preserves or sour cherry jam','½ cup toasted walnuts, finely chopped','¼ cup cinnamon sugar','½ cup dark chocolate chips'],
+    steps:['Pulse cold cream cheese and cold butter with flour, sugar, and salt until crumbly. Do not overmix. Divide into 4 disks; chill 2 hours.','Roll each disk into a 9-inch circle on a lightly floured surface. Spread with a thin, even layer of jam.','Scatter nuts, cinnamon sugar, and chocolate chips. Cut into 12 wedges; roll from wide end to tip, tip-side down on a parchment-lined tray.','Refrigerate 15 minutes before baking. Bake at 375°F for 20–22 minutes until deeply golden.'],
+    wisdom:{heading:'The Modern Note', text:'An even, deep golden-brown all over — not just on top. Pale rugalach are underdone and the dough will taste raw at the center. When in doubt, give them two more minutes.'}
+  }
+},
+{
+  id:'mandelbrot', chapter:'VII. From the Bakery',
+  title:'Mandelbrot', yiddish:'Mondlbroyt',
+  image:'ornament',
+  epigraph:'Mandelbrot were made for long journeys. They keep for two weeks without spoiling and survive being jostled in a bag. They were the food of the road, the market, and the long Sabbath afternoon.',
+  epigraphSource:'— Market tradition, Pale of Settlement',
+  left:{
+    heading:'The Old Way', subheading:'"Twice-Baked, Oil and Almonds"',
+    intro:'Mandelbrot — almond bread — is the Jewish biscotti, though it predates the Italian. The twice-baking is the point: the first bake sets the loaf, the second dries it through to a satisfying crunch.',
+    provisions:['3 cups flour','1 cup sugar','3 eggs','¾ cup neutral oil','1 tsp baking powder','1 tsp vanilla, ½ tsp almond extract','1 cup whole almonds or walnuts','Cinnamon-sugar for rolling'],
+    steps:['Beat eggs and sugar until pale. Add oil, vanilla, and almond extract. Fold in flour and baking powder to a soft, slightly sticky dough. Fold in whole nuts.','With wet hands, shape into two long flat logs on a parchment-lined tray — 12 inches long, 3 inches wide.','Bake at 350°F for 30 minutes until just golden and set.','Slice on the diagonal into ½-inch pieces while still warm. Lay each piece flat.','Return to the oven for 15 minutes until dried and crisp throughout.'],
+    wisdom:{heading:"Grandmother's Wisdom", text:'Let one piece cool completely before tasting — mandelbrot crisp up significantly as they cool. A soft piece from the oven may still be correct. Judge them cold.'}
+  },
+  right:{
+    heading:'The Modern Way', subheading:'"Butter, Chocolate, Orange"',
+    intro:'Butter in place of oil produces a richer, more tender crumb. Dark chocolate chips and orange zest are not traditional. They are recommended without apology.',
+    provisions:['2½ cups flour','¾ cup sugar','3 eggs','½ cup neutral oil','1 tsp baking powder','1 tsp vanilla, ½ tsp almond extract','¾ cup dark chocolate chips','½ cup toasted slivered almonds','1 tsp orange zest, flaky salt'],
+    steps:['Beat eggs, sugar, and oil together until slightly emulsified. Add vanilla, almond extract, and orange zest.','Fold in flour and baking powder until just combined. Fold in chocolate chips and almonds. Refrigerate 20 minutes to firm.','Shape into two logs; bake at 325°F for 35 minutes until just set and pale golden.','Cool 15 minutes. Slice on the diagonal into ¾-inch pieces. Return to a 300°F oven for 20 minutes, flip, 20 more.','Sprinkle with flaky salt while warm.'],
+    wisdom:{heading:'The Modern Note', text:'Flaky salt over the chocolate chips before the second bake makes the chocolate taste twice as chocolatey. This is not traditional. It is recommended.'}
+  }
+},
+{
+  id:'cheese-blintzes', chapter:'VII. From the Bakery',
+  title:'Cheese Blintzes', yiddish:'Blintzen mit Kez',
+  image:'ornament',
+  epigraph:'Blintzes are the Shavuot food — dairy dishes honor the holiday when the Torah was given. The story is that the Israelites arrived home too late to prepare meat, and ate dairy instead.',
+  epigraphSource:'— Shavuot teaching, attributed to tradition',
+  left:{
+    heading:'The Old Way', subheading:'"Pot Cheese, One Side Only"',
+    intro:'The crepe is cooked on one side only — this is not carelessness, it is technique. The uncooked side will face the filling and absorb its moisture during frying. This is what makes the blintz what it is.',
+    provisions:['— Crepes —','2 cups flour, 3 eggs, 2 cups whole milk, ½ tsp salt','Butter for the pan','— Filling —','2 lb dry farmer\'s cheese or pot cheese','2 eggs, 3 tbsp sugar','Pinch of salt and vanilla','Schmaltz or butter for frying, smetana to serve'],
+    steps:['Make the batter — combine flour, eggs, milk, and salt until smooth. Rest 30 minutes. Cook in a lightly greased pan over medium heat, one side only, until the surface turns matte. Stack cooked-side up.','For the filling, the cheese must be very dry — wet filling makes a soggy blintz. Drain overnight in a cloth if needed. Mix with eggs, sugar, salt, and vanilla.','Place filling on the cooked side. Fold the sides in; roll away from you. Fry seam-side down in butter until golden on both sides.','Serve immediately with thick smetana.'],
+    wisdom:{heading:"Grandmother's Wisdom", text:'The blintz must be hot all the way through — not just warm on the outside. A cold center means insufficient pan heat. Lower the heat and cover the pan briefly if they brown too fast before the center heats.'}
+  },
+  right:{
+    heading:'The Modern Way', subheading:'"Ricotta, Lemon, Berry Compote"',
+    intro:'Ricotta and cream cheese together give a richer, creamier result than traditional pot cheese, with less risk of the filling being too dry or too wet. The lemon zest is essential.',
+    provisions:['— Crepes —','1 cup flour, 3 eggs, 1¼ cups whole milk, 2 tbsp melted butter, 1 tsp sugar, pinch of salt','— Filling —','1 lb whole-milk ricotta, well-drained','8 oz cream cheese, softened','3 tbsp sugar, 1 tsp vanilla','Zest of 1 lemon, 2 eggs','Butter for frying; sour cream and berry compote to serve'],
+    steps:['Blend crepe ingredients until smooth; refrigerate 1 hour. Cook one side only in a buttered 8-inch non-stick pan.','Beat ricotta and cream cheese until completely smooth. Add sugar, vanilla, lemon zest, and eggs.','Fill, fold, and fry in butter over medium-low heat until golden on both sides.','Serve with crème fraîche and warm blueberry compote.'],
+    wisdom:{heading:'The Modern Note', text:'Refrigerating the crepe batter an hour allows the bubbles to subside and the gluten to relax. The crepes will be more supple and far less likely to tear during filling.'}
+  }
+},
+
+/* ── CHAPTER VIII: PRESERVING THE GARDEN ──────────────────── */
+{
+  id:'varenye', chapter:'VIII. Preserving the Garden',
+  title:'Cherry Varenye', yiddish:'Kirshn Varenye',
+  image:'ornament',
+  epigraph:'The varenye pot came out in June and the smell of cherries and honey filled the entire courtyard. That smell is not a smell — it is a summer, complete.',
+  epigraphSource:'— Rivka Shapiro, Kiev, c. 1924',
+  left:{
+    heading:'The Old Way', subheading:'"The Copper Pot Summer"',
+    intro:'Varenye differs from Western jam: the fruit remains whole, suspended in a clear, brilliantly flavored syrup. It is served with tea, offered to guests with a small spoon, and never stirred in.',
+    provisions:['1.5 kg fresh sour cherries, pitted','1.2 kg sugar','125 ml water','Juice of 1 lemon','3 cracked cherry pits in muslin (adds almond depth)','1 tbsp dark cherry brandy or kirsch (optional)'],
+    steps:['Combine cherries, sugar, water, and cherry pits in a wide copper or enamel pot. Stir gently; macerate 4 hours or overnight.','Bring slowly to a boil, stirring gently. Do not crush the cherries. Skim the pink foam that rises — important for clarity.','Cook at a moderate boil 20–25 minutes. Test on a cold plate: if it wrinkles when pushed, it is ready.','Remove cherry pit packet. Add lemon juice and kirsch if using. Ladle into sterilized jars while hot.'],
+    wisdom:{heading:"Grandma's Wisdom", text:'Varenye is served in a small spoonful alongside black tea, placed on the saucer. The guest takes the spoon, tastes it, and sets the spoon aside. This ritual is ancient and must be preserved alongside the fruit.'}
+  },
+  right:{
+    heading:'The Modern Way', subheading:'"Small-Batch, Refrigerator Method"',
+    intro:'A small-batch varenye that requires no canning equipment — it keeps three weeks in the refrigerator and can be made any time of year with frozen sour cherries.',
+    provisions:['500g sour cherries, fresh or thawed, pitted','400g sugar','60 ml water','Juice of ½ lemon','¼ tsp almond extract (for the cherry pit effect)','2 tbsp kirsch or cherry brandy, optional'],
+    steps:['Combine cherries, sugar, and water in a medium heavy saucepan. Let stand 30 minutes for the cherries to release their juices.','Bring to a boil; reduce to maintain a steady boil. Skim any foam. Cook 15–20 minutes until the liquid thickens.','Test on a cold plate — it should thicken noticeably when chilled. Remove from heat. Add lemon juice, almond extract, and kirsch.','Cool 15 minutes; ladle into a clean glass jar. Refrigerate. Ready immediately, better after 2 days.'],
+    wisdom:{heading:'The Modern Note', text:'Varenye spooned over fresh ricotta with a slice of black bread is a complete breakfast with deep historic roots. Do not underestimate it. Serve it this way at least once.'}
+  }
+},
+{
+  id:'shav', chapter:'VIII. Preserving the Garden',
+  title:'Sorrel Soup', yiddish:'Shav',
+  image:'ornament',
+  epigraph:'Sorrel is the first green of spring after the long winter. Its arrival was an occasion of genuine relief. This is a soup of the in-between time — when the borscht season has not yet begun.',
+  epigraphSource:'— Common spring memory, Pale of Settlement',
+  left:{
+    heading:'The Old Way', subheading:'"Spring in a Bowl"',
+    intro:'The sorrel will collapse dramatically when it enters the pot and turn from bright green to a murky, drab color. This is correct. Do not be alarmed. The flavor is fully present.',
+    provisions:['1 lb fresh sorrel leaves, stems removed','1 large onion, sliced','4 cups good chicken broth','2 cups water','2 eggs','1 tbsp sugar','Salt to taste','Hard-boiled eggs and thick smetana to serve'],
+    steps:['Simmer the sliced onion in broth and water 15 minutes until soft.','Add the sorrel leaves in large handfuls. They will collapse to almost nothing within seconds and turn drab — this is correct.','Simmer 10 minutes. Beat the eggs with a ladle of hot soup to temper them; stir slowly into the pot. Add sugar; taste for salt.','Serve cold or at room temperature with sliced hard-boiled egg and a large spoonful of smetana.'],
+    wisdom:{heading:"Grandmother's Wisdom", text:'The soup should taste sour, bright, and grassy — like spring air made liquid. If it tastes flat, it needs more salt. The murky color is a sign of proper cooking, not a mistake.'}
+  },
+  right:{
+    heading:'The Modern Way', subheading:'"Blended Smooth, Egg Yolk Cream"',
+    intro:'A blended and strained version of shav — silky, vivid green, and refined. The egg yolk and cream finish is a classic French liaison applied to a very old Jewish soup.',
+    provisions:['12 oz fresh sorrel (or baby spinach plus juice of 1 lemon)','1 leek, white and light green, sliced','1 medium potato, diced','4 cups chicken or vegetable stock','2 egg yolks','½ cup heavy cream or crème fraîche','Salt, white pepper','Cucumber ribbons and fresh dill to serve'],
+    steps:['Sweat the leek in butter 8 minutes. Add diced potato and stock; simmer until potato is completely tender, about 15 minutes.','Add sorrel — it wilts in seconds. Blend completely smooth; strain through a medium sieve.','Whisk egg yolks with cream; temper with a ladle of hot soup. Stir back into the pot. Do not boil after this point or it will curdle.','Season. Serve chilled in wide shallow bowls with thin cucumber ribbons and dill.'],
+    wisdom:{heading:'The Modern Note', text:'Sorrel is difficult to source outside of early spring farmers\' markets. Baby spinach blended with the juice of a whole lemon produces a convincing approximation in both taste and color.'}
+  }
+}
+
+]; // end RECIPES
+
+/* ============================================================
+   STATE
+   ============================================================ */
+let currentIndex = -1;
+
+/* ============================================================
+   RENDER FUNCTIONS
+   ============================================================ */
+function esc(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function renderPageContent(side, recipe, pageNum) {
+  const data = side === 'left' ? recipe.left : recipe.right;
+  const isLeft = side === 'left';
+  const cls = isLeft ? 'old-way' : 'modern-way';
+  const wisdomMod = isLeft ? '' : ' modern';
+
+  const headerHtml = isLeft ? `
+    <div class="recipe-chapter">${esc(recipe.chapter)}</div>
+    <div class="recipe-title">${esc(recipe.title)}</div>
+    <div class="recipe-yiddish">${esc(recipe.yiddish)}</div>
+    <hr class="recipe-divider">
+    <blockquote class="recipe-epigraph">
+      ${esc(recipe.epigraph)}
+      <cite>${esc(recipe.epigraphSource)}</cite>
+    </blockquote>
+    ${recipe.image && SVGS[recipe.image] ? `<div class="recipe-illustration">${SVGS[recipe.image]}</div>` : ''}
+    <hr class="recipe-divider">
+  ` : `
+    <div class="recipe-chapter">${esc(recipe.chapter)}</div>
+    <div class="recipe-title">${esc(recipe.title)}</div>
+    <div class="recipe-yiddish">${esc(recipe.yiddish)}</div>
+    <hr class="recipe-divider">
+  `;
+
+  const provisionsHtml = data.provisions.map(p => `<li>${esc(p)}</li>`).join('');
+  const stepsHtml = data.steps.map(s => `<li>${esc(s)}</li>`).join('');
+
+  return `
+    ${headerHtml}
+    <div class="${cls}">
+      <div class="method-heading">${esc(data.heading)}</div>
+      <div class="method-subheading">${esc(data.subheading)}</div>
+      <p class="method-intro">${esc(data.intro)}</p>
+      <div class="provisions-heading">Provisions</div>
+      <ul class="provisions-list">${provisionsHtml}</ul>
+      <div class="steps-heading">Method</div>
+      <ol class="steps-list">${stepsHtml}</ol>
+      <div class="wisdom-box${wisdomMod}">
+        <div class="wisdom-heading">${esc(data.wisdom.heading)}</div>
+        <p class="wisdom-text">${esc(data.wisdom.text)}</p>
+      </div>
+    </div>
+    <div class="page-number">${pageNum}</div>
+  `;
+}
+
+function renderBook(recipe, idx) {
+  document.getElementById('page-left').innerHTML = renderPageContent('left', recipe, (idx+1)*2-1);
+  document.getElementById('page-right').innerHTML = renderPageContent('right', recipe, (idx+1)*2);
+}
+
+function renderTOC() {
+  const chapters = {};
+  RECIPES.forEach((r, i) => {
+    if (!chapters[r.chapter]) chapters[r.chapter] = [];
+    chapters[r.chapter].push({r, i});
+  });
+
+  let html = `
+    <div class="toc-wrapper">
+      <div class="toc-header">
+        <h2>Contents of this Volume</h2>
+        <p>Select a recipe to open its pages</p>
+      </div>
+      <div class="toc-body">
+  `;
+
+  Object.entries(chapters).forEach(([chap, items]) => {
+    const isStrawberry = chap.includes('Strawberry');
+    html += `<div class="toc-chapter-head">${esc(chap)}</div>`;
+    items.forEach(({r, i}) => {
+      html += `
+        <div class="toc-item ${isStrawberry ? 'toc-strawberry' : ''}" onclick="showRecipe(${i})">
+          <span class="toc-item-num">${String(i+1).padStart(2,'0')}.</span>
+          <span class="toc-recipe-name">${esc(r.title)}</span>
+          <span class="toc-dots"></span>
+          <span class="toc-recipe-yiddish">${esc(r.yiddish)}</span>
+        </div>
+      `;
+    });
+  });
+
+  html += `</div></div>`;
+  document.getElementById('toc-view').innerHTML = html;
+}
+
+/* ============================================================
+   NAVIGATION
+   ============================================================ */
+function showTOC() {
+  currentIndex = -1;
+  document.getElementById('toc-view').style.display = 'block';
+  document.getElementById('book-view').style.display = 'none';
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+function showRecipe(idx) {
+  currentIndex = idx;
+  document.getElementById('toc-view').style.display = 'none';
+  document.getElementById('book-view').style.display = 'block';
+  renderBook(RECIPES[idx], idx);
+  updateNav();
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+function prevRecipe() {
+  if (currentIndex > 0) showRecipe(currentIndex - 1);
+  else showTOC();
+}
+
+function nextRecipe() {
+  if (currentIndex < RECIPES.length - 1) showRecipe(currentIndex + 1);
+}
+
+function updateNav() {
+  const r = RECIPES[currentIndex];
+  document.getElementById('btn-prev').disabled = false;
+  document.getElementById('btn-next').disabled = currentIndex >= RECIPES.length - 1;
+  document.getElementById('nav-indicator').innerHTML = `
+    ${esc(r.title)}
+    <span>${currentIndex + 1} of ${RECIPES.length}</span>
+  `;
+}
+
+/* ============================================================
+   KEYBOARD NAVIGATION
+   ============================================================ */
+document.addEventListener('keydown', e => {
+  if (currentIndex < 0) return;
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') nextRecipe();
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') prevRecipe();
+  if (e.key === 'Escape') showTOC();
+});
+
+/* ============================================================
+   INIT
+   ============================================================ */
+renderTOC();
+showTOC();
+</script>
+</body>
+</html>
