@@ -1,0 +1,18 @@
+[
+  {"label": "", "route": "", "type": "skull-stone", "rotation": "15deg"},
+  {"label": "Smith Singularity", "route": "articles/article1_smith_singularity.md"},
+  {"label": "First Breath", "route": "articles/article2_first_breath.md"},
+  {"label": "", "route": ""},
+  {"label": "Maya", "route": "articles/article3_maya.md"},
+  {"label": "Frequency", "route": "articles/article4_frequency.md"},
+  {"label": "Veil of Babel", "route": "articles/veil/veilofbabel.html"},
+  {"label": "Nitrogen Farmer", "route": "articles/saving_private_MD/nitrogenfarmersguide.html"},
+  {"label": "", "route": "", "type": "skull-stone", "rotation": "-10deg"},
+  {"label": "Grand Forge", "route": "apps/webapps/kalidascope/fontforge5.html"},
+  {"label": "", "route": ""},
+  {"label": "TTS Reader", "route": "apps/webapps/tts/feisttech_reader_v9.html"},
+  {"label": "Codex Root", "route": "articles/codex/index.html"},
+  {"label": "Kiev Cookery", "route": "articles/kievcookery/index.html"},
+  {"label": "", "route": "", "type": "skull-stone", "rotation": "5deg"}
+]
+
