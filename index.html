@@ -3,44 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Project Directory | Workspace</title>
+    <title>V | System Architecture</title>
     <style>
         :root {
-            --bg-color: #0d1117;
-            --card-bg: #161b22;
-            --text-main: #c9d1d9;
-            --text-muted: #8b949e;
-            --accent: #58a6ff;
-            --accent-hover: #79c0ff;
-            --border: #30363d;
-            --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+            --bg: #0a0a0c;
+            --text: #e0e0e0;
+            --accent: #78a9ff;
+            --card-bg: rgba(255, 255, 255, 0.02);
+            --border: rgba(255, 255, 255, 0.06);
+        }
+        
+        body {
+            margin: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
         }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            line-height: 1.6;
-            margin: 0;
-            padding: 2rem 5%;
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 5rem 2rem;
         }
 
         header {
-            margin-bottom: 3rem;
+            margin-bottom: 4rem;
             border-bottom: 1px solid var(--border);
-            padding-bottom: 1rem;
+            padding-bottom: 2rem;
         }
 
         h1 {
-            font-size: 2rem;
+            font-size: 2.5rem;
+            font-weight: 300;
+            letter-spacing: 3px;
             margin: 0 0 0.5rem 0;
-            font-weight: 600;
+            color: #ffffff;
         }
 
-        .subtitle {
-            color: var(--text-muted);
-            font-family: var(--font-mono);
-            font-size: 0.9rem;
+        p.subtitle {
+            color: #888;
+            font-size: 1.1rem;
+            margin: 0;
         }
 
         .grid {
@@ -50,201 +55,96 @@
         }
 
         .card {
-            background-color: var(--card-bg);
+            background: var(--card-bg);
             border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 1.5rem;
-        }
-
-        .card h2 {
-            font-size: 1.25rem;
-            margin-top: 0;
-            margin-bottom: 1rem;
-            color: var(--text-main);
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        li {
-            margin-bottom: 0.5rem;
+            border-radius: 6px;
+            padding: 2rem;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: inherit;
             display: flex;
             flex-direction: column;
         }
 
-        a {
-            color: var(--accent);
-            text-decoration: none;
+        .card:hover {
+            transform: translateY(-3px);
+            border-color: var(--accent);
+            background: rgba(255, 255, 255, 0.04);
+            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
+        }
+
+        .card h3 {
+            margin: 0 0 0.5rem 0;
+            font-size: 1.25rem;
             font-weight: 500;
-            transition: color 0.2s ease;
+            color: #fff;
         }
 
-        a:hover {
-            color: var(--accent-hover);
-            text-decoration: underline;
+        .card p {
+            color: #999;
+            font-size: 0.95rem;
+            margin: 0;
+            flex-grow: 1;
         }
 
-        .path {
-            font-family: var(--font-mono);
+        .tag {
+            display: inline-block;
+            align-self: flex-start;
+            padding: 0.25rem 0.75rem;
+            background: rgba(120, 169, 255, 0.1);
+            color: var(--accent);
+            border-radius: 50px;
             font-size: 0.75rem;
-            color: var(--text-muted);
-            margin-top: 0.1rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 1.5rem;
         }
-
-        /* Utility for markdown files to show they might need a parser */
-        .md-tag {
-            background: #238636;
-            color: white;
-            font-size: 0.6rem;
-            padding: 2px 6px;
-            border-radius: 10px;
-            margin-left: 8px;
-            vertical-align: middle;
+        
+        footer {
+            margin-top: 5rem;
+            text-align: center;
+            font-size: 0.85rem;
+            color: #555;
         }
     </style>
 </head>
 <body>
+    <div class="container">
+        <header>
+            <h1>V_SYSTEM</h1>
+            <p class="subtitle">Digital environments, tools, and theoretical frameworks.</p>
+        </header>
 
-    <header>
-        <h1>Workspace Directory</h1>
-        <div class="subtitle">~/v_project/</div>
-    </header>
+        <div class="grid">
+            <a href="/apps/webapps/sketcherspocket/index.html" class="card">
+                <span class="tag">Web App</span>
+                <h3>Sketchers Pocket</h3>
+                <p>Interactive 3D environment toolkit and structural modeling.</p>
+            </a>
+            
+            <a href="/articles/codex/index.html" class="card">
+                <span class="tag">Archive</span>
+                <h3>The Codex</h3>
+                <p>Foundational documentation and project architecture.</p>
+            </a>
 
-    <div class="grid">
-        <div class="card">
-            <h2>💻 Web Apps & Tools</h2>
-            <ul>
-                <li>
-                    <a href="apps/webapps/sketcherspocket/index.html">Sketchers Pocket</a>
-                    <span class="path">apps/webapps/sketcherspocket/index.html</span>
-                </li>
-                <li>
-                    <a href="apps/webapps/kalidascope/fontforge5.html">Kalidascope Font Forge</a>
-                    <span class="path">apps/webapps/kalidascope/fontforge5.html</span>
-                </li>
-                <li>
-                    <a href="apps/webapps/solsys.html">Solar System (solsys)</a>
-                    <span class="path">apps/webapps/solsys.html</span>
-                </li>
-                <li>
-                    <a href="apps/webapps/tts/feisttech_reader_v9.html">Feisttech Reader v9</a>
-                    <span class="path">apps/webapps/tts/feisttech_reader_v9.html</span>
-                </li>
-                <li>
-                    <a href="apps/webapps/tts/rsvp.html">RSVP Reader</a>
-                    <span class="path">apps/webapps/tts/rsvp.html</span>
-                </li>
-            </ul>
+            <a href="/articles/florida_str_dashboard/index.html" class="card">
+                <span class="tag">Dashboard</span>
+                <h3>Legal Metrics</h3>
+                <p>Analytics and operational monitoring interface.</p>
+            </a>
+
+            <a href="/articles/maya/mayasmirror.html" class="card">
+                <span class="tag">Experience</span>
+                <h3>Maya's Mirror</h3>
+                <p>Immersive narrative architecture and conceptual staging.</p>
+            </a>
         </div>
-
-        <div class="card">
-            <h2>📚 Articles & Dashboards</h2>
-            <ul>
-                <li>
-                    <a href="articles/veil/veilofbabel.html">The Veil of Babel</a>
-                    <span class="path">articles/veil/veilofbabel.html</span>
-                </li>
-                <li>
-                    <a href="articles/kievcookery/index.html">Kiev Cookery</a>
-                    <span class="path">articles/kievcookery/index.html</span>
-                </li>
-                <li>
-                    <a href="articles/maya/mayasmirror.html">Maya's Mirror</a>
-                    <span class="path">articles/maya/mayasmirror.html</span>
-                </li>
-                <li>
-                    <a href="articles/frequency/FrequencyFoundationsTheVibrationarchitecture.html">Frequency Foundations</a>
-                    <span class="path">articles/frequency/...Vibrationarchitecture.html</span>
-                </li>
-                <li>
-                    <a href="articles/codex/index.html">Codex</a>
-                    <span class="path">articles/codex/index.html</span>
-                </li>
-                <li>
-                    <a href="articles/florida_str_dashboard/index.html">Florida STR Dashboard</a>
-                    <span class="path">articles/florida_str_dashboard/index.html</span>
-                </li>
-                <li>
-                    <a href="articles/pagestreetmeats/cookingonpagestreet.html">Cooking on Page Street</a>
-                    <span class="path">articles/pagestreetmeats/cookingonpagestreet.html</span>
-                </li>
-                <li>
-                    <a href="articles/saving_private_MD/nitrogenfarmersguide.html">Nitrogen Farmer's Guide</a>
-                    <span class="path">articles/saving_private_MD/nitrogenfarmersguide.html</span>
-                </li>
-            </ul>
-        </div>
-
-        <div class="card">
-            <h2>📝 Markdown Drafts & Series</h2>
-            <ul>
-                <li>
-                    <a href="articles/article1_smith_singularity.md">Smith Singularity<span class="md-tag">MD</span></a>
-                    <span class="path">articles/article1_smith_singularity.md</span>
-                </li>
-                <li>
-                    <a href="articles/article2_first_breath.md">First Breath<span class="md-tag">MD</span></a>
-                    <span class="path">articles/article2_first_breath.md</span>
-                </li>
-                <li>
-                    <a href="articles/article3_maya.md">Maya<span class="md-tag">MD</span></a>
-                    <span class="path">articles/article3_maya.md</span>
-                </li>
-                <li>
-                    <a href="articles/article4_frequency.md">Frequency<span class="md-tag">MD</span></a>
-                    <span class="path">articles/article4_frequency.md</span>
-                </li>
-                <li>
-                    <a href="articles/article5_the_spark.md">The Spark<span class="md-tag">MD</span></a>
-                    <span class="path">articles/article5_the_spark.md</span>
-                </li>
-                <li>
-                    <a href="articles/airbnbstrategy.md">AirBnb Strategy<span class="md-tag">MD</span></a>
-                    <span class="path">articles/airbnbstrategy.md</span>
-                </li>
-                <li>
-                    <a href="cobblemaze.md">Cobble Maze<span class="md-tag">MD</span></a>
-                    <span class="path">cobblemaze.md</span>
-                </li>
-            </ul>
-        </div>
-
-        <div class="card">
-            <h2>⚙️ Utilities & Root</h2>
-            <ul>
-                <li>
-                    <a href="menu.html">Menu</a>
-                    <span class="path">menu.html</span>
-                </li>
-                <li>
-                    <a href="architect.py">architect.py</a>
-                    <span class="path">architect.py</span>
-                </li>
-                <li>
-                    <a href="asset_forge.py">asset_forge.py</a>
-                    <span class="path">asset_forge.py</span>
-                </li>
-                <li>
-                    <a href="candle_weaver.py">candle_weaver.py</a>
-                    <span class="path">candle_weaver.py</span>
-                </li>
-                <li>
-                    <a href="articles/debundle.py">debundle.py (Articles)</a>
-                    <span class="path">articles/debundle.py</span>
-                </li>
-                <li>
-                    <a href="apps/webapps/cleanup.py">cleanup.py (Webapps)</a>
-                    <span class="path">apps/webapps/cleanup.py</span>
-                </li>
-            </ul>
-        </div>
+        
+        <footer>
+            &copy; 2026 System Architecture. All active modules operating normally.
+        </footer>
     </div>
-
 </body>
 </html>
