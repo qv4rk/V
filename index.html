@@ -1,191 +1,250 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SYS.ARCHIVE // V_PROJECT</title>
-<style>
-:root {
-    --bg-void: #020202; --stone-base: #2a2a2a; --stone-highlight: #3a3a3a;
-    --stone-shadow: #111; --text-dim: #7a7a7a; --text-lit: #d4af37; --door-wood: #1e140d;
-}
-body, html { margin: 0; padding: 0; width: 100%; height: 100%; background-color: var(--bg-void); color: var(--text-dim); font-family: monospace; overflow: hidden; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Directory | Workspace</title>
+    <style>
+        :root {
+            --bg-color: #0d1117;
+            --card-bg: #161b22;
+            --text-main: #c9d1d9;
+            --text-muted: #8b949e;
+            --accent: #58a6ff;
+            --accent-hover: #79c0ff;
+            --border: #30363d;
+            --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+        }
 
-#maze-container { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 10; transition: opacity 1.5s ease-out; }
-#maze-container.fade-out { opacity: 0; pointer-events: none; }
-#skip-ui { position: fixed; bottom: 20px; right: 20px; z-index: 20; color: #fff; font-size: 12px; background: rgba(0,0,0,0.5); padding: 5px 10px; border: 1px solid #333; cursor: pointer; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+            margin: 0;
+            padding: 2rem 5%;
+        }
 
-#alcove-container { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 5; display: flex; justify-content: center; align-items: center; background-image: radial-gradient(circle at center, #1a1a1a 0%, #000 80%); }
+        header {
+            margin-bottom: 3rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 1rem;
+        }
 
-.wall-grid { display: grid; grid-template-columns: repeat(7, 1fr); grid-template-rows: repeat(7, 1fr); gap: 6px; width: 90vw; max-width: 1000px; height: 90vh; max-height: 800px; perspective: 1000px; grid-auto-flow: dense; }
+        h1 {
+            font-size: 2rem;
+            margin: 0 0 0.5rem 0;
+            font-weight: 600;
+        }
 
-.door-alcove { grid-column: 3 / 6; grid-row: 2 / 8; background: var(--door-wood); border: 8px solid #0a0a0a; border-bottom: none; border-radius: 50% 50% 0 0 / 20% 20% 0 0; position: relative; box-shadow: inset 0 0 50px #000; transition: transform 2.5s cubic-bezier(0.4, 0, 0.2, 1); transform-origin: left center; cursor: pointer; }
-.door-alcove.open { transform: rotateY(-85deg); }
+        .subtitle {
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+        }
 
-.stone-btn { background: var(--stone-base); border: 2px solid #000; border-top-color: var(--stone-highlight); border-left-color: var(--stone-highlight); box-shadow: 2px 2px 10px rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center; text-align: center; font-size: 10px; text-transform: uppercase; cursor: pointer; 
-    transition: transform 1.5s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 1.5s, color 0.3s; user-select: none; 
-    background-size: cover; background-position: center; background-repeat: no-repeat; /* For skull overlays */
-}
-.stone-btn.labeled:hover { color: var(--text-lit); background: #2f2f2f; }
-.stone-btn.pressed { transform: translateZ(-25px) scale(0.95) !important; box-shadow: inset 5px 5px 15px #000; border-top-color: var(--stone-shadow); border-left-color: var(--stone-shadow); color: var(--text-lit); }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
 
-.skull-stone { background-image: url('cobble/assets/svg/skull_stone.svg'); opacity: 0.9; }
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
 
-#transition-void { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: #000; opacity: 0; pointer-events: none; transition: opacity 2s ease-in-out; z-index: 9999; }
-</style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script> </head>
+        .card h2 {
+            font-size: 1.25rem;
+            margin-top: 0;
+            margin-bottom: 1rem;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        a {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s ease;
+        }
+
+        a:hover {
+            color: var(--accent-hover);
+            text-decoration: underline;
+        }
+
+        .path {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 0.1rem;
+        }
+
+        /* Utility for markdown files to show they might need a parser */
+        .md-tag {
+            background: #238636;
+            color: white;
+            font-size: 0.6rem;
+            padding: 2px 6px;
+            border-radius: 10px;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+    </style>
+</head>
 <body>
 
-<div id="transition-void"></div>
-<div id="maze-container"><div id="skip-ui">Press 'S' or Click to Skip</div></div>
+    <header>
+        <h1>Workspace Directory</h1>
+        <div class="subtitle">~/v_project/</div>
+    </header>
 
-<div id="alcove-container">
-    <div class="wall-grid" id="dynamic-grid">
-        <div class="door-alcove" id="main-door"></div>
+    <div class="grid">
+        <div class="card">
+            <h2>💻 Web Apps & Tools</h2>
+            <ul>
+                <li>
+                    <a href="apps/webapps/sketcherspocket/index.html">Sketchers Pocket</a>
+                    <span class="path">apps/webapps/sketcherspocket/index.html</span>
+                </li>
+                <li>
+                    <a href="apps/webapps/kalidascope/fontforge5.html">Kalidascope Font Forge</a>
+                    <span class="path">apps/webapps/kalidascope/fontforge5.html</span>
+                </li>
+                <li>
+                    <a href="apps/webapps/solsys.html">Solar System (solsys)</a>
+                    <span class="path">apps/webapps/solsys.html</span>
+                </li>
+                <li>
+                    <a href="apps/webapps/tts/feisttech_reader_v9.html">Feisttech Reader v9</a>
+                    <span class="path">apps/webapps/tts/feisttech_reader_v9.html</span>
+                </li>
+                <li>
+                    <a href="apps/webapps/tts/rsvp.html">RSVP Reader</a>
+                    <span class="path">apps/webapps/tts/rsvp.html</span>
+                </li>
+            </ul>
+        </div>
+
+        <div class="card">
+            <h2>📚 Articles & Dashboards</h2>
+            <ul>
+                <li>
+                    <a href="articles/veil/veilofbabel.html">The Veil of Babel</a>
+                    <span class="path">articles/veil/veilofbabel.html</span>
+                </li>
+                <li>
+                    <a href="articles/kievcookery/index.html">Kiev Cookery</a>
+                    <span class="path">articles/kievcookery/index.html</span>
+                </li>
+                <li>
+                    <a href="articles/maya/mayasmirror.html">Maya's Mirror</a>
+                    <span class="path">articles/maya/mayasmirror.html</span>
+                </li>
+                <li>
+                    <a href="articles/frequency/FrequencyFoundationsTheVibrationarchitecture.html">Frequency Foundations</a>
+                    <span class="path">articles/frequency/...Vibrationarchitecture.html</span>
+                </li>
+                <li>
+                    <a href="articles/codex/index.html">Codex</a>
+                    <span class="path">articles/codex/index.html</span>
+                </li>
+                <li>
+                    <a href="articles/florida_str_dashboard/index.html">Florida STR Dashboard</a>
+                    <span class="path">articles/florida_str_dashboard/index.html</span>
+                </li>
+                <li>
+                    <a href="articles/pagestreetmeats/cookingonpagestreet.html">Cooking on Page Street</a>
+                    <span class="path">articles/pagestreetmeats/cookingonpagestreet.html</span>
+                </li>
+                <li>
+                    <a href="articles/saving_private_MD/nitrogenfarmersguide.html">Nitrogen Farmer's Guide</a>
+                    <span class="path">articles/saving_private_MD/nitrogenfarmersguide.html</span>
+                </li>
+            </ul>
+        </div>
+
+        <div class="card">
+            <h2>📝 Markdown Drafts & Series</h2>
+            <ul>
+                <li>
+                    <a href="articles/article1_smith_singularity.md">Smith Singularity<span class="md-tag">MD</span></a>
+                    <span class="path">articles/article1_smith_singularity.md</span>
+                </li>
+                <li>
+                    <a href="articles/article2_first_breath.md">First Breath<span class="md-tag">MD</span></a>
+                    <span class="path">articles/article2_first_breath.md</span>
+                </li>
+                <li>
+                    <a href="articles/article3_maya.md">Maya<span class="md-tag">MD</span></a>
+                    <span class="path">articles/article3_maya.md</span>
+                </li>
+                <li>
+                    <a href="articles/article4_frequency.md">Frequency<span class="md-tag">MD</span></a>
+                    <span class="path">articles/article4_frequency.md</span>
+                </li>
+                <li>
+                    <a href="articles/article5_the_spark.md">The Spark<span class="md-tag">MD</span></a>
+                    <span class="path">articles/article5_the_spark.md</span>
+                </li>
+                <li>
+                    <a href="articles/airbnbstrategy.md">AirBnb Strategy<span class="md-tag">MD</span></a>
+                    <span class="path">articles/airbnbstrategy.md</span>
+                </li>
+                <li>
+                    <a href="cobblemaze.md">Cobble Maze<span class="md-tag">MD</span></a>
+                    <span class="path">cobblemaze.md</span>
+                </li>
+            </ul>
+        </div>
+
+        <div class="card">
+            <h2>⚙️ Utilities & Root</h2>
+            <ul>
+                <li>
+                    <a href="menu.html">Menu</a>
+                    <span class="path">menu.html</span>
+                </li>
+                <li>
+                    <a href="architect.py">architect.py</a>
+                    <span class="path">architect.py</span>
+                </li>
+                <li>
+                    <a href="asset_forge.py">asset_forge.py</a>
+                    <span class="path">asset_forge.py</span>
+                </li>
+                <li>
+                    <a href="candle_weaver.py">candle_weaver.py</a>
+                    <span class="path">candle_weaver.py</span>
+                </li>
+                <li>
+                    <a href="articles/debundle.py">debundle.py (Articles)</a>
+                    <span class="path">articles/debundle.py</span>
+                </li>
+                <li>
+                    <a href="apps/webapps/cleanup.py">cleanup.py (Webapps)</a>
+                    <span class="path">apps/webapps/cleanup.py</span>
+                </li>
+            </ul>
+        </div>
     </div>
-</div>
 
-<audio id="sfx-grind" src="cobble/assets/audio/stone_grind.mp3" preload="auto"></audio>
-<audio id="sfx-creak" src="cobble/assets/audio/door_creak.mp3" preload="auto"></audio>
-
-<script>
-    // --- GLOBAL MAZE CONTROL ---
-    let mazeActive = true;
-    function terminateMaze() {
-        if (!mazeActive) return;
-        mazeActive = false;
-        const mc = document.getElementById('maze-container');
-        mc.classList.add('fade-out');
-        setTimeout(() => { 
-            const canvas = document.querySelector('#maze-container canvas');
-            if(canvas) canvas.remove(); 
-            mc.remove(); 
-        }, 1500);
-    }
-    document.addEventListener('keydown', (e) => { if (e.key.toLowerCase() === 's') terminateMaze(); });
-    document.getElementById('skip-ui').addEventListener('click', terminateMaze);
-
-    // --- RANDOM MAZE LOADER ---
-    const mazes = ['cobble/maze_run_1.js']; 
-    const chosenMaze = mazes[Math.floor(Math.random() * mazes.length)];
-    const script = document.createElement('script');
-    script.src = chosenMaze;
-    document.body.appendChild(script);
-
-    // --- ALCOVE ENGINE & SECRETS ---
-    const grindAudio = document.getElementById('sfx-grind');
-    const creakAudio = document.getElementById('sfx-creak');
-    const mainDoor = document.getElementById('main-door');
-    const transitionVoid = document.getElementById('transition-void');
-    
-    let secretsList = [];
-    let inputSequence = [];
-    let cipherTimeout;
-
-    // Load Secrets from cobble directory
-    fetch('cobble/secrets.json').then(res => res.json()).then(data => secretsList = data).catch(() => console.log("No secrets found."));
-
-    function applyOrganicShape(element) {
-        const r = () => Math.floor(30 + Math.random() * 40);
-        element.style.borderRadius = `${r()}% ${r()}% ${r()}% ${r()}% / ${r()}% ${r()}% ${r()}% ${r()}%`;
-        const tilt = (Math.random() - 0.5) * 6;
-        element.style.transform = `rotate(${tilt}deg)`;
-        element.dataset.origTransform = `rotate(${tilt}deg)`; 
-    }
-
-    // Load Public Stones from cobble directory
-    fetch('cobble/registry.json')
-        .then(response => response.json())
-        .then(data => {
-            const grid = document.getElementById('dynamic-grid');
-            let cipherIndex = 1;
-
-            data.forEach((stoneData) => {
-                const btn = document.createElement('div');
-                btn.className = 'stone-btn';
-                applyOrganicShape(btn);
-                
-                // Check if it's a skull stone
-                if (stoneData.type === "skull-stone") {
-                    btn.classList.add('skull-stone');
-                    if (stoneData.rotation) {
-                        btn.style.transform = `rotate(${stoneData.rotation})`;
-                        btn.dataset.origTransform = `rotate(${stoneData.rotation})`;
-                    }
-                }
-
-                if (stoneData.route && stoneData.label) {
-                    btn.classList.add('labeled');
-                    btn.dataset.route = stoneData.route;
-                    btn.innerText = stoneData.label;
-                } else {
-                    btn.id = `stone-u${cipherIndex}`;
-                    btn.dataset.dead = "true";
-                    cipherIndex++;
-                }
-                
-                grid.appendChild(btn);
-                
-                btn.addEventListener('click', (e) => {
-                    if (mazeActive) terminateMaze();
-                    const target = e.currentTarget;
-                    if (target.classList.contains('pressed')) return; // Prevent double-clicking
-
-                    grindAudio.currentTime = 0; grindAudio.play().catch(() => {});
-                    target.style.transform = `${target.dataset.origTransform} translateZ(-25px) scale(0.95)`;
-                    target.classList.add('pressed');
-
-                    if (target.classList.contains('labeled')) {
-                        setTimeout(() => { 
-                            target.classList.remove('pressed'); 
-                            target.style.transform = target.dataset.origTransform; 
-                            setTimeout(() => { executeRouting(target.dataset.route); }, 1500); 
-                        }, 1500); 
-                    } else {
-                        processInput(target.id);
-                        setTimeout(() => { 
-                            target.classList.remove('pressed'); 
-                            target.style.transform = target.dataset.origTransform; 
-                        }, 6000); 
-                    }
-                });
-            });
-        });
-
-    mainDoor.addEventListener('click', () => {
-        if (mazeActive) terminateMaze();
-        processInput('door');
-    });
-
-    function processInput(inputId) {
-        inputSequence.push(inputId);
-        if (inputSequence.length > 20) inputSequence.shift(); 
-        
-        clearTimeout(cipherTimeout);
-        cipherTimeout = setTimeout(() => { inputSequence = []; }, 8000); 
-
-        secretsList.forEach(secret => {
-            const seqLength = secret.sequence.length;
-            if (inputSequence.length >= seqLength) {
-                const recentInput = inputSequence.slice(-seqLength);
-                if (JSON.stringify(recentInput) === JSON.stringify(secret.sequence)) {
-                    inputSequence = []; 
-                    executeRouting(secret.route);
-                }
-            }
-        });
-    }
-
-    function executeRouting(route) {
-        if (!route) return;
-        creakAudio.currentTime = 0; creakAudio.play().catch(() => {});
-        mainDoor.classList.add('open');
-        setTimeout(() => { transitionVoid.style.opacity = '1'; }, 1500); 
-        setTimeout(() => { window.location.href = route; }, 3500);
-    }
-</script>
 </body>
 </html>
-
