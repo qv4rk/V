@@ -1,0 +1,22 @@
+{
+  "id": "example-event",
+  "title": "Event Title",
+  "date": {
+    "year": 2024,
+    "month": 1,
+    "day": 1
+  },
+  "location": {
+    "lat": 0,
+    "lon": 0,
+    "name": "Location Name"
+  },
+  "type": "military|financial|legal|demographic|cultural",
+  "era": "ancient|medieval|imperial|modern",
+  "nodeColor": "#ff4444",
+  "nodeSize": 0.5,
+  "tags": [],
+  "connections": [],
+  "articlePath": "/articles/event-name.md",
+  "excerpt": "Brief description"
+}

@@ -3,148 +3,417 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>V | System Architecture</title>
+    <title>feisttech • Research & Interactive Tools</title>
     <style>
-        :root {
-            --bg: #0a0a0c;
-            --text: #e0e0e0;
-            --accent: #78a9ff;
-            --card-bg: rgba(255, 255, 255, 0.02);
-            --border: rgba(255, 255, 255, 0.06);
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
         
         body {
-            margin: 0;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
+            font-family: Georgia, serif;
+            background: #0a0a0a;
+            color: #e0e0e0;
             line-height: 1.6;
-            -webkit-font-smoothing: antialiased;
         }
-
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-            padding: 5rem 2rem;
-        }
-
-        header {
-            margin-bottom: 4rem;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 2rem;
-        }
-
-        h1 {
-            font-size: 2.5rem;
-            font-weight: 300;
-            letter-spacing: 3px;
-            margin: 0 0 0.5rem 0;
-            color: #ffffff;
-        }
-
-        p.subtitle {
-            color: #888;
-            font-size: 1.1rem;
-            margin: 0;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 1.5rem;
-        }
-
-        .card {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 6px;
+        
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 280px;
+            height: 100vh;
+            background: #1a1a1a;
+            border-right: 1px solid #333;
             padding: 2rem;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            color: inherit;
-            display: flex;
-            flex-direction: column;
+            overflow-y: auto;
+            z-index: 1000;
         }
-
-        .card:hover {
-            transform: translateY(-3px);
-            border-color: var(--accent);
-            background: rgba(255, 255, 255, 0.04);
-            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
-        }
-
-        .card h3 {
-            margin: 0 0 0.5rem 0;
-            font-size: 1.25rem;
-            font-weight: 500;
+        
+        .logo {
+            font-size: 1.5rem;
+            margin-bottom: 2rem;
             color: #fff;
         }
-
-        .card p {
-            color: #999;
-            font-size: 0.95rem;
-            margin: 0;
-            flex-grow: 1;
+        
+        .nav-menu {
+            list-style: none;
         }
-
-        .tag {
-            display: inline-block;
-            align-self: flex-start;
-            padding: 0.25rem 0.75rem;
-            background: rgba(120, 169, 255, 0.1);
-            color: var(--accent);
-            border-radius: 50px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            letter-spacing: 1px;
-            text-transform: uppercase;
+        
+        .nav-menu li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .nav-menu a {
+            color: #999;
+            text-decoration: none;
+            display: block;
+            padding: 0.5rem 0;
+            transition: all 0.2s;
+            border-left: 2px solid transparent;
+            padding-left: 1rem;
+        }
+        
+        .nav-menu a:hover,
+        .nav-menu a.active {
+            color: #fff;
+            border-left-color: #fff;
+        }
+        
+        /* Main Content */
+        .main-content {
+            margin-left: 280px;
+            padding: 4rem 6rem;
+            max-width: 1400px;
+        }
+        
+        section {
+            margin-bottom: 6rem;
+            scroll-margin-top: 2rem;
+        }
+        
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            font-weight: normal;
+        }
+        
+        h2 {
+            font-size: 2rem;
+            margin-bottom: 2rem;
+            font-weight: normal;
+            color: #fff;
+        }
+        
+        h3 {
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+            margin-top: 2rem;
+            font-weight: normal;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            color: #999;
+            margin-bottom: 3rem;
+        }
+        
+        /* Project Grid */
+        .project-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+        
+        .project-card {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            padding: 2rem;
+            transition: all 0.3s;
+        }
+        
+        .project-card:hover {
+            border-color: #666;
+            transform: translateY(-5px);
+        }
+        
+        .project-card h3 {
+            margin-top: 0;
+        }
+        
+        .project-card a {
+            color: #fff;
+            text-decoration: none;
+            border-bottom: 1px solid #333;
+            transition: border-color 0.2s;
+        }
+        
+        .project-card a:hover {
+            border-bottom-color: #fff;
+        }
+        
+        /* How-To Guides */
+        .guide-section {
+            background: #1a1a1a;
+            padding: 2rem;
+            border-left: 3px solid #333;
+            margin: 2rem 0;
+        }
+        
+        .guide-section ol {
+            margin-left: 1.5rem;
+            margin-top: 1rem;
+        }
+        
+        .guide-section li {
+            margin-bottom: 0.5rem;
+        }
+        
+        /* Contact Form */
+        .contact-form {
+            max-width: 600px;
+            background: #1a1a1a;
+            padding: 2rem;
+            border: 1px solid #333;
+        }
+        
+        .form-group {
             margin-bottom: 1.5rem;
         }
         
-        footer {
-            margin-top: 5rem;
-            text-align: center;
-            font-size: 0.85rem;
-            color: #555;
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #999;
+        }
+        
+        input, textarea {
+            width: 100%;
+            background: #0a0a0a;
+            border: 1px solid #333;
+            color: #e0e0e0;
+            padding: 0.75rem;
+            font-family: Georgia, serif;
+            font-size: 1rem;
+        }
+        
+        textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+        
+        button {
+            background: #fff;
+            color: #0a0a0a;
+            border: none;
+            padding: 1rem 2rem;
+            font-family: Georgia, serif;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        button:hover {
+            background: #e0e0e0;
+        }
+        
+        /* Mobile */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+                border-right: none;
+                border-bottom: 1px solid #333;
+            }
+            
+            .main-content {
+                margin-left: 0;
+                padding: 2rem;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            h2 {
+                font-size: 1.5rem;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>V_SYSTEM</h1>
-            <p class="subtitle">Digital environments, tools, and theoretical frameworks.</p>
-        </header>
-
-        <div class="grid">
-            <a href="/apps/webapps/sketcherspocket/index.html" class="card">
-                <span class="tag">Web App</span>
-                <h3>Sketchers Pocket</h3>
-                <p>Interactive 3D environment toolkit and structural modeling.</p>
-            </a>
-            
-            <a href="/articles/codex/index.html" class="card">
-                <span class="tag">Archive</span>
-                <h3>The Codex</h3>
-                <p>Foundational documentation and project architecture.</p>
-            </a>
-
-            <a href="/articles/florida_str_dashboard/index.html" class="card">
-                <span class="tag">Dashboard</span>
-                <h3>Legal Metrics</h3>
-                <p>Analytics and operational monitoring interface.</p>
-            </a>
-
-            <a href="/articles/maya/mayasmirror.html" class="card">
-                <span class="tag">Experience</span>
-                <h3>Maya's Mirror</h3>
-                <p>Immersive narrative architecture and conceptual staging.</p>
-            </a>
-        </div>
+    <aside class="sidebar">
+        <div class="logo">feisttech</div>
+        <nav>
+            <ul class="nav-menu">
+                <li><a href="#home" class="active">Home</a></li>
+                <li><a href="#about">About</a></li>
+                <li><a href="#projects">Projects</a></li>
+                <li><a href="#guides">How-To Guides</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+        </nav>
+    </aside>
+    
+    <main class="main-content">
+        <section id="home">
+            <h1>Research & Interactive Tools</h1>
+            <p class="subtitle">Exploring systems, consciousness, and the infrastructure of reality</p>
+            <p>This site houses research and interactive tools spanning political economy, consciousness studies, agricultural independence, and historical pattern recognition. The work here examines how administrative systems create self-perpetuating problems, how perception shapes reality, and how to build resilience against institutional capture.</p>
+        </section>
         
-        <footer>
-            &copy; 2026 System Architecture. All active modules operating normally.
-        </footer>
-    </div>
+        <section id="about">
+            <h2>What This Site Is About</h2>
+            <p>The projects here represent intersecting threads of inquiry:</p>
+            <ul style="margin: 1rem 0 1rem 2rem;">
+                <li><strong>Necronomy Theory</strong> – Systems that profit from perpetual crisis management rather than resolution</li>
+                <li><strong>Consciousness Studies</strong> – The nature of observation, perception, and autonomous awareness</li>
+                <li><strong>Agricultural Independence</strong> – Building resilience against supply chain capture</li>
+                <li><strong>Rhetorical Pattern Recognition</strong> – Identifying linguistic structures that precede violence across conflicts</li>
+                <li><strong>Interactive Visualizations</strong> – Tools for exploring historical events, temporal relationships, and data</li>
+            </ul>
+            <p>The common thread: examining the infrastructure beneath visible events. Not just what happens, but the systems that make it happen—and keep it happening.</p>
+        </section>
+        
+        <section id="projects">
+            <h2>Projects</h2>
+            
+            <div class="project-grid">
+                <div class="project-card">
+                    <h3><a href="necronomy-atlas/">Necronomy Atlas</a></h3>
+                    <p>Interactive timeline mapping systems that profit from perpetual crisis. 3D globe with historical constellation backgrounds showing events from 70 CE to present.</p>
+                </div>
+                
+                <div class="project-card">
+                    <h3><a href="veilofbabel.html">Veil of Babel</a></h3>
+                    <p>Pattern recognition exercise in dehumanizing rhetoric across historical conflicts. DNA visualization splits and heals as you scroll.</p>
+                </div>
+                
+                <div class="project-card">
+                    <h3><a href="manifold_sky_Atlas2_antekethera_.html">Manifold Sky</a></h3>
+                    <p>Interactive celestial visualization with temporal navigation.</p>
+                </div>
+                
+                <div class="project-card">
+                    <h3><a href="klidascopetopgunforge.html">Kaleidoscope</a></h3>
+                    <p>Antikythera-style temporal navigation widget. Drag the crank to scrub through time.</p>
+                </div>
+                
+                <div class="project-card">
+                    <h3><a href="mayasmirror.html">Maya's Mirror</a></h3>
+                    <p>Consciousness exploration. The moment before recognition.</p>
+                </div>
+                
+                <div class="project-card">
+                    <h3><a href="nitrogenfarmersguide.html">Nitrogen Farmer's Guide</a></h3>
+                    <p>Anarchist guide for building DIY nitrogen generators to avoid corporate capture during supply chain disruptions.</p>
+                </div>
+                
+                <div class="project-card">
+                    <h3><a href="fontforge5.html">Digital Reader</a></h3>
+                    <p>Text-to-speech reader with RSVP mode and voice synthesis.</p>
+                </div>
+            </div>
+        </section>
+        
+        <section id="guides">
+            <h2>How-To Guides</h2>
+            
+            <div class="guide-section">
+                <h3>Using the Kaleidoscope / Antikythera Widget</h3>
+                <ol>
+                    <li>Click and drag the crank handle in a circular motion</li>
+                    <li>The date display will update as you scrub through time</li>
+                    <li>Release to lock on a specific date</li>
+                    <li>The celestial background will rotate to show the accurate star positions for that date</li>
+                    <li>Use the reset button to return to present day</li>
+                </ol>
+            </div>
+            
+            <div class="guide-section">
+                <h3>Using the Digital Reader App</h3>
+                <ol>
+                    <li>Paste or type text into the input field</li>
+                    <li>Select voice and speed preferences</li>
+                    <li>Click "Read Aloud" to hear the text</li>
+                    <li>For RSVP mode: click "RSVP" and adjust words-per-minute</li>
+                    <li>Words will flash one at a time in the center of your screen</li>
+                    <li>Use spacebar to pause/resume during playback</li>
+                </ol>
+            </div>
+            
+            <div class="guide-section">
+                <h3>Navigating the Necronomy Atlas</h3>
+                <ol>
+                    <li>The globe will auto-rotate showing event locations as colored pins</li>
+                    <li>Click any pin to zoom to that location</li>
+                    <li>The article panel will slide in from the right</li>
+                    <li>The constellation background rotates to show the historical night sky for that event's date</li>
+                    <li>Click outside the panel or press ESC to close</li>
+                    <li>Hover over pins to see event titles and dates</li>
+                </ol>
+            </div>
+        </section>
+        
+        <section id="contact">
+            <h2>Contact</h2>
+            <p>Questions, collaboration inquiries, or feedback:</p>
+            
+            <div class="contact-form">
+                <form id="contactForm">
+                    <div class="form-group">
+                        <label for="name">Name</label>
+                        <input type="text" id="name" name="name" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" name="email" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="message">Message</label>
+                        <textarea id="message" name="message" required></textarea>
+                    </div>
+                    
+                    <button type="submit">Send Message</button>
+                </form>
+            </div>
+        </section>
+    </main>
+    
+    <script>
+        // Smooth scroll for navigation
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                target.scrollIntoView({ behavior: 'smooth' });
+                
+                // Update active nav
+                document.querySelectorAll('.nav-menu a').forEach(link => {
+                    link.classList.remove('active');
+                });
+                this.classList.add('active');
+            });
+        });
+        
+        // Contact form handler
+        document.getElementById('contactForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const message = document.getElementById('message').value;
+            
+            const subject = `Contact from ${name}`;
+            const body = `From: ${name} (${email})\n\n${message}`;
+            
+            // Create mailto link - replace YOUR_EMAIL with actual email
+            window.location.href = `mailto:YOUR_EMAIL@example.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        });
+        
+        // Highlight active section on scroll
+        window.addEventListener('scroll', () => {
+            let current = '';
+            document.querySelectorAll('section').forEach(section => {
+                const sectionTop = section.offsetTop;
+                if (scrollY >= sectionTop - 100) {
+                    current = section.getAttribute('id');
+                }
+            });
+            
+            document.querySelectorAll('.nav-menu a').forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href').substring(1) === current) {
+                    link.classList.add('active');
+                }
+            });
+        });
+    </script>
 </body>
 </html>

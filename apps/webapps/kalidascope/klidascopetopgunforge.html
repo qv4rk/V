@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>FeistTech · KeyForge v2</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #04060A;
+      --panel: rgba(6,9,16,0.92);
+      --border: rgba(0,255,200,0.18);
+      --accent: #00FFC8;
+      --accent2: #FF2D78;
+      --accent3: #B060FF;
+      --gold: #FFD060;
+      --text: #D8E8E4;
+      --dim: #3A5050;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 100vw; height: 100vh; overflow: hidden;
+      background: var(--bg);
+      font-family: 'Space Mono', monospace;
+      color: var(--text);
+      touch-action: none;
+      user-select: none;
+    }
+    canvas { display: block; position: absolute; top: 0; left: 0; z-index: 1; }
+
+    /* ── TOP BAR ── */
+    #top-bar {
+      position: fixed; top: 0; left: 50%; transform: translateX(-50%);
+      z-index: 200; display: flex; gap: 5px; padding: 8px 8px 0;
+      pointer-events: auto;
+    }
+    .t-btn {
+      background: var(--panel); border: 1px solid var(--border);
+      color: var(--accent); font-family: 'Space Mono', monospace;
+      font-size: 0.58rem; font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase; padding: 6px 10px; border-radius: 6px;
+      cursor: pointer; transition: all 0.15s; backdrop-filter: blur(12px);
+      white-space: nowrap;
+    }
+    .t-btn:hover { border-color: var(--accent); background: rgba(0,255,200,0.08); }
+    .t-btn.active { background: var(--accent); color: #000; border-color: var(--accent); }
+    .t-btn.rec { border-color: var(--accent2); color: var(--accent2); }
+    .t-btn.rec.live { background: var(--accent2); color: #fff; animation: blink 1s infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.55} }
+
+    /* ── HUD ── */
+    #hud {
+      position: fixed; top: 50%; left: 50%;
+      transform: translate(-50%,-50%) scale(0.88);
+      z-index: 300; padding: 16px 26px;
+      background: var(--panel); border: 1px solid var(--accent);
+      border-radius: 14px; text-align: center;
+      pointer-events: none; backdrop-filter: blur(20px);
+      opacity: 0; transition: opacity 0.18s, transform 0.18s;
+      min-width: 210px; box-shadow: 0 0 40px rgba(0,255,200,0.08);
+    }
+    #hud.on { opacity: 1; transform: translate(-50%,-50%) scale(1); }
+    #hud-lbl { font-size: 0.6rem; color: var(--dim); text-transform: uppercase; letter-spacing: 0.12em; }
+    #hud-val { font-family: 'Syne', sans-serif; font-size: 1.25rem; color: var(--accent); margin-top: 3px; }
+    #hud-sub { font-size: 0.58rem; color: var(--accent2); margin-top: 2px; min-height: 14px; }
+
+    /* ── STATUS STRIP ── */
+    #status-strip {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      z-index: 200; display: flex; justify-content: center; gap: 20px;
+      padding: 6px 12px; pointer-events: none;
+      font-size: 0.55rem; letter-spacing: 0.1em; text-transform: uppercase;
+      background: linear-gradient(transparent, rgba(4,6,10,0.9));
+    }
+    .strip-item { color: var(--dim); }
+    .strip-item span { color: var(--accent); }
+
+    /* ── JOYSTICK TOGGLES ── */
+    .toggle-wrap {
+      position: fixed; display: flex; flex-direction: column;
+      align-items: center; z-index: 201; padding: 6px;
+    }
+    .toggle {
+      width: 50px; height: 50px; background: var(--panel);
+      border: 1px solid var(--border); border-radius: 50%;
+      cursor: grab; position: relative;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.6);
+    }
+    .toggle:active { cursor: grabbing; border-color: var(--accent); }
+    .stick {
+      width: 20px; height: 20px;
+      background: rgba(0,255,200,0.5); border-radius: 50%;
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%,-50%);
+      transition: transform 0.07s cubic-bezier(.16,1,.3,1);
+      pointer-events: none;
+    }
+    .toggle-tag {
+      margin-top: 4px; font-size: 0.5rem; font-weight: 700;
+      color: var(--dim); letter-spacing: 0.05em; text-transform: uppercase;
+      text-align: center; background: rgba(0,0,0,0.5);
+      padding: 2px 4px; border-radius: 4px; white-space: nowrap;
+    }
+    #L1-w{top:3%;left:0} #L2-w{top:21%;left:0} #L3-w{top:41%;left:0}
+    #L4-w{bottom:21%;left:0} #L5-w{bottom:3%;left:0}
+    #R1-w{top:3%;right:0} #R2-w{top:21%;right:0} #R3-w{top:41%;right:0}
+    #R4-w{bottom:21%;right:0} #R5-w{bottom:3%;right:0}
+
+    #file-in { display: none; }
+  </style>
+</head>
+<body>
+
+<canvas id="cv"></canvas>
+
+<div id="top-bar">
+  <button class="t-btn rec" id="btn-rec" onclick="toggleRecord()">● REC</button>
+  <button class="t-btn" onclick="clearAll()">WIPE</button>
+  <button class="t-btn" id="btn-ghost" onclick="toggleGhosts()">GHOST: OFF</button>
+  <button class="t-btn" onclick="exportJSON()">JSON</button>
+  <button class="t-btn" onclick="document.getElementById('file-in').click()">LOAD</button>
+  <button class="t-btn" onclick="exportPNG()">PNG</button>
+</div>
+
+<div id="hud">
+  <div id="hud-lbl">KeyForge v2</div>
+  <div id="hud-val">Ready</div>
+  <div id="hud-sub"></div>
+</div>
+
+<div id="status-strip">
+  <div class="strip-item">PAT: <span id="s-pat">Line</span></div>
+  <div class="strip-item">FINGERS: <span id="s-fing">2</span></div>
+  <div class="strip-item">DELAY: <span id="s-delay">12</span>fr</div>
+  <div class="strip-item">MIRRORS: <span id="s-mir">6</span></div>
+  <div class="strip-item">MESH: <span id="s-mesh">ON</span></div>
+</div>
+
+<input type="file" id="file-in" accept=".json" onchange="importJSON(event)">
+
+<script>
+// ═══════════════════════════════════════════════════════════════════
+//  CANVAS SETUP
+// ═══════════════════════════════════════════════════════════════════
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d', { alpha: true });
+let W, H;
+
+function resize() {
+  const dpr = window.devicePixelRatio || 1;
+  W = window.innerWidth; H = window.innerHeight;
+  cv.width = W * dpr; cv.height = H * dpr;
+  cv.style.width = W + 'px'; cv.style.height = H + 'px';
+  ctx.scale(dpr, dpr);
+  // transparent background — no fillRect
+}
+window.addEventListener('resize', resize);
+resize();
+
+// ═══════════════════════════════════════════════════════════════════
+//  CONFIG
+// ═══════════════════════════════════════════════════════════════════
+const C = {
+  mirrors:    6,
+  gridMode:   0,       // 0=1×1  1=2×1  2=2×2
+  thickness:  1.2,
+  size:       260,
+  patIdx:     0,
+  palIdx:     0,
+  fadeRate:   0,       // 0 = permanent
+  param1:     0.5,
+  param2:     0.5,
+  glitchMesh: true,
+  hysteresis: false,
+  ghostsOn:   false,
+  isRec:      false,
+  // ── TEMPORAL CLUSTER ──────────────────────────────────────────
+  tubeFingersN: 2,     // how many virtual fingers (including real)
+  tubeDelay:   12,     // frame gap between consecutive virtual fingers
+  tubeOn:      false   // temporal cluster active?
+};
+
+let globalStep = 0;
+let sessionStart = Date.now();
+
+// ═══════════════════════════════════════════════════════════════════
+//  PALETTES
+// ═══════════════════════════════════════════════════════════════════
+const PALETTES = {
+  'Axial DNA':    ['#FF00FF','#00FFFF','#FFFF00','#FF0000','#00FF00','#0000FF','#FF77FF'],
+  'Cyberpunk':    ['#00FFFF','#FF00FF','#00FF00','#FFFF00','#FF0000','#7D00FF'],
+  'Neon Storm':   ['#FF0055','#FF00AA','#FF00FF','#AA00FF','#00FFFF','#00FF55','#FFAA00'],
+  'Golden':       ['#FFD700','#FFA500','#FF8C00','#DAA520','#B8860B','#F0E68C'],
+  'Ocean':        ['#001d3d','#003566','#2196F3','#00D9FF','#7FD8BE','#ffffff'],
+  'Ghost':        ['rgba(255,255,255,0.8)','rgba(0,243,255,0.6)','rgba(255,0,255,0.5)','rgba(255,255,0,0.4)'],
+  'Sakura':       ['#FFC0CB','#FFB6C1','#FF69B4','#DB7093','#F5DEB3','#FFFFFF'],
+  'Forest':       ['#2F4F2F','#556B2F','#8B4513','#006400','#228B22','#6B8E23','#90BE6D'],
+  'Grayscale':    ['#FFFFFF','#D3D3D3','#A9A9A9','#808080','#4D4D4D','#1A1A1A'],
+  'Cosmic':       ['#000033','#4B0082','#8A2BE2','#FFD700','#F0E68C','#FFFFFF']
+};
+const PAL_KEYS = Object.keys(PALETTES);
+const pal = () => PALETTES[PAL_KEYS[C.palIdx]];
+
+// ═══════════════════════════════════════════════════════════════════
+//  PATTERNS
+// ═══════════════════════════════════════════════════════════════════
+const PATTERNS = [
+  {
+    name: 'Standard Line',
+    draw(ctx, x, y, sz, prev, p) {
+      if (!prev) return;
+      const colors = pal();
+      ctx.strokeStyle = colors[globalStep % colors.length];
+      ctx.lineWidth = p.thickness;
+      ctx.beginPath(); ctx.moveTo(prev.x, prev.y); ctx.lineTo(x, y); ctx.stroke();
+    }
+  },
+  {
+    name: 'Golden Spiral',
+    draw(ctx, x, y, sz, prev, p) {
+      const PHI = 1.6180339887, B = Math.log(PHI)/(Math.PI/2);
+      const turns = 1 + p.param1 * 4;
+      const spread = 0.015 + p.param2 * 0.055;
+      const anim = (Date.now()/500) % (Math.PI*2);
+      let lx = x, ly = y; let ci = 0;
+      const colors = pal();
+      ctx.lineWidth = p.thickness;
+      for (let a = 0; a < Math.PI*turns*4; a += 0.2) {
+        const r = sz * spread * Math.exp(B*a);
+        const px = x + Math.cos(a+anim)*r, py = y + Math.sin(a+anim)*r;
+        if (a > 0) {
+          ctx.strokeStyle = colors[ci++ % colors.length];
+          ctx.beginPath(); ctx.moveTo(lx,ly); ctx.lineTo(px,py); ctx.stroke();
+        }
+        lx=px; ly=py;
+      }
+    }
+  },
+  {
+    name: 'Lorenz',
+    draw(ctx, x, y, sz, prev, p) {
+      let lx=0.1,ly=0,lz=0;
+      const sc = sz*0.03*(0.5+p.param2), iters=150+p.param1*500, dt=0.01;
+      const colors = pal(); let ci=0;
+      ctx.lineWidth = p.thickness;
+      ctx.beginPath(); ctx.moveTo(x+lx*sc, y+ly*sc);
+      for (let i=0;i<iters;i++) {
+        const dx=10*(ly-lx), dy=lx*(28-lz)-ly, dz=lx*ly-(8/3)*lz;
+        lx+=dx*dt; ly+=dy*dt; lz+=dz*dt;
+        if (i%20===0) { ctx.strokeStyle=colors[ci++%colors.length]; ctx.stroke(); ctx.beginPath(); ctx.moveTo(x+lx*sc,y+ly*sc); }
+        else ctx.lineTo(x+lx*sc,y+ly*sc);
+      }
+      ctx.stroke();
+    }
+  },
+  {
+    name: 'Lynchpin Star',
+    draw(ctx, x, y, sz, prev, p) {
+      const pts=Math.floor(3+p.param1*12), rOut=sz*0.45, rIn=rOut*(0.05+p.param2*0.8);
+      const rot=(Date.now()*0.001)%(Math.PI*2);
+      const colors=pal();
+      ctx.strokeStyle=colors[globalStep%colors.length]; ctx.lineWidth=p.thickness;
+      ctx.beginPath();
+      for (let i=0;i<pts*2;i++) {
+        const r=i%2===0?rOut:rIn, a=(i*Math.PI)/pts-Math.PI/2+rot;
+        if(i===0) ctx.moveTo(x+Math.cos(a)*r,y+Math.sin(a)*r);
+        else ctx.lineTo(x+Math.cos(a)*r,y+Math.sin(a)*r);
+      }
+      ctx.closePath(); ctx.stroke();
+    }
+  },
+  {
+    name: 'Flower of Life',
+    draw(ctx, x, y, sz, prev, p) {
+      const r=sz*(0.1+p.param2*0.35);
+      const colors=pal();
+      ctx.lineWidth=p.thickness;
+      for (let i=0;i<7;i++) {
+        ctx.strokeStyle=colors[i%colors.length];
+        const a=i===0?0:(i-1)*(Math.PI/3);
+        const cx=x+(i===0?0:r*Math.cos(a)), cy=y+(i===0?0:r*Math.sin(a));
+        ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.stroke();
+      }
+    }
+  },
+  {
+    name: 'Sierpinski',
+    draw(ctx, x, y, sz, prev, p) {
+      const h=sz*(Math.sqrt(3)/2);
+      const p1={x,y:y-h/2}, p2={x:x-sz/2,y:y+h/2}, p3={x:x+sz/2,y:y+h/2};
+      const depth=Math.floor(1+p.param1*4); let ci=0; const colors=pal();
+      ctx.lineWidth=p.thickness;
+      function drw(a,b,c,lv) {
+        if(lv<=0){
+          ctx.strokeStyle=colors[ci++%colors.length];
+          ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.lineTo(c.x,c.y);ctx.closePath();ctx.stroke();return;
+        }
+        const ab={x:(a.x+b.x)/2,y:(a.y+b.y)/2},bc={x:(b.x+c.x)/2,y:(b.y+c.y)/2},ca={x:(c.x+a.x)/2,y:(c.y+a.y)/2};
+        drw(a,ab,ca,lv-1);drw(ab,b,bc,lv-1);drw(ca,bc,c,lv-1);
+      }
+      drw(p1,p2,p3,depth);
+    }
+  },
+  {
+    name: 'Tube (Temporal)',   // placeholder — tube is drawn by cluster engine
+    draw() {}
+  }
+];
+const PAT_NAMES = PATTERNS.map(p => p.name);
+
+// ═══════════════════════════════════════════════════════════════════
+//  STROKE RING BUFFER — THE TEMPORAL SPINE
+// ═══════════════════════════════════════════════════════════════════
+/*
+ * Every pointer-move event writes one frame into this circular buffer.
+ * Each entry carries the full biometric vector: position, pressure,
+ * velocity, heading, and a snapshot of live config parameters.
+ *
+ * Virtual finger k reads from buffer[head - k * tubeDelay].
+ * This means finger 0 = live, finger 1 = N frames ago,
+ * finger 2 = 2N frames ago, etc.
+ *
+ * Each virtual finger draws its OWN longitudinal line segment
+ * (from its prev position to its current position in history).
+ * The glitch mesh then connects all fingers LATERALLY at the
+ * current frame — exactly as if N physical fingers had been placed
+ * at those positions simultaneously.
+ *
+ * This is the key: the "fighting over lastUV" that you saw with
+ * 2 real fingers IS reproduced here because each virtual finger
+ * has its own lastPos and draws its own line. They are independent
+ * actors tracing the same path at different points in time.
+ */
+const BUF_SIZE = 1024;
+const strokeBuf = new Array(BUF_SIZE).fill(null);
+let bufHead = 0;    // next write slot
+let bufCount = 0;   // total frames written this stroke
+
+function bufWrite(frame) {
+  strokeBuf[bufHead % BUF_SIZE] = frame;
+  bufHead++;
+  bufCount++;
+}
+
+function bufRead(stepsBack) {
+  // stepsBack=0 → most recent, stepsBack=1 → one before, etc.
+  const clamp = Math.min(stepsBack, bufCount - 1);
+  const idx = ((bufHead - 1 - clamp) % BUF_SIZE + BUF_SIZE) % BUF_SIZE;
+  return strokeBuf[idx];
+}
+
+function bufReset() {
+  bufHead = 0; bufCount = 0;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  VIRTUAL FINGER POSITIONS AT CURRENT FRAME
+// ═══════════════════════════════════════════════════════════════════
+/*
+ * Returns an array of {x, y, p, v, h, prev} for each virtual finger.
+ * x,y are in ABSOLUTE CANVAS coordinates.
+ * prev is the virtual finger's OWN previous canvas position.
+ * fingerIdx k: current = bufRead(k * tubeDelay), prev = bufRead(k * tubeDelay + 1)
+ */
+function getVirtualFingers() {
+  if (bufCount < 2) return [];
+  const fingers = [];
+  for (let k = 0; k < C.tubeFingersN; k++) {
+    const delay = k * C.tubeDelay;
+    const cur  = bufRead(delay);
+    const prv  = bufRead(delay + 1);
+    if (!cur) continue;
+    fingers.push({
+      x:    cur.x * W,
+      y:    (1 - cur.y) * H,
+      prevX: prv ? prv.x * W   : null,
+      prevY: prv ? (1 - prv.y) * H : null,
+      p:    cur.p,
+      v:    cur.v,
+      h:    cur.h,
+      k     // finger index, used for color assignment
+    });
+  }
+  return fingers;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  SYMMETRY ENGINE
+// ═══════════════════════════════════════════════════════════════════
+function getCenters() {
+  if (C.gridMode === 1) return [{x:W/4,y:H/2},{x:W*0.75,y:H/2}];
+  if (C.gridMode === 2) return [{x:W/4,y:H/4},{x:W*0.75,y:H/4},{x:W/4,y:H*0.75},{x:W*0.75,y:H*0.75}];
+  return [{x:W/2,y:H/2}];
+}
+
+/*
+ * Core render pass for one symmetry center.
+ *
+ * vFingers: array of virtual finger positions (from getVirtualFingers())
+ * realX/Y:  position of the live (real) finger in canvas coords
+ * realPrevX/Y: previous position of the live finger
+ *
+ * Each mirror loop does two things:
+ * 1. LONGITUDINAL LINES — each virtual finger draws its own segment
+ *    (from its prev pos to its current pos). This builds the STRANDS
+ *    of the tube.
+ * 2. LATERAL MESH — glitch mesh connects all virtual fingers at the
+ *    current frame. This builds the CROSS-SECTIONS of the tube.
+ *    With hysteresis, the cross-sections bow/oscillate, creating the
+ *    ribbon morphing effect.
+ */
+function renderPass(cx, cy, vFingers, realX, realY, realPrevX, realPrevY, targetCtx) {
+  const p  = C;
+  const colors = pal();
+  const step  = (Math.PI * 2) / C.mirrors;
+  const loops = Math.ceil(C.mirrors);
+  const tc = targetCtx || ctx;
+
+  tc.save();
+  tc.translate(cx, cy);
+
+  for (let i = 0; i < loops; i++) {
+    tc.save();
+    tc.rotate(i * step);
+    if (C.mirrors >= 2 && i % 2 === 1) tc.scale(1, -1);
+    tc.lineCap = 'round'; tc.lineJoin = 'round';
+
+    // ── 1. GEOMETRIC PATTERN (real finger only, no tube mode) ──
+    if (!C.tubeOn || PATTERNS[C.patIdx].name === 'Tube (Temporal)') {
+      if (realPrevX !== null) {
+        PATTERNS[C.patIdx].draw(
+          tc,
+          realX - cx, realY - cy, C.size,
+          {x: realPrevX - cx, y: realPrevY - cy},
+          p
+        );
+      } else {
+        PATTERNS[C.patIdx].draw(tc, realX - cx, realY - cy, C.size, null, p);
+      }
+    }
+
+    // ── 2. TUBE: LONGITUDINAL STRANDS ──
+    // Each virtual finger draws its own line segment.
+    // They are independent — each has its own "lastUV" (prevX/Y).
+    // The effect: they trace the same path but at different times,
+    // creating parallel strands that compose the tube wall.
+    if (C.tubeOn && vFingers.length > 0) {
+      vFingers.forEach((f, idx) => {
+        if (f.prevX === null) return;
+        tc.strokeStyle = colors[f.k % colors.length];
+        tc.lineWidth = p.thickness;
+        tc.beginPath();
+        tc.moveTo(f.prevX - cx, f.prevY - cy);
+        tc.lineTo(f.x    - cx, f.y    - cy);
+        tc.stroke();
+      });
+    }
+
+    // ── 3. GLITCH MESH: LATERAL CROSS-SECTIONS ──
+    // Connects consecutive virtual fingers (and real finger) at the
+    // current frame. With N virtual fingers you get an N-gon cross-
+    // section. Wall j gets color j — deterministic to finger count.
+    const meshPts = C.tubeOn && vFingers.length > 1
+      ? vFingers.map(f => ({x: f.x, y: f.y}))
+      : null;
+
+    // If not in tube mode, use activeTouches for real multi-finger mesh
+    const rawMeshPts = meshPts || (C.glitchMesh ? getRealMeshPts() : null);
+
+    if (rawMeshPts && rawMeshPts.length > 1 && C.glitchMesh) {
+      const n = rawMeshPts.length;
+      tc.lineWidth = 0.6;
+
+      if (!C.hysteresis) {
+        // Straight-line cross-sections
+        for (let j = 0; j < n; j++) {
+          const nj = (j + 1) % n;
+          tc.strokeStyle = colors[j % colors.length];
+          tc.beginPath();
+          tc.moveTo(rawMeshPts[j].x - cx, rawMeshPts[j].y - cy);
+          tc.lineTo(rawMeshPts[nj].x - cx, rawMeshPts[nj].y - cy);
+          tc.stroke();
+        }
+      } else {
+        // HYSTERESIS LOOM: bowing bézier cross-sections
+        // The bow oscillates over time — the "deviating return path"
+        // means each cross-section takes a different arc each frame.
+        for (let j = 0; j < n; j++) {
+          const nj = (j + 1) % n;
+          const p1 = rawMeshPts[j], p2 = rawMeshPts[nj];
+          const dx = p2.x - p1.x, dy = p2.y - p1.y;
+          const dist = Math.hypot(dx, dy) || 1;
+          const nx = -dy/dist, ny = dx/dist;
+          const bow = Math.sin(globalStep * 0.022 + j * 1.1 + i * 0.7) * dist * 0.28;
+          const cpX = (p1.x + p2.x)/2 + nx * bow;
+          const cpY = (p1.y + p2.y)/2 + ny * bow;
+          tc.strokeStyle = colors[j % colors.length];
+          tc.beginPath();
+          tc.moveTo(p1.x - cx, p1.y - cy);
+          tc.quadraticCurveTo(cpX - cx, cpY - cy, p2.x - cx, p2.y - cy);
+          tc.stroke();
+        }
+      }
+    }
+
+    tc.restore();
+  }
+  tc.restore();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  REAL MULTI-FINGER MESH (physical multi-touch, non-tube mode)
+// ═══════════════════════════════════════════════════════════════════
+const realTouches = new Map(); // id → {x,y} canvas coords
+
+function getRealMeshPts() {
+  const pts = Array.from(realTouches.values());
+  return pts.length > 1 ? pts : null;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  BIOMETRIC TELEMETRY
+// ═══════════════════════════════════════════════════════════════════
+let telemetry = [];
+
+function capture(id, uvX, uvY, pressure, velocity, heading) {
+  if (!C.isRec) return;
+  // Also snapshot live config — config changes mid-stroke ARE part of the key
+  telemetry.push({
+    t: Date.now() - sessionStart,
+    id, x: +uvX.toFixed(5), y: +uvY.toFixed(5),
+    p: +pressure.toFixed(4), v: +velocity.toFixed(4), h: +heading.toFixed(4),
+    // config delta snapshot
+    cfg: {
+      mirrors: C.mirrors, pat: C.patIdx, pal: C.palIdx,
+      fade: C.fadeRate, delay: C.tubeDelay, fingers: C.tubeFingersN
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  PING-PONG GHOST ENGINE
+// ═══════════════════════════════════════════════════════════════════
+/*
+ * Each ghost stores its full stroke buffer as a flat array of frames.
+ * On replay, getVirtualFingers() is reconstructed by reading from the
+ * stored array using the same temporal offsets — exact deterministic
+ * reproduction of the original tube geometry.
+ */
+let ghosts = [];
+let liveStroke = [];  // accumulates frames for the current stroke
+
+function commitStroke() {
+  if (liveStroke.length < 4) { liveStroke = []; return; }
+  ghosts.push({
+    frames: [...liveStroke],
+    curIdx: liveStroke.length - 1,
+    dir: -1,
+    snapC: {
+      mirrors: C.mirrors, patIdx: C.patIdx, palIdx: C.palIdx,
+      tubeFingersN: C.tubeFingersN, tubeDelay: C.tubeDelay,
+      tubeOn: C.tubeOn, thickness: C.thickness, size: C.size,
+      glitchMesh: C.glitchMesh, hysteresis: C.hysteresis
+    }
+  });
+  liveStroke = [];
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  POINTER EVENTS
+// ═══════════════════════════════════════════════════════════════════
+const pointerState = new Map();
+let isDown = false;
+let realLastUV = null;
+
+function uvFrom(cx, cy) { return { x: cx/W, y: 1 - cy/H }; }
+
+function onDown(e) {
+  if (e.target.closest('.toggle') || e.target.closest('#top-bar')) return;
+  isDown = true;
+  realLastUV = null;
+  bufReset();
+  pointerState.set(e.pointerId, {x: e.clientX, y: e.clientY, t: Date.now()});
+  realTouches.set(e.pointerId, {x: e.clientX, y: H - e.clientY});
+  onMove(e);
+}
+
+function onMove(e) {
+  if (!isDown) return;
+  e.preventDefault();
+
+  const id = e.pointerId;
+  const cx = e.clientX, cy = e.clientY;
+  const pressure = e.pointerType === 'pen' ? e.pressure : (e.pressure || 0.5);
+
+  let velocity = 0, heading = 0;
+  const now = Date.now();
+  if (pointerState.has(id)) {
+    const prev = pointerState.get(id);
+    const dt = now - prev.t;
+    if (dt > 0) {
+      const dx = cx - prev.x, dy = cy - prev.y;
+      velocity = Math.hypot(dx, dy) / dt;
+      heading  = Math.atan2(dy, dx);
+    }
+  }
+  pointerState.set(id, {x: cx, y: cy, t: now});
+
+  const uv = uvFrom(cx, cy);
+
+  // ── Write frame to ring buffer ──
+  const frame = { x: uv.x, y: uv.y, p: pressure, v: velocity, h: heading };
+  bufWrite(frame);
+  liveStroke.push(frame);
+  capture(id, uv.x, uv.y, pressure, velocity, heading);
+
+  // ── Update real touch position ──
+  realTouches.set(id, {x: cx, y: H - cy});
+
+  // ── Compute virtual finger positions ──
+  const vf = C.tubeOn ? getVirtualFingers() : [];
+
+  // ── Real finger canvas position ──
+  const absX = uv.x * W;
+  const absY = (1 - uv.y) * H;
+  const prevAbsX = realLastUV ? realLastUV.x * W   : null;
+  const prevAbsY = realLastUV ? (1-realLastUV.y)*H : null;
+
+  // ── Render across all symmetry centers ──
+  getCenters().forEach(c => renderPass(c.x, c.y, vf, absX, absY, prevAbsX, prevAbsY));
+
+  realLastUV = uv;
+  globalStep++;
+  updateStrip();
+}
+
+function onUp(e) {
+  isDown = false;
+  commitStroke();
+  realLastUV = null;
+  realTouches.delete(e.pointerId);
+  pointerState.delete(e.pointerId);
+  // Keep buffer for ghost — reset happens on next onDown
+}
+
+window.addEventListener('pointerdown', onDown, {passive:false});
+window.addEventListener('pointermove', onMove, {passive:false});
+window.addEventListener('pointerup',   onUp);
+window.addEventListener('pointercancel', onUp);
+
+// ═══════════════════════════════════════════════════════════════════
+//  ANIMATION — FADE + GHOST REPLAY
+// ═══════════════════════════════════════════════════════════════════
+function ghostVF(g, idx) {
+  const frames = g.frames;
+  const N = g.snapC.tubeFingersN;
+  const D = g.snapC.tubeDelay;
+  const fingers = [];
+  for (let k = 0; k < N; k++) {
+    const delay = k * D;
+    const ci  = Math.max(0, idx - delay);
+    const cip = Math.max(0, idx - delay - 1);
+    const cur = frames[ci];
+    const prv = frames[cip];
+    if (!cur) continue;
+    fingers.push({
+      x:    cur.x * W, y: (1-cur.y) * H,
+      prevX: prv.x * W, prevY: (1-prv.y) * H,
+      p: cur.p, v: cur.v, h: cur.h, k
+    });
+  }
+  return fingers;
+}
+
+function animate() {
+  requestAnimationFrame(animate);
+
+  // Fade
+  if (C.fadeRate > 0) {
+    ctx.fillStyle = `rgba(4,6,10,${C.fadeRate})`;
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  // Ghost replay
+  if (C.ghostsOn && ghosts.length > 0) {
+    ghosts.forEach(g => {
+      g.curIdx += g.dir;
+      if (g.curIdx >= g.frames.length - 1) { g.curIdx = g.frames.length - 1; g.dir = -1; }
+      else if (g.curIdx <= 0)              { g.curIdx = 0;                    g.dir = 1;  }
+
+      const idx = g.curIdx;
+      const cur = g.frames[idx];
+      const prv = g.frames[Math.max(0, idx - g.dir)];
+      if (!cur) return;
+
+      const vf = g.snapC.tubeOn ? ghostVF(g, idx) : [];
+      const absX  = cur.x*W,       absY  = (1-cur.y)*H;
+      const prevX = prv.x*W,       prevY = (1-prv.y)*H;
+
+      // Temporarily borrow snap config
+      const save = {patIdx:C.patIdx,palIdx:C.palIdx,mirrors:C.mirrors,
+        tubeFingersN:C.tubeFingersN,tubeDelay:C.tubeDelay,tubeOn:C.tubeOn,
+        thickness:C.thickness,size:C.size,glitchMesh:C.glitchMesh,hysteresis:C.hysteresis};
+      Object.assign(C, g.snapC);
+
+      getCenters().forEach(c => renderPass(c.x, c.y, vf, absX, absY, prevX, prevY));
+
+      Object.assign(C, save);
+    });
+    globalStep++;
+  }
+}
+animate();
+
+// ═══════════════════════════════════════════════════════════════════
+//  EXPORT / IMPORT
+// ═══════════════════════════════════════════════════════════════════
+function exportJSON() {
+  if (telemetry.length === 0) { hud('ERROR','Enable REC first',''); return; }
+  const blob = new Blob([JSON.stringify({
+    meta: { date: new Date().toISOString(), config: {...C}, version: '2.0' },
+    telemetry,
+    ghosts: ghosts.map(g => ({frames: g.frames, snapC: g.snapC}))
+  }, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = `KeyForge_${Date.now()}.json`; a.click();
+  hud('EXPORTED', `${telemetry.length} biometric vectors`, '');
+}
+
+function importJSON(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      (data.ghosts || []).forEach(g => {
+        ghosts.push({ frames: g.frames, curIdx: 0, dir: 1, snapC: g.snapC });
+      });
+      C.ghostsOn = true;
+      document.getElementById('btn-ghost').classList.add('active');
+      document.getElementById('btn-ghost').textContent = 'GHOST: ON';
+      hud('IMPORTED', `${data.telemetry?.length||0} vectors`, '');
+    } catch { hud('ERROR','Invalid file',''); }
+  };
+  reader.readAsText(file); e.target.value = '';
+}
+
+function exportPNG() {
+  // Transparent high-res re-render of all ghosts — no background fill
+  const DIM = 4096;
+  const off = document.createElement('canvas');
+  off.width = off.height = DIM;
+  const oCtx = off.getContext('2d');
+  // NO fillRect — transparent background
+
+  const scale = DIM / Math.max(W, H);
+  const oW = W * scale, oH = H * scale;
+  const offX = (DIM - oW) / 2, offY = (DIM - oH) / 2;
+
+  ghosts.forEach(g => {
+    const save = {patIdx:C.patIdx,palIdx:C.palIdx,mirrors:C.mirrors,
+      tubeFingersN:C.tubeFingersN,tubeDelay:C.tubeDelay,tubeOn:C.tubeOn,
+      thickness:C.thickness,size:C.size,glitchMesh:C.glitchMesh,hysteresis:C.hysteresis};
+    Object.assign(C, g.snapC);
+
+    g.frames.forEach((frame, idx) => {
+      const vf = g.snapC.tubeOn ? ghostVFScaled(g, idx, scale, offX, offY, oH) : [];
+      const absX  = frame.x*oW + offX;
+      const absY  = (1-frame.y)*oH + offY;
+      const prv   = g.frames[Math.max(0,idx-1)];
+      const prevX = prv.x*oW + offX;
+      const prevY = (1-prv.y)*oH + offY;
+      renderPass(DIM/2, DIM/2, vf, absX, absY, prevX, prevY, oCtx);
+    });
+
+    Object.assign(C, save);
+  });
+
+  const a = document.createElement('a');
+  a.download = `KeyForge_4K_${Date.now()}.png`;
+  a.href = off.toDataURL('image/png'); a.click();
+  hud('PNG EXPORTED','Transparent 4K','Lines only, no background');
+}
+
+function ghostVFScaled(g, idx, scale, offX, offY, oH) {
+  const N = g.snapC.tubeFingersN, D = g.snapC.tubeDelay;
+  const fingers = [];
+  const oW = W * scale;
+  for (let k = 0; k < N; k++) {
+    const delay = k * D;
+    const ci  = Math.max(0, idx - delay);
+    const cip = Math.max(0, idx - delay - 1);
+    const cur = g.frames[ci], prv = g.frames[cip];
+    if (!cur) continue;
+    fingers.push({
+      x:    cur.x*oW + offX,    y: (1-cur.y)*oH + offY,
+      prevX: prv.x*oW + offX,   prevY: (1-prv.y)*oH + offY,
+      p: cur.p, v: cur.v, h: cur.h, k
+    });
+  }
+  return fingers;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  UI CONTROLS
+// ═══════════════════════════════════════════════════════════════════
+function clearAll() {
+  ctx.clearRect(0, 0, W, H);
+  ghosts = []; telemetry = []; liveStroke = [];
+  bufReset(); realTouches.clear();
+  sessionStart = Date.now();
+  hud('WIPED','Canvas & memory cleared','');
+}
+
+function toggleRecord() {
+  C.isRec = !C.isRec;
+  const btn = document.getElementById('btn-rec');
+  if (C.isRec) {
+    telemetry = []; sessionStart = Date.now();
+    btn.classList.add('live'); btn.textContent = '■ STOP';
+    hud('RECORDING','Biometrics + config delta','');
+  } else {
+    btn.classList.remove('live'); btn.textContent = '● REC';
+    hud('STOPPED',`${telemetry.length} vectors captured`,'');
+  }
+}
+
+function toggleGhosts() {
+  C.ghostsOn = !C.ghostsOn;
+  const btn = document.getElementById('btn-ghost');
+  btn.classList.toggle('active', C.ghostsOn);
+  btn.textContent = C.ghostsOn ? 'GHOST: ON' : 'GHOST: OFF';
+  hud('GHOST REPLAY', C.ghostsOn ? 'Ping-pong ON' : 'OFF', '');
+}
+
+function toggleFS() {
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+}
+
+// ── HUD ──
+let hudTimer;
+function hud(lbl, val, sub) {
+  document.getElementById('hud-lbl').textContent = lbl;
+  document.getElementById('hud-val').textContent = val;
+  document.getElementById('hud-sub').textContent = sub;
+  const el = document.getElementById('hud');
+  el.classList.add('on'); clearTimeout(hudTimer);
+  hudTimer = setTimeout(() => el.classList.remove('on'), 2200);
+}
+
+// ── Status strip ──
+function updateStrip() {
+  document.getElementById('s-pat').textContent   = PAT_NAMES[C.patIdx];
+  document.getElementById('s-fing').textContent  = C.tubeOn ? C.tubeFingersN : 'REAL';
+  document.getElementById('s-delay').textContent = C.tubeDelay;
+  document.getElementById('s-mir').textContent   = C.mirrors.toFixed(1);
+  document.getElementById('s-mesh').textContent  = C.glitchMesh ? 'ON' : 'OFF';
+}
+updateStrip();
+
+// ═══════════════════════════════════════════════════════════════════
+//  JOYSTICK INTERFACE
+// ═══════════════════════════════════════════════════════════════════
+/*
+ * L1  Mirrors / Grid
+ * L2  Thickness / Size
+ * L3  Pattern / Palette
+ * L4  Screen / Export
+ * L5  Math P1 / P2
+ *
+ * R1  Tube ON/OFF  ↑/↓   |  Finger count ←/→
+ * R2  Delay step ↑/↓     |  Glitch mesh ←/→
+ * R3  Hysteresis ↑/↓     |  Fade rate ←/→
+ * R4  Ghost ON/OFF        |  Clear ghosts
+ * R5  Record / Wipe
+ */
+const JOYS = {
+  L1: { lbl:'Mirrors/Grid',
+    up:   ()=>{ C.mirrors=Math.min(36,C.mirrors+0.2); },
+    down: ()=>{ C.mirrors=Math.max(1,C.mirrors-0.2); },
+    left: ()=>{ C.gridMode=(C.gridMode-1+3)%3; },
+    right:()=>{ C.gridMode=(C.gridMode+1)%3; } },
+  L2: { lbl:'Size/Thick',
+    up:   ()=>{ C.thickness=Math.min(30,C.thickness+0.15); },
+    down: ()=>{ C.thickness=Math.max(0.1,C.thickness-0.15); },
+    left: ()=>{ C.size=Math.max(10,C.size-8); },
+    right:()=>{ C.size=Math.min(600,C.size+8); } },
+  L3: { lbl:'Pattern/Palette',
+    up:   ()=>{ C.patIdx=(C.patIdx+1)%PATTERNS.length; },
+    down: ()=>{ C.patIdx=(C.patIdx-1+PATTERNS.length)%PATTERNS.length; },
+    left: ()=>{ C.palIdx=(C.palIdx-1+PAL_KEYS.length)%PAL_KEYS.length; },
+    right:()=>{ C.palIdx=(C.palIdx+1)%PAL_KEYS.length; } },
+  L4: { lbl:'Screen/Export',
+    up:   ()=>toggleFS(),
+    down: ()=>exportPNG(),
+    left: ()=>exportJSON(),
+    right:()=>document.getElementById('file-in').click() },
+  L5: { lbl:'Math P1/P2',
+    up:   ()=>{ C.param1=Math.min(1,C.param1+0.05); },
+    down: ()=>{ C.param1=Math.max(0,C.param1-0.05); },
+    left: ()=>{ C.param2=Math.max(0,C.param2-0.05); },
+    right:()=>{ C.param2=Math.min(1,C.param2+0.05); } },
+
+  R1: { lbl:'Tube ON/Fingers',
+    up:   ()=>{ C.tubeOn=true;  hud('TUBE ON', `${C.tubeFingersN} virtual fingers`, `${C.tubeDelay}fr delay`); },
+    down: ()=>{ C.tubeOn=false; hud('TUBE OFF','Real multi-touch mode',''); },
+    left: ()=>{ C.tubeFingersN=Math.max(2,C.tubeFingersN-1); hud('FINGERS',C.tubeFingersN,'virtual fingers'); },
+    right:()=>{ C.tubeFingersN=Math.min(16,C.tubeFingersN+1); hud('FINGERS',C.tubeFingersN,'virtual fingers'); } },
+  R2: { lbl:'Delay/Mesh',
+    up:   ()=>{ C.tubeDelay=Math.min(120,C.tubeDelay+1); hud('DELAY',C.tubeDelay+'fr','between virtual fingers'); },
+    down: ()=>{ C.tubeDelay=Math.max(1,C.tubeDelay-1);  hud('DELAY',C.tubeDelay+'fr','between virtual fingers'); },
+    left: ()=>{ C.glitchMesh=!C.glitchMesh; hud('GLITCH MESH',C.glitchMesh?'ON':'OFF',''); },
+    right:()=>{ C.glitchMesh=!C.glitchMesh; hud('GLITCH MESH',C.glitchMesh?'ON':'OFF',''); } },
+  R3: { lbl:'Hyst/Fade',
+    up:   ()=>{ C.hysteresis=!C.hysteresis; hud('HYSTERESIS LOOM',C.hysteresis?'ON':'OFF',''); },
+    down: ()=>{ C.hysteresis=!C.hysteresis; hud('HYSTERESIS LOOM',C.hysteresis?'ON':'OFF',''); },
+    left: ()=>{ C.fadeRate=Math.max(0,C.fadeRate-0.003); hud('FADE',C.fadeRate===0?'PERMANENT':C.fadeRate.toFixed(3),''); },
+    right:()=>{ C.fadeRate=Math.min(0.3,C.fadeRate+0.003); hud('FADE',C.fadeRate.toFixed(3),''); } },
+  R4: { lbl:'Ghost/Clear',
+    up:   ()=>toggleGhosts(),
+    down: ()=>{ ghosts=[]; hud('GHOSTS CLEARED','',''); },
+    left: ()=>toggleGhosts(),
+    right:()=>toggleGhosts() },
+  R5: { lbl:'Rec/Wipe',
+    up:   ()=>toggleRecord(),
+    down: ()=>clearAll(),
+    left: ()=>{ telemetry=[]; hud('TELEMETRY ERASED','',''); },
+    right:()=>toggleRecord() }
+};
+
+// Build DOM
+Object.keys(JOYS).forEach(id => {
+  const wrap = document.createElement('div');
+  wrap.className = 'toggle-wrap'; wrap.id = `${id}-w`;
+  wrap.innerHTML = `<div id="${id}" class="toggle"><div class="stick"></div></div><div class="toggle-tag">${JOYS[id].lbl}</div>`;
+  document.body.appendChild(wrap);
+});
+
+// Drag logic
+let activeJoy = null, joyStartX = 0, joyStartY = 0, joyTicker = null;
+const THRESH = 16;
+
+function joyFire(id, dir) {
+  JOYS[id][dir]?.();
+  updateStrip();
+  // Contextual HUD for non-special joys
+  const lbl = JOYS[id].lbl;
+  const vals = {
+    L1:`Mirrors ${C.mirrors.toFixed(1)}  Grid ${['1×1','2×1','2×2'][C.gridMode]}`,
+    L2:`Thick ${C.thickness.toFixed(1)}  Size ${C.size}`,
+    L3:`${PAT_NAMES[C.patIdx]}  /  ${PAL_KEYS[C.palIdx]}`,
+    L5:`P1: ${C.param1.toFixed(2)}  P2: ${C.param2.toFixed(2)}`
+  };
+  if (vals[id]) hud(lbl, vals[id], '');
+}
+
+document.querySelectorAll('.toggle').forEach(el => {
+  el.addEventListener('pointerdown', e => {
+    e.preventDefault(); e.stopPropagation();
+    activeJoy = e.currentTarget;
+    joyStartX = e.clientX; joyStartY = e.clientY;
+    clearInterval(joyTicker);
+    e.currentTarget.setPointerCapture(e.pointerId);
+  }, {passive:false});
+
+  el.addEventListener('pointermove', e => {
+    if (!activeJoy || activeJoy !== e.currentTarget) return;
+    e.preventDefault();
+    const dx = e.clientX - joyStartX, dy = e.clientY - joyStartY;
+    let dir = null;
+    if (Math.abs(dx) > Math.abs(dy)) { if (Math.abs(dx)>THRESH) dir=dx>0?'right':'left'; }
+    else { if (Math.abs(dy)>THRESH) dir=dy>0?'down':'up'; }
+    if (dir) {
+      clearInterval(joyTicker);
+      joyFire(activeJoy.id, dir);
+      joyTicker = setInterval(() => joyFire(activeJoy.id, dir), 85);
+      const off = 13;
+      const stick = activeJoy.querySelector('.stick');
+      const tx = dir==='left'?-off:dir==='right'?off:0;
+      const ty = dir==='up'?-off:dir==='down'?off:0;
+      stick.style.transform = `translate(-50%,-50%) translate(${tx}px,${ty}px)`;
+      joyStartX = e.clientX; joyStartY = e.clientY;
+    }
+  }, {passive:false});
+
+  el.addEventListener('pointerup', e => {
+    if (!activeJoy) return;
+    activeJoy.querySelector('.stick').style.transform='translate(-50%,-50%)';
+    clearInterval(joyTicker); joyTicker=null; activeJoy=null;
+  });
+});
+
+// ── Init ──
+hud('KEYFORGE v2','Temporal Tube Engine','R1↑ = Tube ON  R1←/→ = Fingers  R2↑↓ = Delay');
+</script>
+</body>
+</html>
