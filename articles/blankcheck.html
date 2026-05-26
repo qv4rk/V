@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Interest on America's Blank Check</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=JetBrains+Mono:wght@100;300;400&display=swap" rel="stylesheet">
+
+<!--
+  ╔══════════════════════════════════════════════════════════╗
+  ║  NAVIGATION CONFIG — edit these three lines only        ║
+  ╚══════════════════════════════════════════════════════════╝
+-->
+<script>
+  const NAV_HOME      = "../index.html";          // ← your site root
+  const NAV_PREV      = "veilofbabel.html";       // ← previous article filename
+  const NAV_PREV_LABEL = "Veil of Babel";
+  const NAV_NEXT      = "mayasmirror.html";       // ← next article filename
+  const NAV_NEXT_LABEL = "Maya's Mirror";
+</script>
+
+<style>
+/* ── TOKENS ── */
+:root {
+  --bg:          #08080a;
+  --glass:       rgba(8, 9, 14, 0.91);
+  --border:      rgba(197, 160, 89, 0.13);
+  --gold:        #c5a059;
+  --gold-dim:    #7a6035;
+  --red:         #7c1a1a;
+  --blue:        #3d8ee8;
+  --text:        #ddd8ce;
+  --text-dim:    #7a766e;
+  --font-title:  'Cinzel', serif;
+  --font-body:   'Cormorant Garamond', serif;
+  --font-mono:   'JetBrains Mono', monospace;
+  --card-pad:    3.5rem 4.5rem;
+  --card-pad-sm: 1.8rem 1.4rem;
+}
+
+/* ── RESET ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 100%; height: 100%; background: var(--bg); color: var(--text); }
+
+/* ── CANVAS BACKGROUND ── */
+#bg-canvas {
+  position: fixed; inset: 0;
+  width: 100vw; height: 100vh;
+  z-index: 0; pointer-events: none;
+  opacity: 0.38;
+}
+
+/* ── SCROLL CONTAINER ── */
+.scroll-wrap {
+  height: 100vh;
+  overflow-y: scroll;
+  scroll-snap-type: y mandatory;
+  scroll-behavior: smooth;
+  position: relative;
+  z-index: 10;
+  /* hide scrollbar */
+  scrollbar-width: none;
+}
+.scroll-wrap::-webkit-scrollbar { display: none; }
+
+/* ── SECTION ── */
+.panel {
+  height: 100vh;
+  width: 100%;
+  scroll-snap-align: start;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem 1rem 3.5rem;  /* bottom padding clears nav */
+}
+
+/* ── CONTENT CARD ── */
+.card {
+  background: var(--glass);
+  border: 1px solid var(--border);
+  padding: var(--card-pad);
+  max-width: 960px;
+  width: 100%;
+  max-height: 88vh;
+  overflow-y: auto;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 0 80px rgba(0,0,0,0.95), inset 0 1px 0 rgba(255,255,255,0.03);
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.9s ease, transform 0.9s ease;
+  scrollbar-width: thin;
+  scrollbar-color: var(--gold-dim) transparent;
+}
+.card::-webkit-scrollbar { width: 3px; }
+.card::-webkit-scrollbar-thumb { background: var(--gold-dim); border-radius: 2px; }
+.panel.visible .card { opacity: 1; transform: translateY(0); }
+
+/* ── HERO CARD ── */
+.hero-card {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.2rem;
+  background: var(--glass);
+  border: 1px solid var(--border);
+  padding: 4rem 3rem;
+  max-width: 880px;
+  width: 100%;
+  max-height: 88vh;
+  overflow-y: auto;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 0 100px rgba(0,0,0,0.98), 0 0 40px rgba(197,160,89,0.04);
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 1.2s ease, transform 1.2s ease;
+}
+.panel.visible .hero-card { opacity: 1; transform: translateY(0); }
+
+.hero-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 300;
+  letter-spacing: 4px;
+  color: var(--red);
+  text-transform: uppercase;
+}
+
+.hero-title {
+  font-family: var(--font-title);
+  font-size: clamp(2rem, 5.5vw, 4rem);
+  color: var(--gold);
+  line-height: 1.18;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid rgba(124,26,26,0.5);
+  padding-bottom: 1.4rem;
+  margin-bottom: 0.4rem;
+}
+
+.hero-sub {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.hero-deck {
+  font-family: var(--font-body);
+  font-size: 1.25rem;
+  font-style: italic;
+  font-weight: 300;
+  color: var(--text-dim);
+  max-width: 620px;
+  line-height: 1.7;
+}
+
+.hero-lede {
+  font-family: var(--font-body);
+  font-size: 1.35rem;
+  font-weight: 300;
+  line-height: 1.72;
+  max-width: 680px;
+  border-left: 3px solid var(--gold);
+  padding-left: 1.4rem;
+  text-align: left;
+  color: var(--text);
+}
+
+.hero-rule {
+  width: 60px;
+  border: none;
+  border-top: 1px solid var(--gold-dim);
+}
+
+/* ── TYPOGRAPHY ── */
+.section-label {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--red);
+  margin-bottom: 0.6rem;
+  display: block;
+}
+
+h2, h3 {
+  font-family: var(--font-title);
+  color: #fff;
+  line-height: 1.25;
+}
+
+h2 {
+  font-size: clamp(1.6rem, 3.5vw, 2.4rem);
+  border-left: 4px solid var(--gold);
+  padding-left: 1.2rem;
+  margin-bottom: 2rem;
+}
+
+h3 {
+  font-size: 1.25rem;
+  color: var(--gold);
+  margin-top: 2.4rem;
+  margin-bottom: 0.9rem;
+  letter-spacing: 0.3px;
+}
+
+p {
+  font-family: var(--font-body);
+  font-size: 1.22rem;
+  line-height: 1.72;
+  margin-bottom: 1.4rem;
+  font-weight: 300;
+  text-align: justify;
+}
+
+strong {
+  font-weight: 600;
+  color: #e8e0d0;
+}
+
+em {
+  font-style: italic;
+  color: var(--text-dim);
+}
+
+hr.section-rule {
+  border: none;
+  border-top: 1px solid rgba(197,160,89,0.18);
+  margin: 2.2rem 0;
+}
+
+/* ── TABLES ── */
+.table-label {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--gold-dim);
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.table-wrap {
+  overflow-x: auto;
+  margin: 1.8rem 0 2.4rem;
+  border: 1px solid var(--border);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-body);
+  font-size: 1.05rem;
+  min-width: 520px;
+}
+
+thead th {
+  background: rgba(197,160,89,0.08);
+  color: var(--gold);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 400;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(197,160,89,0.22);
+  text-align: left;
+}
+
+tbody td {
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(197,160,89,0.07);
+  vertical-align: top;
+  line-height: 1.55;
+  color: var(--text);
+}
+
+tbody tr:hover td { background: rgba(197,160,89,0.04); }
+
+tbody td strong {
+  color: var(--gold);
+  font-weight: 600;
+}
+
+.table-note {
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  font-style: italic;
+  color: var(--text-dim);
+  border-left: 2px solid var(--blue);
+  padding-left: 1rem;
+  margin: 0.8rem 0 1.8rem;
+  line-height: 1.6;
+}
+
+/* ── PULL QUOTE ── */
+.pull {
+  border-left: 3px solid var(--gold);
+  padding: 0.6rem 0 0.6rem 1.5rem;
+  margin: 1.8rem 0;
+}
+.pull p {
+  font-size: 1.3rem;
+  font-style: italic;
+  font-weight: 300;
+  color: #c8c2b6;
+  margin: 0;
+  text-align: left;
+}
+
+/* ── END KICKER ── */
+.kicker {
+  text-align: center;
+  padding: 2rem 0 1rem;
+}
+.kicker p {
+  font-family: var(--font-title);
+  font-size: 1.6rem;
+  color: var(--gold);
+  letter-spacing: 1px;
+  margin: 0;
+  text-align: center;
+}
+
+/* ── CITATIONS ── */
+.citations ol {
+  padding-left: 1.4rem;
+}
+.citations li {
+  font-family: var(--font-body);
+  font-size: 0.98rem;
+  line-height: 1.6;
+  margin-bottom: 0.5rem;
+  color: var(--text-dim);
+}
+.citations a {
+  color: var(--blue);
+  text-decoration: none;
+  word-break: break-all;
+}
+.citations a:hover { text-decoration: underline; }
+
+/* ── TTS WIDGET ── */
+#tts-anchor {
+  position: fixed;
+  bottom: 52px;  /* sits above nav bar */
+  right: 22px;
+  z-index: 10000;
+  font-family: var(--font-mono);
+}
+
+#tts-panel {
+  display: none;
+  flex-direction: column;
+  gap: 10px;
+  background: rgba(8,9,14,0.97);
+  border: 1px solid rgba(197,160,89,0.25);
+  padding: 14px;
+  width: 240px;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.7);
+  margin-bottom: 8px;
+}
+#tts-panel.open { display: flex; }
+
+#tts-status {
+  font-size: 0.65rem;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  text-align: center;
+}
+
+#tts-voice {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: var(--text-dim);
+  padding: 6px 8px;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  width: 100%;
+}
+
+.tts-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+
+.tts-btn {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.1);
+  color: var(--text-dim);
+  padding: 7px 4px;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.tts-btn:hover { background: rgba(197,160,89,0.15); color: #fff; border-color: var(--gold-dim); }
+
+#tts-stop {
+  background: transparent;
+  border: 1px solid rgba(124,26,26,0.3);
+  color: var(--red);
+  padding: 7px;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+#tts-stop:hover { background: rgba(124,26,26,0.2); }
+
+#tts-toggle {
+  display: block;
+  width: 38px;
+  height: 38px;
+  background: var(--gold);
+  color: #000;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  float: right;
+  transition: background 0.2s;
+  box-shadow: 0 0 20px rgba(197,160,89,0.2);
+}
+#tts-toggle:hover { background: var(--red); color: #fff; }
+
+.tts-highlight {
+  border-left: 2px solid var(--gold) !important;
+  padding-left: 0.8rem !important;
+  transition: border-left 0.3s;
+}
+
+/* ── BOTTOM NAV ── */
+#bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 44px;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.5rem;
+  background: rgba(8,9,14,0.96);
+  border-top: 1px solid rgba(197,160,89,0.1);
+  backdrop-filter: blur(10px);
+  font-family: var(--font-mono);
+}
+
+.nav-link {
+  font-size: 0.65rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  text-decoration: none;
+  transition: color 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.nav-link:hover { color: var(--gold); }
+
+.nav-center {
+  font-size: 0.58rem;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: rgba(197,160,89,0.3);
+  text-align: center;
+  pointer-events: none;
+}
+
+/* ── SECTION COUNTER ── */
+.panel-counter {
+  position: absolute;
+  bottom: 56px;
+  right: 1.2rem;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 2px;
+  color: rgba(197,160,89,0.2);
+  pointer-events: none;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  .card, .hero-card { padding: var(--card-pad-sm); }
+  h2 { font-size: 1.5rem; }
+  p { font-size: 1.1rem; }
+  table { font-size: 0.9rem; }
+  thead th { font-size: 0.62rem; padding: 9px 8px; }
+  tbody td { padding: 8px; }
+}
+</style>
+</head>
+
+<body>
+
+<!-- ── ANIMATED BACKGROUND ── -->
+<canvas id="bg-canvas"></canvas>
+
+<!-- ── MAIN SCROLL CONTAINER ── -->
+<div class="scroll-wrap" id="scroll-wrap">
+
+  <!-- ══ PANEL 0: HERO ══ -->
+  <section class="panel" id="p0">
+    <div class="hero-card">
+      <span class="hero-eyebrow">Investigative Finance · U.S. Security Assistance</span>
+      <h1 class="hero-title">The Interest on<br>America's Blank Check</h1>
+      <p class="hero-sub">How U.S. Military Aid to Israel Built a Sovereign Yield Engine</p>
+      <hr class="hero-rule">
+      <p class="hero-deck">An empirical analysis of Foreign Military Financing disbursement mechanics, Federal Reserve interest accrual, and bilateral debt amortization, 1991–2026</p>
+      <hr class="hero-rule">
+      <blockquote class="hero-lede">
+        Somewhere in the books of the Federal Reserve Bank of New York, there is roughly $178 million a year with nowhere to go.
+      </blockquote>
+    </div>
+    <span class="panel-counter">01 / 11</span>
+  </section>
+
+  <!-- ══ PANEL 1: THE LEDE ══ -->
+  <section class="panel" id="p1">
+    <div class="card">
+      <span class="section-label">Opening</span>
+      <p>It accrues on the $3.3 billion Israel receives each October — the annual U.S. military aid allocation, deposited as a single lump sum into an interest-bearing Federal Reserve account under a congressional mandate dating to 1991. For thirty-two years, that interest had a job: the quiet, systematic retirement of Israel's legacy bilateral debt to the United States government. In June 2023, the last dollar of that debt was cleared.</p>
+      <p>The federal funds rate, at that moment, sat above 5 percent.</p>
+      <p>The result is legally tidy and practically absurd. Congress prohibits Israel from spending Foreign Military Financing interest on domestic defense procurement. With the debt extinguished, there is no longer any lawful bucket for the yield. Unless new legislation creates one, the FRB account will compound hundreds of millions of dollars annually in untouchable interest — sitting idle at America's central bank, attached to a statutory framework that no longer has a purpose.</p>
+      <div class="pull"><p>This is the endpoint of a financial structure that almost no one outside the bureaucracies that built it has examined carefully.</p></div>
+      <p>Understanding how we arrived here requires going back to its origins — and appreciating just how much the banking mechanics of military aid can outrun the policy logic that created them.</p>
+    </div>
+    <span class="panel-counter">02 / 11</span>
+  </section>
+
+  <!-- ══ PANEL 2: WHAT CONGRESS BUILT ══ -->
+  <section class="panel" id="p2">
+    <div class="card">
+      <span class="section-label">Section I</span>
+      <h2>What Congress Built in 1991</h2>
+      <p>Most countries receiving U.S. military assistance never see the money. Congress appropriates it; the Pentagon's Defense Finance and Accounting Service holds it in the Foreign Military Sales Trust Fund; when a specific vendor invoice arrives for approved equipment, the funds are released. The recipient nation gets weapons. The cash never leaves Washington.</p>
+      <p>Israel is different, and has been for thirty-five years.</p>
+      <p>Since Fiscal Year 1991, Public Law 101-513 has required Israel's entire annual FMF allocation to be transferred within thirty days of the fiscal year's start — not held in trust pending invoices, but deposited immediately into a dedicated interest-bearing account at the Federal Reserve Bank of New York. The legal mechanics are precise: an agreement between the Israeli Ministry of Defense, the Bank of Israel, the FRB-New York, and the Defense Security Cooperation Agency governs the account's daily operation. No other U.S. security assistance recipient has this arrangement.</p>
+      <p>The early transfer mandate emerged from a convergence of crises. The Gulf War had strained Israel's economy severely. Iraqi Scud attacks extracted enormous civilian and infrastructure costs. The massive absorption of Soviet Jewish immigrants — roughly one million people between 1990 and 1995 — had pushed Israel's fiscal position to its limit. The United States was simultaneously negotiating $10 billion in loan guarantees to help Israel absorb the demographic shock. Against that backdrop, Congress decided Israel needed immediate liquidity rather than the bureaucratic pace of quarterly disbursements. The thirty-day rule was the result.</p>
+      <p>The restriction attached to the account's yield was equally deliberate. Israel could not use the interest for domestic defense spending — that would convert a procurement grant into a general subsidy. Instead, Congress earmarked the yield specifically for servicing Israel's legacy non-guaranteed bilateral debt: the loans from the 1970s and early 1980s, extended before the United States shifted military assistance to a 100-percent grant basis. The FRB account would generate the money to retire the debt that predated it.</p>
+      <div class="pull"><p>For three decades, this worked exactly as designed. Then it worked too well.</p></div>
+    </div>
+    <span class="panel-counter">03 / 11</span>
+  </section>
+
+  <!-- ══ PANEL 3: HOW THE MONEY STAYS LONGER ══ -->
+  <section class="panel" id="p3">
+    <div class="card">
+      <span class="section-label">Section II</span>
+      <h2>How the Money Stays Longer Than It Should</h2>
+      <p>The amount of interest generated in any given year depends on two variables: the Federal Reserve's prevailing short-term rate, and how long the principal actually sits in the account before being drawn down for procurement. The first variable is entirely outside Israel's control. The second is shaped by three statutory mechanisms that, taken together, have consistently extended the average lifespan of an FMF dollar at the Federal Reserve.</p>
+
+      <h3>Cash Flow Financing</h3>
+      <p>Under Section 23 of the Arms Export Control Act (22 U.S.C. §2763), Israel can commit to multi-billion-dollar arms purchases while depositing only the funds needed to cover the current year's payment milestones. A $3 billion fighter jet contract doesn't require $3 billion on day one — just the portion due at this year's production checkpoints, with the balance anticipated from future congressional appropriations. This means FMF allocated in year one may not be drawn down until year five or six, when the aircraft it was appropriated to purchase actually rolls off the production line. The principal balance stays intact. The interest keeps accruing.</p>
+
+      <h3>Off-Shore Procurement</h3>
+      <p>Under the most recent Memoranda of Understanding, Israel can convert approximately 26.3 percent of its annual FMF — about $815 million — into Israeli shekels to pay domestic defense contractors: Elbit Systems, Rafael Advanced Defense Systems, Israel Aerospace Industries. Unlike the slow drawdowns tied to F-35 delivery milestones, OSP funds are liquid. They move monthly or quarterly to meet domestic payroll and supply chains, leaving almost no time in the FRB account for compounding. The current 2019–2028 MOU phases OSP out entirely — a change that will, as a structural side effect, extend the average residence time of an FMF dollar in the Federal Reserve account and increase annual yield generation even if the principal stays constant.</p>
+      <p>The OSP exception traces back to the 1987 cancellation of Israel's Lavi ground-attack aircraft, a program the U.S. had subsidized with an estimated $1.3–1.8 billion in development costs before pressing Israel to shut it down in favor of purchasing F-16s. Congress authorized $250 million in FMF for domestic Israeli spending to cushion the blow. That one-time concession became permanent. Over the following three decades, the sustained infusion of converted FMF dollars into Israeli defense prime contractors funded capabilities that became commercially exportable — and eventually made Israel the world's eighth-largest arms exporter, generating $11.3 billion in global sales by 2021. The U.S. funded the industry that now competes with it.</p>
+
+      <h3>The DCS Reimbursement Lag</h3>
+      <p>Most FMF recipients purchase through the Pentagon's Foreign Military Sales system, which means the DOD manages the transaction and releases funds directly to U.S. vendors. Israel conducts approximately 99 percent of its U.S. military purchases through Direct Commercial Contracts negotiated directly between the Israeli Ministry of Defense purchasing mission in New York and American commercial vendors.</p>
+      <p>When a contract milestone is reached, Israel often pays the vendor from its own sovereign funds. It then submits the invoices and contractor certifications to DFAS. After audit by the Security Assistance Accounting Center, the DOD releases the equivalent FMF amount from the FRB account to reimburse Israel. The gap between vendor payment and FRB drawdown — sometimes months — is additional time the principal spends earning interest at the Federal Reserve. Nobody designed this as an interest-optimization strategy. It's just how the bureaucratic sequence works.</p>
+    </div>
+    <span class="panel-counter">04 / 11</span>
+  </section>
+
+  <!-- ══ PANEL 4: TABLE 1 — ALLOCATION RECORD ══ -->
+  <section class="panel" id="p4">
+    <div class="card">
+      <span class="section-label">Section III</span>
+      <h2>The Allocation Record</h2>
+      <span class="table-label">Table 1 — U.S. FMF to Israel, FY1991–FY2026</span>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Fiscal Year</th><th>FMF Allocation (USD M)</th><th>Notes</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>1991–1996</td><td>~$1,800.0 avg</td><td>Early transfer mandate initiated; Gulf War period; ESF concurrent</td></tr>
+            <tr><td>1997</td><td>$1,800.0</td><td>Standard baseline</td></tr>
+            <tr><td>1998</td><td>$1,800.0</td><td>Continuation</td></tr>
+            <tr><td>1999</td><td>$1,860.0</td><td>Incremental increase as ESF phases down</td></tr>
+            <tr><td>2000</td><td>$3,120.0</td><td>$1.2B Wye River supplemental + $1.92B regular</td></tr>
+            <tr><td>2001</td><td>$1,975.6</td><td>Return to incremental baseline</td></tr>
+            <tr><td>2002</td><td>$2,040.0</td><td>Second Intifada; defense demand rising</td></tr>
+            <tr><td>2003</td><td>$3,086.4</td><td>Wartime supplemental; reduced 0.65% rescission</td></tr>
+            <tr><td>2004</td><td>$2,147.3</td><td>Reduced 0.59% rescission</td></tr>
+            <tr><td>2005</td><td>$2,202.2</td><td>Final phase-out of ESF</td></tr>
+            <tr><td>2006</td><td>$2,257.0</td><td>Second Lebanon War</td></tr>
+            <tr><td>2007</td><td>$2,340.0</td><td>Pre-MOU baseline</td></tr>
+            <tr><td>2008</td><td>$2,380.0</td><td>Bush 10-Year MOU negotiated</td></tr>
+            <tr><td>2009</td><td>$2,550.0</td><td>MOU execution begins</td></tr>
+            <tr><td>2010</td><td>$2,775.0</td><td>MOU step-up</td></tr>
+            <tr><td>2011</td><td>$3,000.0</td><td>MOU step-up</td></tr>
+            <tr><td>2012</td><td>$3,075.0</td><td>MOU step-up</td></tr>
+            <tr><td>2013</td><td>$3,100.0</td><td>U.S. sequestration; minor disbursement delays</td></tr>
+            <tr><td>2014–2018</td><td>$3,100.0</td><td>Stable MOU baseline</td></tr>
+            <tr><td>2019</td><td>$3,300.0</td><td>Obama-era MOU begins ($3.3B FMF + $500M missile defense)</td></tr>
+            <tr><td>2020–2023</td><td>$3,300.0</td><td>MOU baseline</td></tr>
+            <tr><td>2024</td><td>$6,800.0</td><td>$3.3B standard + $3.5B Emergency Supplemental (P.L. 118-50)</td></tr>
+            <tr><td>2025–2026</td><td>$3,300.0</td><td>Expected MOU baseline</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>The $3.12 billion in FY2000 reflects the Wye River supplemental landing in a year when the federal funds rate was at 6 percent. The interest generated that year was enormous by the account's historical standards. The $3.08 billion in FY2003 includes wartime contingency funding, partially offset by a mandated rescission — an accounting adjustment that barely touched the FRB balance in practice.</p>
+      <p>The $6.8 billion in FY2024 looks dramatic. It isn't, for yield purposes. The $3.5 billion emergency supplemental under P.L. 118-50 was classified by the Office of Management and Budget as global FMF — explicitly not subject to the thirty-day early transfer mandate. It did not hit the FRB account as a lump sum. The interest windfall that might have followed a sudden $6.8 billion deposit never materialized.</p>
+    </div>
+    <span class="panel-counter">05 / 11</span>
+  </section>
+
+  <!-- ══ PANEL 5: DRAWDOWN SCHEDULE ══ -->
+  <section class="panel" id="p5">
+    <div class="card">
+      <span class="section-label">Section IV</span>
+      <h2>The Drawdown Schedule</h2>
+      <p>The FRB account balance isn't a public ledger. Estimating the annual withdrawal schedule requires mapping the allocation history against actual delivery timelines, milestone structures, and the routine OSP drain.</p>
+
+      <h3>The F-35 "Adir" and the Long Tail of Aerospace Procurement</h3>
+      <p>In September 2008, the DSCA notified Congress of a potential sale of up to 75 F-35s — a program valued at up to $15.2 billion. Israel contracted for 50 aircraft across three agreements, forming two squadrons at Nevatim Air Base. The procurement didn't drain the FRB account in 2008. It barely moved the balance.</p>
+      <p>Cash Flow Financing meant the drawdowns tracked physical milestones at Lockheed Martin: long-lead material orders, airframe completion, engine integration, final delivery. Initial withdrawals in 2010–2012 were modest. The heavy drawdowns came between 2016 and 2020 as completed aircraft reached Israel. By September 2020, Israel had received 27 of the contracted 50 jets — roughly half the financial obligations physically realized. FMF dollars appropriated in 2012 for this program likely sat in the FRB account earning interest for four or five years before the aircraft they were meant to purchase actually existed.</p>
+      <p>The same dynamic applies to the Boeing F-15I, the AH-64 Apache procurements, and the recently notified $6.75 billion F-15IA package extending into the late 2020s. These aren't single-year transactions. They're multi-decade relationships between a procurement contract and the Federal Reserve account backing it.</p>
+
+      <h3>Arrow Missile Defense: The Audit That Explains the Mechanism</h3>
+      <p>A 1996 GAO audit of the Arrow Cooperative Program offers one of the only public windows into how milestone structures govern FRB withdrawals in practice. For one Arrow Continuation Experiments contract stage, Israel had agreed to finance 35 milestones totaling $92.6 million. DFAS had disbursed $86.7 million against 32 completed milestones when the audit ran. The GAO found that $30.2 million of those funds had been released prematurely — before the corresponding milestones were actually completed — because DSCA didn't have the current milestone schedule.</p>
+      <p>The entire point of the milestone structure is to keep money in the FRB account earning interest until it's earned by completed work. A bureaucratic gap in documentation cost Israel roughly $30 million in premature drawdowns — funds that left the Federal Reserve before they should have, truncating interest generation. The fact that a $30 million premature disbursement was audit-worthy tells you something about the precision with which the rest of the system normally operates.</p>
+      <p>The Arrow became operational in 2000. Arrow II and Arrow III programs ran continuous milestone-driven withdrawals through 2017 and beyond. Total U.S. contributions to the Arrow program exceeded $2.6 billion by 2016, distributed across decades of engineering checkpoints. This is the opposite of a simple grant.</p>
+
+      <h3>OSP: The Predictable Monthly Drain</h3>
+      <p>Against the episodic, slow-release pattern of aerospace and missile defense contracts, OSP withdrawals are relentless. Roughly $815 million per year — converted to shekels, transferred to the Israeli treasury, paid to domestic contractors. Monthly or quarterly. Almost no time in the FRB account. Almost no interest generated on this portion.</p>
+      <p>OSP and the F-35 program are structural counterweights. One keeps money in the account; the other drains it on a retail schedule. The net balance at any moment reflects this tension.</p>
+    </div>
+    <span class="panel-counter">06 / 11</span>
+  </section>
+
+  <!-- ══ PANEL 6: FIVE RATE ENVIRONMENTS ══ -->
+  <section class="panel" id="p6">
+    <div class="card">
+      <span class="section-label">Section V</span>
+      <h2>Five Rate Environments and What They Did</h2>
+      <p>The FRB account's yield has been entirely hostage to Federal Reserve monetary policy. This is not metaphorical — the yield on short-term Treasury instruments set by the FOMC is the mechanism by which U.S. macro conditions transmitted directly into Israel's bilateral debt repayment capacity.</p>
+
+      <h3>1991–2000 · The High-Yield Establishment</h3>
+      <p>Short-term rates between 3 and 6 percent, a principal base growing toward $1.8 billion annually, and manageable drawdowns for F-15I procurement and early Arrow development. The bilateral debt began eroding steadily.</p>
+
+      <h3>2001–2007 · Volatility</h3>
+      <p>Post-September 11 rate cuts drove the federal funds rate to 1 percent by 2003. The account's yield collapsed. But the Wye River supplemental had already inflated the 2000 principal dramatically, and the 2003 wartime supplemental did the same. Massive principal injections in low-rate years partially offset the yield compression — an unintended hedge.</p>
+
+      <h3>2008–2015 · Zero Interest Rate Policy</h3>
+      <p>This broke the model. The Fed cut to 0–0.25 percent and held it there for seven years. FMF allocations climbed from $2.38 billion to $3.1 billion under the Bush-era MOU. The principal base grew. The yield evaporated anyway.</p>
+      <div class="pull"><p>A $3 billion balance at 0.15 percent earns $4.5 million. The bilateral debt repayment, which had been running at tens to hundreds of millions annually, stalled.</p></div>
+
+      <h3>2016–2021 · Gradual Recovery, Then COVID</h3>
+      <p>The Fed's post-ZIRP hiking cycle pushed rates back toward 2.4 percent by 2019. The account recovered partial yield. Then the pandemic hit, and rates went back to zero for 2020 and 2021.</p>
+
+      <h3>2022–Present · The Inflationary Spike</h3>
+      <p>One of the fastest tightening cycles in modern Federal Reserve history pushed the federal funds rate to 5.25–5.50 percent by late 2023. The 3-month T-bill hit 5.4 percent. A $3.3 billion principal at that rate generates $178 million annually. This surge cleared the remaining bilateral debt by June 2023. It is also what created the problem that has no solution yet.</p>
+    </div>
+    <span class="panel-counter">07 / 11</span>
+  </section>
+
+  <!-- ══ PANEL 7: HOW THE DEBT DIED ══ -->
+  <section class="panel" id="p7">
+    <div class="card">
+      <span class="section-label">Section VI</span>
+      <h2>How the Debt Died</h2>
+      <span class="table-label">Table 2 — Israel's Non-Guaranteed Bilateral Debt to the U.S., 2005–2024</span>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Date</th><th>Outstanding Balance</th><th>Context</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>December 2005</td><td>$1.20 Billion</td><td>Pre-crisis; rates rising; steady paydown velocity</td></tr>
+            <tr><td>August 2010</td><td>$625.0 Million</td><td>Debt halved over 5 years on pre-2008 yield</td></tr>
+            <tr><td>March 2011</td><td>$538.7 Million</td><td>ZIRP begins constraining paydown pace</td></tr>
+            <tr><td>January 2013</td><td>$455.0 Million</td><td>Near-zero yield continues</td></tr>
+            <tr><td>October 2013</td><td>$318.0 Million</td><td>–$137M in 9 months; possible balloon payment or reconciliation</td></tr>
+            <tr><td>December 2015</td><td>$148.8 Million</td><td>Final years of ZIRP; debt approaching liquidation</td></tr>
+            <tr><td>June 2023</td><td><strong>$0.00</strong></td><td>Fully retired</td></tr>
+            <tr><td>September 2024</td><td>$0.00</td><td>Remains at zero</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>The correlation between rate environment and repayment pace isn't subtle.</p>
+      <p>Between 2005 and 2010, when rates generated real yield, the debt dropped from $1.2 billion to $625 million — roughly $115 million per year on average. Then ZIRP hit. Between 2010 and 2015, with the FRB principal actually growing under the Bush MOU, the debt dropped only from $625 million to $148.8 million. The account was full of money that earned nothing.</p>
+      <p>The drop from $318 million in October 2013 to $148.8 million in December 2015 — $169 million in 26 months — is the period the data makes hardest to explain from interest generation alone. The most likely mechanism is accumulated prior-year interest held in the account rather than applied quarterly, released in a lump against the debt balance. The Fed's first post-ZIRP rate hike came in December 2015. The timing is not coincidental.</p>
+      <p>By 2022, with $3.3 billion in principal earning steadily rising yields, the account had what it needed. By June 2023, the debt was gone.</p>
+    </div>
+    <span class="panel-counter">08 / 11</span>
+  </section>
+
+  <!-- ══ PANEL 8: THE MODELS ══ -->
+  <section class="panel" id="p8">
+    <div class="card">
+      <span class="section-label">Section VII</span>
+      <h2>The Financial Boundary Models</h2>
+      <p>Two hypothetical scenarios bracket the actual economic scale of what the FRB account has generated. Neither reflects reality — they're limits, not ledgers.</p>
+
+      <h3>Model A — Zero Drawdowns</h3>
+      <p>If every dollar of FMF since 1991 had compounded at prevailing rates without a single procurement drawdown, the accrued interest alone by 2024 would be approximately $34.5 billion. The entire Obama-era ten-year MOU is worth $33 billion. The compound interest on money that was supposed to buy weapons would exceed the value of one of the largest military aid packages in history.</p>
+      <span class="table-label">Table 3 — Model A: Hypothetical Zero-Drawdown Account Balance</span>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Year-End</th><th>Cumulative FMF Injected</th><th>Avg. Rate</th><th>Accrued Interest</th><th>Theoretical Balance</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>2000</td><td>~$19.5B</td><td>4.5–6.0%</td><td>~$5.2B</td><td><strong>~$24.7B</strong></td></tr>
+            <tr><td>2010</td><td>~$44.0B</td><td>1.0–5.0%</td><td>~$18.5B</td><td><strong>~$62.5B</strong></td></tr>
+            <tr><td>2020</td><td>~$75.6B</td><td>0.1–2.4%</td><td>~$23.8B</td><td><strong>~$99.4B</strong></td></tr>
+            <tr><td>2024</td><td>~$89.0B</td><td>0.1–5.4%</td><td>~$34.5B</td><td><strong>~$123.5B</strong></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="table-note">Model A excludes the $3.5B emergency supplemental of 2024, per OMB's decision not to treat it as subject to the early transfer mandate.</p>
+
+      <h3>Model B — 12-Month Stagnation</h3>
+      <p>Model B assumes each annual FMF injection sits in the FRB account for exactly twelve months before full drawdown — approximating the actual average residence time created by Cash Flow Financing, DCS reimbursement lags, and OSP's partial counterweight.</p>
+      <span class="table-label">Table 4 — Model B: 12-Month Stagnation Interest Generation</span>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Fiscal Year</th><th>FMF Principal</th><th>Rate (12-Mo Avg)</th><th>Annual Yield</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>1997</td><td>$1,800.0M</td><td>5.00%</td><td><strong>$90.0M</strong></td></tr>
+            <tr><td>2000</td><td>$3,120.0M</td><td>6.00%</td><td><strong>$187.2M</strong></td></tr>
+            <tr><td>2004</td><td>$2,147.3M</td><td>1.30%</td><td><strong>$27.9M</strong></td></tr>
+            <tr><td>2007</td><td>$2,340.0M</td><td>5.00%</td><td><strong>$117.0M</strong></td></tr>
+            <tr><td>2012</td><td>$3,075.0M</td><td>0.15%</td><td><strong>$4.6M</strong></td></tr>
+            <tr><td>2016</td><td>$3,100.0M</td><td>0.40%</td><td><strong>$12.4M</strong></td></tr>
+            <tr><td>2019</td><td>$3,300.0M</td><td>2.20%</td><td><strong>$72.6M</strong></td></tr>
+            <tr><td>2021</td><td>$3,300.0M</td><td>0.10%</td><td><strong>$3.3M</strong></td></tr>
+            <tr><td>2023</td><td>$3,300.0M</td><td>5.00%</td><td><strong>$165.0M</strong></td></tr>
+            <tr><td>2024</td><td>$3,300.0M</td><td>5.40%</td><td><strong>$178.2M</strong></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>The $187.2 million generated in 2000 explains why the bilateral debt fell sharply in the early 2000s. The $4.6 million and $12.4 million of the ZIRP years explain why the debt reduction stalled between 2010 and 2016. The $165 million generated in 2023 explains why June 2023 was the end.</p>
+    </div>
+    <span class="panel-counter">09 / 11</span>
+  </section>
+
+  <!-- ══ PANEL 9: WHAT THE STRUCTURE BUILT ══ -->
+  <section class="panel" id="p9">
+    <div class="card">
+      <span class="section-label">Section VIII</span>
+      <h2>What the Structure Built Beyond the Balance Sheet</h2>
+      <p>The FRB arrangement's effects on Israeli macroeconomic stability run deeper than the debt it retired.</p>
+      <p>Placing $3+ billion annually into a Federal Reserve account creates something that functions in practice as a shadow foreign exchange reserve. Credit rating agencies and sovereign bond investors pricing Israel's risk implicitly account for the guaranteed annual dollar deposit — a multi-billion backstop to Israel's defense procurement commitments, parked at the U.S. central bank, available with thirty days' notice each October. It insulates Israel from the balance-of-payments pressures that typically accompany rapid military modernization, the strain of committing to multi-decade procurement programs while managing a civilian economy. That strain simply doesn't appear in Israel's fiscal profile the way it would for a country carrying this exposure without U.S. backing.</p>
+      <p>More concretely: because the FRB yield retired the bilateral debt without touching Israel's national budget, the Israeli Ministry of Finance retained capital over three decades that would otherwise have gone to foreign debt service. That capital was available for domestic infrastructure, technology investment, and the R&D subsidies that incubated Israel's globally dominant cybersecurity and dual-use technology sectors. The FMF interest arrangement was a direct input into Israeli civilian economic development — not through design, but through the cumulative arithmetic of thirty years of off-budget debt retirement.</p>
+      <p>The OSP allowance compounded this. Sustained U.S. dollar infusions into domestic defense contractors funded capabilities that, once developed, became commercially exportable. By 2021, Israel's arms exports reached $11.3 billion annually. The U.S. funded the industrial base that now sells to India, Azerbaijan, Vietnam, and dozens of other customers — some of whom are buying systems that compete directly with U.S. platforms.</p>
+      <div class="pull"><p>This is not an accusation. It is a straightforward description of how a specific statutory exception, originally designed as a one-time concession to absorb the Lavi cancellation, metastasized through three decades of MOUs into a structural feature of American security assistance.</p></div>
+    </div>
+    <span class="panel-counter">10 / 11</span>
+  </section>
+
+  <!-- ══ PANEL 10: THE TRAPPED YIELD + CODA ══ -->
+  <section class="panel" id="p10">
+    <div class="card">
+      <span class="section-label">Section IX — Final</span>
+      <h2>The Trapped Yield</h2>
+      <p>The forward problem has a clean description and no obvious solution.</p>
+      <p>Israel's bilateral debt to the United States is zero. The federal funds rate is above 5 percent. The annual FMF baseline is $3.3 billion. The statutory prohibition on using FMF interest for domestic defense procurement remains fully in force. The interest is accumulating with no authorized destination.</p>
+      <p>Four legislative options exist, each with its own political valence.</p>
+      <p>Congress could direct the yield back to the U.S. Treasury — effectively converting a portion of the grant into an involuntary partial clawback. Politically viable in one direction and radioactive in the other.</p>
+      <p>Congress could authorize the yield for U.S. Foreign Military Sales purchases specifically, keeping the funds in American defense industry hands while creating a new procurement mechanism. This preserves the spirit of the FMF grant while solving the regulatory void — and it would accelerate Israeli procurement of U.S. systems, which the current MOU already requires as OSP phases out.</p>
+      <p>Congress could create a new bilateral fund for jointly authorized purposes — missile defense co-development is the obvious candidate, given that Arrow IV discussions have been ongoing for years and the existing Arrow program has already absorbed more than $2.6 billion in U.S. contributions.</p>
+      <p>Or Congress could lift the domestic procurement restriction entirely, which is almost certainly what Israel prefers and which Congress has historically declined to authorize.</p>
+      <p>Absent any of these, the FRB account will begin running a miniature version of Model A indefinitely. Hundreds of millions in annual interest, compounding at the Federal Reserve, legally unspendable, attached to a statutory framework built for a debt that no longer exists.</p>
+      <hr class="section-rule">
+      <p>The 1991 mandate was built to solve a crisis. The interest restriction was built to retire a debt. Both accomplished what they were designed to do. What neither contemplated was a world in which the debt was gone, the rate was at a generational high, and nobody in Congress had yet written the next chapter.</p>
+      <div class="kicker"><p>That chapter is now overdue.</p></div>
+      <hr class="section-rule">
+      <div class="citations">
+        <span class="section-label">Works Cited</span>
+        <ol>
+          <li>U.S. Foreign Aid to Israel: Overview and Developments — <a href="https://www.everycrsreport.com/reports/RL33222.html" target="_blank">everycrsreport.com</a></li>
+          <li>U.S. Foreign Aid to Israel — Policy Archive — <a href="https://www.policyarchive.org/download/2696" target="_blank">policyarchive.org</a></li>
+          <li>U.S. Foreign Aid to Israel (2008) — <a href="https://www.everycrsreport.com/files/20080102_RL33222_ccba3778cd7b80bf36f0a6f852b90e110c8c11b6.pdf" target="_blank">CRS/everycrsreport.com</a></li>
+          <li>U.S. Spending on Israel's Military Operations, Oct. 2023–Sept. 2024 — <a href="https://costsofwar.watson.brown.edu/sites/default/files/papers/Costs-of-War_US-Support-Since-Oct7-FINALv2.pdf" target="_blank">Costs of War, Brown University</a></li>
+          <li>FY24 DOD Approps Middle East Provisions — <a href="https://fmep.org/resource/fy24-dod-approps-sfops-unrwa-in-minibus-middle-east-related-provisions/" target="_blank">fmep.org</a></li>
+          <li>FY 2027 Congressional Budget Justification — <a href="https://www.state.gov/wp-content/uploads/2026/04/FY-2027-Congressional-Budget-Justification-Appendix-1-4.23.pdf" target="_blank">State Dept.</a></li>
+          <li>U.S. Foreign Aid to Israel — DTIC — <a href="https://apps.dtic.mil/sti/tr/pdf/ADA601566.pdf" target="_blank">dtic.mil</a></li>
+          <li>Security Assistance Management Manual, Ch. 1 (2003) — <a href="https://samm.dsca.mil/sites/default/files/2003%20SAMM/2004-01-28%20-%202003%20SAMM.pdf" target="_blank">dsca.mil</a></li>
+          <li>U.S. Foreign Aid to Israel (2019) — <a href="https://www.everycrsreport.com/files/20190807_RL33222_2e8c7004ffdc2ec65499eea65e09125b7dfcf236.html" target="_blank">CRS/everycrsreport.com</a></li>
+          <li>Security Assistance Management Manual, Ch. 9 — <a href="https://samm.dsca.mil/chapter/chapter-9" target="_blank">dsca.mil</a></li>
+          <li>U.S. Foreign Aid to Israel — Journalists Resource — <a href="https://journalistsresource.org/wp-content/uploads/2012/04/Military-Aid-to-Israel.pdf" target="_blank">journalistsresource.org</a></li>
+          <li>Extraordinary Sums and Privileges — <a href="https://mideastdc.org/wp-content/uploads/2025/09/Fact_Sheet_Extraordinary_Sums_and_Privileges.pdf" target="_blank">Middle East Policy Council</a></li>
+          <li>U.S. Military Aid — Strategic Asset for Israel — <a href="https://www.inss.org.il/wp-content/uploads/2020/08/Memo202_e-131-142.pdf" target="_blank">INSS</a></li>
+          <li>MIFTAH — Controversy of U.S. Aid to Israel — <a href="http://www.miftah.org/Display.cfm?DocId=3326&CategoryId=4" target="_blank">miftah.org</a></li>
+          <li>Measuring the U.S.-Israel Relationship in Dollars — <a href="https://www.thecipherbrief.com/column_article/measuring-the-strength-of-the-u-s-israel-relationship-in-dollars" target="_blank">The Cipher Brief</a></li>
+          <li>NSIAD-93-184: Military Sales to Israel and Egypt — <a href="https://www.gao.gov/assets/nsiad-93-184.pdf" target="_blank">GAO</a></li>
+          <li>U.S. Military Aid and Arms Transfers, Oct. 2023–Sept. 2025 — <a href="https://quincyinst.org/research/u-s-military-aid-and-arms-transfers-to-israel-october-2023-september-2025/" target="_blank">Quincy Institute</a></li>
+          <li>CRS Report RL33222 (2012) — <a href="https://www.everycrsreport.com/files/20120312_RL33222_c4118b1d342ab9e57a1e2839897796fddb11fd26.html" target="_blank">everycrsreport.com</a></li>
+          <li>Israeli Use of Offshore Procurement Funds — <a href="https://media.defense.gov/1996/Nov/22/2001713603/-1/-1/1/97-028.pdf" target="_blank">DOD Inspector General</a></li>
+          <li>U.S. Military Aid and Arms Transfers — <a href="https://costsofwar.watson.brown.edu/sites/default/files/2025-10/Hartung_US_Military_Aid_to_Israel_Oct.20.pdf" target="_blank">Costs of War</a></li>
+          <li>DSCA Policy Letter 04-02 — <a href="https://samm.dsca.mil/sites/default/files/DSCA%2004-02.pdf" target="_blank">dsca.mil</a></li>
+          <li>Federal Funds Effective Rate — <a href="https://www.economy.com/united-states/interest-rates-federal-funds-effective-rate" target="_blank">Moody's Analytics</a></li>
+          <li>Monetary Policy & Economic Developments (2009) — <a href="https://www.federalreserve.gov/boarddocs/rptcongress/annual09/pdf/mpo.pdf" target="_blank">Federal Reserve</a></li>
+          <li>U.S. T-bill 3-Month Rate — <a href="https://www.economy.com/united-states/interest-rates-t-bill-3-months-secondary-market-discount-basis" target="_blank">Moody's Analytics</a></li>
+          <li>Measuring Global Financial Market Stresses — <a href="https://www.newyorkfed.org/medialibrary/media/research/staff_reports/sr940.pdf" target="_blank">FRB New York</a></li>
+          <li>Elbit Systems Annual Report 2022 — <a href="https://www.sec.gov/ix?doc=/Archives/edgar/data/0001027664/000162828023014328/eslt-20221231.htm" target="_blank">SEC EDGAR</a></li>
+          <li>Elbit Systems Annual Report 2024 — <a href="https://www.sec.gov/Archives/edgar/data/1027664/000162828025013971/eslt-20241231.htm" target="_blank">SEC EDGAR</a></li>
+          <li>FOMC Minutes, November 1, 2023 — <a href="https://www.federalreserve.gov/monetarypolicy/fomcminutes20231101.htm" target="_blank">Federal Reserve</a></li>
+          <li>Government Debt Report 2013 — <a href="https://www.gov.il/BlobFolder/dynamiccollectorresultitem/annual-debt-reports-2013/en/annual-debt-report_YearsReporEt_2013.pdf" target="_blank">State of Israel</a></li>
+          <li>State of Israel Disclosure Document — <a href="https://israelbondsintl.com/pdf/18K-2021.pdf" target="_blank">Israel Bonds International</a></li>
+          <li>External Debt Statistics, Country Experience — <a href="https://www.elibrary.imf.org/display/book/9781589060609/ch014.xml" target="_blank">IMF eLibrary</a></li>
+        </ol>
+      </div>
+    </div>
+    <span class="panel-counter">11 / 11</span>
+  </section>
+
+</div><!-- /scroll-wrap -->
+
+
+<!-- ══ TTS WIDGET ══ -->
+<div id="tts-anchor">
+  <div id="tts-panel">
+    <div id="tts-status">Standby</div>
+    <select id="tts-voice"></select>
+    <div class="tts-row">
+      <button class="tts-btn" id="tts-prev">◀ PREV</button>
+      <button class="tts-btn" id="tts-play">PLAY</button>
+      <button class="tts-btn" id="tts-next">NEXT ▶</button>
+    </div>
+    <button id="tts-stop">TERMINATE</button>
+  </div>
+  <button id="tts-toggle" title="Toggle audio reader">🔊</button>
+</div>
+
+
+<!-- ══ BOTTOM NAV ══ -->
+<nav id="bottom-nav">
+  <a class="nav-link" id="nav-prev" href="#">← <span id="nav-prev-label">Previous</span></a>
+  <span class="nav-center" id="nav-section-label">01 / 11</span>
+  <a class="nav-link" id="nav-home" href="#">HOME</a>
+  <a class="nav-link" id="nav-next" href="#"><span id="nav-next-label">Next</span> →</a>
+</nav>
+
+
+<script>
+/* ════════════════════════════════════════════
+   NAVIGATION SETUP
+════════════════════════════════════════════ */
+document.getElementById('nav-home').href = NAV_HOME;
+document.getElementById('nav-prev').href = NAV_PREV;
+document.getElementById('nav-next').href = NAV_NEXT;
+document.getElementById('nav-prev-label').textContent = NAV_PREV_LABEL;
+document.getElementById('nav-next-label').textContent = NAV_NEXT_LABEL;
+
+
+/* ════════════════════════════════════════════
+   CANVAS BACKGROUND — YIELD ENGINE
+════════════════════════════════════════════ */
+(function() {
+  const canvas = document.getElementById('bg-canvas');
+  const ctx    = canvas.getContext('2d');
+  let t = 0;
+
+  function resize() {
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  function draw() {
+    ctx.fillStyle = 'rgba(8, 8, 10, 0.22)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    const cx = canvas.width  / 2;
+    const cy = canvas.height / 2;
+
+    /* compounding spiral */
+    for (let i = 0; i < 90; i++) {
+      const angle  = t * 0.7 + i * 0.11;
+      const r      = 70 + i * 6.8;
+      const x      = cx + Math.cos(angle) * r;
+      const y      = cy + Math.sin(angle) * r * 0.55 + Math.sin(t * 0.6 + i * 0.08) * 28;
+      const alpha  = 0.12 + (i / 90) * 0.45;
+      ctx.fillStyle = i % 4 === 0
+        ? `rgba(197, 160, 89, ${alpha})`
+        : `rgba(61, 142, 232, ${alpha * 0.55})`;
+      ctx.beginPath();
+      ctx.arc(x, y, i % 7 === 0 ? 3.5 : 1.8, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    /* horizontal ledger lines */
+    ctx.strokeStyle = 'rgba(197, 160, 89, 0.045)';
+    ctx.lineWidth   = 1;
+    for (let i = 0; i < 14; i++) {
+      const y = (i / 14) * canvas.height + Math.sin(t * 0.3 + i) * 6;
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+    }
+
+    /* vertical faint lines */
+    ctx.strokeStyle = 'rgba(197, 160, 89, 0.02)';
+    for (let i = 0; i < 8; i++) {
+      const x = (i / 8) * canvas.width;
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+    }
+
+    t += 0.014;
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+
+/* ════════════════════════════════════════════
+   INTERSECTION OBSERVER — panel visibility
+════════════════════════════════════════════ */
+const panels = document.querySelectorAll('.panel');
+const sectionLabel = document.getElementById('nav-section-label');
+
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+      const counter = entry.target.querySelector('.panel-counter');
+      if (counter) sectionLabel.textContent = counter.textContent;
+    }
+  });
+}, { threshold: 0.3 });
+
+panels.forEach(p => io.observe(p));
+
+
+/* ════════════════════════════════════════════
+   TTS ENGINE
+════════════════════════════════════════════ */
+(function() {
+  const synth      = window.speechSynthesis;
+  const panel      = document.getElementById('tts-panel');
+  const toggleBtn  = document.getElementById('tts-toggle');
+  const voiceSel   = document.getElementById('tts-voice');
+  const statusEl   = document.getElementById('tts-status');
+  const playBtn    = document.getElementById('tts-play');
+  let voices       = [];
+  let nodes        = [];
+  let cursor       = 0;
+  let active       = false;
+
+  function loadVoices() {
+    voices = synth.getVoices();
+    if (!voices.length) return;
+    voiceSel.innerHTML = '';
+    const sorted = [...voices].sort((a, b) =>
+      (b.name.includes('Natural') || b.name.includes('Online') ? 1 : 0) -
+      (a.name.includes('Natural') || a.name.includes('Online') ? 1 : 0)
+    );
+    sorted.forEach(v => {
+      const o   = document.createElement('option');
+      o.value   = v.name;
+      o.textContent = v.name.replace('Microsoft ', '').replace(' Online (Natural)', '');
+      if (v.name.includes('Aria') || v.default) o.selected = true;
+      voiceSel.appendChild(o);
+    });
+    statusEl.textContent = 'Ready';
+  }
+
+  if ('onvoiceschanged' in synth) synth.onvoiceschanged = loadVoices;
+  loadVoices();
+
+  function indexNodes() {
+    nodes = Array.from(document.querySelectorAll('h2, h3, p, .hero-lede, .pull p'))
+      .filter(el => el.innerText.trim().length > 3);
+  }
+
+  function clearHighlight() {
+    document.querySelectorAll('.tts-highlight').forEach(el => el.classList.remove('tts-highlight'));
+  }
+
+  function speak(index) {
+    synth.cancel();
+    if (index < 0 || index >= nodes.length) { active = false; return; }
+    cursor = index;
+    clearHighlight();
+    nodes[index].classList.add('tts-highlight');
+    nodes[index].scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+    const utt  = new SpeechSynthesisUtterance(nodes[index].innerText);
+    const sel  = voices.find(v => v.name === voiceSel.value);
+    if (sel) utt.voice = sel;
+    utt.rate   = 0.93;
+    utt.onend  = () => {
+      if (active && cursor < nodes.length - 1) {
+        setTimeout(() => speak(cursor + 1), 600);
+      } else {
+        active = false;
+        playBtn.textContent = 'PLAY';
+        statusEl.textContent = 'Done';
+        clearHighlight();
+      }
+    };
+    synth.speak(utt);
+    statusEl.textContent = `§ ${index + 1} / ${nodes.length}`;
+  }
+
+  toggleBtn.addEventListener('click', () => {
+    panel.classList.toggle('open');
+    synth.speak(new SpeechSynthesisUtterance(''));
+    loadVoices();
+  });
+
+  playBtn.addEventListener('click', () => {
+    if (!nodes.length) indexNodes();
+    if (synth.speaking && !synth.paused) {
+      synth.pause(); active = false;
+      playBtn.textContent = 'RESUME';
+      statusEl.textContent = 'Paused';
+    } else if (synth.paused) {
+      synth.resume(); active = true;
+      playBtn.textContent = 'PAUSE';
+    } else {
+      active = true;
+      speak(cursor);
+      playBtn.textContent = 'PAUSE';
+    }
+  });
+
+  document.getElementById('tts-prev').addEventListener('click', () => {
+    if (!nodes.length) indexNodes();
+    active = true; speak(Math.max(0, cursor - 1));
+    playBtn.textContent = 'PAUSE';
+  });
+
+  document.getElementById('tts-next').addEventListener('click', () => {
+    if (!nodes.length) indexNodes();
+    active = true; speak(Math.min(nodes.length - 1, cursor + 1));
+    playBtn.textContent = 'PAUSE';
+  });
+
+  document.getElementById('tts-stop').addEventListener('click', () => {
+    synth.cancel(); active = false;
+    clearHighlight();
+    playBtn.textContent = 'PLAY';
+    statusEl.textContent = 'Standby';
+  });
+
+  /* double-click any paragraph to start reading from there */
+  document.addEventListener('dblclick', e => {
+    if (!nodes.length) indexNodes();
+    const hit = nodes.find(n => n.contains(e.target) || n === e.target);
+    if (hit) {
+      if (!panel.classList.contains('open')) panel.classList.add('open');
+      active = true;
+      speak(nodes.indexOf(hit));
+      playBtn.textContent = 'PAUSE';
+    }
+  });
+})();
+</script>
+
+</body>
+</html>
