@@ -393,7 +393,7 @@ window.MA = window.MA || {};
         }
       });
 
-      // Connections — draw light geodesic-ish line between active node and its connections
+            // Connections — The Mycelial Network
       if (this.activeNode && this.activeNode.connections) {
         const start = this._projectNode(this.activeNode);
         if (start && start.visible) {
@@ -402,27 +402,57 @@ window.MA = window.MA || {};
             if (!other) return;
             const end = this._projectNode(other);
             if (!end || !end.visible) return;
+            
             ctx.save();
-            ctx.strokeStyle = theme.accent;
-            ctx.globalAlpha = 0.35;
-            ctx.setLineDash([3, 5]);
-            ctx.lineWidth = 0.9;
-            ctx.beginPath();
-            // Curved line (quadratic) — bow it slightly outward
-            const mx = (start.x + end.x) / 2;
-            const my = (start.y + end.y) / 2;
-            const dx = end.x - start.x, dy = end.y - start.y;
-            const px = -dy * 0.18, py = dx * 0.18;
-            ctx.moveTo(start.x, start.y);
-            ctx.quadraticCurveTo(mx + px, my + py, end.x, end.y);
-            ctx.stroke();
+            
+            // The parasite inherits the color of its host node, defaulting to a hot/malignant tone
+            const infectColor = this.activeNode.nodeColor || theme.hot || '#c0392b';
+            
+            const dx = end.x - start.x;
+            const dy = end.y - start.y;
+            const dist = Math.hypot(dx, dy);
+            
+            // Generate multiple creeping hyphae strands
+            const strands = 3;
+            for (let i = 0; i < strands; i++) {
+              ctx.beginPath();
+              
+              // Phase offsets ensure each strand throbs and moves independently
+              const phase = tween * 3 + i * 2.1;
+              const throb = 0.5 + 0.5 * Math.sin(phase);
+              
+              ctx.strokeStyle = infectColor;
+              ctx.lineWidth = 0.3 + throb * 1.8;
+              ctx.globalAlpha = 0.15 + throb * 0.4;
+              
+              // Organic bezier control points: base perpendicular spread + continuous sinusoidal jitter
+              const perpX = -dy * (0.05 + i * 0.08);
+              const perpY = dx * (0.05 + i * 0.08);
+              
+              const jitterX1 = Math.sin(tween * 4 + i) * (dist * 0.15);
+              const jitterY1 = Math.cos(tween * 5 + i) * (dist * 0.15);
+              
+              const cp1x = start.x + dx * 0.3 + perpX + jitterX1;
+              const cp1y = start.y + dy * 0.3 + perpY + jitterY1;
+              
+              const cp2x = start.x + dx * 0.7 - perpX - jitterY1;
+              const cp2y = start.y + dy * 0.7 - perpY + jitterX1;
+              
+              // The metabolic engine: animated line dashes simulate resource extraction flowing to the host
+              // Using irregular dash arrays to mimic biological structure
+              ctx.setLineDash([dist * 0.03, dist * 0.06, dist * 0.01, dist * 0.04]);
+              ctx.lineDashOffset = -(tween * 40 * (i + 1)); 
+              
+              ctx.moveTo(start.x, start.y);
+              ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, end.x, end.y);
+              ctx.stroke();
+            }
+            
             ctx.setLineDash([]);
             ctx.restore();
           });
         }
       }
-    }
-  }
 
   MA.EarthGlobe = EarthGlobe;
 

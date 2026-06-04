@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FeistTech Systems & Research</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-deep: #0c0a07;
+      --bg-soft: #14110b;
+      --panel: rgba(20, 17, 11, 0.75);
+      --panel-hover: rgba(30, 25, 17, 0.95);
+      --border: rgba(166, 112, 65, 0.25);
+      --border-glow: rgba(201, 168, 76, 0.6);
+      
+      --text-main: #d4c39a;
+      --text-dim: #7a6a4e;
+      --text-mute: #4a4030;
+      
+      --accent-gold: #c9a84c;
+      --accent-cyan: #00e5ff;
+      --accent-red: #8a1c1c;
+
+      --font-display: 'Cinzel', serif;
+      --font-body: 'Cormorant Garamond', serif;
+      --font-tech: 'Space Mono', monospace;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background-color: var(--bg-deep);
+      background-image: radial-gradient(circle at 50% 0%, #1a1610 0%, var(--bg-deep) 70%);
+      color: var(--text-main);
+      font-family: var(--font-body);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      line-height: 1.6;
+    }
+
+    /* Subtle Film Grain */
+    body::before {
+      content: "";
+      position: fixed; inset: 0; pointer-events: none; z-index: 9999;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+      opacity: 0.03; mix-blend-mode: overlay;
+    }
+
+    /* Top Navigation */
+    header {
+      width: 100%;
+      padding: 2rem 4rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      background: rgba(12, 10, 7, 0.8);
+      backdrop-filter: blur(10px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .brand {
+      font-family: var(--font-display);
+      font-size: 1.2rem;
+      letter-spacing: 0.3em;
+      color: var(--accent-gold);
+      text-transform: uppercase;
+    }
+
+    .brand span { color: var(--accent-cyan); }
+
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      font-family: var(--font-tech);
+      font-size: 0.75rem;
+      letter-spacing: 0.15em;
+    }
+
+    .nav-links a {
+      color: var(--text-dim);
+      text-decoration: none;
+      text-transform: uppercase;
+      transition: color 0.3s ease;
+    }
+
+    .nav-links a:hover { color: var(--accent-gold); }
+
+    /* Main Container */
+    main {
+      width: 100%;
+      max-width: 1200px;
+      padding: 4rem 2rem;
+      flex-grow: 1;
+    }
+
+    .hero {
+      text-align: center;
+      margin-bottom: 4rem;
+    }
+
+    .hero h1 {
+      font-family: var(--font-display);
+      font-size: clamp(2rem, 4vw, 3.5rem);
+      letter-spacing: 0.2em;
+      color: var(--text-main);
+      margin-bottom: 1rem;
+      text-transform: uppercase;
+    }
+
+    .hero p {
+      font-family: var(--font-tech);
+      font-size: 0.85rem;
+      color: var(--accent-cyan);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+    }
+
+    /* Grid Layout for Modules */
+    .module-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 2rem;
+    }
+
+    /* Module Cards */
+    .card {
+      display: block;
+      text-decoration: none;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      padding: 2rem;
+      border-radius: 2px;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+      backdrop-filter: blur(10px);
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 3px;
+      height: 100%;
+      background: var(--text-dim);
+      transition: all 0.4s ease;
+    }
+
+    .card:hover {
+      background: var(--panel-hover);
+      border-color: var(--border-glow);
+      transform: translateY(-5px);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+
+    .card:hover::before { background: var(--accent-gold); }
+    .card.cyan:hover::before { background: var(--accent-cyan); }
+    .card.red:hover::before { background: var(--accent-red); }
+
+    .card-type {
+      font-family: var(--font-tech);
+      font-size: 0.7rem;
+      letter-spacing: 0.3em;
+      color: var(--text-dim);
+      margin-bottom: 1rem;
+      display: block;
+    }
+
+    .card h2 {
+      font-family: var(--font-display);
+      font-size: 1.4rem;
+      color: var(--accent-gold);
+      margin-bottom: 0.75rem;
+      letter-spacing: 0.1em;
+    }
+
+    .card p {
+      font-size: 1.1rem;
+      color: var(--text-main);
+      opacity: 0.8;
+    }
+
+    /* Footer */
+    footer {
+      width: 100%;
+      text-align: center;
+      padding: 3rem 0;
+      font-family: var(--font-tech);
+      font-size: 0.7rem;
+      letter-spacing: 0.2em;
+      color: var(--text-mute);
+      border-top: 1px solid var(--border);
+    }
+
+    @media (max-width: 768px) {
+      header { flex-direction: column; gap: 1rem; padding: 1.5rem; }
+      .nav-links { flex-wrap: wrap; justify-content: center; }
+      .module-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">FeistTech<span>·</span>Systems</div>
+    <nav class="nav-links">
+      <a href="#applications">Applications</a>
+      <a href="#research">Research & Data</a>
+      <a href="https://github.com/Qv4rk" target="_blank">Repository</a>
+    </nav>
+  </header>
+
+  <main>
+    <div class="hero">
+      <h1>Central Directory</h1>
+      <p>System Architecture & Phenomenological Research</p>
+    </div>
+
+    <div class="module-grid" id="applications">
+      
+      <a href="manifold-atlas/Manifold Atlas.html" class="card">
+        <span class="card-type">CARTOGRAPHY / CMS</span>
+        <h2>Manifold Atlas</h2>
+        <p>A 4D geographic and temporal content management system. Features interactive celestial mechanics and Antikythera synchronization.</p>
+      </a>
+
+      <a href="apps/webapps/kalidascope/vectorfontskalidascope.html" class="card cyan">
+        <span class="card-type">VECTOR ENGINE / RENDERER</span>
+        <h2>Symmetry Shadow Matrix</h2>
+        <p>A non-linear, time-based layering engine. Real-time rendering of dynamic polygon meshes through ping-pong playhead mechanics.</p>
+      </a>
+
+      <a href="apps/webapps/metabolic-research-app/index.html" class="card cyan">
+        <span class="card-type">BIOLOGY / PROTOCOL</span>
+        <h2>Metabolic Research</h2>
+        <p>Hoffman Methionine Restriction & Sulforaphane Fasting application. Clinical data tracking and protocol management.</p>
+      </a>
+
+      <a href="apps/webapps/tts/feisttech_reader_v9.html" class="card">
+        <span class="card-type">UTILITY / AUDIO</span>
+        <h2>Neural TTS Engine</h2>
+        <p>FeistTech Reader v9. Advanced text-to-speech processing with modular voice allocation and reading pacing controls.</p>
+      </a>
+
+      <a href="articles/veil/veilofbabel.html" class="card red" id="research">
+        <span class="card-type">PATHOLOGY REPORT</span>
+        <h2>The Veil of Babel</h2>
+        <p>A dossier on the Levantine Paradox. Interactive manuscript analyzing the intersection of genetic lineage, administrative frameworks, and biological autonomy.</p>
+      </a>
+
+      <a href="articles/frequency/FrequencyFoundationsTheVibrationarchitecture.html" class="card red">
+        <span class="card-type">SYSTEMS THEORY</span>
+        <h2>Frequency Foundations</h2>
+        <p>The vibration architecture. An investigation into the mechanical and historical implementation of frequency as a foundational control mechanism.</p>
+      </a>
+
+    </div>
+  </main>
+
+  <footer>
+    INITIATED 2026 · SYSTEM TERMINAL ACTIVE
+  </footer>
+
+</body>
+</html>
