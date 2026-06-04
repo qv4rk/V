@@ -3,273 +3,226 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FeistTech Systems & Research</title>
+  <title>FeistTech Systems Directory</title>
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
 
   <style>
     :root {
-      --bg-deep: #0c0a07;
-      --bg-soft: #14110b;
-      --panel: rgba(20, 17, 11, 0.75);
-      --panel-hover: rgba(30, 25, 17, 0.95);
-      --border: rgba(166, 112, 65, 0.25);
-      --border-glow: rgba(201, 168, 76, 0.6);
+      --bg: #0a0a0a;
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --text-meta: #6b7280;
+      --border: #27272a;
+      --hover-bg: #111111;
       
-      --text-main: #d4c39a;
-      --text-dim: #7a6a4e;
-      --text-mute: #4a4030;
-      
-      --accent-gold: #c9a84c;
-      --accent-cyan: #00e5ff;
-      --accent-red: #8a1c1c;
-
-      --font-display: 'Cinzel', serif;
-      --font-body: 'Cormorant Garamond', serif;
-      --font-tech: 'Space Mono', monospace;
+      --font-serif: 'Playfair Display', serif;
+      --font-sans: 'Inter', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
-      background-color: var(--bg-deep);
-      background-image: radial-gradient(circle at 50% 0%, #1a1610 0%, var(--bg-deep) 70%);
+      background-color: var(--bg);
       color: var(--text-main);
-      font-family: var(--font-body);
+      font-family: var(--font-sans);
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
-      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
     }
 
-    /* Subtle Film Grain */
-    body::before {
-      content: "";
-      position: fixed; inset: 0; pointer-events: none; z-index: 9999;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
-      opacity: 0.03; mix-blend-mode: overlay;
-    }
-
-    /* Top Navigation */
+    /* Minimal Header */
     header {
       width: 100%;
-      padding: 2rem 4rem;
+      max-width: 1000px;
+      padding: 4rem 2rem 2rem 2rem;
       display: flex;
       justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid var(--border);
-      background: rgba(12, 10, 7, 0.8);
-      backdrop-filter: blur(10px);
-      position: sticky;
-      top: 0;
-      z-index: 100;
+      align-items: baseline;
     }
 
     .brand {
-      font-family: var(--font-display);
-      font-size: 1.2rem;
-      letter-spacing: 0.3em;
-      color: var(--accent-gold);
-      text-transform: uppercase;
+      font-family: var(--font-serif);
+      font-size: 1.5rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
     }
-
-    .brand span { color: var(--accent-cyan); }
 
     .nav-links {
       display: flex;
       gap: 2rem;
-      font-family: var(--font-tech);
+      font-family: var(--font-mono);
       font-size: 0.75rem;
-      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
 
     .nav-links a {
-      color: var(--text-dim);
+      color: var(--text-muted);
       text-decoration: none;
-      text-transform: uppercase;
-      transition: color 0.3s ease;
+      transition: color 0.2s ease;
     }
 
-    .nav-links a:hover { color: var(--accent-gold); }
+    .nav-links a:hover { color: var(--text-main); }
 
-    /* Main Container */
+    /* Main Content */
     main {
       width: 100%;
-      max-width: 1200px;
-      padding: 4rem 2rem;
+      max-width: 1000px;
+      padding: 0 2rem 4rem 2rem;
       flex-grow: 1;
     }
 
-    .hero {
-      text-align: center;
-      margin-bottom: 4rem;
-    }
-
-    .hero h1 {
-      font-family: var(--font-display);
-      font-size: clamp(2rem, 4vw, 3.5rem);
-      letter-spacing: 0.2em;
-      color: var(--text-main);
-      margin-bottom: 1rem;
-      text-transform: uppercase;
-    }
-
-    .hero p {
-      font-family: var(--font-tech);
-      font-size: 0.85rem;
-      color: var(--accent-cyan);
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-    }
-
-    /* Grid Layout for Modules */
-    .module-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-      gap: 2rem;
-    }
-
-    /* Module Cards */
-    .card {
-      display: block;
-      text-decoration: none;
-      background: var(--panel);
-      border: 1px solid var(--border);
-      padding: 2rem;
-      border-radius: 2px;
-      position: relative;
-      overflow: hidden;
-      transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-      backdrop-filter: blur(10px);
-    }
-
-    .card::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0;
-      width: 3px;
-      height: 100%;
-      background: var(--text-dim);
-      transition: all 0.4s ease;
-    }
-
-    .card:hover {
-      background: var(--panel-hover);
-      border-color: var(--border-glow);
-      transform: translateY(-5px);
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-    }
-
-    .card:hover::before { background: var(--accent-gold); }
-    .card.cyan:hover::before { background: var(--accent-cyan); }
-    .card.red:hover::before { background: var(--accent-red); }
-
-    .card-type {
-      font-family: var(--font-tech);
-      font-size: 0.7rem;
-      letter-spacing: 0.3em;
-      color: var(--text-dim);
-      margin-bottom: 1rem;
-      display: block;
-    }
-
-    .card h2 {
-      font-family: var(--font-display);
-      font-size: 1.4rem;
-      color: var(--accent-gold);
-      margin-bottom: 0.75rem;
-      letter-spacing: 0.1em;
-    }
-
-    .card p {
-      font-size: 1.1rem;
-      color: var(--text-main);
-      opacity: 0.8;
-    }
-
-    /* Footer */
-    footer {
-      width: 100%;
-      text-align: center;
-      padding: 3rem 0;
-      font-family: var(--font-tech);
-      font-size: 0.7rem;
-      letter-spacing: 0.2em;
-      color: var(--text-mute);
+    /* Directory List */
+    .directory-list {
+      list-style: none;
       border-top: 1px solid var(--border);
     }
 
+    .directory-item {
+      display: flex;
+      align-items: flex-start;
+      padding: 2rem 0;
+      border-bottom: 1px solid var(--border);
+      transition: background-color 0.2s ease;
+      text-decoration: none;
+      color: inherit;
+      gap: 2rem;
+    }
+
+    .directory-item:hover {
+      background-color: var(--hover-bg);
+    }
+
+    .item-meta {
+      flex: 0 0 180px;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--text-meta);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding-top: 0.4rem;
+    }
+
+    .item-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .item-title {
+      font-family: var(--font-serif);
+      font-size: 1.8rem;
+      font-weight: 400;
+      color: var(--text-main);
+    }
+
+    .item-desc {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+      max-width: 650px;
+    }
+
+    /* Sub-links for folders with multiple files */
+    .sub-links {
+      display: flex;
+      gap: 1.5rem;
+      margin-top: 0.5rem;
+    }
+
+    .sub-link {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-decoration: none;
+      border-bottom: 1px solid transparent;
+      transition: all 0.2s ease;
+    }
+
+    .sub-link:hover {
+      color: var(--text-main);
+      border-bottom: 1px solid var(--text-main);
+    }
+
     @media (max-width: 768px) {
-      header { flex-direction: column; gap: 1rem; padding: 1.5rem; }
-      .nav-links { flex-wrap: wrap; justify-content: center; }
-      .module-grid { grid-template-columns: 1fr; }
+      header { flex-direction: column; gap: 1rem; }
+      .directory-item { flex-direction: column; gap: 0.5rem; padding: 1.5rem 0; }
+      .item-meta { padding-top: 0; flex: auto; margin-bottom: 0.5rem; }
     }
   </style>
 </head>
 <body>
 
   <header>
-    <div class="brand">FeistTech<span>·</span>Systems</div>
+    <div class="brand">FeistTech</div>
     <nav class="nav-links">
-      <a href="#applications">Applications</a>
-      <a href="#research">Research & Data</a>
+      <a href="#index">Index</a>
       <a href="https://github.com/Qv4rk" target="_blank">Repository</a>
     </nav>
   </header>
 
-  <main>
-    <div class="hero">
-      <h1>Central Directory</h1>
-      <p>System Architecture & Phenomenological Research</p>
-    </div>
-
-    <div class="module-grid" id="applications">
+  <main id="index">
+    <ul class="directory-list">
       
-      <a href="manifold-atlas/Manifold Atlas.html" class="card">
-        <span class="card-type">CARTOGRAPHY / CMS</span>
-        <h2>Manifold Atlas</h2>
-        <p>A 4D geographic and temporal content management system. Features interactive celestial mechanics and Antikythera synchronization.</p>
+      <!-- Atlas Archive -->
+      <a href="necronomy-atlas/manifold_legacy/Manifold Atlas.html" class="directory-item">
+        <div class="item-meta">4D Article Archive</div>
+        <div class="item-content">
+          <h2 class="item-title">The Necronomy Atlas</h2>
+          <p class="item-desc">An interactive 3D temporal interface mapping historical and systemic crises, incorporating celestial mechanics.</p>
+        </div>
       </a>
 
-      <a href="apps/webapps/kalidascope/vectorfontskalidascope.html" class="card cyan">
-        <span class="card-type">VECTOR ENGINE / RENDERER</span>
-        <h2>Symmetry Shadow Matrix</h2>
-        <p>A non-linear, time-based layering engine. Real-time rendering of dynamic polygon meshes through ping-pong playhead mechanics.</p>
+      <!-- Articles -->
+      <a href="articles/veil/veilofbabel.html" class="directory-item">
+        <div class="item-meta">Article Dossier</div>
+        <div class="item-content">
+          <h2 class="item-title">The Veil of Babel</h2>
+          <p class="item-desc">An investigative dossier detailing systemic frameworks and historical intersections.</p>
+        </div>
       </a>
 
-      <a href="apps/webapps/metabolic-research-app/index.html" class="card cyan">
-        <span class="card-type">BIOLOGY / PROTOCOL</span>
-        <h2>Metabolic Research</h2>
-        <p>Hoffman Methionine Restriction & Sulforaphane Fasting application. Clinical data tracking and protocol management.</p>
+      <!-- Dietary Protocol -->
+      <a href="articles/metabolic-research-app/index.html" class="directory-item">
+        <div class="item-meta">Dietary Protocol</div>
+        <div class="item-content">
+          <h2 class="item-title">Metabolic Research</h2>
+          <p class="item-desc">Clinical data tracking for methionine restriction and sulforaphane protocols.</p>
+        </div>
       </a>
 
-      <a href="apps/webapps/tts/feisttech_reader_v9.html" class="card">
-        <span class="card-type">UTILITY / AUDIO</span>
-        <h2>Neural TTS Engine</h2>
-        <p>FeistTech Reader v9. Advanced text-to-speech processing with modular voice allocation and reading pacing controls.</p>
+      <!-- Utilities -->
+      <a href="apps/webapps/tts/feisttech_reader_v9.html" class="directory-item">
+        <div class="item-meta">Utility</div>
+        <div class="item-content">
+          <h2 class="item-title">Neural TTS Engine</h2>
+          <p class="item-desc">Advanced text-to-speech processing and reading pacing controls.</p>
+        </div>
       </a>
 
-      <a href="articles/veil/veilofbabel.html" class="card red" id="research">
-        <span class="card-type">PATHOLOGY REPORT</span>
-        <h2>The Veil of Babel</h2>
-        <p>A dossier on the Levantine Paradox. Interactive manuscript analyzing the intersection of genetic lineage, administrative frameworks, and biological autonomy.</p>
-      </a>
+      <!-- Kaleidoscope Suite (Multiple Links) -->
+      <div class="directory-item">
+        <div class="item-meta">Development Suite</div>
+        <div class="item-content">
+          <h2 class="item-title">Kaleidoscope Interface</h2>
+          <p class="item-desc">Interactive typography and visual rendering tools.</p>
+          <div class="sub-links">
+            <a href="apps/webapps/kalidascope/fontforge5.html" class="sub-link">Font Forge</a>
+            <a href="apps/webapps/kalidascope/klidascopetopgunforge.html" class="sub-link">Top Gun Forge</a>
+            <a href="apps/webapps/kalidascope/vectorfontskalidascope.html" class="sub-link">Vector Fonts</a>
+          </div>
+        </div>
+      </div>
 
-      <a href="articles/frequency/FrequencyFoundationsTheVibrationarchitecture.html" class="card red">
-        <span class="card-type">SYSTEMS THEORY</span>
-        <h2>Frequency Foundations</h2>
-        <p>The vibration architecture. An investigation into the mechanical and historical implementation of frequency as a foundational control mechanism.</p>
-      </a>
-
-    </div>
+    </ul>
   </main>
-
-  <footer>
-    INITIATED 2026 · SYSTEM TERMINAL ACTIVE
-  </footer>
 
 </body>
 </html>
