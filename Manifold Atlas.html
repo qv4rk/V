@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Manifold Atlas</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Cinzel:wght@400;700&family=Share+Tech+Mono&family=Noto+Sans+Symbols+2&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="app/themes.css">
+<style>
+  /* ── Persistent sky backdrop layering ── */
+  #sky-bg {
+    position: fixed; inset: 0;
+    width: 100%; height: 100%;
+    z-index: 0; pointer-events: none;
+  }
+  #app  { position: relative; z-index: 1; background: transparent !important; }
+  #atrium { background: transparent !important; }
+  #atlas  { background: transparent !important; }
+  /* Node jump dropdown */
+  .node-jump {
+    background: var(--panel); color: var(--ink-dim);
+    border: 1px solid var(--panel-edge); border-radius: 2px;
+    padding: 7px 12px;
+    font-family: 'Space Mono', monospace;
+    font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+    max-width: 220px; cursor: pointer;
+    pointer-events: auto;
+  }
+  .node-jump:hover { color: var(--ink); border-color: var(--ink-dim); }
+  .node-jump option { background: #0c0a07; color: #d4c39a; }
+</style>
+</head>
+<body>
+
+<!-- Persistent starfield backdrop — always rendering, behind everything -->
+<canvas id="sky-bg"></canvas>
+
+<div id="app">
+
+  <!-- ════════════════ ATRIUM (homepage) ════════════════ -->
+  <section id="atrium" class="view on" data-screen-label="00 Atrium">
+    <div class="marquee">
+      <div class="eyebrow">FEISTTECH SYSTEMS &amp; RESEARCH</div>
+      <h1>Manifold Atlas</h1>
+      <div class="sub">4D GEOGRAPHIC CMS · TIME IS THE MASTER VARIABLE</div>
+    </div>
+
+    <div class="dial-stage" id="atrium-dial"></div>
+
+    <div class="footer">
+      <div class="date-readout">
+        EPOCH<br>
+        <span class="d" id="atrium-date">—</span>
+      </div>
+      <button class="enter-btn" id="enter-btn">Enter the Atlas →</button>
+      <div class="date-readout" style="font-size:8px;letter-spacing:4px;color:var(--ink-mute);">
+        DRAG THE DIAL TO TRAVEL · DOUBLE-CLICK THE CORNER DIAL TO RETURN
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════ ATLAS (Earth) ════════════════ -->
+  <section id="atlas" class="view" data-screen-label="01 Atlas">
+    <canvas id="earth-canvas"></canvas>
+  </section>
+
+  <!-- ════════════════ SKY (full-bleed) ════════════════ -->
+  <section id="sky" class="view" data-screen-label="02 Sky">
+    <canvas id="sky-canvas"></canvas>
+  </section>
+
+  <!-- ════════════════ CHROME ════════════════ -->
+  <div class="topbar" id="chrome-bar" style="display:none">
+    <div class="brand">
+      MANIFOLD
+      <span class="dot">·</span>
+      ATLAS
+    </div>
+    <select id="node-jump" class="node-jump"><option value="">◇ JUMP TO NODE…</option></select>
+    <div class="view-tabs">
+      <button data-view="atrium">Atrium</button>
+      <button data-view="atlas" class="on">Atlas</button>
+      <button data-view="sky">Sky</button>
+    </div>
+    <div class="theme-picker">
+      <span class="lbl">THEME</span>
+      <div class="theme-swatch on" data-theme="patina"   style="--col:#a67041" title="Patina"></div>
+      <div class="theme-swatch"    data-theme="cyan"     style="--col:#00e5ff" title="Cyan Blueprint"></div>
+      <div class="theme-swatch"    data-theme="imperial" style="--col:#e8c46a" title="Imperial Gold"></div>
+      <div class="theme-swatch"    data-theme="night"    style="--col:#88c0d0" title="Night Plate"></div>
+    </div>
+  </div>
+
+  <!-- HUD (atlas only by default; visible in sky too) -->
+  <div class="hud atlas-only" style="display:none">
+    <div class="h-head">CHRONOMETER</div>
+    <div class="h-sub">DIGITAL ANTIKYTHERA · J2000 EPOCH</div>
+    <div class="row"><span>DATE</span><span class="v" id="hud-date">—</span></div>
+    <div class="row"><span>YEAR</span><span class="v" id="hud-year">—</span></div>
+    <div class="row"><span>VIEW</span><span class="v" id="hud-view">ATLAS</span></div>
+    <div class="row"><span>SYZYGY</span><span class="v" id="hud-eclipse">—</span></div>
+  </div>
+
+  <!-- Corner dial -->
+  <div class="corner-dial" id="corner-dial" style="display:none">
+    <div id="corner-dial-svg"></div>
+    <div class="hint">TAP TO SWITCH VIEW · DRAG TO CRANK</div>
+  </div>
+
+  <!-- Node list (atlas) -->
+  <div class="node-list atlas-only" style="display:none">
+    <div class="nl-head">DOSSIERS · NODES</div>
+    <div id="nl-list"></div>
+  </div>
+
+  <!-- Sky locator -->
+  <div class="sky-locator sky-only" style="display:none">
+    <div class="l-head">OBSERVER</div>
+    <div class="loc-grid" id="loc-grid"></div>
+  </div>
+
+  <!-- Time bar (shown in atlas + sky) -->
+  <div class="timebar" id="timebar" style="display:none">
+    <div class="date-line">
+      <div class="date" id="date-display">—</div>
+      <div class="meta"><span class="span-pill">RANGE −3000 / +1000</span></div>
+    </div>
+    <input type="range" id="date-slider" min="-3026" max="1000" value="0" step="1">
+    <div class="ctrls">
+      <button class="ctrl" data-speed="1">¼×</button>
+      <button class="ctrl" data-speed="7">7×</button>
+      <button class="ctrl on" data-speed="30">30×</button>
+      <button class="ctrl" data-speed="365">YR</button>
+      <button class="ctrl" data-speed="3650">10YR</button>
+      <button class="ctrl play" id="play-btn">▶</button>
+      <button class="ctrl" id="now-btn">NOW</button>
+    </div>
+  </div>
+
+  <!-- Node tooltip -->
+  <div class="node-tip" id="node-tip">
+    <div class="nt-date">—</div>
+    <div class="nt-title">—</div>
+    <div class="nt-loc">—</div>
+  </div>
+
+  <!-- Dossier panel -->
+  <aside class="dossier" id="dossier">
+    <div class="top">
+      <button class="close" id="doss-close">✕</button>
+      <div class="classification">—</div>
+      <div class="doss-title">—</div>
+      <div class="meta-line">—</div>
+      <div class="excerpt">—</div>
+    </div>
+    <div class="body scroll"></div>
+    <div class="connections">
+      <div class="conn-head">—</div>
+      <div class="conn-chips"></div>
+    </div>
+  </aside>
+
+</div>
+
+<!-- Show chrome whenever we're not in the atrium -->
+<style>
+  /* timebar is shown in atlas + sky */
+  .atlas-only, .sky-only { /* default hidden, JS toggles */ }
+</style>
+
+<!-- ── Libraries (pinned) ── -->
+<script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
+
+<!-- ── Modules ── -->
+<script src="app/data.js"></script>
+<script src="app/dial.js"></script>
+<script src="app/earth.js"></script>
+<script src="app/sky.js"></script>
+<script src="app/atlas.js"></script>
+
+<script>
+  // Boot
+  const _atlas = new MA.ManifoldAtlas();
+
+  // Initial date set
+  _atlas.setDate(MA.jd(new Date('1839-06-15')));   // Opium War era — in range of the loaded nodes
+
+  // ── Timebar visibility: hide in atrium, show in atlas/sky ──
+  const tb = document.getElementById('timebar');
+  const refreshChrome = () => {
+    const v = document.querySelector('.view.on');
+    if (!v) return;
+    tb.style.display = (v.id === 'atrium') ? 'none' : '';
+  };
+  refreshChrome();
+  const observer = new MutationObserver(refreshChrome);
+  observer.observe(document.body, { attributes:true, subtree:true, attributeFilter:['class'] });
+</script>
+
+</body>
+</html>

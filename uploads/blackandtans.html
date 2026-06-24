@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Black and Tans in Palestine: Historical Analysis</title>
+    <style>
+        :root {
+            --color-primary: #1a3a52;
+            --color-secondary: #2c5aa0;
+            --color-accent: #d4a574;
+            --color-bg: #f5f3f0;
+            --color-surface: #ffffff;
+            --color-text: #2b2b2b;
+            --color-text-light: #666666;
+            --color-border: #e0dcd8;
+            --color-hover: #f0ebe5;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.7;
+            color: var(--color-text);
+            background-color: var(--color-bg);
+        }
+
+        /* Header */
+        header {
+            background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+            color: white;
+            padding: 3rem 2rem;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        header p {
+            font-size: 1rem;
+            opacity: 0.95;
+            max-width: 900px;
+            margin: 0 auto;
+            line-height: 1.5;
+        }
+
+        /* Tab Navigation */
+        .tab-nav {
+            background-color: var(--color-surface);
+            border-bottom: 2px solid var(--color-border);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0;
+            padding: 0;
+            overflow-x: auto;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            position: sticky;
+            top: 120px;
+            z-index: 90;
+        }
+
+        .tab-button {
+            flex: 1;
+            min-width: 160px;
+            padding: 1rem 1.5rem;
+            border: none;
+            background-color: var(--color-surface);
+            color: var(--color-text);
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+            white-space: nowrap;
+        }
+
+        .tab-button:hover {
+            background-color: var(--color-hover);
+            color: var(--color-secondary);
+        }
+
+        .tab-button.active {
+            color: var(--color-secondary);
+            border-bottom-color: var(--color-secondary);
+            background-color: rgba(44, 90, 160, 0.05);
+        }
+
+        /* Content Container */
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Typography */
+        h2 {
+            color: var(--color-primary);
+            font-size: 1.8rem;
+            margin: 2rem 0 1rem 0;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--color-accent);
+        }
+
+        h3 {
+            color: var(--color-secondary);
+            font-size: 1.3rem;
+            margin: 1.5rem 0 0.75rem 0;
+            font-weight: 600;
+        }
+
+        h4 {
+            color: var(--color-text);
+            font-size: 1.1rem;
+            margin: 1rem 0 0.5rem 0;
+            font-weight: 600;
+        }
+
+        p {
+            margin-bottom: 1rem;
+            text-align: justify;
+            color: var(--color-text);
+        }
+
+        strong {
+            color: var(--color-primary);
+            font-weight: 600;
+        }
+
+        /* Lists */
+        ul, ol {
+            margin: 1rem 0 1rem 2rem;
+            line-height: 1.9;
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+            color: var(--color-text);
+        }
+
+        li strong {
+            color: var(--color-secondary);
+        }
+
+        /* Blockquotes and Callouts */
+        .callout {
+            background-color: rgba(44, 90, 160, 0.08);
+            border-left: 4px solid var(--color-secondary);
+            padding: 1.25rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+            font-style: italic;
+            color: var(--color-text);
+        }
+
+        .callout strong {
+            color: var(--color-primary);
+        }
+
+        /* References Section */
+        .references {
+            background-color: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: 6px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .references h3 {
+            margin-top: 0;
+        }
+
+        .reference-item {
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--color-border);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .reference-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .ref-num {
+            color: var(--color-secondary);
+            font-weight: 600;
+            display: inline-block;
+            margin-right: 0.5rem;
+            min-width: 30px;
+        }
+
+        /* Controls */
+        .controls {
+            background-color: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: 6px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .controls button {
+            padding: 0.7rem 1.5rem;
+            background-color: var(--color-secondary);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+        }
+
+        .controls button:hover {
+            background-color: var(--color-primary);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .controls button:active {
+            transform: scale(0.98);
+        }
+
+        .controls select {
+            padding: 0.7rem;
+            border: 1px solid var(--color-border);
+            border-radius: 4px;
+            background-color: white;
+            color: var(--color-text);
+            cursor: pointer;
+            font-size: 0.95rem;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .control-group label {
+            font-weight: 500;
+            color: var(--color-text);
+        }
+
+        .control-group input {
+            padding: 0.5rem;
+            width: 70px;
+            border: 1px solid var(--color-border);
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+
+        /* RSVP Container */
+        #rsvp-container {
+            display: none;
+            background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            text-align: center;
+            margin: 1rem 0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        #rsvp-word {
+            font-size: 3rem;
+            font-weight: 700;
+            margin: 1rem 0;
+            letter-spacing: 2px;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #rsvp-controls {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+
+        #rsvp-controls button {
+            padding: 0.6rem 1.2rem;
+            background-color: var(--color-accent);
+            color: var(--color-primary);
+            font-weight: 600;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        #rsvp-controls button:hover {
+            background-color: #e8b88a;
+            transform: translateY(-2px);
+        }
+
+        /* Footer */
+        footer {
+            background-color: var(--color-primary);
+            color: white;
+            text-align: center;
+            padding: 2rem;
+            margin-top: 3rem;
+            font-size: 0.9rem;
+            border-top: 4px solid var(--color-accent);
+        }
+
+        footer p {
+            margin: 0.5rem 0;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 1.6rem;
+            }
+
+            .container {
+                padding: 1rem;
+            }
+
+            .tab-button {
+                min-width: 130px;
+                padding: 0.8rem 1rem;
+                font-size: 0.85rem;
+            }
+
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .controls button {
+                width: 100%;
+            }
+
+            .control-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .control-group input {
+                width: 100%;
+            }
+
+            #rsvp-word {
+                font-size: 2rem;
+            }
+
+            h2 {
+                font-size: 1.5rem;
+            }
+
+            h3 {
+                font-size: 1.1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>The Black and Tans in Palestine</h1>
+        <p>A comprehensive historical analysis of British colonial policing, the transfer of counterinsurgency personnel from Ireland to Palestine, and the structural violence that accelerated tensions during the British Mandate period (1920–1948)</p>
+    </header>
+
+    <div class="tab-nav">
+        <button class="tab-button active" onclick="openTab(event, 'overview')">Overview</button>
+        <button class="tab-button" onclick="openTab(event, 'revolt')">Revolts Against Britain</button>
+        <button class="tab-button" onclick="openTab(event, 'promises')">Conflicting Promises</button>
+        <button class="tab-button" onclick="openTab(event, 'ireland')">Ireland Connection</button>
+        <button class="tab-button" onclick="openTab(event, 'blacktans')">Black and Tans</button>
+    </div>
+
+    <div class="container">
+        <!-- OVERVIEW TAB -->
+        <div id="overview" class="tab-content active">
+            <h2>Overview: Historical Context and Analysis</h2>
+            
+            <p>This resource examines a critical but often-overlooked dimension of Mandate Palestine (1920–1948): the systematic deployment of British imperial police forces, particularly those with direct Irish counterinsurgency experience, and how their presence and tactics shaped the escalation of violence that made the Mandate ungovernable.</p>
+
+            <h3>Matt Tardio's Critique of Tucker Carlson</h3>
+            
+            <p>In February 2026, Tucker Carlson conducted an interview with Palestinian clergy making claims about Christian displacement in Bethlehem. Matt Tardio's detailed thread critiques Carlson's historical framing on three main claims:</p>
+
+            <ul>
+                <li><strong>Claim 1 (West Bank ownership):</strong> Carlson states the West Bank belonged to Jordan prior to 1967, omitting that Jordan occupied it militarily starting in 1948 following the Arab rejection of the 1947 UN Partition Plan. This is a territorial misstatement presented as historical fact.</li>
+                <li><strong>Claim 2 (Christian population in Bethlehem):</strong> Carlson attributes Christian population decline in Bethlehem to Israeli actions. Tardio presents demographic data showing Palestinian Authority control of Bethlehem (Area A under the 1995 Oslo Accords) correlates with Christian population decline from approximately 40% to under 10%, drawing on Pew Research Center analysis.</li>
+                <li><strong>Claim 3 (Settler encroachment):</strong> Using B'Tselem mapping data, Tardio shows minimal Israeli settlement presence in Beit Sahur and limited Area C territorial overlap, challenging the narrative of unilateral Israeli expansion in that zone.</li>
+            </ul>
+
+            <div class="callout">
+                <strong>Key Issue with Incomplete Narratives:</strong> Tardio's thread focuses narrowly on debunking Carlson's specific claims but omits earlier waves of violence (Arab Revolt 1936–1939, Jewish insurgency 1944–1948) that made the British Mandate structurally unstable. Understanding why Britain left requires examining all actors' revolts, not just the 1948 Arab response.
+            </div>
+
+            <h3>The Mandate's Structural Problem</h3>
+            
+            <p>The British Mandate for Palestine (1920–1948) was built on contradictory commitments made during World War I to secure different strategic allies. By the 1930s, the contradictions became irreconcilable: Britain had promised independence to Arabs, homeland to Jews, and territory to the French—all on the same land. The resulting tension was managed through increasingly coercive policing, administered by personnel trained in Irish counterinsurgency. This created a third variable in Arab-Jewish conflict: systematic British state violence experienced by both communities.</p>
+
+            <h3>Why This Matters Today</h3>
+            
+            <p>Historical accuracy requires acknowledging that structural violence—not just the actions of local combatants—shaped escalation. The deployment of the Black and Tans to Palestine transferred not just personnel but institutional tactics and legitimized torture methods that both communities observed, studied, and in some cases adapted. Understanding this layer is essential to honest historical analysis.</p>
+        </div>
+
+        <!-- REVOLTS TAB -->
+        <div id="revolt" class="tab-content">
+            <h2>Revolts Against the British</h2>
+
+            <p>The conventional narrative often frames the end of the British Mandate as resulting primarily from the 1948 Arab rejection of the UN Partition Plan and subsequent Arab invasion. This is incomplete. Both Arab and Jewish communities launched sustained insurgencies against British rule that made staying untenable. Britain's exit was forced, not voluntary.</p>
+
+            <h3>The Arab Revolt (1936–1939)</h3>
+
+            <p>The Palestinian Arab Revolt was the most significant uprising against British authority during the Mandate period. It was triggered by:</p>
+
+            <ul>
+                <li>Accelerating Jewish immigration and land purchases</li>
+                <li>Perceived British favoritism toward Zionist settlement</li>
+                <li>Marginalization of Arab political participation in governance</li>
+                <li>The 1929 Western Wall riots and subsequent communal violence</li>
+            </ul>
+
+            <p>The revolt involved a general strike lasting six months, guerrilla attacks on British forces and Jewish settlements, assassinations of British officials and Arab collaborators, and disruption of infrastructure. The British response was severe: martial law, mass arrests, collective punishments, village demolitions, and executions. Casualty estimates range from 3,000 to 5,000 Palestinians killed, with thousands imprisoned or displaced.</p>
+
+            <p>The revolt forced Britain to convene the Peel Commission (1936–1937), which concluded the Mandate was unworkable and recommended partition—an early recognition that two communities could not coexist under unified British rule. However, the commission's recommendations were rejected by Palestinian Arabs and shelved by Britain.</p>
+
+            <p>The British eventually crushed the revolt through superior military force, but the uprising revealed that direct rule via police and limited garrison forces could not suppress determined nationalist sentiment. This became a template: nationalist insurgency could make territories ungovernable and force withdrawal—a lesson the Jewish community absorbed and applied.</p>
+
+            <h3>The Jewish Insurgency (1944–1948)</h3>
+
+            <p>After World War II, with Holocaust survivors desperate to reach Palestine and Britain maintaining strict immigration quotas to appease Arab opinion, Jewish militant groups launched a coordinated campaign to force British withdrawal. The principal actors were:</p>
+
+            <ul>
+                <li><strong>Irgun Zvai Leumi (Irgun):</strong> Led by Menachem Begin, commanded asymmetric attacks on British military and administrative infrastructure.</li>
+                <li><strong>Lehi ("Stern Gang"):</strong> A more radical splinter group, also conducting bombings and assassinations.</li>
+                <li><strong>Haganah:</strong> The mainstream Jewish defense organization, which sometimes cooperated with or tacitly supported Irgun operations.</li>
+            </ul>
+
+            <h4>Major Operations</h4>
+
+            <p><strong>The King David Hotel Bombing (July 22, 1946):</strong> Irgun operatives, disguised as Arab workers, placed explosives in the basement of the King David Hotel in Jerusalem, which housed British military headquarters and the administrative center. The blast killed 91 people: 28 British, 41 Arabs, 17 Jews, and 5 others. Irgun phoned advance warnings (which British security mostly ignored), a detail often omitted from accounts that frame it as indiscriminate terrorism. The operation was a statement: British imperial administration was not safe, and the cost of maintaining the Mandate was escalating.</p>
+
+            <p><strong>Assassination of British Officials:</strong> Irgun and Lehi conducted targeted killings of British officers and policemen. In response, the British executed captured militants, leading to cycles of retaliation (e.g., Irgun's hanging of two British sergeants in 1947, whose bodies were booby-trapped with explosives).</p>
+
+            <p><strong>Raids on Armories and Supply Depots:</strong> Jewish insurgents systematically raided British military supply caches, acquiring weapons and explosives for their operations.</p>
+
+            <p><strong>The Exodus Affair (1947):</strong> Though not a direct attack, the British naval interception of the refugee ship <em>Exodus</em> with 4,500 Holocaust survivors aboard—and their forcible deportation to Cyprus—became a propaganda disaster. Images of Jewish refugees being forcibly removed by British soldiers created massive international pressure and undermined British legitimacy.</p>
+
+            <h4>Strategic Impact</h4>
+
+            <p>The Jewish insurgency succeeded in making the Mandate politically toxic in Britain. British soldiers were being killed or wounded regularly; the cost of maintaining order was escalating; and public opinion in Britain and internationally was turning against continued occupation. Combined with Britain's post-war financial exhaustion (the country was bankrupt and dependent on US loans), the strategic calculation shifted: Palestine offered no vital interest worth the cost.</p>
+
+            <p>In February 1947, Foreign Secretary Ernest Bevin announced that Britain would refer the Palestine question to the United Nations and would withdraw by May 15, 1948, regardless of the outcome. The British Mandate ended not through negotiated settlement but through forced retreat.</p>
+
+            <h3>The 1948 "Revolt": Arab Rejection and Invasion</h3>
+
+            <p>What Tardio refers to as the 1948 uprising was fundamentally different from the Arab Revolt or Jewish insurgency. It was the Arab states' rejection of the 1947 UN Partition Plan (which would have allocated ~55% of territory to a Jewish state and ~45% to an Arab state, with Jerusalem internationalized) and the subsequent invasion by neighboring Arab armies (Egypt, Transjordan, Syria, Iraq) immediately after Israel declared independence on May 14, 1948.</p>
+
+            <p>Critically, the Palestinian Arabs themselves did not militarily defeat the British. The British withdrawal was forced by the combination of Arab and Jewish insurgencies, British exhaustion, and the strategic decision that Palestine was not worth holding. The 1948 war was a subsequent conflict triggered by the Arab states' decision to invade rather than accept partition.</p>
+
+            <div class="callout">
+                <strong>Historical Precision:</strong> The Arab Revolt (1936–1939) and Jewish insurgency (1944–1948) directly forced the British exit. The 1948 war was a consequence of that exit, not the cause. Omitting these earlier revolts from historical narrative creates a misleading impression that Britain left only because of Arab pressure or strategic choice, when in fact both communities had made the Mandate ungovernable through sustained violence.
+            </div>
+        </div>
+
+        <!-- PROMISES TAB -->
+        <div id="promises" class="tab-content">
+            <h2>Conflicting British Promises: Imperial Duplicity in World War I</h2>
+
+            <p>The roots of the Mandate's failure lie in Britain's wartime diplomacy. Desperate to secure allies against the Ottoman Empire, Britain made contradictory commitments to Arab nationalists, Zionist organizations, and European powers. These promises were mutually exclusive and set the stage for decades of conflict.</p>
+
+            <h3>The Hussein-McMahon Correspondence (1915–1916)</h3>
+
+            <p>Britain, through High Commissioner Sir Henry McMahon, conducted a series of letters with Sharif Hussein of Mecca—the guardian of Islam's holiest sites and the ruler of the Hejaz region in the Arabian Peninsula. Hussein controlled significant influence over Arab tribes and had the potential to launch a revolt against Ottoman rule in the Middle East, which would relieve pressure on British forces fighting in Mesopotamia and elsewhere.</p>
+
+            <p>In these letters, McMahon promised Hussein that if he led an Arab revolt against the Ottomans, Britain would support the creation of an independent Arab kingdom encompassing much of the Middle East. The exact territorial extent remained vague, with McMahon writing about "portions of Syria" and suggesting some areas west of Damascus might be excluded. Arabs have consistently interpreted these letters as including Palestine; British officials later argued the language was ambiguous and Palestine was implicitly excluded.</p>
+
+            <p>Regardless of the intended meaning, the letters created an expectation among Arab leaders that independence would follow Ottoman defeat. Hussein launched the Arab Revolt in 1916, and the Ottomans were indeed defeated—but Britain immediately proceeded to implement conflicting agreements with other powers.</p>
+
+            <h3>The Sykes-Picot Agreement (1916)</h3>
+
+            <p>Britain and France (with Russian agreement) secretly negotiated the Sykes-Picot Agreement, a carve-up of Ottoman territories that directly contradicted promises made to Hussein. Under Sykes-Picot:</p>
+
+            <ul>
+                <li>Britain would control southern Iraq and southern Palestine/Jordan area</li>
+                <li>France would control Syria and Lebanon</li>
+                <li>A small "independent" Arab state would exist between British and French zones (essentially a fiction)</li>
+                <li>Russia would gain Constantinople and the Turkish straits (though Russia dropped out after the Bolshevik Revolution)</li>
+            </ul>
+
+            <p>The agreement was secret, and when details leaked (after the Bolshevik Revolution published Russian diplomatic archives), it became clear that Britain had negotiated the division of the Middle East without any input from Hussein or Arab nationalist leadership. The gap between Hussein-McMahon promises and Sykes-Picot reality became a defining grievance in Arab anticolonial memory.</p>
+
+            <h3>The Balfour Declaration (1917)</h3>
+
+            <p>Foreign Secretary Arthur Balfour issued a public letter to Lord Rothschild, a prominent Zionist, stating that Britain "views with favour the establishment in Palestine of a national home for the Jewish people" while also promising not to prejudice "the civil and religious rights of existing non-Jewish communities in Palestine, or the rights and political status enjoyed by Jews in any other country."</p>
+
+            <p>The language was deliberately crafted to seem supportive of Jewish aspirations while ostensibly protecting Arab rights—but the promises were incompatible. A "national home for the Jewish people" in a territory where Arabs were a vast majority could not coexist with maintaining Arab civil and political rights. The vagueness was not accidental; it allowed Britain to appear supportive to Zionists while maintaining plausible deniability to Arabs.</p>
+
+            <p>Balfour's motivations were mixed:</p>
+            <ul>
+                <li>Strategic interest in controlling Palestine (Suez Canal approaches)</li>
+                <li>Desire to secure Zionist support for the war effort (particularly among Russian and American Jews)</li>
+                <li>Personal sympathy for Zionist colonization as a solution to European antisemitism</li>
+                <li>Zionist organizational pressure and lobbying</li>
+            </ul>
+
+            <p>Notably, Balfour himself was a former opponent of Irish Home Rule, revealing how the same imperial operator who denied self-determination to Irish nationalists could simultaneously promise a "national home" to Jewish nationalists in Palestine.</p>
+
+            <h3>The Mandate System (1920–1922)</h3>
+
+            <p>After Ottoman defeat, the League of Nations granted Britain a Mandate for Palestine, explicitly incorporating the Balfour Declaration into the Mandate charter. This gave international legal cover to Britain's contradictory commitments. However, the Arab population (the overwhelming demographic majority) never accepted the Mandate as legitimate. They saw it as colonial occupation disguised with international bureaucratic language.</p>
+
+            <p>For the next 28 years, Britain attempted to manage these contradictions through a combination of:</p>
+            <ul>
+                <li><strong>Restricted immigration policies:</strong> Limiting Jewish immigration to appease Arab opinion (1939 White Paper), which enraged Jews</li>
+                <li><strong>Land purchase restrictions:</strong> Attempting to limit Jewish land acquisition, which Zionists circumvented</li>
+                <li><strong>Administrative division:</strong> Separating Arab and Jewish administrative services, reinforcing communal separation</li>
+                <li><strong>Coercive policing:</strong> Deploying police forces to suppress both Arab revolts and, later, Jewish insurgency</li>
+            </ul>
+
+            <div class="callout">
+                <strong>The Core Problem:</strong> Britain made mutually exclusive promises to three groups—Arab nationalists, Jewish nationalists, and European powers—during World War I. No amount of administrative sophistication could reconcile these commitments. When nationalist movements demanded fulfillment of their respective promises, the Mandate became a site of structural irresolvability. Both communities experienced British rule as favoritism toward the other. This created a foundation for the violence that followed.
+            </div>
+        </div>
+
+        <!-- IRELAND TAB -->
+        <div id="ireland" class="tab-content">
+            <h2>The Ireland Connection: Famine, Insurgency, and Imperial Personnel Transfer</h2>
+
+            <p>The British Mandate in Palestine must be understood in the context of Britain's experience in Ireland. The Great Famine, the War of Independence, and the deployment of Irish counterinsurgency officers to Palestine reveal how imperial violence becomes a portable technology and how empires weaken through cumulative crises.</p>
+
+            <h3>The Great Famine (An Gorta Mór, 1845–1852)</h3>
+
+            <p>The Irish Famine killed over one million people through starvation and disease, with another million emigrating, largely as a result of British colonial policies:</p>
+
+            <ul>
+                <li><strong>Continued Food Exports:</strong> While Irish peasants starved, British authorities and Irish landlords continued exporting grain, cattle, and other foodstuffs to Britain and abroad to meet financial obligations and market prices.</li>
+                <li><strong>Laissez-Faire Ideology:</strong> British economic policy prioritized market mechanisms over relief. Intervention in markets was seen as improper, even as a million people died.</li>
+                <li><strong>Land Tenure System:</strong> Irish tenant farmers had no security of tenure; landlords could evict at will. When the potato blight devastated the crop (the primary subsistence food), tenant farmers had no reserves and faced eviction for inability to pay rent.</li>
+                <li><strong>Inadequate Relief:</strong> Workhouse policies were deliberately harsh to discourage applications. Public works programs were underfunded. Private charity could not compensate for the scale of catastrophe.</li>
+            </ul>
+
+            <p>While not "torture" in the immediate sense, the Famine was a catastrophic failure of governance with colonial indifference—some historians describe it as an induced or even genocidal famine, given that policy choices directly caused the scale of death. Modern scholarship (particularly Cormac Ó Gráda, Christine Kinealy, and others) emphasizes that the Famine was a man-made disaster enabled by colonial structures, not merely a natural disaster exacerbated by bad luck.</p>
+
+            <p>The Famine's psychological legacy was immense. It generated deep anti-British sentiment across Irish society and the Irish diaspora (particularly in the United States). It became a symbol of British imperial indifference and colonial exploitation—a historical wound that shaped Irish politics and Irish-American politics for generations.</p>
+
+            <h3>The Irish War of Independence (1919–1921)</h3>
+
+            <p>After World War I, Irish nationalists launched a guerrilla war against British occupation forces. The Irish Republican Army (IRA) conducted ambushes, assassinations, and raids on British military and police installations. In response, Britain deployed specially recruited police forces—particularly the <strong>Royal Irish Constabulary (RIC) Auxiliary Division</strong> and the <strong>Black and Tans</strong>—who became notorious for brutal reprisals.</p>
+
+            <h4>The Black and Tans: Origins and Methods</h4>
+
+            <p>The Black and Tans were recruited primarily from demobilized British soldiers and Ulster veterans after World War I. Named for their mixed khaki and dark police uniforms, they were deployed in Ireland starting in 1920 to supplement the regular RIC in counterinsurgency operations. Their tactics included:</p>
+
+            <ul>
+                <li>Indiscriminate violence against civilians suspected of supporting the IRA</li>
+                <li>Burning of towns and villages (e.g., Balbriggan, Cork City)</li>
+                <li>Extrajudicial killings and disappearances</li>
+                <li>Torture and beatings in custody</li>
+                <li>Collective punishment of communities</li>
+            </ul>
+
+            <p>The Black and Tans became synonymous with British brutality in Ireland. Public outrage in Britain and internationally—combined with the IRA's sustained insurgency and the economic cost of occupation—forced Britain to negotiate. The 1921 Anglo-Irish Treaty resulted in Irish independence for the 26 southern counties (later the Irish Free State and then the Republic of Ireland) and partition of the north (Northern Ireland remained part of the UK).</p>
+
+            <div class="callout">
+                <strong>Key Historical Parallel:</strong> The Black and Tans' failure in Ireland demonstrated that military repression and police brutality could not suppress nationalist movements indefinitely. The violence became politically toxic, both domestically and internationally. Yet instead of learning that occupation was unsustainable, Britain's immediate response was to export these tactics and personnel to other colonies—particularly Palestine.
+            </div>
+
+            <h3>Personnel Transfer: From Ireland to Palestine</h3>
+
+            <p>After the Irish Treaty (1921), many disbanded or redundant members of the RIC, the Auxiliary Division, and other British security forces faced unemployment. Some were recruited or redeployed to other colonies, particularly Palestine. This wasn't accidental or unknown:</p>
+
+            <ul>
+                <li>On April 30, 1922, approximately 760 former RIC and Auxiliary personnel disembarked at Haifa to form the British Section of the Palestine Gendarmerie.</li>
+                <li>Between 75 and 95 percent of these men were former Black and Tans or Auxiliaries.</li>
+                <li>Their commander was Major-General Henry Hugh Tudor, who had directed police operations in Ireland, including the most controversial reprisals.</li>
+                <li>By the early 1940s, the majority of district commander positions in the Palestine Police were held by former Black and Tans.</li>
+            </ul>
+
+            <p>This was not a marginal presence. For two decades, the command structure of Palestinian policing was dominated by men trained and experienced in Irish counterinsurgency. They brought not just personnel but institutional tactics, interrogation methods, and a worldview that saw nationalist populations as threats to be suppressed through intimidation and violence.</p>
+
+            <h3>Britain's Post-WWII Exhaustion and Imperial Withdrawal</h3>
+
+            <p>Britain emerged from World War II victorious but economically devastated. The country was bankrupt, dependent on American loans, facing massive domestic reconstruction costs, and contending with nationalist uprisings across the empire simultaneously:</p>
+
+            <ul>
+                <li>India and Pakistan (independence 1947)</li>
+                <li>Palestine (Mandate abandoned 1948)</li>
+                <li>Malaya (counterinsurgency, eventual independence 1957)</li>
+                <li>Kenya (counterinsurgency, eventual independence 1964)</li>
+                <li>Cyprus (tensions, eventual independence 1960)</li>
+            </ul>
+
+            <p>The decolonization wave was inevitable, but it was accelerated by multiple factors:</p>
+
+            <ul>
+                <li><strong>Nationalist movements worldwide:</strong> Irish independence had set a precedent; nationalist elites elsewhere saw that determined insurgency could force withdrawal.</li>
+                <li><strong>Cold War pressure:</strong> Both US and USSR pressured Britain to withdraw from expensive colonial commitments; the US was more concerned with preventing Soviet expansion than maintaining British imperial control.</li>
+                <li><strong>Economic exhaustion:</strong> Britain simply could not afford to maintain garrisons and police forces to suppress multiple simultaneous nationalist uprisings.</li>
+                <li><strong>Loss of moral authority:</strong> The Famine's legacy, Irish independence, and growing international criticism of colonialism eroded Britain's ability to justify imperial rule as benevolent.</li>
+            </ul>
+
+            <p>The decision to refer Palestine to the UN in February 1947 and announce withdrawal by May 1948 was a pragmatic acceptance of unsustainability, not a principled choice. Britain could no longer afford to hold the Mandate against both Arab revolts and Jewish insurgency, nor could it reconcile its contradictory wartime promises.</p>
+
+            <h3>Why Ireland Became Pro-Palestinian</h3>
+
+            <p>Modern Ireland has become one of the most pro-Palestinian nations in the world, and this is directly connected to Irish historical experience with British colonialism. The parallels are obvious to Irish observers:</p>
+
+            <ul>
+                <li>Occupation by a militarily stronger power claiming historical ties</li>
+                <li>Displacement of the native population through settlement and land confiscation</li>
+                <li>Collective punishment and coercive policing</li>
+                <li>International backing for the occupying power despite documented abuses</li>
+            </ul>
+
+            <p>Ireland's support for Palestinian self-determination is rooted in recognition of structural parallels with their own anti-colonial struggle. This is not mere ideological sympathy but lived historical memory refracted through contemporary patterns.</p>
+
+            <div class="callout">
+                <strong>Summary:</strong> The Ireland-Palestine connection is not merely ideological—it is a direct transfer of personnel, tactics, and colonial methodology from one site of British occupation to another. Understanding this transfer clarifies why Palestinian nationalism encountered not just British military power but institutionalized counterinsurgency techniques honed in Ireland. The Famine's legacy of colonial violence, combined with the failure of Black and Tan repression in Ireland, set conditions for how Britain would govern Palestine—and ultimately, why it could not.
+            </div>
+        </div>
+
+        <!-- BLACK AND TANS TAB -->
+        <div id="blacktans" class="tab-content">
+            <h2>The Black and Tans in Palestine: The Invisible Third Variable</h2>
+
+            <p>The conventional historical narrative of the British Mandate presents a two-player conflict: Arabs versus Jews, with Britain awkwardly in the middle attempting to maintain order. This framing erases a critical third actor—a police force staffed by men trained in Irish counterinsurgency—who inflamed tensions with both communities and modeled systematic violence that both would study and, in different ways, adapt. Understanding the Black and Tans' role reshapes how one reads every subsequent conflict.</p>
+
+            <h3>The Force That Nobody Talked About</h3>
+
+            <h4>Establishment and Command Structure</h4>
+
+            <p>On April 30, 1922, 760 disbanded members of the Royal Irish Constabulary (RIC) and the Auxiliary Division arrived at Haifa as the British Section of the Palestine Gendarmerie—a specialized strike force and riot control unit. Between 75 and 95 percent of these men were former Black and Tans or Auxiliaries, the very units notorious for brutality in Ireland. Their commanding officer was Major-General Henry Hugh Tudor, who had directly overseen police operations in Ireland, including some of the most controversial reprisal campaigns.</p>
+
+            <p>Significantly, Winston Churchill—then Secretary of State for War and Air—explicitly directed their recruitment. Churchill also oversaw the deliberate attempt to obscure the connection to the Black and Tans through euphemistic naming and bureaucratic distancing, because British officials privately acknowledged the reputational damage such an association would cause. The cover-up failed immediately: Palestinian Arabs knew who these men were before they disembarked, and the force's actual composition became known within weeks.</p>
+
+            <p>By the early 1940s, the majority of district commander positions across Palestinian police were held by former Black and Tans. This was not a fringe presence; it was command-level authority over policing in both Arab and Jewish areas for nearly two decades.</p>
+
+            <h3>How Palestinians Perceived the Force</h3>
+
+            <h4>Immediate Recognition and Fear</h4>
+
+            <p>Palestinian Arabs had heard about the Black and Tans' reputation in Ireland through newspapers, word-of-mouth networks, and informal intelligence channels. When the force arrived in Palestine, the fear was immediate and rational. Douglas Duff, a former Black and Tan who rose to Police Inspector for Jerusalem, recorded being asked by a trembling Arab brothel-keeper whether he belonged to "the new Police which she had heard had been sent to Palestine because of the murders we had committed in some land from which the English had been driven because of our brutalities."</p>
+
+            <p>This question captures the transmission of historical memory: Palestinians knew, before any acts occurred, that these men represented a specific tradition of imperial violence. The fear was not paranoia; it was informed by documented history.</p>
+
+            <h4>The Terror Methods: Torture and Extrajudicial Violence</h4>
+
+            <p>Douglas Duff himself exemplifies the methods that became standard in Palestinian policing. Duff carried an Irish blackthorn baton, a Colt .45 pistol, and a Turkish whip. He later admitted in his own memoir to "going berserk" while charging unarmed crowds—his own candid description of losing control while wielding weapons against civilians. He introduced waterboarding and suspension torture in Palestinian prisons; other colonial police officers would later coin the term "duffing up" as slang for torture in direct reference to him.</p>
+
+            <p>Duff was eventually convicted and dismissed from the Palestine Police for "counseling and procuring" a subordinate to inflict bodily distress on a Palestinian prisoner—a formal administrative acknowledgment that torture was occurring under his direction, even if the full extent of British institutional involvement remains disputed.</p>
+
+            <h4>During the Arab Revolt (1936–1939)</h4>
+
+            <p>When the Arab Revolt erupted in 1936, the Palestine Police expanded dramatically to 2,800 officers and then beyond. The tactics used in Ireland returned in full force in Palestine:</p>
+
+            <ul>
+                <li>Home demolitions and collective punishment of villages</li>
+                <li>Warrantless arrests and administrative detention without trial</li>
+                <li>Beatings, torture in custody, and extrajudicial killings</li>
+                <li>Curfews and restrictions on movement</li>
+                <li>Hostage-taking to coerce information or compliance</li>
+            </ul>
+
+            <p>But here emerges a striking media contrast: While similar tactics in Ireland had been condemned in the British and American press as brutal, the same tactics in Palestine were largely praised as necessary "order-keeping." The Times of London and the New York Times ran headlines treating the Palestine Police as professional forces maintaining civilization against "Arab rebels," while the exact same methods in Ireland had been framed as shocking and illegitimate.</p>
+
+            <p>The British High Commissioner himself—the top civilian authority in Palestine—sent a secret telegram to London in September 1938 expressing concern about the emergence of "Black and Tan tendencies" in his own police force. This was an extraordinary admission: the High Commissioner was concerned that the force he nominally supervised was replicating the very methods that had failed in Ireland and created international outrage.</p>
+
+            <h4>Radicalization Effect</h4>
+
+            <p>The police brutality during the Arab Revolt accelerated radicalization among Palestinians. Each collective punishment, each torture session, each demolition of a home generated new recruits for rebel groups and deepened popular resentment against British rule. The insurgency that Britain's police actions were designed to suppress was actually being perpetuated by those actions. This is a documented pattern in counterinsurgency: coercive policing without legitimate authority tends to generate the resistance it purports to suppress.</p>
+
+            <h3>How Jews Perceived the Force—and Learned From It</h3>
+
+            <h4>Initial Protective Function</h4>
+
+            <p>The Jewish community's relationship with the Palestine Police was more complex than the Arab experience. In the early years, particularly in 1920–1921, the Palestine Police provided some protection to Jewish communities against Arab rioting. However, this protective function was inconsistent: the police also included Arab constables who sometimes participated in or failed to prevent anti-Jewish violence. The protection was tactical, not principled, and it shifted sharply depending on political circumstances.</p>
+
+            <h4>The Wailing Wall Incident (1928) and Shift to Opposition</h4>
+
+            <p>A pivotal moment came in 1928 with the so-called "Wailing Wall incident." Inspector Douglas Duff and four of his former Black and Tan colleagues forcibly removed a Jewish prayer partition that had been erected at the Western Wall (the Wailing Wall), a site sacred to Judaism. During this removal, they violently threw a Jewish man who was clinging to the wall into a valley. The assault was documented and became widely known in the Jewish community.</p>
+
+            <p>After this incident, Zionist leaders and Jewish organizations publicly called out the "brutal tactics" of the Palestine Police and drew explicit comparisons to Black and Tan methods in Ireland. Jewish newspapers and political figures used the incident to argue that the police force itself was an instrument of occupation and oppression, no different in character from what had operated in Ireland. Three assassination attempts were directed at Duff in the weeks following the incident—a violent but understandable response to state violence.</p>
+
+            <h4>Learning Torture Techniques</h4>
+
+            <p>Most chillingly: Jewish members of the Palestine Police later claimed they learned torture techniques from officers like Duff—specifically methods to torture without leaving physical marks or evidence. Whether this is literally accurate or retrospectively embellished, it symbolizes a crucial transfer: techniques of imperial violence were being studied and adopted by members of the colonized population who had access to or were complicit in state structures.</p>
+
+            <p>This is a documented pattern in colonial history: the colonized sometimes adopt the oppressor's methods, and the oppressor's tactics become available to emerging nationalist security forces. In Palestine, both emergent Israeli security services and Palestinian militant factions would develop their own versions of coercive interrogation and counterinsurgency—techniques they had observed being used against their own communities by the British.</p>
+
+            <h3>The Structural Role of the Black and Tans: Accelerating Escalation</h3>
+
+            <p>The Black and Tans were not neutral administrators maintaining order. They were active catalysts for escalation. Consider their role in three critical moments:</p>
+
+            <h4>1. Inflaming Arab Grievances and Accelerating Revolt</h4>
+
+            <p>The Arab Revolt of 1936–1939 did not occur in a vacuum. Palestinian Arabs had grievances rooted in immigration policy, land acquisition, and political marginalization—but the revolt was triggered and intensified by police brutality. The demolitions, arrests, torture, and killings by a police force openly staffed with men trained in Irish counterinsurgency legitimized the rebellion. Every act of police violence created new recruits for rebel organizations.</p>
+
+            <h4>2. Alienating Jews Through Incidents Like Wailing Wall</h4>
+
+            <p>The incident at the Wailing Wall in 1928 directly triggered the 1928–1929 riots that left 133 Jews and 116 Arabs dead. The police action was the immediate precipitant. This demonstrates how police violence could accelerate communal conflict rather than suppressing it.</p>
+
+            <h4>3. Modeling Asymmetric Repression</h4>
+
+            <p>Both Jewish and Arab nationalist factions observed how the Black and Tans and their successors operated. They noted the methods: torture, collective punishment, extrajudicial killing, administrative detention without trial. In different ways and at different scales, both communities studied these techniques. When the Palestinian Authority and Israeli security forces emerged, they would employ variants of these same methods—not as inherent to their cultures, but as learned practices from observing British imperial policing.</p>
+
+            <h3>The Admission from the Command Structure Itself</h3>
+
+            <p>Major-General Henry Hugh Tudor—the man who commanded the entire apparatus in Palestine—made an extraordinarily candid statement that reveals the structural function of his force:</p>
+
+            <p>Tudor stated that his gendarmes "had to leave Ireland because of the principle of Irish self-determination and were sent to Palestine to resist the Arab attempt at self-determination."</p>
+
+            <p>This is the machine's own commander admitting the structural irony: the same personnel deployed to crush Irish nationalism were redeployed to suppress Arab nationalism. The contradiction—that Britain claimed to champion self-determination in principle while using counterinsurgency forces to prevent it in practice—was evident to contemporary observers and remains evident in historical record.</p>
+
+            <h3>Why This Gets Omitted from Historical Accounts</h3>
+
+            <p>The Black and Tans as a factor in Palestinian history is systematically buried for several reasons:</p>
+
+            <ul>
+                <li><strong>Media Framing of the Era:</strong> Contemporary British and American press coverage praised the Palestine Police as professionals maintaining order while condemning identical tactics in Ireland as brutal. This archival record normalizes the violence and obscures its true character.</li>
+                <li><strong>Nationalist Historiographies:</strong> Both Arab and Jewish nationalist history centers their own communities as protagonists in a struggle for self-determination. This framing leaves the British occupier as a background condition rather than an active catalyst. The British become scenery, not agents.</li>
+                <li><strong>Political Sensitivity:</strong> Drawing the Ireland-Palestine parallel implicates Britain in a specific way that Western-aligned narratives prefer to avoid. It suggests that Western-backed occupation might employ systematic violence—an uncomfortable implication that undermines the legitimacy of current arrangements.</li>
+                <li><strong>Institutional Interest:</strong> Israeli security forces, having evolved from structures that operated under British occupation, may have institutional incentive to downplay the role of British counterinsurgency methods in shaping Palestinian resistance. Similarly, Palestinian and Arab historiography may frame resistance as purely indigenous rather than partly reactive to observable imperial violence.</li>
+            </ul>
+
+            <h3>The Honest Historical Reading</h3>
+
+            <p>The structural reality is this: Britain did not simply fail to keep peace in Mandate Palestine. Britain actively imported, institutionalized, and weaponized a policing culture—derived from Ireland—that made peace structurally impossible. By deploying men trained in Irish counterinsurgency, Britain transferred not just personnel but the logic of asymmetric repression. Both Arab and Jewish communities experienced this repression, both studied it, and both paid the cost when Britain finally withdrew in 1948, leaving two traumatized communities to resolve the contradictions Britain's occupation had created and intensified.</p>
+
+            <p>This is not to absolve Palestinians and Jews of agency in the violence that followed. Both communities made choices, some terrible. But understanding the third variable—the institutional violence of the occupation force itself—is essential to understanding why decolonization in Palestine took the form it did: not a negotiated handover but a chaotic withdrawal that left behind a territory convulsed by conflict.</p>
+
+            <h3>References and Citations</h3>
+
+            <div class="references">
+                <h3>Primary and Secondary Sources</h3>
+
+                <div class="reference-item">
+                    <span class="ref-num">[1]</span>
+                    <strong>The Irish Story.</strong> "The Black and Tans in Palestine: Irish Connections to the Palestine Police 1922–1948." Accessed 2026. https://www.theirishstory.com/2020/02/20/the-black-and-tans-in-palestine-irish-connections-to-the-palestine-police-1922-1948/
+                </div>
+
+                <div class="reference-item">
+                    <span class="ref-num">[2]</span>
+                    <strong>Journal of Palestine Studies.</strong> "Going Berserk: Black and Tans in Palestine." Palestine Studies, vol. X, no. X, 20XX. https://www.palestine-studies.org/en/node/78290
+                </div>
+
+                <div class="reference-item">
+                    <span class="ref-num">[3]</span>
+                    <strong>Journal of Palestine Studies.</strong> "The Image of Black and Tans in Late Mandate Palestine." Palestine Studies, vol. X, no. X, 20XX. https://www.palestine-studies.org/en/node/78336
+                </div>
+
+                <div class="reference-item">
+                    <span class="ref-num">[4]</span>
+                    <strong>NPR.</strong> "Why Ireland Is One of the Most Pro-Palestinian Nations in the World." NPR, March 14, 2024. https://www.npr.org/2024/03/14/1233395830/ireland-pro-palestinian
+                </div>
+
+                <div class="reference-item">
+                    <span class="ref-num">[5]</span>
+                    <strong>Wikipedia.</strong> "Black and Tans." Accessed 2026. https://en.wikipedia.org/wiki/Black_and_Tans
+                </div>
+
+                <div class="reference-item">
+                    <span class="ref-num">[6]</span>
+                    <strong>ABC Religion & Ethics.</strong> "The Hidden History of British War Crimes in Palestine." ABC, accessed 2026. https://www.abc.net.au/religion/hidden-history-british-war-crimes-palestine-campaign-for-apology/105878764
+                </div>
+
+                <div class="reference-item">
+                    <span class="ref-num">[7]</span>
+                    <strong>West Virginia University.</strong> "British Colonial Policing in Ireland and the Palestine Mandate." ETD (Electronic Theses and Dissertations), accessed 2026. https://researchrepository.wvu.edu/cgi/viewcontent.cgi?article=7052&context=etd
+                </div>
+
+                <div class="reference-item">
+                    <span class="ref-num">[8]</span>
+                    <strong>BBC News.</strong> "The Controversial Irish Force Sent to Police Palestine." BBC, February 2022. https://www.bbc.co.uk/news/uk-northern-ireland-60031090
+                </div>
+
+                <div class="reference-item">
+                    <span class="ref-num">[9]</span>
+                    <strong>Electronic Intifada.</strong> "How Britain Brought Waterboarding to Palestine." Electronic Intifada, accessed 2026. https://electronicintifada.net/blogs/david-cronin/how-britain-brought-waterboarding-palestine
+                </div>
+
+                <div class="reference-item">
+                    <span class="ref-num">[10]</span>
+                    <strong>RTÉ Century Ireland.</strong> "The Royal Irish Constabulary and Colonial Policing: Lessons and Legacies." RTÉ, accessed 2026. https://www.rte.ie/centuryireland/articles/the-royal-irish-constabulary-and-colonial-policing-lessons-and-legacies
+                </div>
+
+                <div class="reference-item">
+                    <span class="ref-num">[11]</span>
+                    <strong>English Historical Review.</strong> "Banality of Brutality: British Armed Forces and the Repression of..." Oxford University Press, vol. CXXIV, no. 507, 2009, pp. 313+. https://academic.oup.com/ehr/article/CXXIV/507/313/465867
+                </div>
+
+                <div class="reference-item">
+                    <span class="ref-num">[12]</span>
+                    <strong>Imperial War Museum.</strong> "Why Did Britain Promise Palestine to Arabs and Zionists?" IWM History, accessed 2026. https://www.iwm.org.uk/history/why-did-britain-promise-palestine-to-arabs-and-zionists
+                </div>
+
+                <div class="reference-item">
+                    <span class="ref-num">[13]</span>
+                    <strong>Wikipedia.</strong> "British Gendarmerie." Accessed 2026. https://en.wikipedia.org/wiki/British_Gendarmerie
+                </div>
+
+                <div class="reference-item">
+                    <span class="ref-num">[14]</span>
+                    <strong>JSTOR.</strong> "The British Police in Mandate Palestine and After." JSTOR Academic Database, accessed 2026. https://www.jstor.org/stable/26266182
+                </div>
+
+                <div class="reference-item">
+                    <span class="ref-num">[15]</span>
+                    <strong>Cambridge University Press.</strong> "When Palestinians Became Human Shields: Counterinsurgency, Racialization, and the Great Revolt 1936–1939." Comparative Studies in Society and History, vol. 62, no. 2, 2020, pp. 256–286. https://www.cambridge.org/core/journals/comparative-studies-in-society-and-history/article/when-palestinians-became-human-shields-counterinsurgency-racialization-and-the-great-revolt-19361939/C0A6393722B3B92BEB55382B27ED6467
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONTROLS SECTION -->
+    <div class="controls">
+        <button onclick="printPage()">📄 Print All</button>
+        <button onclick="startTTS()">🔊 Play Audio</button>
+        <button onclick="stopTTS()">⏹️ Stop Audio</button>
+        <div class="control-group">
+            <label for="tts-voices">Voice:</label>
+            <select id="tts-voices"></select>
+        </div>
+        <button onclick="toggleRSVP()">👁️ Start RSVP Reader</button>
+        <div class="control-group">
+            <label for="rsvp-wpm">Reading Speed (WPM):</label>
+            <input type="number" id="rsvp-wpm" value="250" min="100" max="600">
+        </div>
+    </div>
+
+    <!-- RSVP Reader Container -->
+    <div id="rsvp-container">
+        <p style="color: rgba(255, 255, 255, 0.7); margin-bottom: 1rem;">Rapid Serial Visual Presentation (RSVP) Reader</p>
+        <div id="rsvp-word"></div>
+        <div id="rsvp-controls">
+            <button onclick="pauseRSVP()">⏸️ Pause</button>
+            <button onclick="resumeRSVP()">▶️ Resume</button>
+            <button onclick="stopRSVP()">⏹️ Stop</button>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer>
+        <p><strong>Historical Analysis Resource</strong></p>
+        <p>This page presents documented historical analysis based on academic sources, journalistic investigations, and primary documents.</p>
+        <p>For educational purposes. Last updated: February 2026</p>
+    </footer>
+
+    <script>
+        // Tab functionality
+        function openTab(evt, tabName) {
+            const tabcontents = document.getElementsByClassName("tab-content");
+            for (let i = 0; i < tabcontents.length; i++) {
+                tabcontents[i].classList.remove("active");
+            }
+            const tabbuttons = document.getElementsByClassName("tab-button");
+            for (let i = 0; i < tabbuttons.length; i++) {
+                tabbuttons[i].classList.remove("active");
+            }
+            document.getElementById(tabName).classList.add("active");
+            evt.currentTarget.classList.add("active");
+        }
+
+        // Default tab
+        document.querySelectorAll(".tab-button")[0].click();
+
+        // TTS (Text-to-Speech) functionality
+        let utterance;
+        const voicesSelect = document.getElementById('tts-voices');
+        let voices = [];
+
+        function populateVoices() {
+            voices = speechSynthesis.getVoices();
+            voicesSelect.innerHTML = '';
+            voices.forEach((voice, i) => {
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = `${voice.name} (${voice.lang})`;
+                voicesSelect.appendChild(option);
+            });
+        }
+
+        speechSynthesis.onvoiceschanged = populateVoices;
+        populateVoices();
+
+        function getFullText() {
+            let text = '';
+            const tabs = document.querySelectorAll('.tab-content');
+            tabs.forEach(tab => {
+                text += tab.innerText + '\n\n';
+            });
+            return text;
+        }
+
+        function startTTS() {
+            if (utterance) speechSynthesis.cancel();
+            utterance = new SpeechSynthesisUtterance(getFullText());
+            const selectedVoice = voices[voicesSelect.value];
+            if (selectedVoice) {
+                utterance.voice = selectedVoice;
+            }
+            utterance.rate = 1;
+            speechSynthesis.speak(utterance);
+        }
+
+        function stopTTS() {
+            speechSynthesis.cancel();
+        }
+
+        // RSVP (Rapid Serial Visual Presentation) functionality
+        let rsvpInterval;
+        let rsvpWords = [];
+        let rsvpIndex = 0;
+        let rsvpPaused = false;
+
+        function toggleRSVP() {
+            const container = document.getElementById('rsvp-container');
+            if (container.style.display === 'none' || container.style.display === '') {
+                const text = getFullText().replace(/[^\w\s']/g, ' ').split(/\s+/);
+                rsvpWords = text.filter(word => word.trim().length > 0);
+                rsvpIndex = 0;
+                rsvpPaused = false;
+                container.style.display = 'block';
+                startRSVP();
+            } else {
+                stopRSVP();
+                container.style.display = 'none';
+            }
+        }
+
+        function startRSVP() {
+            const wpm = parseInt(document.getElementById('rsvp-wpm').value) || 250;
+            const delay = 60000 / wpm;
+            rsvpInterval = setInterval(() => {
+                if (!rsvpPaused && rsvpIndex < rsvpWords.length) {
+                    document.getElementById('rsvp-word').textContent = rsvpWords[rsvpIndex];
+                    rsvpIndex++;
+                } else if (rsvpIndex >= rsvpWords.length) {
+                    stopRSVP();
+                }
+            }, delay);
+        }
+
+        function pauseRSVP() {
+            rsvpPaused = true;
+        }
+
+        function resumeRSVP() {
+            rsvpPaused = false;
+        }
+
+        function stopRSVP() {
+            clearInterval(rsvpInterval);
+            document.getElementById('rsvp-word').textContent = '';
+            rsvpIndex = 0;
+            document.getElementById('rsvp-container').style.display = 'none';
+        }
+
+        // Print functionality
+        function printPage() {
+            window.print();
+        }
+
+        // Keyboard shortcuts hint
+        document.addEventListener('keydown', function(e) {
+            if (e.key === '?' && !e.ctrlKey && !e.metaKey) {
+                alert('Keyboard Shortcuts:\n- Use Tab buttons to navigate sections\n- Audio playback available via controls\n- RSVP reader for speed reading\n- Ctrl+P to print');
+            }
+        });
+    </script>
+</body>
+</html>
