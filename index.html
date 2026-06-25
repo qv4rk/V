@@ -1,11 +1,192 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="refresh" content="0; url=Manifold%20Atlas.html">
-<title>Manifold Atlas</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FeistTech</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #00f3ff;
+    --secondary: #bc13fe;
+    --accent: #ff6b35;
+    --bg: #050510;
+    --bg2: #0a0a1a;
+    --border: rgba(0,243,255,0.2);
+    --text: #c8d0dc;
+    --dim: #5a6070;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Roboto Mono', monospace;
+    min-height: 100vh;
+  }
+  header {
+    padding: 2.5rem 2rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: baseline;
+    gap: 1.5rem;
+  }
+  .logo {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.6rem;
+    font-weight: 700;
+    background: linear-gradient(90deg, var(--primary), var(--secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: 0.1em;
+  }
+  .logo-sub {
+    font-size: 0.7rem;
+    color: var(--dim);
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+  }
+  main {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem 4rem;
+  }
+  .section-label {
+    font-size: 0.65rem;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: var(--dim);
+    margin-bottom: 1rem;
+    margin-top: 2.5rem;
+  }
+  .section-label:first-child { margin-top: 0; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1rem;
+  }
+  .card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1.4rem 1.6rem;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    transition: border-color 0.2s, background 0.2s, transform 0.15s;
+    cursor: pointer;
+  }
+  .card:hover {
+    border-color: var(--primary);
+    background: rgba(0,243,255,0.04);
+    transform: translateY(-2px);
+  }
+  .card-icon {
+    font-size: 1.4rem;
+    margin-bottom: 0.75rem;
+    display: block;
+  }
+  .card-name {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--primary);
+    letter-spacing: 0.08em;
+    margin-bottom: 0.4rem;
+  }
+  .card-desc {
+    font-size: 0.75rem;
+    color: var(--dim);
+    line-height: 1.6;
+  }
+  /* Kalidascope sub-links */
+  .card-links {
+    margin-top: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .card-link {
+    font-size: 0.7rem;
+    color: var(--primary);
+    text-decoration: none;
+    opacity: 0.7;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 0;
+    border-top: 1px solid rgba(0,243,255,0.08);
+  }
+  .card-link:first-child { border-top: none; margin-top: 0.5rem; }
+  .card-link:hover { opacity: 1; }
+  .card-link::before { content: '→'; font-size: 0.65rem; }
+  /* Featured card */
+  .card.featured {
+    border-color: rgba(188,19,254,0.4);
+    grid-column: span 2;
+  }
+  .card.featured .card-name { color: var(--secondary); }
+  .card.featured:hover { border-color: var(--secondary); background: rgba(188,19,254,0.04); }
+  @media (max-width: 600px) {
+    .card.featured { grid-column: span 1; }
+    header { flex-direction: column; gap: 0.4rem; }
+  }
+</style>
 </head>
 <body>
-<script>window.location.replace("Manifold%20Atlas.html");</script>
+
+<header>
+  <span class="logo">FEISTTECH</span>
+  <span class="logo-sub">Systems &amp; Research</span>
+</header>
+
+<main>
+
+  <div class="section-label">Tools</div>
+  <div class="grid">
+
+    <a href="Manifold Atlas.html" class="card featured">
+      <span class="card-icon">🌍</span>
+      <div class="card-name">Atlas</div>
+      <div class="card-desc">Geographic event viewer. Navigate historical nodes on an interactive globe with a time dial.</div>
+    </a>
+
+    <a href="apps/webapps/tts/feisttech_reader_v10.html" class="card">
+      <span class="card-icon">🔊</span>
+      <div class="card-name">Reader</div>
+      <div class="card-desc">Multi-voice TTS reader for text, markdown, and PDF. Supports speaker tags for character voices.</div>
+    </a>
+
+    <a href="apps/webapps/tts/rsvp.html" class="card">
+      <span class="card-icon">⚡</span>
+      <div class="card-name">RSVP Reader</div>
+      <div class="card-desc">Rapid serial visual presentation speed reader.</div>
+    </a>
+
+    <a href="apps/webapps/solsys.html" class="card">
+      <span class="card-icon">🪐</span>
+      <div class="card-name">Solar System</div>
+      <div class="card-desc">Interactive solar system visualization.</div>
+    </a>
+
+  </div>
+
+  <div class="section-label">Kalidascope</div>
+  <div class="grid">
+
+    <div class="card">
+      <span class="card-icon">✏️</span>
+      <div class="card-name">Kalidascope</div>
+      <div class="card-desc">Font &amp; vector design tools.</div>
+      <div class="card-links">
+        <a class="card-link" href="apps/webapps/kalidascope/vectorfontskalidascope.html">Vector Fonts</a>
+        <a class="card-link" href="apps/webapps/kalidascope/klidascopetopgunforge.html">Top Gun Forge</a>
+        <a class="card-link" href="apps/webapps/kalidascope/fontforge5.html">Font Forge 5</a>
+      </div>
+    </div>
+
+  </div>
+
+</main>
+
 </body>
 </html>
