@@ -83,10 +83,41 @@ canvas { display:block; width:100vw; height:100vh; }
 #sandbox-overlay { position:absolute; inset:0; display:none; align-items:center; justify-content:center; background:rgba(2,2,12,.85); z-index:25; backdrop-filter:blur(4px); flex-direction:column; gap:14px; }
 .sb-title { color:var(--gold); font-size:22px; letter-spacing:4px; }
 .sb-sub { color:#3a5060; font-size:11px; letter-spacing:2px; max-width:360px; text-align:center; line-height:1.8; }
+
+/* ── Consistent home link ── */
+#home-btn {
+  position:absolute; top:14px; left:14px; z-index:35;
+  background:var(--panel); border:1px solid rgba(201,168,76,.3);
+  color:var(--gold); padding:8px 14px;
+  font-family:inherit; font-size:9px; letter-spacing:2px; text-transform:uppercase;
+  text-decoration:none; border-radius:2px; backdrop-filter:blur(8px);
+  transition:background .2s, color .2s;
+  -webkit-tap-highlight-color:transparent; touch-action:manipulation;
+}
+#home-btn:hover,#home-btn:active { background:rgba(201,168,76,.12); }
+
+/* ── Mobile: raise bottom elements above browser chrome ───────────────────
+   Chrome/Edge Android has a ~56 px navigation bar at the bottom that
+   covers absolutely-positioned elements. Firefox puts its UI at the top
+   so this fix doesn't affect it. */
+@media (max-width:700px) {
+  #btm-btns  { bottom: max(80px, calc(env(safe-area-inset-bottom, 0px) + 24px)); }
+  #loc-btns  { bottom: max(80px, calc(env(safe-area-inset-bottom, 0px) + 24px)); }
+  #time-bar  { bottom: max(144px, calc(env(safe-area-inset-bottom, 0px) + 88px)); }
+  #layers    { bottom: max(144px, calc(env(safe-area-inset-bottom, 0px) + 88px)); }
+  #zoom-btns { bottom: max(144px, calc(env(safe-area-inset-bottom, 0px) + 88px)); }
+  #time-bar  { min-width:92vw; padding:9px 12px; }
+  #hud       { display:none; }
+  #sky-hud   { display:none; }
+  .mdbtn     { padding:8px 12px; font-size:9px; }
+}
 </style>
 </head>
 <body>
 <canvas id="cv"></canvas>
+
+<!-- Consistent home link — top-left, never hidden by bottom browser chrome -->
+<a href="../index.html" id="home-btn">← Home</a>
 
 <div id="mode-bar">
   <button class="mdbtn on" data-mode="solar">☀ Solar System</button>

@@ -32,6 +32,37 @@
   }
   .node-jump:hover { color: var(--ink); border-color: var(--ink-dim); }
   .node-jump option { background: #0c0a07; color: #d4c39a; }
+
+  /* ── Consistent home link (topbar + Atrium) ── */
+  .home-link {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--ink-dim); text-decoration: none;
+    background: var(--panel); border: 1px solid var(--panel-edge);
+    padding: 7px 12px; border-radius: 2px;
+    transition: color .2s, border-color .2s;
+    pointer-events: auto;
+    white-space: nowrap;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  .home-link:hover { color: var(--ink); border-color: var(--ink-dim); }
+
+  /* Atrium also gets the fixed home button always visible at top-left */
+  #atrium-home {
+    position: absolute; top: 18px; left: 18px; z-index: 40;
+  }
+
+  /* ── Mobile: ensure Enter button clears browser chrome ── */
+  @media (max-width: 780px) {
+    /* themes.css raises .footer, but also ensure Atrium home is reachable */
+    #atrium .enter-btn {
+      padding: 14px 32px;
+      font-size: 12px;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+  }
 </style>
 </head>
 <body>
@@ -43,6 +74,8 @@
 
   <!-- ════════════════ ATRIUM (homepage) ════════════════ -->
   <section id="atrium" class="view on" data-screen-label="00 Atrium">
+    <!-- Always-visible home link in top-left — not hidden by bottom browser chrome -->
+    <a href="index.html" class="home-link" id="atrium-home">← FeistTech</a>
     <div class="marquee">
       <h1>Manifold Atlas</h1>
     </div>
@@ -73,6 +106,7 @@
 
   <!-- ════════════════ CHROME ════════════════ -->
   <div class="topbar" id="chrome-bar" style="display:none">
+    <a href="index.html" class="home-link">← Home</a>
     <div class="brand">
       MANIFOLD
       <span class="dot">·</span>

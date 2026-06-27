@@ -535,4 +535,32 @@ body::after {
   .timebar { min-width:92vw; padding:10px 14px; }
   .dossier { width:100vw; }
   #atrium .marquee h1 { font-size:18px; }
+
+  /* ── Chrome/Edge Android bottom navigation bar fix ─────────────────────
+     The browser chrome on Chrome/Edge Android is ~56 px tall and sits at
+     the bottom of the viewport, covering absolutely-positioned elements
+     at low bottom values. Firefox puts its UI at the top so this is not
+     needed there. We raise every bottom-anchored element enough to clear
+     the bar. env(safe-area-inset-bottom) handles the iOS home indicator. */
+
+  /* Atrium footer (the "Enter the Atlas →" button) */
+  #atrium .footer {
+    bottom: max(88px, calc(env(safe-area-inset-bottom, 0px) + 24px));
+  }
+
+  /* Time bar */
+  .timebar {
+    bottom: max(88px, calc(env(safe-area-inset-bottom, 0px) + 24px));
+  }
+
+  /* Sky locator bump to stay above the timebar */
+  .sky-locator {
+    bottom: max(190px, calc(env(safe-area-inset-bottom, 0px) + 130px));
+  }
+
+  /* Topbar: collapse theme picker on narrow screens to save space */
+  .theme-picker .lbl { display:none; }
+  .topbar { padding:12px 14px; }
+  .view-tabs button { padding:7px 10px; font-size:8px; letter-spacing:1.5px; }
+  .brand { font-size:10px; letter-spacing:.2em; }
 }
