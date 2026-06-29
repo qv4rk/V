@@ -20,6 +20,26 @@
   #app  { position: relative; z-index: 1; background: transparent !important; }
   #atrium { background: transparent !important; }
   #atlas  { background: transparent !important; }
+  /* ── Node search ── */
+  .nl-search-wrap {
+    display: flex; align-items: center; gap: 4px;
+    padding: 6px 8px; border-bottom: 1px solid var(--panel-edge);
+  }
+  .nl-search {
+    flex: 1; background: transparent;
+    border: none; outline: none;
+    font-family: 'Space Mono', monospace;
+    font-size: 9px; letter-spacing: 1.5px;
+    color: var(--ink); caret-color: var(--ink);
+  }
+  .nl-search::placeholder { color: var(--ink-mute); }
+  .nl-search-clear {
+    background: transparent; border: none;
+    color: var(--ink-mute); cursor: pointer; font-size: 10px; padding: 0 2px;
+  }
+  .nl-search-clear:hover { color: var(--ink-dim); }
+  .nl-item.dim { opacity: .22; pointer-events: none; }
+
   /* Node jump dropdown */
   .node-jump {
     background: var(--panel); color: var(--ink-dim);
@@ -146,6 +166,11 @@
   <!-- Node list (atlas) -->
   <div class="node-list atlas-only" style="display:none">
     <div class="nl-head">DOSSIERS · NODES</div>
+    <div class="nl-search-wrap">
+      <input type="text" id="node-search" class="nl-search"
+             placeholder="Search tags, topics…" autocomplete="off" spellcheck="false">
+      <button class="nl-search-clear" id="node-search-clear" title="Clear">✕</button>
+    </div>
     <div id="nl-list"></div>
   </div>
 

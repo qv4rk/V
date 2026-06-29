@@ -57,6 +57,8 @@ window.MA = window.MA || {};
     setDate(jdt)    { this.jd = jdt; }
     setSpin(on)     { this.spin = !!on; }
     setActive(node) { this.activeNode = node; }
+    // Pass a Set of IDs to highlight; null clears the filter (all nodes full opacity).
+    setHighlightFilter(idSet) { this.highlightIds = idSet || null; }
 
     resize() {
       const rect = this.cv.getBoundingClientRect();
@@ -361,6 +363,9 @@ window.MA = window.MA || {};
       projected.forEach(({n, p}) => {
         const isActive = this.activeNode && this.activeNode.id === n.id;
         const isHover  = this.hoverNode && this.hoverNode.id === n.id;
+        // Search filter: dim nodes not in the active result set
+        const isDimmed = this.highlightIds && !this.highlightIds.has(n.id) && !isActive;
+
         const nodeJd = MA.ymdToJd(n.date.year, n.date.month, n.date.day);
         const yrsAway = Math.abs(nodeJd - activeJd) / 365.25;
         // Node is "alive" when the dial is near its date
@@ -375,12 +380,13 @@ window.MA = window.MA || {};
         const glowStr = isActive ? 1
                       : isHover  ? 0.7
                       : 0.25 + proximity * 0.65;
-        ctx.shadowBlur  = 14 * glowStr * p.depth;
+        ctx.shadowBlur  = isDimmed ? 0 : 14 * glowStr * p.depth;
         ctx.shadowColor = color;
 
         // Faint disc
         ctx.fillStyle = color;
-        ctx.globalAlpha = (0.55 + 0.45 * p.depth) * (0.4 + 0.6 * Math.max(proximity, isHover ? 1 : 0.3));
+        const baseAlpha = (0.55 + 0.45 * p.depth) * (0.4 + 0.6 * Math.max(proximity, isHover ? 1 : 0.3));
+        ctx.globalAlpha = isDimmed ? baseAlpha * 0.18 : baseAlpha;
         ctx.beginPath();
         ctx.arc(p.x, p.y, r, 0, Math.PI*2);
         ctx.fill();

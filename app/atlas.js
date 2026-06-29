@@ -123,6 +123,45 @@ window.MA = window.MA || {};
         }
         sel.value = '';
       });
+      // Node search
+      const searchEl  = document.getElementById('node-search');
+      const clearBtn  = document.getElementById('node-search-clear');
+      if (searchEl) {
+        searchEl.addEventListener('input', () => this._applySearch(searchEl.value));
+        searchEl.addEventListener('keydown', e => { if (e.key === 'Escape') { searchEl.value = ''; this._applySearch(''); } });
+      }
+      if (clearBtn) clearBtn.addEventListener('click', () => {
+        if (searchEl) searchEl.value = '';
+        this._applySearch('');
+      });
+    }
+
+    /* ── Boolean tag/content search ── */
+    _applySearch(raw) {
+      const terms = raw.trim().toLowerCase().split(/\s+/).filter(Boolean);
+      const items = document.querySelectorAll('.nl-item');
+      if (!terms.length) {
+        items.forEach(li => li.classList.remove('dim'));
+        if (this.earth) this.earth.setHighlightFilter(null);
+        return;
+      }
+      const matchIds = new Set();
+      items.forEach(li => {
+        const art = this.articles.find(a => a.id === li.dataset.id);
+        if (!art) { li.classList.add('dim'); return; }
+        const blob = [
+          art.title, art.excerpt, art.type,
+          (art.tags || []).join(' '),
+          (art.mechanism || []).join(' '),
+          (art.empire || ''),
+          (art.content || ''),
+          (art.location && art.location.name) || '',
+        ].join(' ').toLowerCase();
+        const match = terms.every(t => blob.includes(t));
+        li.classList.toggle('dim', !match);
+        if (match) matchIds.add(art.id);
+      });
+      if (this.earth) this.earth.setHighlightFilter(matchIds);
     }
 
     /* ── Dial wiring (atrium + corner) ── */
@@ -256,6 +295,16 @@ window.MA = window.MA || {};
       }
       this.earth.setNodes(this.articles);
       this._renderNodeList();
+      // Deep-link: Manifold Atlas.html#node-{id}
+      const hash = window.location.hash;
+      if (hash && hash.startsWith('#node-')) {
+        const nodeId = hash.slice(6);
+        const art = this.articles.find(a => a.id === nodeId);
+        if (art) {
+          if (this.view === 'atrium') this.setView('atlas');
+          setTimeout(() => this.openArticle(art), 200);
+        }
+      }
     }
 
     _renderNodeList() {
@@ -339,7 +388,18 @@ window.MA = window.MA || {};
         <span>COORDS · <b>${art.location.lat.toFixed(2)}, ${art.location.lon.toFixed(2)}</b></span>
       `;
       root.querySelector('.excerpt').textContent = art.excerpt || '';
-      root.querySelector('.body').innerHTML = mdToHtml(art.content || '');
+      const bodyEl = root.querySelector('.body');
+      bodyEl.innerHTML = mdToHtml(art.content || '');
+      // Article link
+      if (art.article_url) {
+        const link = document.createElement('a');
+        link.href = art.article_url;
+        link.target = '_blank';
+        link.rel = 'noopener';
+        link.className = 'article-link-btn';
+        link.textContent = 'Read Full Article with TTS →';
+        bodyEl.appendChild(link);
+      }
 
       // Connections
       const chipsHost = root.querySelector('.conn-chips');

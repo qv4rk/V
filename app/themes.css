@@ -476,6 +476,16 @@ body::after {
 .dossier .scroll { scrollbar-width:thin; scrollbar-color: var(--panel-edge) transparent; }
 .dossier .body::-webkit-scrollbar { width:5px; }
 .dossier .body::-webkit-scrollbar-thumb { background:var(--panel-edge); }
+.article-link-btn {
+  display:block; margin-top:2rem;
+  font-family:'Space Mono',monospace;
+  font-size:9px; letter-spacing:2px; text-transform:uppercase;
+  color:var(--accent); text-decoration:none;
+  border:1px solid rgba(201,168,76,.3); border-radius:2px;
+  padding:8px 14px; text-align:center;
+  transition:background .2s, border-color .2s;
+}
+.article-link-btn:hover { background:rgba(201,168,76,.07); border-color:var(--accent); }
 
 /* Article nodes list (in atlas, browse mode) */
 .node-list {

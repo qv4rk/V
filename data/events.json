@@ -1,7 +1,98 @@
 [
   {
+    "id": "diaspora-70ce",
+    "title": "70 CE Jerusalem Siege",
+    "source": "necronomy",
+    "date": {
+      "year": 70,
+      "month": 8,
+      "day": 30
+    },
+    "location": {
+      "lat": 31.7683,
+      "lon": 35.2137,
+      "name": "Jerusalem"
+    },
+    "type": "military",
+    "nodeColor": "#8a1c1c",
+    "nodeSize": 0.6,
+    "tags": [
+      "diaspora",
+      "roman-empire",
+      "genetic-split",
+      "permanent-administration"
+    ],
+    "connections": [
+      "land-code-1858"
+    ],
+    "excerpt": "Roman siege creates permanent population split. Those who fled preserved identity through ritual. Those who stayed evolved into Palestinian fellahin. 2,000 years of mediation revenue.",
+    "content": "# The 70 CE Diaspora: Manufacturing Permanence\n\nWhen Titus breached Jerusalem's walls in 70 CE, the genetic code of a people fractured into two branches. Branch A scattered into the diaspora, preserving identity through ritual and law. Branch B stayed, their Hebrew roots growing into the soil that would later bear Muslim and Christian fruit.\n\nThis wasn't just conquest. It was the creation of a permanent administrative problem. The scattered branch would spend millennia negotiating for return. The rooted branch would spend millennia defending against displacement. Both branches would generate endless revenue for mediators, administrators, legal scholars, and eventually, military contractors.\n\nGenetic studies confirm what history obscured: Palestinians and Jews share the same Levantine foundation. The \"Zionist\" displacing a cousin. The \"Resistance Fighter\" striking a returned relative. The separation is cultural software running on shared biological hardware.\n\nThe necronomy begins not in the siege itself, but in the permanence of the split. No resolution. No reunion. Just endless administration of an unresolved wound that both sides have learned to monetize.",
+    "article_url": "articles/diaspora-70ce.html"
+  },
+  {
+    "id": "land-code-1858",
+    "title": "1858 Ottoman Land Code",
+    "source": "necronomy",
+    "date": {
+      "year": 1858,
+      "month": 4,
+      "day": 21
+    },
+    "location": {
+      "lat": 41.0082,
+      "lon": 28.9784,
+      "name": "Constantinople"
+    },
+    "type": "legal",
+    "nodeColor": "#c5a059",
+    "nodeSize": 0.5,
+    "tags": [
+      "ottoman-empire",
+      "land-registration",
+      "dispossession",
+      "bureaucratic-capture"
+    ],
+    "connections": [
+      "diaspora-70ce",
+      "skid-row-1976"
+    ],
+    "excerpt": "Ottoman bureaucracy requires land registration. Fellahin can't navigate system. Debt leads to coercion leads to land loss. Administrative dispossession without conquest.",
+    "content": "# The 1858 Land Code: Bureaucracy as Weapon\n\nThe Ottoman Empire issued a land code requiring formal registration. Sounds reasonable. Except the fellahin—Palestinian peasants who'd worked the same land for generations—couldn't navigate the bureaucratic maze. Registration required Ottoman Turkish literacy, travel to distant offices, fees they couldn't afford.\n\nSo they borrowed. Debt became coercion. Coercion became transfer. Within decades, land that had been held communally for centuries was registered to urban elites and European creditors who'd never touched a plow.\n\nThis is necronomy in its purest form: create an administrative requirement that the target population can't meet, then profit from their failure to comply. No soldiers needed. No conquest declared. Just paperwork, fees, and the inexorable logic of bureaucratic exclusion.\n\nThe system worked so well it became a template. Replace \"land registration\" with \"zoning codes,\" \"credit scores,\" \"occupational licensing,\" or \"immigration documentation\" and the mechanism remains identical: manufacture complexity, then monetize the inability to navigate it.",
+    "article_url": "articles/land-code-1858.html"
+  },
+  {
+    "id": "mao-1966",
+    "title": "Cultural Revolution Launch",
+    "source": "necronomy",
+    "date": {
+      "year": 1966,
+      "month": 5,
+      "day": 16
+    },
+    "location": {
+      "lat": 39.9042,
+      "lon": 116.4074,
+      "name": "Beijing"
+    },
+    "type": "cultural",
+    "nodeColor": "#7c4a7c",
+    "nodeSize": 0.6,
+    "tags": [
+      "revolutionary-necronomy",
+      "permanent-campaign",
+      "manufactured-crisis"
+    ],
+    "connections": [
+      "opium-wars-1839"
+    ],
+    "excerpt": "Mao launches permanent revolution to maintain crisis state. Creates endless need for Party intervention. Crisis becomes the system.",
+    "content": "# The Cultural Revolution: Revolution as Business Model\n\nMao's Cultural Revolution (1966-1976) wasn't about achieving communism—it was about institutionalizing permanent crisis as a governance mechanism. By declaring continuous revolution, Mao ensured the Party would always be necessary to manage the chaos it created.\n\nThe Red Guards weren't solving problems; they were generating demand for administrative intervention. Every struggle session, every denunciation, every forced confession created work for Party officials, required documentation, needed oversight.\n\nThe necronomy is visible in the structure: you can never finish revolutionizing. Any declaration of victory would eliminate the justification for Party control. So the revolution must be permanent, the enemy must be eternal, and the crisis must never resolve.\n\nWhen the Cultural Revolution 'ended' in 1976, it didn't actually end—it just transformed. The mechanisms of surveillance, denunciation, and administrative control remained. The revolution became the market reform era, but the fundamental necronomy persisted: manufacture crisis, then profit from managing it.",
+    "article_url": "articles/mao-1966.html"
+  },
+  {
     "id": "n01",
     "title": "The Ledger and the Mob: Galilee Under the Pashas, 1831-1840",
+    "source": "manifold",
     "date": {
       "year": 1834,
       "month": 4,
@@ -12,23 +103,24 @@
       "lon": 35.496,
       "name": "Safed & the Galilee, Ottoman Syria"
     },
-    "empire": "Egyptian occupation of Ottoman Syria",
-    "mechanism": [
+    "type": "Egyptian occupation of Ottoman Syria",
+    "nodeColor": "#a67041",
+    "nodeSize": 0.85,
+    "tags": [
       "conscription",
       "disarmament",
       "toll-confiscation",
       "centralization",
       "communal-violence"
     ],
-    "nodeColor": "#a67041",
-    "nodeSize": 0.85,
     "connections": [
       "n05"
     ],
-    "content": "In 1831, Ibrahim Pasha marched his army into Greater Syria and ended a century of Ottoman rule by proxy. Governance there had been outsourced for decades to local strongmen — Ahmad al-Jazzar Pasha in Acre, Muhammad Abu Nabbut in Jaffa — men who ran their own fiefdoms with their own muscle and their own tax arrangements, answering to Istanbul mostly in name. Ibrahim Pasha arrived with a modernizing army and a centralized bureaucracy built to replace that system with direct rule from Cairo. The new administration came with conscription quotas, requisition orders, and a tax structure that bypassed local intermediaries entirely. It also began stripping income from the people who had been collecting it informally for generations: Muhammad Ali's officials took over the administration of religious endowments across Syria, curbed the authority of the local ulama, and ended the portage and toll fees that Bedouin tribes and the Abu Ghosh family had long collected along the roads near Jerusalem.\n\nOn April 25, 1834, Ibrahim Pasha summoned the leaders of Jerusalem and Nablus and laid out what he needed: two hundred conscripts from Jerusalem to start, thirty-five hundred more from the Jerusalem and Nablus districts combined, five hundred from Hebron. He asked the notables directly — since they were Muslims at war with Christian nations, wasn't a real standing army a necessity? They didn't disagree with the principle. They told him their men were already trained fighters, the same as their fathers before them, ready to shed blood defending their land from religious enemies when the moment required it. That wasn't the same thing Ibrahim Pasha was asking for, and he told them so: he wanted professional, permanent soldiers, not what he called a herd of useless men called up only when trouble arrived at the door. The two sides were describing the same word — service — and meaning two different arrangements by it.\n\nFor a Muslim peasant household, the old arrangement had run a particular way: a man's sons served when called, and the neighbors who didn't fight paid a tax instead, the jizya, while whatever clan or family controlled the roads nearby added its own trickle of income from the tolls. Egyptian centralization left the costly half of that arrangement untouched — the sons still went to war — while dismantling the half that had offset it, redirecting the Abu Ghosh family's toll income and the Bedouin tribes' portage fees into the new treasury in Cairo. The jizya itself wasn't abolished; Jews and Christians went on paying it. But the old bargain had never just been about a tax on someone else's ledger. It was about the rest of the local economy that had grown up around military service being the price one community paid and exemption being the price the other one paid instead — and only one side of that arrangement was now being touched.\n\nBy May, the peasantry had stopped waiting to find out how this would resolve. On May 19, the notables of Jerusalem and Nablus told Egyptian officials they could no longer conscript anyone or collect the new taxes, because the men of the surrounding villages had taken up arms and fled into the mountains, out of reach. Qasim al-Ahmad, sheikh of the Jamma'in subdistrict near Nablus and recently removed from his post, organized the revolt that followed from his home in Beit Wazan, joined there by Abdullah al-Jarrar of Sanur and Isa al-Barqawi of Shufa. In the Hebron hills, the fighting was led by Isa al-Amr; in Bani Zeid, by Abd al-Jabir Barghouti. Around Acre and Haifa, the rebels were commanded by Mas'ud al-Madi. Ten thousand men from Nablus, Hebron, Jerusalem, and Gaza converged on Jerusalem and tried to take it by force in early May. In the Galilee, Aqil Agha — who had defected out of Ibrahim Pasha's own service — led Hawwara irregulars fighting alongside unnamed local sheikhs near Safed. Days after the siege of Jerusalem began, an earthquake struck the city and damaged infrastructure across the region, on top of everything else already in motion.\n\nSafed, already strained by the unrest, took the political chaos and the aftershocks together. On Sunday, June 15, 1834 — the day after Shavuot — a local preacher named Muhammad Damoor, according to accounts later relayed to the British traveler Alexander Kinglake, told a crowd that true believers should rise up and take the gold and silver of the Jewish community. For thirty-three days, until July 17, the Jewish quarter was looted, burned, and desecrated. Later estimates cite around 500 Torah scrolls and manuscripts destroyed. Bak's printing press — at the time the only Hebrew press operating in the region — was wrecked, though Israel Bak rebuilt it in Jerusalem within a few years. Fourteenth-century volumes belonging to Rabbi Isaac Aboab I were lost. A rabbi who hid in a cave was found and blinded in one eye. Isaac Farhi, who survived the violence and died in 1853, left one of the clearest firsthand accounts of it — and also recorded Rabbi Mendel of Kamenetz, and in some accounts Rabbis Leib Cohen and Shalom Hayyat, walking through the wreckage during the chaos to reunite separated children with their parents and bury the dead. Yisroel ben Shmuel of Shklov, who led what remained of the Jewish community, wrote to the foreign consuls in Beirut asking for intervention. Ibrahim Pasha eventually sent the Druze emir Bashir Shihab II with Egyptian and Druze troops to restore order; a researcher named Löwe later put the Jewish community's material losses at 135,250 piastres.\n\nNo letter survives from any man who took part in those thirty-three days explaining what he thought he was owed and from whom. What survives instead is the shape of what had happened to him in the months before it: his sons conscripted or in hiding from conscription, his weapons confiscated, the toll income his family might have lived on for generations redirected to a treasury in Cairo he would never see a coin from, and then a man standing up in front of him with a date, a target, and the suggestion that none of it had been entirely fair to begin with. Whatever he told himself in the moment, it didn't have to be invented out of nothing. The grievance was real. The target was not the source of it.\n\nWhat also survives, because he wrote it down himself, is what the thirty-three days felt like from the other direction. Jacob Saphir was twelve. He didn't write about conscription decrees or toll income. He wrote about hunger — three days of it, before the village next door worked out how to hide and feed that many extra people without being caught — and about a sheikh he never learned the name of, who took that risk anyway.\n\nA number of Safed's Jewish families fled to Ein al-Zeitun, the Arab village beside the city, and were taken in. Saphir hid there for roughly forty days under the protection of the village's sheikh. No source names him. Mustafa Abbasi's research on Safed and the Galilee centers on the later Ottoman period and the Mandate; Mahmoud Yazbak's work on the sharia court registers covers Haifa, Jaffa, and Nazareth more than rural Safed in this exact decade. A name may exist in the Safed sijill for the Hijri years 1249 and 1250, in a kafalat al-wajh or a property settlement filed after the unrest — that is a real possibility, not a confirmed one. According to the same body of research, some of the village's own young men joined the assault on Safed during the same unrest, which left Ein al-Zeitun's leadership exposed to Ibrahim Pasha's reprisals once the revolt was put down. Shelter and participation came out of the same village, in the same month.\n\nThe revolt was crushed without much restraint. The worst of it came at Hebron in early August, where Qasim al-Ahmad had fled after his dismissal and reached an agreement with the local sheikhs to keep fighting. Egyptian troops broke the city's resistance in heavy street fighting, and once inside, with permission to plunder, did not distinguish carefully between combatants and civilians: roughly five hundred people were killed in the sack of the city, the great majority of them Muslim rebels and residents, against Egyptian losses of around 260. Twelve Jews were also killed there, despite Ibrahim Pasha's prior assurance that the Jewish quarter would be spared — a massacre Hebron's Jewish community remembered afterward as Yagma el Gabireh, the great destruction. This was a different mechanism than Safed: not a peasant mob targeting a specific community on a specific date, but a punitive army sacking a rebellious city and treating everyone inside it as the enemy.\n\nQasim al-Ahmad himself escaped to al-Karak, where a Bedouin chief named Duwaikhi al-Samir sheltered him — until Ibrahim Pasha destroyed the town and uprooted its orchards in response, after which al-Samir handed him over. Qasim was executed in Damascus alongside his lieutenant Arsab al-Kahol and Isa al-Barqawi. His sons Yusuf and Muhammad were executed separately, at Acre. The Abu Ghosh and Abd al-Hadi clans, who had defected to the Egyptian side partway through the revolt, were given official posts once it was over — the same Abu Ghosh family whose toll income had been one of the things taken from them three years earlier.\n\nOn January 1, 1837, an earthquake leveled Safed almost completely, killing by some estimates more than half its population. Foreign travelers — William Thomson, the German prince Hermann von Pückler-Muskau — wrote accounts of the devastation. Edward Robinson, passing through the valley near Ein al-Zeitun not long after, described the town as rubble from a distance, but noted that the vineyards and olive groves around it were still being tended.",
     "excerpt": "Ibrahim Pasha's conscription and disarmament decrees gut a province's old bargain between service and exemption. The peasants revolt; the revolt curdles into a pogrom in Safed and a massacre at Hebron; a village called Ein al-Zeitun shelters Jewish refugees while some of its own sons join the violence next door.",
-    "type": "Egyptian occupation of Ottoman Syria",
-    "tags": [
+    "content": "In 1831, Ibrahim Pasha marched his army into Greater Syria and ended a century of Ottoman rule by proxy. Governance there had been outsourced for decades to local strongmen — Ahmad al-Jazzar Pasha in Acre, Muhammad Abu Nabbut in Jaffa — men who ran their own fiefdoms with their own muscle and their own tax arrangements, answering to Istanbul mostly in name. Ibrahim Pasha arrived with a modernizing army and a centralized bureaucracy built to replace that system with direct rule from Cairo. The new administration came with conscription quotas, requisition orders, and a tax structure that bypassed local intermediaries entirely. It also began stripping income from the people who had been collecting it informally for generations: Muhammad Ali's officials took over the administration of religious endowments across Syria, curbed the authority of the local ulama, and ended the portage and toll fees that Bedouin tribes and the Abu Ghosh family had long collected along the roads near Jerusalem.\n\nOn April 25, 1834, Ibrahim Pasha summoned the leaders of Jerusalem and Nablus and laid out what he needed: two hundred conscripts from Jerusalem to start, thirty-five hundred more from the Jerusalem and Nablus districts combined, five hundred from Hebron. He asked the notables directly — since they were Muslims at war with Christian nations, wasn't a real standing army a necessity? They didn't disagree with the principle. They told him their men were already trained fighters, the same as their fathers before them, ready to shed blood defending their land from religious enemies when the moment required it. That wasn't the same thing Ibrahim Pasha was asking for, and he told them so: he wanted professional, permanent soldiers, not what he called a herd of useless men called up only when trouble arrived at the door. The two sides were describing the same word — service — and meaning two different arrangements by it.\n\nFor a Muslim peasant household, the old arrangement had run a particular way: a man's sons served when called, and the neighbors who didn't fight paid a tax instead, the jizya, while whatever clan or family controlled the roads nearby added its own trickle of income from the tolls. Egyptian centralization left the costly half of that arrangement untouched — the sons still went to war — while dismantling the half that had offset it, redirecting the Abu Ghosh family's toll income and the Bedouin tribes' portage fees into the new treasury in Cairo. The jizya itself wasn't abolished; Jews and Christians went on paying it. But the old bargain had never just been about a tax on someone else's ledger. It was about the rest of the local economy that had grown up around military service being the price one community paid and exemption being the price the other one paid instead — and only one side of that arrangement was now being touched.\n\nBy May, the peasantry had stopped waiting to find out how this would resolve. On May 19, the notables of Jerusalem and Nablus told Egyptian officials they could no longer conscript anyone or collect the new taxes, because the men of the surrounding villages had taken up arms and fled into the mountains, out of reach. Qasim al-Ahmad, sheikh of the Jamma'in subdistrict near Nablus and recently removed from his post, organized the revolt that followed from his home in Beit Wazan, joined there by Abdullah al-Jarrar of Sanur and Isa al-Barqawi of Shufa. In the Hebron hills, the fighting was led by Isa al-Amr; in Bani Zeid, by Abd al-Jabir Barghouti. Around Acre and Haifa, the rebels were commanded by Mas'ud al-Madi. Ten thousand men from Nablus, Hebron, Jerusalem, and Gaza converged on Jerusalem and tried to take it by force in early May. In the Galilee, Aqil Agha — who had defected out of Ibrahim Pasha's own service — led Hawwara irregulars fighting alongside unnamed local sheikhs near Safed. Days after the siege of Jerusalem began, an earthquake struck the city and damaged infrastructure across the region, on top of everything else already in motion.\n\nSafed, already strained by the unrest, took the political chaos and the aftershocks together. On Sunday, June 15, 1834 — the day after Shavuot — a local preacher named Muhammad Damoor, according to accounts later relayed to the British traveler Alexander Kinglake, told a crowd that true believers should rise up and take the gold and silver of the Jewish community. For thirty-three days, until July 17, the Jewish quarter was looted, burned, and desecrated. Later estimates cite around 500 Torah scrolls and manuscripts destroyed. Bak's printing press — at the time the only Hebrew press operating in the region — was wrecked, though Israel Bak rebuilt it in Jerusalem within a few years. Fourteenth-century volumes belonging to Rabbi Isaac Aboab I were lost. A rabbi who hid in a cave was found and blinded in one eye. Isaac Farhi, who survived the violence and died in 1853, left one of the clearest firsthand accounts of it — and also recorded Rabbi Mendel of Kamenetz, and in some accounts Rabbis Leib Cohen and Shalom Hayyat, walking through the wreckage during the chaos to reunite separated children with their parents and bury the dead. Yisroel ben Shmuel of Shklov, who led what remained of the Jewish community, wrote to the foreign consuls in Beirut asking for intervention. Ibrahim Pasha eventually sent the Druze emir Bashir Shihab II with Egyptian and Druze troops to restore order; a researcher named Löwe later put the Jewish community's material losses at 135,250 piastres.\n\nNo letter survives from any man who took part in those thirty-three days explaining what he thought he was owed and from whom. What survives instead is the shape of what had happened to him in the months before it: his sons conscripted or in hiding from conscription, his weapons confiscated, the toll income his family might have lived on for generations redirected to a treasury in Cairo he would never see a coin from, and then a man standing up in front of him with a date, a target, and the suggestion that none of it had been entirely fair to begin with. Whatever he told himself in the moment, it didn't have to be invented out of nothing. The grievance was real. The target was not the source of it.\n\nWhat also survives, because he wrote it down himself, is what the thirty-three days felt like from the other direction. Jacob Saphir was twelve. He didn't write about conscription decrees or toll income. He wrote about hunger — three days of it, before the village next door worked out how to hide and feed that many extra people without being caught — and about a sheikh he never learned the name of, who took that risk anyway.\n\nA number of Safed's Jewish families fled to Ein al-Zeitun, the Arab village beside the city, and were taken in. Saphir hid there for roughly forty days under the protection of the village's sheikh. No source names him. Mustafa Abbasi's research on Safed and the Galilee centers on the later Ottoman period and the Mandate; Mahmoud Yazbak's work on the sharia court registers covers Haifa, Jaffa, and Nazareth more than rural Safed in this exact decade. A name may exist in the Safed sijill for the Hijri years 1249 and 1250, in a kafalat al-wajh or a property settlement filed after the unrest — that is a real possibility, not a confirmed one. According to the same body of research, some of the village's own young men joined the assault on Safed during the same unrest, which left Ein al-Zeitun's leadership exposed to Ibrahim Pasha's reprisals once the revolt was put down. Shelter and participation came out of the same village, in the same month.\n\nThe revolt was crushed without much restraint. The worst of it came at Hebron in early August, where Qasim al-Ahmad had fled after his dismissal and reached an agreement with the local sheikhs to keep fighting. Egyptian troops broke the city's resistance in heavy street fighting, and once inside, with permission to plunder, did not distinguish carefully between combatants and civilians: roughly five hundred people were killed in the sack of the city, the great majority of them Muslim rebels and residents, against Egyptian losses of around 260. Twelve Jews were also killed there, despite Ibrahim Pasha's prior assurance that the Jewish quarter would be spared — a massacre Hebron's Jewish community remembered afterward as Yagma el Gabireh, the great destruction. This was a different mechanism than Safed: not a peasant mob targeting a specific community on a specific date, but a punitive army sacking a rebellious city and treating everyone inside it as the enemy.\n\nQasim al-Ahmad himself escaped to al-Karak, where a Bedouin chief named Duwaikhi al-Samir sheltered him — until Ibrahim Pasha destroyed the town and uprooted its orchards in response, after which al-Samir handed him over. Qasim was executed in Damascus alongside his lieutenant Arsab al-Kahol and Isa al-Barqawi. His sons Yusuf and Muhammad were executed separately, at Acre. The Abu Ghosh and Abd al-Hadi clans, who had defected to the Egyptian side partway through the revolt, were given official posts once it was over — the same Abu Ghosh family whose toll income had been one of the things taken from them three years earlier.\n\nOn January 1, 1837, an earthquake leveled Safed almost completely, killing by some estimates more than half its population. Foreign travelers — William Thomson, the German prince Hermann von Pückler-Muskau — wrote accounts of the devastation. Edward Robinson, passing through the valley near Ein al-Zeitun not long after, described the town as rubble from a distance, but noted that the vineyards and olive groves around it were still being tended.",
+    "article_url": "articles/n01.html",
+    "empire": "Egyptian occupation of Ottoman Syria",
+    "mechanism": [
       "conscription",
       "disarmament",
       "toll-confiscation",
@@ -39,6 +131,7 @@
   {
     "id": "n02",
     "title": "The Fiscal Hinge: Opium, the Bengal Monopoly, and the Liquidity of Empire",
+    "source": "manifold",
     "date": {
       "year": 1839,
       "month": 6,
@@ -49,23 +142,24 @@
       "lon": 88.3639,
       "name": "Calcutta & Lintin Island"
     },
-    "empire": "British East India Company",
-    "mechanism": [
+    "type": "British East India Company",
+    "nodeColor": "#a67041",
+    "nodeSize": 0.85,
+    "tags": [
       "debt-bondage",
       "state-monopoly",
       "auction-laundering",
       "silver-extraction"
     ],
-    "nodeColor": "#a67041",
-    "nodeSize": 0.85,
     "connections": [
       "n03",
       "n04"
     ],
-    "content": "By the late eighteenth century, the East India Company had a problem with its own appetite. Tea, silk, and porcelain bought in China had to be paid for in silver, and silver was draining out of London faster than the Company could replace it. In 1773, Governor-General Warren Hastings answered that problem by declaring opium a state monopoly in Bengal. In 1797, the Company tightened its grip further, replacing a looser contractor system with two salaried Opium Agents, one at Patna and one at Ghazipur, who controlled cultivation directly.\n\nPeasants didn't choose to grow poppy the way a farmer chooses a crop. They were locked into it through cash advances they had no real way to refuse — money paid up front against a harvest not yet planted, the same structure that would later bind a peasant in Ein al-Zeitun to a merchant's ledger in Beirut. Once the harvest came in, the opium went to the government factories at Patna and Ghazipur, was pressed into cakes, and shipped down the Ganges to Calcutta — not for export, but for auction.\n\nThe auction was the hinge the whole system turned on. China had banned opium imports outright. The Company couldn't be seen shipping a banned narcotic into a country it depended on for tea. So it sold the chests, openly and legally, to private merchants in Calcutta, and let those merchants carry the risk — and the profit — of getting the cargo past Chinese law. By 1800, smuggled chests numbered around 4,000 a year. By 1831, the figure was near 20,000. By 1839, on the eve of the war that finally answered it, the number had passed 40,000.\n\nThe silver that had been draining toward Beijing reversed direction. Every chest sold at Lintin Island brought silver back into circuits that fed the Bengal treasury and, downstream, the Company's books in London. The farmer in Bihar who'd planted poppy instead of food never saw a coin of it beyond the advance that had trapped him into planting in the first place.",
     "excerpt": "A silver shortage in London gets solved by an opium monopoly in Bengal. The Company never touches the smuggling itself — it just auctions the product and lets the risk, and the profit, pass to someone else's hands before it crosses into China.",
-    "type": "British East India Company",
-    "tags": [
+    "content": "By the late eighteenth century, the East India Company had a problem with its own appetite. Tea, silk, and porcelain bought in China had to be paid for in silver, and silver was draining out of London faster than the Company could replace it. In 1773, Governor-General Warren Hastings answered that problem by declaring opium a state monopoly in Bengal. In 1797, the Company tightened its grip further, replacing a looser contractor system with two salaried Opium Agents, one at Patna and one at Ghazipur, who controlled cultivation directly.\n\nPeasants didn't choose to grow poppy the way a farmer chooses a crop. They were locked into it through cash advances they had no real way to refuse — money paid up front against a harvest not yet planted, the same structure that would later bind a peasant in Ein al-Zeitun to a merchant's ledger in Beirut. Once the harvest came in, the opium went to the government factories at Patna and Ghazipur, was pressed into cakes, and shipped down the Ganges to Calcutta — not for export, but for auction.\n\nThe auction was the hinge the whole system turned on. China had banned opium imports outright. The Company couldn't be seen shipping a banned narcotic into a country it depended on for tea. So it sold the chests, openly and legally, to private merchants in Calcutta, and let those merchants carry the risk — and the profit — of getting the cargo past Chinese law. By 1800, smuggled chests numbered around 4,000 a year. By 1831, the figure was near 20,000. By 1839, on the eve of the war that finally answered it, the number had passed 40,000.\n\nThe silver that had been draining toward Beijing reversed direction. Every chest sold at Lintin Island brought silver back into circuits that fed the Bengal treasury and, downstream, the Company's books in London. The farmer in Bihar who'd planted poppy instead of food never saw a coin of it beyond the advance that had trapped him into planting in the first place.",
+    "article_url": "articles/n02.html",
+    "empire": "British East India Company",
+    "mechanism": [
       "debt-bondage",
       "state-monopoly",
       "auction-laundering",
@@ -75,6 +169,7 @@
   {
     "id": "n03",
     "title": "The Yaokou and the Fast Crabs: Distribution Inside China, 1821-1839",
+    "source": "manifold",
     "date": {
       "year": 1839,
       "month": 6,
@@ -85,23 +180,24 @@
       "lon": 113.5439,
       "name": "Lingdingyang & Pearl River Delta"
     },
-    "empire": "Qing China / British smuggling networks",
-    "mechanism": [
+    "type": "Qing China / British smuggling networks",
+    "nodeColor": "#a67041",
+    "nodeSize": 0.78,
+    "tags": [
       "smuggling",
       "bribery",
       "armed-distribution",
       "labor-displacement"
     ],
-    "nodeColor": "#a67041",
-    "nodeSize": 0.78,
     "connections": [
       "n02",
       "n04"
     ],
-    "content": "What the Calcutta auction made legal on the Indian side had to become illegal again the moment it touched Chinese water, and a whole distribution economy grew up around that seam. After an 1821 crackdown on opium stockpiled at Macau, the trade shifted to receiving ships anchored off Lintin Island. Chinese wholesale buyers rowed out, paid silver, and carried the chests inland in fast, heavily armed boats — fast crabs, sometimes called scrambling dragons — built to outrun the government's water patrols. Many of the men crewing them were Tanka boat people who had fished those waters for generations and found that one successful run paid more than months of honest work.\n\n[NEEDS VERIFICATION PASS: the specific organizers, guild names, and individual smugglers named in some accounts of this network — figures running storage operations, clan networks turning ancestral halls into hidden warehouses — require a dedicated, sourced check before being presented as documented fact, the same standard applied to the named revolt leaders in n01.]\n\nWhat's solid without that pass: the mechanism. Sons were being pulled into a trade that paid better than fishing or farming ever had. The capital that built the boats, paid the bribes, and bought the silence of the customs officers wasn't raised on Chinese soil. It had already passed through the Calcutta auction once. The risk that followed it inland — the boats, the gunfire, the executions when Lin Zexu's crackdown finally came — was paid by the people swimming closest to where the blood was already in the water.",
     "excerpt": "What the Calcutta auction made legal on the Indian side had to become illegal again the moment it crossed into Chinese water — and a whole armed distribution economy grew up to manage that seam.",
-    "type": "Qing China / British smuggling networks",
-    "tags": [
+    "content": "What the Calcutta auction made legal on the Indian side had to become illegal again the moment it touched Chinese water, and a whole distribution economy grew up around that seam. After an 1821 crackdown on opium stockpiled at Macau, the trade shifted to receiving ships anchored off Lintin Island. Chinese wholesale buyers rowed out, paid silver, and carried the chests inland in fast, heavily armed boats — fast crabs, sometimes called scrambling dragons — built to outrun the government's water patrols. Many of the men crewing them were Tanka boat people who had fished those waters for generations and found that one successful run paid more than months of honest work.\n\n[NEEDS VERIFICATION PASS: the specific organizers, guild names, and individual smugglers named in some accounts of this network — figures running storage operations, clan networks turning ancestral halls into hidden warehouses — require a dedicated, sourced check before being presented as documented fact, the same standard applied to the named revolt leaders in n01.]\n\nWhat's solid without that pass: the mechanism. Sons were being pulled into a trade that paid better than fishing or farming ever had. The capital that built the boats, paid the bribes, and bought the silence of the customs officers wasn't raised on Chinese soil. It had already passed through the Calcutta auction once. The risk that followed it inland — the boats, the gunfire, the executions when Lin Zexu's crackdown finally came — was paid by the people swimming closest to where the blood was already in the water.",
+    "article_url": "articles/n03.html",
+    "empire": "Qing China / British smuggling networks",
+    "mechanism": [
       "smuggling",
       "bribery",
       "armed-distribution",
@@ -111,6 +207,7 @@
   {
     "id": "n04",
     "title": "Poppies, Clans, and Smoke: Domestic Cultivation and Terminal Consumption in China, 1820s-1839",
+    "source": "manifold",
     "date": {
       "year": 1839,
       "month": 6,
@@ -121,22 +218,23 @@
       "lon": 102.7091,
       "name": "Yunnan borderlands & Guangzhou Xiguan"
     },
-    "empire": "Qing China",
-    "mechanism": [
+    "type": "Qing China",
+    "nodeColor": "#a67041",
+    "nodeSize": 0.78,
+    "tags": [
       "domestic-cultivation",
       "addiction-economy",
       "clan-networks"
     ],
-    "nodeColor": "#a67041",
-    "nodeSize": 0.78,
     "connections": [
       "n02",
       "n03"
     ],
-    "content": "[NEEDS VERIFICATION PASS: this node's claims about specific clan names (He and Liang of Panyu's Jiaotang Division), the precise red-flag inscription, and the characterization of smoke-den demographics in Guangzhou's Xiguan district require independent sourcing before publication — see verification note on n03.]\n\nWhat is independently well-documented: domestic poppy cultivation did spread inland over the 1820s and 1830s, particularly into Yunnan and Sichuan, as the habit became profitable enough that growing food crops lost out to growing poppy in some districts. Lin Zexu's 1839 crackdown, including the destruction of opium stocks at Humen, is extensively documented and targeted both the foreign supply chain and domestic trafficking and consumption alike.\n\nThe pattern repeats from the coast inland: a habit that started as an import becomes, within a generation, something grown, processed, and consumed entirely on Chinese soil, by Chinese hands — while the capital that had originally primed the market, and the silver it had already extracted on the way in, never had to be local at all.",
     "excerpt": "Once the habit took root, it didn't need foreign ships anymore. Domestic poppy fields in Yunnan and smoke dens in Guangzhou's Xiguan district show the same economy running on local soil, local hands, local family networks.",
-    "type": "Qing China",
-    "tags": [
+    "content": "[NEEDS VERIFICATION PASS: this node's claims about specific clan names (He and Liang of Panyu's Jiaotang Division), the precise red-flag inscription, and the characterization of smoke-den demographics in Guangzhou's Xiguan district require independent sourcing before publication — see verification note on n03.]\n\nWhat is independently well-documented: domestic poppy cultivation did spread inland over the 1820s and 1830s, particularly into Yunnan and Sichuan, as the habit became profitable enough that growing food crops lost out to growing poppy in some districts. Lin Zexu's 1839 crackdown, including the destruction of opium stocks at Humen, is extensively documented and targeted both the foreign supply chain and domestic trafficking and consumption alike.\n\nThe pattern repeats from the coast inland: a habit that started as an import becomes, within a generation, something grown, processed, and consumed entirely on Chinese soil, by Chinese hands — while the capital that had originally primed the market, and the silver it had already extracted on the way in, never had to be local at all.",
+    "article_url": "articles/n04.html",
+    "empire": "Qing China",
+    "mechanism": [
       "domestic-cultivation",
       "addiction-economy",
       "clan-networks"
@@ -145,6 +243,7 @@
   {
     "id": "n05",
     "title": "After the Pashas: Tanzimat, the Land Code, and the New Lords of Palestine",
+    "source": "manifold",
     "date": {
       "year": 1858,
       "month": 6,
@@ -155,26 +254,173 @@
       "lon": 35.417,
       "name": "Jezreel Valley & Constantinople"
     },
+    "type": "Ottoman Tanzimat / British diplomatic pressure",
+    "nodeColor": "#a67041",
+    "nodeSize": 0.85,
+    "tags": [
+      "land-registration",
+      "absentee-landlordism",
+      "debt-bondage",
+      "diplomatic-leverage"
+    ],
+    "connections": [
+      "n01"
+    ],
+    "excerpt": "A registration law meant to give peasants direct title to their own land instead produces a new class of absentee landlords — because the peasants registering it had already lived through what a government list with their name on it was for.",
+    "content": "Ibrahim Pasha withdrew from Syria and Palestine in 1840, not because anyone defeated him on the ground but because Britain, Austria, Russia, and Prussia forced the issue — diplomatically at first, and then with a British naval bombardment of Acre. The Ottomans recovered their territory in early 1841. The empire that returned was not the one that had lost it nine years earlier. It was indebted, anxious about Russian expansion, and about to let a British ambassador shape a significant piece of its legislative agenda.\n\nThat ambassador was Stratford Canning, who had already served three separate postings to the Ottoman court before returning in 1841 for what became his longest and final term. He did not draft Ottoman legal text himself. What he held was leverage — specifically the Crimean War, fought against Russia from 1853 to 1856, during which the empire needed British troops, ships, and money to survive. Canning used that need to press for private property protections, equal legal rights for non-Muslims, and a European-style commercial framework, carrying memos into closed-door meetings with Mustafa Reşid Pasha and Âli Pasha, men he had known and worked alongside for nearly two decades. Reşid and Âli did the work of translating those demands into language the Sultan, Abdülmecid I, and the religious establishment could accept. The result was the Hatt-ı Hümayun of February 1856, folded into the peace terms at the end of the war.\n\nThe 1858 Ottoman Land Code followed two years later, drafted under the Tanzimat Council with Reşid Pasha as its political architect — he died in early 1858, shortly before its completion — and Ahmet Cevdet Pasha as its legal draftsman. The Code's stated purpose ran opposite to what it eventually produced: registering land directly in the names of the peasants who farmed it, replacing the old miri system of customary, unrecorded use-rights with an individual title deed, the tapu, so the state could tax cultivators directly instead of going through tax farmers and local strongmen who had skimmed the difference for generations.\n\nWhen the registrars arrived in the villages with their books, the peasants who had lived through Ibrahim Pasha's conscription decrees less than two decades earlier read a government request to write down exactly who owned what as a setup for the draft, or for back-taxes they couldn't pay. Whole villages asked literate, well-connected merchants in Beirut, Damascus, Nablus, and Jerusalem to register the village lands under their own names instead. The merchants agreed. Legal title to large stretches of Palestinian agricultural land passed to a new class of urban landlords, some of whom never set foot on the land they now owned. The cultivators kept working the same fields. The deed now said someone else's name.\n\nMustafa Abbasi's research follows this story past the families everyone already knows — the Husseinis and Khalidis of Jerusalem, the Nimr and Touqan and Jarrar families of Nablus, the Abd al-Hadi clan of Arraba — toward the regional notables who ran the same system on a smaller stage: the Tabari family in Tiberias, whose standing traced back to Sheikh Dhaher al-Umar al-Zaydani's rule there in the early eighteenth century; the Qadoura and Nahawi families in Safed; the Fahoum family in Nazareth; the Shuqayri and Saadi families in Acre. The same salam contracts and kafalat al-wajh debt arrangements that bound a sheikh in Ein al-Zeitun to a peasant's harvest ran through these families' ledgers too — urban capital reaching into rural villages through advance crop sales structured to function as interest, collected whether or not the harvest came in.\n\nIn 1872, the Ottoman government sold the Jezreel Valley — Marj ibn Amir, some of the most fertile land in Palestine — to the Sursock family, Greek Orthodox bankers based in Beirut, for roughly £20,000. No rural clan held the title. No fellah who had farmed that ground for generations had ever owned the deed that would have let him refuse the sale. The Sursocks held the valley for decades before selling portions of it, in the 1920s, to Zionist land-purchasing organizations. The valley changed hands the way capital changes hands once the paperwork exists to allow it — registered, priced, and signed for in a city ledger, by people who had never touched the soil it described.",
+    "article_url": "articles/n05.html",
     "empire": "Ottoman Tanzimat / British diplomatic pressure",
     "mechanism": [
       "land-registration",
       "absentee-landlordism",
       "debt-bondage",
       "diplomatic-leverage"
-    ],
-    "nodeColor": "#a67041",
-    "nodeSize": 0.85,
-    "connections": [
-      "n01"
-    ],
-    "content": "Ibrahim Pasha withdrew from Syria and Palestine in 1840, not because anyone defeated him on the ground but because Britain, Austria, Russia, and Prussia forced the issue — diplomatically at first, and then with a British naval bombardment of Acre. The Ottomans recovered their territory in early 1841. The empire that returned was not the one that had lost it nine years earlier. It was indebted, anxious about Russian expansion, and about to let a British ambassador shape a significant piece of its legislative agenda.\n\nThat ambassador was Stratford Canning, who had already served three separate postings to the Ottoman court before returning in 1841 for what became his longest and final term. He did not draft Ottoman legal text himself. What he held was leverage — specifically the Crimean War, fought against Russia from 1853 to 1856, during which the empire needed British troops, ships, and money to survive. Canning used that need to press for private property protections, equal legal rights for non-Muslims, and a European-style commercial framework, carrying memos into closed-door meetings with Mustafa Reşid Pasha and Âli Pasha, men he had known and worked alongside for nearly two decades. Reşid and Âli did the work of translating those demands into language the Sultan, Abdülmecid I, and the religious establishment could accept. The result was the Hatt-ı Hümayun of February 1856, folded into the peace terms at the end of the war.\n\nThe 1858 Ottoman Land Code followed two years later, drafted under the Tanzimat Council with Reşid Pasha as its political architect — he died in early 1858, shortly before its completion — and Ahmet Cevdet Pasha as its legal draftsman. The Code's stated purpose ran opposite to what it eventually produced: registering land directly in the names of the peasants who farmed it, replacing the old miri system of customary, unrecorded use-rights with an individual title deed, the tapu, so the state could tax cultivators directly instead of going through tax farmers and local strongmen who had skimmed the difference for generations.\n\nWhen the registrars arrived in the villages with their books, the peasants who had lived through Ibrahim Pasha's conscription decrees less than two decades earlier read a government request to write down exactly who owned what as a setup for the draft, or for back-taxes they couldn't pay. Whole villages asked literate, well-connected merchants in Beirut, Damascus, Nablus, and Jerusalem to register the village lands under their own names instead. The merchants agreed. Legal title to large stretches of Palestinian agricultural land passed to a new class of urban landlords, some of whom never set foot on the land they now owned. The cultivators kept working the same fields. The deed now said someone else's name.\n\nMustafa Abbasi's research follows this story past the families everyone already knows — the Husseinis and Khalidis of Jerusalem, the Nimr and Touqan and Jarrar families of Nablus, the Abd al-Hadi clan of Arraba — toward the regional notables who ran the same system on a smaller stage: the Tabari family in Tiberias, whose standing traced back to Sheikh Dhaher al-Umar al-Zaydani's rule there in the early eighteenth century; the Qadoura and Nahawi families in Safed; the Fahoum family in Nazareth; the Shuqayri and Saadi families in Acre. The same salam contracts and kafalat al-wajh debt arrangements that bound a sheikh in Ein al-Zeitun to a peasant's harvest ran through these families' ledgers too — urban capital reaching into rural villages through advance crop sales structured to function as interest, collected whether or not the harvest came in.\n\nIn 1872, the Ottoman government sold the Jezreel Valley — Marj ibn Amir, some of the most fertile land in Palestine — to the Sursock family, Greek Orthodox bankers based in Beirut, for roughly £20,000. No rural clan held the title. No fellah who had farmed that ground for generations had ever owned the deed that would have let him refuse the sale. The Sursocks held the valley for decades before selling portions of it, in the 1920s, to Zionist land-purchasing organizations. The valley changed hands the way capital changes hands once the paperwork exists to allow it — registered, priced, and signed for in a city ledger, by people who had never touched the soil it described.",
-    "excerpt": "A registration law meant to give peasants direct title to their own land instead produces a new class of absentee landlords — because the peasants registering it had already lived through what a government list with their name on it was for.",
-    "type": "Ottoman Tanzimat / British diplomatic pressure",
-    "tags": [
-      "land-registration",
-      "absentee-landlordism",
-      "debt-bondage",
-      "diplomatic-leverage"
     ]
+  },
+  {
+    "id": "opium-wars-1839",
+    "title": "First Opium War",
+    "source": "necronomy",
+    "date": {
+      "year": 1839,
+      "month": 9,
+      "day": 4
+    },
+    "location": {
+      "lat": 22.3964,
+      "lon": 114.1095,
+      "name": "Hong Kong"
+    },
+    "type": "military",
+    "nodeColor": "#8a1c1c",
+    "nodeSize": 0.6,
+    "tags": [
+      "imperial-necronomy",
+      "addiction-economy",
+      "forced-trade"
+    ],
+    "connections": [
+      "land-code-1858"
+    ],
+    "excerpt": "British Empire forces China to accept opium imports. Creates permanent addiction crisis requiring endless intervention. Military enforcement of market dependency.",
+    "content": "# The Opium Wars: Addiction as Empire\n\nBritain had a trade problem: they wanted Chinese tea and silk, but China wanted nothing Britain produced. The solution? Create artificial demand by flooding China with opium from British-controlled India.\n\nWhen China tried to ban the drug, Britain went to war—twice—to force the market open. The Treaty of Nanking (1842) didn't just open ports; it institutionalized the addiction economy. China was required to accept opium imports indefinitely.\n\nThe necronomy operates on multiple levels: the drug trade itself, the military enforcement of market access, the administrative apparatus managing treaty compliance, the rehabilitation industry that emerges from the crisis, and eventually, the communist revolution that claims to solve the problem by creating an entirely new set of permanent administrative mechanisms.\n\nThis is imperial necronomy: don't just conquer territory—create dependency that requires endless management.",
+    "article_url": "articles/opium-wars-1839.html"
+  },
+  {
+    "id": "patriot-act-2001",
+    "title": "PATRIOT Act Signed",
+    "source": "necronomy",
+    "date": {
+      "year": 2001,
+      "month": 10,
+      "day": 26
+    },
+    "location": {
+      "lat": 38.9072,
+      "lon": -77.0369,
+      "name": "Washington DC"
+    },
+    "type": "legal",
+    "nodeColor": "#c5a059",
+    "nodeSize": 0.6,
+    "tags": [
+      "surveillance-state",
+      "permanent-emergency",
+      "security-theater"
+    ],
+    "connections": [
+      "war-on-drugs-1971"
+    ],
+    "excerpt": "Emergency powers become permanent infrastructure. TSA, NSA expansion, contractor ecosystem. Crisis creates industry that then depends on crisis continuing.",
+    "content": "# The PATRIOT Act: Emergency as Infrastructure\n\nThe USA PATRIOT Act was passed 45 days after 9/11 as emergency legislation. 'Temporary' provisions that were supposed to sunset have been renewed continuously for over two decades. The emergency became permanent because the infrastructure built around it is now too profitable to dismantle.\n\nThe necronomy is visible in the contractor ecosystem: surveillance technology companies, private security firms, biometric database providers, security screening operators, intelligence analysts, threat assessment consultants. Billions in contracts dependent on the permanent emergency.\n\nThe TSA alone costs $8 billion annually and employs over 60,000 people. Security theater that exists not to make flying safer, but to demonstrate that the crisis requires constant management. Any suggestion that the threat has diminished is met with new threat assessments justifying expanded screening.\n\nThe necronomy completes when the security measures themselves generate the need for more security. Every new screening technology creates new evasion techniques, requiring newer technology. Every expansion of surveillance creates new privacy concerns, requiring more oversight, requiring more administrators.\n\nVictory in the 'war on terror' would be economic disaster for the industries built around fighting it. So the war continues, threats are perpetually discovered, and the emergency infrastructure becomes permanent.",
+    "article_url": "articles/patriot-act-2001.html"
+  },
+  {
+    "id": "skid-row-1976",
+    "title": "1976 Skid Row Containment",
+    "source": "necronomy",
+    "date": {
+      "year": 1976,
+      "month": 1,
+      "day": 1
+    },
+    "location": {
+      "lat": 34.0443,
+      "lon": -118.2467,
+      "name": "Los Angeles"
+    },
+    "type": "demographic",
+    "nodeColor": "#4a7c59",
+    "nodeSize": 0.5,
+    "tags": [
+      "containment",
+      "nonprofit-industrial-complex",
+      "permanent-crisis"
+    ],
+    "connections": [
+      "land-code-1858"
+    ],
+    "excerpt": "LAPD Blue Book designates 50-block containment zone. Don't solve homelessness—warehouse it. Creates permanent nonprofit ecosystem dependent on problem persisting.",
+    "content": "# Skid Row Containment: The Nonprofit Necronomy\n\nIn 1976, the LAPD published the \"Blue Book\"—a policy guide designating a 50-block area in downtown LA as a containment zone for the homeless. Officers were instructed to actively shepherd unhoused people into this area and prevent them from dispersing to other neighborhoods.\n\nThe policy was never about solving homelessness. It was about managing visibility. Concentrate the problem in one place, then build an entire ecosystem around managing—not ending—that concentration.\n\nToday, Skid Row generates hundreds of millions in annual revenue. Nonprofits, service providers, grant administrators, consultants, security contractors—all dependent on the problem persisting. Any actual solution would be a mass layoff.\n\nThe necronomy is in the design: the worse the crisis gets, the more funding flows in. Success is measured by the scale of intervention, not by outcomes. You can't disrupt a market that profits from its own failure to function.",
+    "article_url": "articles/skid-row-1976.html"
+  },
+  {
+    "id": "war-on-drugs-1971",
+    "title": "War on Drugs Declared",
+    "source": "necronomy",
+    "date": {
+      "year": 1971,
+      "month": 6,
+      "day": 17
+    },
+    "location": {
+      "lat": 38.9072,
+      "lon": -77.0369,
+      "name": "Washington DC"
+    },
+    "type": "legal",
+    "nodeColor": "#c5a059",
+    "nodeSize": 0.6,
+    "tags": [
+      "incarceration-economy",
+      "permanent-war",
+      "manufactured-enemy"
+    ],
+    "connections": [
+      "skid-row-1976"
+    ],
+    "excerpt": "Nixon declares war on drugs. Fifty years later, drugs won. But the war infrastructure generates billions annually. Victory would eliminate the industry.",
+    "content": "# War on Drugs: The Forever War at Home\n\nRichard Nixon declared a 'war on drugs' in 1971. Fifty years later, drugs are cheaper, purer, and more available than ever. By any measure, drugs won. But the war continues—because the war itself is the product.\n\nThe necronomy ecosystem: private prisons profit from incarceration, police departments profit from civil asset forfeiture, defense contractors profit from militarizing law enforcement, rehab centers profit from court-mandated treatment, drug testing companies profit from employment screening, probation services profit from monitoring, and on and on.\n\nEach arrest generates revenue across multiple sectors. Each conviction creates a permanent administrative relationship. Each release creates a monitoring obligation. The cycle is self-sustaining because it's designed to be.\n\nActual drug policy reform—decriminalization, harm reduction, treatment—threatens the entire ecosystem. Not because it wouldn't work, but precisely because it would. You can't run a permanent war without an enemy, and you can't maintain an industry built on war without perpetual conflict.\n\nThe war on drugs is necronomy at scale: create a crisis, criminalize it, then build an economy around managing the criminalization.",
+    "article_url": "articles/war-on-drugs-1971.html"
+  },
+  {
+    "id": "west-bank-1967",
+    "title": "1967 Occupation Begins",
+    "source": "necronomy",
+    "date": {
+      "year": 1967,
+      "month": 6,
+      "day": 10
+    },
+    "location": {
+      "lat": 31.9522,
+      "lon": 35.2332,
+      "name": "West Bank"
+    },
+    "type": "military",
+    "nodeColor": "#8a1c1c",
+    "nodeSize": 0.6,
+    "tags": [
+      "occupation-necronomy",
+      "permit-regime",
+      "permanent-provisional"
+    ],
+    "connections": [
+      "diaspora-70ce",
+      "land-code-1858"
+    ],
+    "excerpt": "Occupation begins as 'temporary' measure. 57 years later, the temporary has become permanent infrastructure. Permit regime generates endless administrative revenue.",
+    "content": "# West Bank Occupation: Permanent Provisional Status\n\nThe 1967 occupation was declared temporary. Nearly six decades later, 'temporary' has become the most permanent feature of the landscape. This isn't failure—it's the design.\n\nThe permit regime is necronomy infrastructure: Palestinians need permits to build, to farm, to move, to work. Each permit requires fees, applications, waiting periods, denials that generate appeals. An entire administrative apparatus profits from managing access to what was once simply lived.\n\nMeanwhile, the security industry profits from managing the reaction to the permits. Checkpoints, barriers, surveillance systems, biometric databases—all justified by the 'temporary' crisis that must be managed indefinitely.\n\nThe necronomy completes when both sides develop economies dependent on the occupation's continuation. Aid flows to manage the humanitarian crisis. Defense contracts flow to manage the security crisis. Think tanks profit from analyzing the crisis. NGOs profit from documenting the crisis. \n\nResolution would eliminate the revenue stream. Permanent provisional status is the business model.",
+    "article_url": "articles/west-bank-1967.html"
   }
 ]
