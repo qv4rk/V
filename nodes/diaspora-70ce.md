@@ -1,6 +1,6 @@
 ---
 id: diaspora-70ce
-title: 70 CE Jerusalem Siege
+title: "The Fracture Line: Jerusalem Under Titus and the Administration of Diaspora, 70 CE"
 source: necronomy
 date:
   year: 70
@@ -14,10 +14,14 @@ type: military
 nodeColor: "#8a1c1c"
 nodeSize: 0.6
 tags:
+  - displacement
+  - dispossession
+  - permanent-administration
   - diaspora
   - roman-empire
-  - genetic-split
-  - permanent-administration
+  - jewish-community
+  - fellahin
+
 connections:
   - land-code-1858
 excerpt: "Roman siege creates permanent population split. Those who fled preserved identity through ritual. Those who stayed evolved into Palestinian fellahin. 2,000 years of mediation revenue."

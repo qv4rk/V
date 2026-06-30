@@ -1,6 +1,6 @@
 ---
 id: land-code-1858
-title: 1858 Ottoman Land Code
+title: "The Form You Could Not Fill: Ottoman Land Registration and Dispossession Without Conquest, 1858"
 source: necronomy
 date:
   year: 1858
@@ -14,10 +14,15 @@ type: legal
 nodeColor: "#c5a059"
 nodeSize: 0.5
 tags:
-  - ottoman-empire
   - land-registration
-  - dispossession
+  - debt-bondage
+  - bureaucratic-exclusion
   - bureaucratic-capture
+  - dispossession
+  - displacement
+  - ottoman-empire
+  - fellahin
+
 connections:
   - diaspora-70ce
   - skid-row-1976

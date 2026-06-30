@@ -1,6 +1,6 @@
 ---
 id: skid-row-1976
-title: 1976 Skid Row Containment
+title: "The Blue Book: How Los Angeles Decided to Warehouse Homelessness, 1976"
 source: necronomy
 date:
   year: 1976
@@ -15,8 +15,14 @@ nodeColor: "#4a7c59"
 nodeSize: 0.5
 tags:
   - containment
+  - manufactured-crisis
+  - permanent-administration
   - nonprofit-industrial-complex
-  - permanent-crisis
+  - displacement
+  - lapd
+  - us-government
+  - unhoused
+
 connections:
   - land-code-1858
 excerpt: "LAPD Blue Book designates 50-block containment zone. Don't solve homelessness\u2014warehouse it. Creates permanent nonprofit ecosystem dependent on problem persisting."

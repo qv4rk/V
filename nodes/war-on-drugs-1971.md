@@ -1,6 +1,6 @@
 ---
 id: war-on-drugs-1971
-title: War on Drugs Declared
+title: "The War That Was Never Meant to Be Won: Nixon Drug Policy and the Incarceration Economy, 1971"
 source: necronomy
 date:
   year: 1971
@@ -14,9 +14,15 @@ type: legal
 nodeColor: "#c5a059"
 nodeSize: 0.6
 tags:
-  - incarceration-economy
+  - incarceration
+  - manufactured-crisis
   - permanent-war
-  - manufactured-enemy
+  - addiction-economy
+  - surveillance
+  - bureaucratic-exclusion
+  - us-government
+  - Black-Americans
+
 connections:
   - skid-row-1976
 excerpt: "Nixon declares war on drugs. Fifty years later, drugs won. But the war infrastructure generates billions annually. Victory would eliminate the industry."

@@ -1,7 +1,7 @@
 [
   {
     "id": "diaspora-70ce",
-    "title": "70 CE Jerusalem Siege",
+    "title": "The Fracture Line: Jerusalem Under Titus and the Administration of Diaspora, 70 CE",
     "source": "necronomy",
     "date": {
       "year": 70,
@@ -17,10 +17,13 @@
     "nodeColor": "#8a1c1c",
     "nodeSize": 0.6,
     "tags": [
+      "displacement",
+      "dispossession",
+      "permanent-administration",
       "diaspora",
       "roman-empire",
-      "genetic-split",
-      "permanent-administration"
+      "jewish-community",
+      "fellahin"
     ],
     "connections": [
       "land-code-1858"
@@ -31,7 +34,7 @@
   },
   {
     "id": "land-code-1858",
-    "title": "1858 Ottoman Land Code",
+    "title": "The Form You Could Not Fill: Ottoman Land Registration and Dispossession Without Conquest, 1858",
     "source": "necronomy",
     "date": {
       "year": 1858,
@@ -47,10 +50,14 @@
     "nodeColor": "#c5a059",
     "nodeSize": 0.5,
     "tags": [
-      "ottoman-empire",
       "land-registration",
+      "debt-bondage",
+      "bureaucratic-exclusion",
+      "bureaucratic-capture",
       "dispossession",
-      "bureaucratic-capture"
+      "displacement",
+      "ottoman-empire",
+      "fellahin"
     ],
     "connections": [
       "diaspora-70ce",
@@ -62,7 +69,7 @@
   },
   {
     "id": "mao-1966",
-    "title": "Cultural Revolution Launch",
+    "title": "The Campaign That Cannot End: Mao Cultural Revolution as Permanent Governance, 1966-1976",
     "source": "necronomy",
     "date": {
       "year": 1966,
@@ -78,9 +85,13 @@
     "nodeColor": "#7c4a7c",
     "nodeSize": 0.6,
     "tags": [
-      "revolutionary-necronomy",
-      "permanent-campaign",
-      "manufactured-crisis"
+      "manufactured-crisis",
+      "permanent-administration",
+      "permanent-war",
+      "surveillance",
+      "centralization",
+      "incarceration",
+      "mao-era-china"
     ],
     "connections": [
       "opium-wars-1839"
@@ -109,9 +120,16 @@
     "tags": [
       "conscription",
       "disarmament",
-      "toll-confiscation",
       "centralization",
-      "communal-violence"
+      "communal-violence",
+      "displacement",
+      "dispossession",
+      "proxy-control",
+      "ottoman-empire",
+      "egyptian-occupation",
+      "fellahin",
+      "jewish-community",
+      "bedouin"
     ],
     "connections": [
       "n05"
@@ -149,7 +167,13 @@
       "debt-bondage",
       "state-monopoly",
       "auction-laundering",
-      "silver-extraction"
+      "silver-extraction",
+      "addiction-economy",
+      "resource-extraction",
+      "monopoly",
+      "british-empire",
+      "east-india-company",
+      "bihar-farmers"
     ],
     "connections": [
       "n03",
@@ -187,7 +211,14 @@
       "smuggling",
       "bribery",
       "armed-distribution",
-      "labor-displacement"
+      "addiction-economy",
+      "labor-displacement",
+      "displacement",
+      "resource-extraction",
+      "british-empire",
+      "qing-dynasty",
+      "chinese-workers",
+      "tanka"
     ],
     "connections": [
       "n02",
@@ -222,9 +253,13 @@
     "nodeColor": "#a67041",
     "nodeSize": 0.78,
     "tags": [
-      "domestic-cultivation",
       "addiction-economy",
-      "clan-networks"
+      "domestic-cultivation",
+      "clan-networks",
+      "displacement",
+      "resource-extraction",
+      "qing-dynasty",
+      "chinese-peasants"
     ],
     "connections": [
       "n02",
@@ -261,7 +296,15 @@
       "land-registration",
       "absentee-landlordism",
       "debt-bondage",
-      "diplomatic-leverage"
+      "diplomatic-leverage",
+      "dispossession",
+      "bureaucratic-capture",
+      "displacement",
+      "centralization",
+      "ottoman-empire",
+      "british-empire",
+      "fellahin",
+      "jewish-community"
     ],
     "connections": [
       "n01"
@@ -279,7 +322,7 @@
   },
   {
     "id": "opium-wars-1839",
-    "title": "First Opium War",
+    "title": "The Treaty That Opened the Vein: Britain Forces the Opium Market, 1839-1842",
     "source": "necronomy",
     "date": {
       "year": 1839,
@@ -295,9 +338,15 @@
     "nodeColor": "#8a1c1c",
     "nodeSize": 0.6,
     "tags": [
-      "imperial-necronomy",
       "addiction-economy",
-      "forced-trade"
+      "silver-extraction",
+      "armed-distribution",
+      "resource-extraction",
+      "forced-trade",
+      "monopoly",
+      "state-monopoly",
+      "british-empire",
+      "qing-dynasty"
     ],
     "connections": [
       "land-code-1858"
@@ -308,7 +357,7 @@
   },
   {
     "id": "patriot-act-2001",
-    "title": "PATRIOT Act Signed",
+    "title": "The Emergency That Became Infrastructure: The PATRIOT Act and the Security Economy, 2001",
     "source": "necronomy",
     "date": {
       "year": 2001,
@@ -324,9 +373,13 @@
     "nodeColor": "#c5a059",
     "nodeSize": 0.6,
     "tags": [
-      "surveillance-state",
-      "permanent-emergency",
-      "security-theater"
+      "permanent-administration",
+      "permanent-war",
+      "surveillance",
+      "security-theater",
+      "manufactured-crisis",
+      "incarceration",
+      "us-government"
     ],
     "connections": [
       "war-on-drugs-1971"
@@ -337,7 +390,7 @@
   },
   {
     "id": "skid-row-1976",
-    "title": "1976 Skid Row Containment",
+    "title": "The Blue Book: How Los Angeles Decided to Warehouse Homelessness, 1976",
     "source": "necronomy",
     "date": {
       "year": 1976,
@@ -354,8 +407,13 @@
     "nodeSize": 0.5,
     "tags": [
       "containment",
+      "manufactured-crisis",
+      "permanent-administration",
       "nonprofit-industrial-complex",
-      "permanent-crisis"
+      "displacement",
+      "lapd",
+      "us-government",
+      "unhoused"
     ],
     "connections": [
       "land-code-1858"
@@ -366,7 +424,7 @@
   },
   {
     "id": "war-on-drugs-1971",
-    "title": "War on Drugs Declared",
+    "title": "The War That Was Never Meant to Be Won: Nixon Drug Policy and the Incarceration Economy, 1971",
     "source": "necronomy",
     "date": {
       "year": 1971,
@@ -382,9 +440,14 @@
     "nodeColor": "#c5a059",
     "nodeSize": 0.6,
     "tags": [
-      "incarceration-economy",
+      "incarceration",
+      "manufactured-crisis",
       "permanent-war",
-      "manufactured-enemy"
+      "addiction-economy",
+      "surveillance",
+      "bureaucratic-exclusion",
+      "us-government",
+      "Black-Americans"
     ],
     "connections": [
       "skid-row-1976"
@@ -395,7 +458,7 @@
   },
   {
     "id": "west-bank-1967",
-    "title": "1967 Occupation Begins",
+    "title": "Temporary, Indefinitely: The West Bank Occupation and the Permit Economy, 1967",
     "source": "necronomy",
     "date": {
       "year": 1967,
@@ -411,9 +474,15 @@
     "nodeColor": "#8a1c1c",
     "nodeSize": 0.6,
     "tags": [
-      "occupation-necronomy",
-      "permit-regime",
-      "permanent-provisional"
+      "permit-system",
+      "bureaucratic-exclusion",
+      "land-seizure",
+      "permanent-administration",
+      "displacement",
+      "dispossession",
+      "surveillance",
+      "israeli-occupation",
+      "Palestinian-Arabs"
     ],
     "connections": [
       "diaspora-70ce",

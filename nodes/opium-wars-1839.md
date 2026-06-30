@@ -1,6 +1,6 @@
 ---
 id: opium-wars-1839
-title: First Opium War
+title: "The Treaty That Opened the Vein: Britain Forces the Opium Market, 1839-1842"
 source: necronomy
 date:
   year: 1839
@@ -14,9 +14,16 @@ type: military
 nodeColor: "#8a1c1c"
 nodeSize: 0.6
 tags:
-  - imperial-necronomy
   - addiction-economy
+  - silver-extraction
+  - armed-distribution
+  - resource-extraction
   - forced-trade
+  - monopoly
+  - state-monopoly
+  - british-empire
+  - qing-dynasty
+
 connections:
   - land-code-1858
 excerpt: British Empire forces China to accept opium imports. Creates permanent addiction crisis requiring endless intervention. Military enforcement of market dependency.

@@ -1,6 +1,6 @@
 ---
 id: patriot-act-2001
-title: PATRIOT Act Signed
+title: "The Emergency That Became Infrastructure: The PATRIOT Act and the Security Economy, 2001"
 source: necronomy
 date:
   year: 2001
@@ -14,9 +14,14 @@ type: legal
 nodeColor: "#c5a059"
 nodeSize: 0.6
 tags:
-  - surveillance-state
-  - permanent-emergency
+  - permanent-administration
+  - permanent-war
+  - surveillance
   - security-theater
+  - manufactured-crisis
+  - incarceration
+  - us-government
+
 connections:
   - war-on-drugs-1971
 excerpt: "Emergency powers become permanent infrastructure. TSA, NSA expansion, contractor ecosystem. Crisis creates industry that then depends on crisis continuing."

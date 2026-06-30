@@ -1,6 +1,6 @@
 ---
 id: west-bank-1967
-title: 1967 Occupation Begins
+title: "Temporary, Indefinitely: The West Bank Occupation and the Permit Economy, 1967"
 source: necronomy
 date:
   year: 1967
@@ -14,9 +14,16 @@ type: military
 nodeColor: "#8a1c1c"
 nodeSize: 0.6
 tags:
-  - occupation-necronomy
-  - permit-regime
-  - permanent-provisional
+  - permit-system
+  - bureaucratic-exclusion
+  - land-seizure
+  - permanent-administration
+  - displacement
+  - dispossession
+  - surveillance
+  - israeli-occupation
+  - Palestinian-Arabs
+
 connections:
   - diaspora-70ce
   - land-code-1858

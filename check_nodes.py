@@ -25,7 +25,6 @@ NODES_DIR  = os.path.join(SCRIPT_DIR, 'nodes')
 
 DRAFT_MARKERS = [
     'not verified',
-    'not verified.',
     '[draft]',
     '[wip]',
     'todo:',
@@ -33,6 +32,22 @@ DRAFT_MARKERS = [
     'insert citation',
     'fact check',
     '[citation needed]',
+    'needs verification',
+    'needs a verification',
+    'verification pass',
+    'sourced check',
+    'before publication',
+    'before being presented',
+    'require independent sourcing',
+    '[needs',
+    '(needs',
+    '[check',
+    '[source',
+    '[confirm',
+    '[unverified',
+    '(unverified',
+    '[tbd',
+    '[to do',
 ]
 
 REQUIRED_FIELDS = ['id', 'title', 'date', 'location', 'excerpt']
