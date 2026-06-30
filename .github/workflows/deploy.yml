@@ -3,12 +3,6 @@ name: Build & Deploy
 on:
   push:
     branches: [main]
-    paths:
-      - 'nodes/**'
-      - 'build.py'
-      - 'requirements.txt'
-      - 'necronomy-atlas/src/**'
-      - 'necronomy-atlas/package*.json'
 
 jobs:
   build:
@@ -33,42 +27,13 @@ jobs:
       - name: Run build script
         run: python build.py
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: necronomy-atlas/package-lock.json
-
-      - name: Build Necronomy Atlas
-        working-directory: necronomy-atlas
-        run: |
-          npm ci
-          npm run build
-
-      # Overwrite necronomy-atlas/ with built dist/ contents so GitHub Pages
-      # serves the compiled React app at /necronomy-atlas/
-      - name: Stage built necronomy output
-        run: |
-          rm -rf necronomy-atlas-built
-          mkdir necronomy-atlas-built
-          cp -r necronomy-atlas/dist/. necronomy-atlas-built/
-
       - name: Commit generated files
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          # Stage generated outputs
           git add data/events.json articles/ sitemap.xml
-
-          # Stage compiled necronomy atlas (dist/ → necronomy-atlas/)
-          # We keep src/ in the repo but also commit the compiled version
-          git add necronomy-atlas/dist/
-
-          # Only commit if something actually changed
           git diff --cached --quiet && echo "Nothing to commit" || \
-            git commit -m "auto: regenerate articles, events, necronomy build [skip ci]"
+            git commit -m "auto: regenerate articles and events [skip ci]"
 
       - name: Push
         run: git push
