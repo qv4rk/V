@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Eigenstate Roll — Quantum Dicemancy | FeistTech</title>
+<meta name="description" content="Eigenstate Roll: a living quantum dicemancy oracle. Six sacred dice, a private reading, a wavefunction waiting to collapse.">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Roboto+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="app/styles.css">
+</head>
+<body>
+
+<canvas id="starfield-canvas" aria-hidden="true"></canvas>
+
+<header class="topbar">
+  <div>
+    <span class="topbar-logo">EIGENSTATE ROLL</span>
+    <span class="topbar-sub">FeistTech</span>
+  </div>
+  <a href="../../../index.html" class="btn-ghost">← FeistTech</a>
+</header>
+
+<main>
+
+  <!-- ═══════════════ LANDING ═══════════════ -->
+  <section id="screen-landing" class="screen">
+    <h1 class="hero-title">EIGENSTATE ROLL</h1>
+    <p class="hero-subtitle">The Threads Are Listening &nbsp;·&nbsp; Quantum Dicemancy for the Modern Seeker</p>
+    <div class="hero-actions">
+      <button id="btn-begin" class="btn-primary">Begin Your Reading</button>
+      <button id="btn-fluctuation" class="btn-secondary">✦ Random Quantum Fluctuation (Demo)</button>
+    </div>
+  </section>
+
+  <!-- ═══════════════ INPUT RITUAL ═══════════════ -->
+  <section id="screen-input" class="screen hidden">
+    <h2 tabindex="-1">The Input Ritual</h2>
+    <p class="hero-subtitle" style="text-align:left;margin-bottom:2rem;">Name the seeker. Name the question. Then meet the six sacred dice.</p>
+
+    <form id="reading-form" class="ritual-form" onsubmit="return false;">
+      <div class="field">
+        <label for="input-seeker">Seeker</label>
+        <input id="input-seeker" type="text" placeholder="Client name, or leave blank for Anonymous Seeker" autocomplete="off">
+      </div>
+      <div class="field">
+        <label for="input-question">Session Question / Intent</label>
+        <textarea id="input-question" placeholder="What are you actually asking, right now?"></textarea>
+      </div>
+      <div class="field">
+        <label for="input-date">Date</label>
+        <input id="input-date" type="date">
+      </div>
+    </form>
+
+    <div class="dice-ritual-grid" id="dice-grid">
+      <div class="die" id="die-d4"></div>
+      <div class="die" id="die-d6"></div>
+      <div class="die" id="die-d8"></div>
+      <div class="die" id="die-d10"></div>
+      <div class="die" id="die-d12"></div>
+      <div class="die" id="die-d20"></div>
+    </div>
+
+    <div class="ritual-actions">
+      <button id="btn-entangle" class="btn-primary">Entangle the Threads / Collapse the Wavefunction</button>
+      <button id="btn-random-roll" class="btn-secondary">✦ Quantum Fluctuation (Random Roll)</button>
+    </div>
+    <div style="text-align:center;margin-top:1rem;">
+      <button id="btn-back-landing" class="btn-ghost">← back</button>
+    </div>
+  </section>
+
+  <!-- ═══════════════ RESULTS ═══════════════ -->
+  <section id="screen-results" class="screen hidden">
+    <h2 tabindex="-1">The Revelation</h2>
+
+    <div class="results-top">
+      <div class="reading-meta">
+        <h2>Reading Summary</h2>
+        <p class="headline" id="headline-text"></p>
+        <div class="meta-row">Seeker: <strong id="result-seeker"></strong></div>
+        <div class="meta-row">Intent: <strong id="result-question"></strong></div>
+        <div class="meta-row">Date: <strong id="result-date"></strong></div>
+      </div>
+      <div class="panel-box">
+        <h4>Antikythera Triplicity Dial</h4>
+        <div id="dial-container"></div>
+      </div>
+    </div>
+
+    <div class="dial-map-row">
+      <div class="vector-map-pair">
+        <div class="panel-box"><h4>Lo Shu Square</h4><div id="loshu-container"></div></div>
+        <div class="panel-box"><h4>Etruscan Templum</h4><div id="templum-container"></div></div>
+      </div>
+      <div class="panel-box" style="display:flex;flex-direction:column;justify-content:center;">
+        <h4>The Living Vector Map</h4>
+        <p style="font-size:.82rem;color:var(--dim);line-height:1.6;">Click a cell of the Lo Shu square or a quadrant of the Templum for a short lore pop. Both panels respond to the same Vector (d8) roll.</p>
+      </div>
+    </div>
+
+    <h3>The Summary Grid</h3>
+    <div class="summary-grid" id="summary-grid"></div>
+
+    <section class="thread-section">
+      <div class="thread-toolbar">
+        <h4>Thread Entanglement Canvas</h4>
+        <button id="btn-toggle-threads" class="btn-ghost">toggle</button>
+      </div>
+      <div id="thread-canvas-wrap"><canvas id="thread-canvas"></canvas></div>
+    </section>
+
+    <h3>The Detailed Revelation</h3>
+    <div id="detail-panels"></div>
+
+    <div class="action-bar">
+      <button id="btn-export-pdf" class="btn-secondary">⬇ Export PDF</button>
+      <button id="btn-save-library" class="btn-secondary">☆ Save to Library</button>
+      <button id="btn-share" class="btn-secondary">↗ Share</button>
+      <button id="btn-new-reading" class="btn-primary">New Reading</button>
+    </div>
+  </section>
+
+</main>
+
+<button id="history-fab" class="history-fab" aria-haspopup="true">☰ Grimoire</button>
+<aside id="history-panel" class="history-panel hidden" aria-label="Reading history">
+  <div class="history-header">
+    <h3>Your Grimoire</h3>
+    <button id="history-close" class="btn-icon" aria-label="Close history">✕</button>
+  </div>
+  <div class="history-search-wrap">
+    <input id="history-search" type="search" placeholder="Search by name, question, headline…">
+  </div>
+  <div class="history-list" id="history-list"></div>
+</aside>
+
+<div id="toast-region" aria-live="polite"></div>
+
+<div id="lore-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="lore-modal-title">
+  <div class="modal-card">
+    <h3 id="lore-modal-title"></h3>
+    <p id="lore-modal-body"></p>
+    <button id="lore-modal-close" class="btn-secondary modal-close">Close</button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="app/definitions.js"></script>
+<script src="app/dice.js"></script>
+<script src="app/dial.js"></script>
+<script src="app/map.js"></script>
+<script src="app/storage.js"></script>
+<script src="app/pdf.js"></script>
+<script src="app/main.js"></script>
+
+</body>
+</html>
