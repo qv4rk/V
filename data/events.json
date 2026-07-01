@@ -252,41 +252,5 @@
     "excerpt": "LAPD Blue Book designates 50-block containment zone. Don't solve homelessness—warehouse it. Creates permanent nonprofit ecosystem dependent on problem persisting.",
     "content": "# Skid Row Containment: The Nonprofit Necronomy\n\nIn 1976, the LAPD published the \"Blue Book\"—a policy guide designating a 50-block area in downtown LA as a containment zone for the homeless. Officers were instructed to actively shepherd unhoused people into this area and prevent them from dispersing to other neighborhoods.\n\nThe policy was never about solving homelessness. It was about managing visibility. Concentrate the problem in one place, then build an entire ecosystem around managing—not ending—that concentration.\n\nToday, Skid Row generates hundreds of millions in annual revenue. Nonprofits, service providers, grant administrators, consultants, security contractors—all dependent on the problem persisting. Any actual solution would be a mass layoff.\n\nThe necronomy is in the design: the worse the crisis gets, the more funding flows in. Success is measured by the scale of intervention, not by outcomes. You can't disrupt a market that profits from its own failure to function.",
     "article_url": "articles/skid-row-1976.html"
-  },
-  {
-    "id": "west-bank-1967",
-    "title": "Temporary, Indefinitely: The West Bank Occupation and the Permit Economy, 1967",
-    "source": "necronomy",
-    "date": {
-      "year": 1967,
-      "month": 6,
-      "day": 10
-    },
-    "location": {
-      "lat": 31.9522,
-      "lon": 35.2332,
-      "name": "West Bank"
-    },
-    "type": "military",
-    "nodeColor": "#8a1c1c",
-    "nodeSize": 0.6,
-    "tags": [
-      "permit-system",
-      "bureaucratic-exclusion",
-      "land-seizure",
-      "permanent-administration",
-      "displacement",
-      "dispossession",
-      "surveillance",
-      "israeli-occupation",
-      "Palestinian-Arabs"
-    ],
-    "connections": [
-      "diaspora-70ce",
-      "land-code-1858"
-    ],
-    "excerpt": "Occupation begins as 'temporary' measure. 57 years later, the temporary has become permanent infrastructure. Permit regime generates endless administrative revenue.",
-    "content": "# West Bank Occupation: Permanent Provisional Status\n\nThe 1967 occupation was declared temporary. Nearly six decades later, 'temporary' has become the most permanent feature of the landscape. This isn't failure—it's the design.\n\nThe permit regime is necronomy infrastructure: Palestinians need permits to build, to farm, to move, to work. Each permit requires fees, applications, waiting periods, denials that generate appeals. An entire administrative apparatus profits from managing access to what was once simply lived.\n\nMeanwhile, the security industry profits from managing the reaction to the permits. Checkpoints, barriers, surveillance systems, biometric databases—all justified by the 'temporary' crisis that must be managed indefinitely.\n\nThe necronomy completes when both sides develop economies dependent on the occupation's continuation. Aid flows to manage the humanitarian crisis. Defense contracts flow to manage the security crisis. Think tanks profit from analyzing the crisis. NGOs profit from documenting the crisis. \n\nResolution would eliminate the revenue stream. Permanent provisional status is the business model.",
-    "article_url": "articles/west-bank-1967.html"
   }
 ]
