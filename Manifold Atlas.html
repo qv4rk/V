@@ -53,7 +53,7 @@
   .node-jump:hover { color: var(--ink); border-color: var(--ink-dim); }
   .node-jump option { background: #0c0a07; color: #d4c39a; }
 
-  /* ── Consistent home link (topbar + Atrium) ── */
+  /* ── Consistent home link (used inside the chrome menu) ── */
   .home-link {
     font-family: 'Space Mono', monospace;
     font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
@@ -67,11 +67,6 @@
     touch-action: manipulation;
   }
   .home-link:hover { color: var(--ink); border-color: var(--ink-dim); }
-
-  /* Atrium also gets the fixed home button always visible at top-left */
-  #atrium-home {
-    position: absolute; top: 18px; left: 18px; z-index: 40;
-  }
 
   /* ── Mobile: ensure Enter button clears browser chrome ── */
   @media (max-width: 780px) {
@@ -94,8 +89,8 @@
 
   <!-- ════════════════ ATRIUM (homepage) ════════════════ -->
   <section id="atrium" class="view on" data-screen-label="00 Atrium">
-    <!-- Always-visible home link in top-left — not hidden by bottom browser chrome -->
-    <a href="index.html" class="home-link" id="atrium-home">← FeistTech</a>
+    <!-- Home link now lives in the persistent hamburger menu (#chrome-menu),
+         which is visible here too — no separate corner link needed. -->
     <div class="marquee">
       <h1>Manifold Atlas</h1>
     </div>
@@ -124,27 +119,36 @@
     <canvas id="sky-canvas"></canvas>
   </section>
 
-  <!-- ════════════════ CHROME ════════════════ -->
-  <div class="topbar" id="chrome-bar" style="display:none">
-    <a href="index.html" class="home-link">← Home</a>
-    <div class="brand">
-      MANIFOLD
-      <span class="dot">·</span>
-      ATLAS
-    </div>
-    <select id="node-jump" class="node-jump"><option value="">◇ JUMP TO NODE…</option></select>
-    <div class="view-tabs">
-      <button data-view="atrium">Atrium</button>
-      <button data-view="atlas" class="on">Atlas</button>
-      <button data-view="sky">Sky</button>
-    </div>
-    <div class="theme-picker">
-      <span class="lbl">THEME</span>
-      <div class="theme-swatch on" data-theme="patina"   style="--col:#a67041" title="Patina"></div>
-      <div class="theme-swatch"    data-theme="cyan"     style="--col:#00e5ff" title="Cyan Blueprint"></div>
-      <div class="theme-swatch"    data-theme="imperial" style="--col:#e8c46a" title="Imperial Gold"></div>
-      <div class="theme-swatch"    data-theme="night"    style="--col:#88c0d0" title="Night Plate"></div>
-    </div>
+  <!-- ════════════════ CHROME — persistent hamburger nav ════════════════
+       Always present (all three views, including Atrium). Collapsed to
+       just the toggle button until clicked; the revealed menu stacks
+       vertically on narrow viewports and lays out horizontally once
+       there's room, matching the toggle button's fixed top-left anchor. -->
+  <div class="chrome-bar" id="chrome-bar">
+    <button class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="chrome-menu">
+      <span></span><span></span><span></span>
+    </button>
+    <nav class="chrome-menu" id="chrome-menu">
+      <a href="index.html" class="home-link">← Home</a>
+      <div class="brand">
+        MANIFOLD
+        <span class="dot">·</span>
+        ATLAS
+      </div>
+      <select id="node-jump" class="node-jump"><option value="">◇ JUMP TO NODE…</option></select>
+      <div class="view-tabs">
+        <button data-view="atrium">Atrium</button>
+        <button data-view="atlas" class="on">Atlas</button>
+        <button data-view="sky">Sky</button>
+      </div>
+      <div class="theme-picker">
+        <span class="lbl">THEME</span>
+        <div class="theme-swatch on" data-theme="patina"   style="--col:#a67041" title="Patina"></div>
+        <div class="theme-swatch"    data-theme="cyan"     style="--col:#00e5ff" title="Cyan Blueprint"></div>
+        <div class="theme-swatch"    data-theme="imperial" style="--col:#e8c46a" title="Imperial Gold"></div>
+        <div class="theme-swatch"    data-theme="night"    style="--col:#88c0d0" title="Night Plate"></div>
+      </div>
+    </nav>
   </div>
 
   <!-- HUD (atlas only by default; visible in sky too) -->
