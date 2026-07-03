@@ -3,196 +3,503 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FeistTech</title>
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto+Mono:wght@300;400&display=swap" rel="stylesheet">
+<title>FeistTech — Systems &amp; Research</title>
+<meta name="description" content="FeistTech: a working archive of connected historical events, and the instruments built to walk through them.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='44' fill='%23050810'/%3E%3Ccircle cx='50' cy='50' r='36' fill='none' stroke='%23c9a84c' stroke-width='2'/%3E%3Cpath d='M50 18 L50 82 M18 50 L82 50' stroke='%2300e5ff' stroke-width='1' opacity='.5'/%3E%3Ccircle cx='50' cy='50' r='6' fill='%23c9a84c'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --primary: #00f3ff;
-    --secondary: #bc13fe;
-    --accent: #ff6b35;
-    --bg: #050510;
-    --bg2: #0a0a1a;
-    --border: rgba(0,243,255,0.2);
-    --text: #c8d0dc;
-    --dim: #5a6070;
+    --bg: #050810;
+    --bg2: #0a0c14;
+    --panel: rgba(10,12,20,.72);
+    --gold: #c9a84c;
+    --gold-hi: #e8c96d;
+    --gold-dim: rgba(201,168,76,.3);
+    --cyan: #00e5ff;
+    --ink: #ddd5c0;
+    --ink-dim: #8a7e6a;
+    --ink-mute: #4a4030;
+    --border: rgba(201,168,76,.16);
+    --border-cyan: rgba(0,229,255,.14);
+    --font-display: 'Cinzel', serif;
+    --font-body: 'Cormorant Garamond', serif;
+    --font-mono: 'Space Mono', monospace;
   }
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
   body {
     background: var(--bg);
-    color: var(--text);
-    font-family: 'Roboto Mono', monospace;
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 18px;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
     min-height: 100vh;
+    overflow-x: hidden;
   }
-  header {
-    padding: 2.5rem 2rem 1.5rem;
+  a { color: inherit; }
+  img { max-width: 100%; display: block; }
+
+  /* faint starfield, matches Atlas / article pages */
+  body::before {
+    content: "";
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background-image:
+      radial-gradient(1px 1px at 8% 22%, rgba(255,255,255,.35), transparent),
+      radial-gradient(1px 1px at 22% 68%, rgba(255,255,255,.22), transparent),
+      radial-gradient(1.5px 1.5px at 38% 12%, rgba(255,255,255,.3), transparent),
+      radial-gradient(1px 1px at 54% 76%, rgba(255,255,255,.2), transparent),
+      radial-gradient(1.5px 1.5px at 68% 34%, rgba(255,255,255,.28), transparent),
+      radial-gradient(1px 1px at 82% 58%, rgba(255,255,255,.2), transparent),
+      radial-gradient(1px 1px at 92% 18%, rgba(255,255,255,.25), transparent),
+      radial-gradient(1.5px 1.5px at 14% 88%, rgba(255,255,255,.2), transparent);
+    opacity: .5;
+  }
+  .frame { position: relative; z-index: 1; max-width: 1080px; margin: 0 auto; padding: 0 1.6rem; }
+
+  /* ═══════ Nav ═══════ */
+  .site-nav {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(5,8,16,.9);
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
     border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: baseline;
-    gap: 1.5rem;
   }
-  .logo {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 1.6rem;
-    font-weight: 700;
-    background: linear-gradient(90deg, var(--primary), var(--secondary));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    letter-spacing: 0.1em;
+  .nav-inner {
+    max-width: 1080px; margin: 0 auto; padding: 0 1.6rem;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 68px;
   }
-  .logo-sub {
-    font-size: 0.7rem;
-    color: var(--dim);
-    letter-spacing: 0.25em;
+  .brand { text-decoration: none; display: flex; flex-direction: column; line-height: 1.1; }
+  .brand-mark {
+    font-family: var(--font-display); font-weight: 700; font-size: 1.15rem;
+    letter-spacing: .12em; color: var(--gold-hi);
+  }
+  .brand-sub {
+    font-family: var(--font-mono); font-size: .58rem; letter-spacing: .28em;
+    text-transform: uppercase; color: var(--ink-dim); margin-top: 2px;
+  }
+  .nav-links {
+    display: flex; align-items: center; gap: 1.8rem;
+    font-family: var(--font-mono); font-size: .74rem; letter-spacing: .12em;
     text-transform: uppercase;
   }
-  main {
-    max-width: 960px;
-    margin: 0 auto;
-    padding: 2.5rem 1.5rem 4rem;
+  .nav-links a { text-decoration: none; color: var(--ink-dim); transition: color .2s; padding: 4px 0; }
+  .nav-links a:hover, .nav-links a:focus-visible { color: var(--gold-hi); }
+  .nav-contact {
+    border: 1px solid var(--gold-dim); border-radius: 3px; padding: 7px 12px !important;
+    color: var(--gold) !important;
   }
-  .section-label {
-    font-size: 0.65rem;
-    letter-spacing: 0.35em;
-    text-transform: uppercase;
-    color: var(--dim);
-    margin-bottom: 1rem;
-    margin-top: 2.5rem;
+  .nav-contact:hover { border-color: var(--gold); background: rgba(201,168,76,.08); }
+  .nav-actions { display: flex; align-items: center; gap: .6rem; }
+  .icon-btn {
+    background: transparent; border: 1px solid var(--border-cyan); color: var(--cyan);
+    font-family: var(--font-mono); font-size: .68rem; letter-spacing: .1em;
+    padding: 8px 12px; border-radius: 3px; cursor: pointer; white-space: nowrap;
+    transition: border-color .2s, background .2s;
   }
-  .section-label:first-child { margin-top: 0; }
-  .grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 1rem;
+  .icon-btn:hover { border-color: var(--cyan); background: rgba(0,229,255,.07); }
+  .nav-toggle {
+    display: none; background: transparent; border: 1px solid var(--border);
+    color: var(--ink); font-size: 1.1rem; padding: 6px 10px; border-radius: 3px; cursor: pointer;
   }
-  .card {
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 1.4rem 1.6rem;
-    text-decoration: none;
-    color: inherit;
-    display: block;
-    transition: border-color 0.2s, background 0.2s, transform 0.15s;
-    cursor: pointer;
+
+  @media (max-width: 760px) {
+    .nav-toggle { display: block; }
+    .nav-links {
+      position: absolute; top: 68px; left: 0; right: 0; z-index: 60;
+      flex-direction: column; align-items: flex-start; gap: 0;
+      background: #070a12; border-bottom: 1px solid var(--border);
+      max-height: 0; overflow: hidden; transition: max-height .3s ease;
+    }
+    .nav-links.open { max-height: 320px; }
+    .nav-links a { width: 100%; padding: 14px 1.6rem; border-top: 1px solid var(--border); }
+    .nav-contact { border-radius: 0 !important; border: none !important; border-top: 1px solid var(--border) !important; margin: 0 !important; }
+    .brand-sub { display: none; }
   }
-  .card:hover {
-    border-color: var(--primary);
-    background: rgba(0,243,255,0.04);
-    transform: translateY(-2px);
+
+  /* ═══════ Hero ═══════ */
+  .hero {
+    padding: 4.5rem 0 3.5rem;
+    border-bottom: 1px solid var(--border);
+    opacity: 0; transition: opacity .5s ease;
   }
-  .card-icon {
-    font-size: 1.4rem;
-    margin-bottom: 0.75rem;
-    display: block;
+  .hero.ready { opacity: 1; }
+  .eyebrow {
+    font-family: var(--font-mono); font-size: .68rem; letter-spacing: .3em;
+    text-transform: uppercase; color: var(--cyan); margin-bottom: 1rem;
   }
-  .card-name {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 0.82rem;
-    font-weight: 700;
-    color: var(--primary);
-    letter-spacing: 0.08em;
-    margin-bottom: 0.4rem;
+  .hero-title {
+    font-family: var(--font-display); font-weight: 700; font-size: clamp(1.9rem, 5vw, 3.1rem);
+    line-height: 1.18; color: var(--gold-hi); max-width: 20ch; letter-spacing: .01em;
   }
-  .card-desc {
-    font-size: 0.75rem;
-    color: var(--dim);
-    line-height: 1.6;
+  .hero-meta {
+    font-family: var(--font-mono); font-size: .72rem; letter-spacing: .1em;
+    color: var(--ink-mute); text-transform: uppercase; margin-top: 1rem; display: flex; gap: 1.2rem; flex-wrap: wrap;
   }
-  /* Kalidascope sub-links */
-  .card-links {
-    margin-top: 0.75rem;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
+  .hero-excerpt {
+    font-size: 1.2rem; line-height: 1.6; color: var(--ink-dim); font-style: italic;
+    max-width: 62ch; margin-top: 1.3rem;
   }
-  .card-link {
-    font-size: 0.7rem;
-    color: var(--primary);
-    text-decoration: none;
-    opacity: 0.7;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 3px 0;
-    border-top: 1px solid rgba(0,243,255,0.08);
+  .btn-primary {
+    display: inline-block; margin-top: 1.8rem;
+    font-family: var(--font-mono); font-size: .78rem; letter-spacing: .12em; text-transform: uppercase;
+    color: #050810; background: linear-gradient(120deg, var(--gold-hi), var(--gold));
+    padding: 13px 26px; border-radius: 3px; text-decoration: none;
+    transition: transform .15s ease, box-shadow .2s ease;
   }
-  .card-link:first-child { border-top: none; margin-top: 0.5rem; }
-  .card-link:hover { opacity: 1; }
-  .card-link::before { content: '→'; font-size: 0.65rem; }
-  /* Featured card */
-  .card.featured {
-    border-color: rgba(188,19,254,0.4);
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(201,168,76,.25); }
+
+  /* ═══════ Sections ═══════ */
+  .section { padding: 3.4rem 0; border-bottom: 1px solid var(--border); }
+  .section:last-of-type { border-bottom: none; }
+  .section-title {
+    font-family: var(--font-display); font-weight: 600; font-size: 1.5rem;
+    color: var(--gold-hi); letter-spacing: .04em; margin-bottom: .35rem;
+  }
+  .section-sub { color: var(--ink-dim); font-size: 1rem; margin-bottom: 1.8rem; max-width: 56ch; }
+
+  /* ═══════ Dispatch (article preview) cards ═══════ */
+  .article-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.2rem;
+  }
+  .article-card {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 6px; padding: 1.5rem 1.6rem;
+    display: flex; flex-direction: column; transition: border-color .2s, transform .15s;
+  }
+  .article-card:hover { border-color: var(--gold-dim); transform: translateY(-2px); }
+  .article-date {
+    font-family: var(--font-mono); font-size: .64rem; letter-spacing: .18em;
+    color: var(--cyan); text-transform: uppercase; margin-bottom: .6rem;
+  }
+  .article-title {
+    font-family: var(--font-display); font-size: 1.08rem; font-weight: 600;
+    color: var(--ink); line-height: 1.35; margin-bottom: .7rem;
+  }
+  .article-excerpt { font-size: .95rem; line-height: 1.55; color: var(--ink-dim); flex: 1; }
+  .read-more {
+    display: inline-flex; align-items: center; gap: 5px; margin-top: 1rem;
+    font-family: var(--font-mono); font-size: .7rem; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--gold); text-decoration: none;
+  }
+  .read-more:hover { color: var(--gold-hi); }
+
+  /* ═══════ Tool / instrument cards ═══════ */
+  .tool-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.2rem;
+  }
+  .tool-card {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 6px;
+    padding: 1.6rem 1.7rem; text-decoration: none; color: inherit;
+    display: block; transition: border-color .2s, background .2s, transform .15s;
+  }
+  .tool-card:hover, .tool-card:focus-visible {
+    border-color: var(--gold-dim); background: rgba(201,168,76,.04); transform: translateY(-2px);
+  }
+  .tool-card--flagship {
     grid-column: span 2;
+    background: linear-gradient(160deg, rgba(201,168,76,.07), transparent 65%);
+    border-color: var(--gold-dim);
   }
-  .card.featured .card-name { color: var(--secondary); }
-  .card.featured:hover { border-color: var(--secondary); background: rgba(188,19,254,0.04); }
-  @media (max-width: 600px) {
-    .card.featured { grid-column: span 1; }
-    header { flex-direction: column; gap: 0.4rem; }
+  @media (max-width: 620px) { .tool-card--flagship { grid-column: span 1; } }
+  .tool-icon { font-size: 1.6rem; display: block; margin-bottom: .8rem; }
+  .tool-card h3 {
+    font-family: var(--font-display); font-size: 1.15rem; font-weight: 600;
+    color: var(--gold-hi); letter-spacing: .02em; display: flex; align-items: baseline; gap: .6rem; flex-wrap: wrap;
+    margin-bottom: .5rem;
+  }
+  .tool-badge {
+    font-family: var(--font-mono); font-size: .58rem; letter-spacing: .06em;
+    color: var(--ink-mute); border: 1px solid var(--border); border-radius: 2px; padding: 2px 6px;
+    text-transform: none;
+  }
+  .tool-card p { font-size: .96rem; line-height: 1.55; color: var(--ink-dim); }
+  .tool-links { margin-top: .9rem; display: flex; flex-direction: column; gap: 2px; }
+  .tool-links a {
+    font-family: var(--font-mono); font-size: .72rem; letter-spacing: .05em;
+    color: var(--cyan); text-decoration: none; opacity: .8;
+    padding: 7px 0; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 6px;
+  }
+  .tool-links a:first-child { border-top: none; margin-top: .4rem; }
+  .tool-links a:hover { opacity: 1; }
+  .tool-links a::before { content: '→'; font-size: .65rem; }
+
+  /* ═══════ Coming soon ═══════ */
+  .soon-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.2rem; }
+  .soon-card {
+    border: 1px dashed var(--border); border-radius: 6px; padding: 1.5rem 1.6rem;
+    opacity: .68;
+  }
+  .soon-card h3 {
+    font-family: var(--font-display); font-size: 1.05rem; color: var(--ink); margin-bottom: .5rem;
+    display: flex; align-items: center; gap: .6rem; flex-wrap: wrap;
+  }
+  .soon-tag {
+    font-family: var(--font-mono); font-size: .58rem; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--ink-mute); border: 1px solid var(--border); border-radius: 2px; padding: 2px 7px;
+  }
+  .soon-card p { font-size: .9rem; color: var(--ink-mute); line-height: 1.5; }
+  .disclosure {
+    display: inline-block; margin-top: .7rem; font-family: var(--font-mono);
+    font-size: .6rem; letter-spacing: .05em; color: var(--ink-mute);
+    border-top: 1px solid var(--border); padding-top: .6rem;
+  }
+
+  footer {
+    padding: 2.4rem 0 3rem;
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;
+    font-family: var(--font-mono); font-size: .68rem; letter-spacing: .1em; color: var(--ink-mute);
+  }
+  footer a { text-decoration: none; color: var(--ink-dim); }
+  footer a:hover { color: var(--gold); }
+  .footer-actions { display: flex; gap: 1rem; align-items: center; }
+
+  :focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+
+  @media (max-width: 480px) {
+    body { font-size: 16.5px; }
+    .hero { padding: 3rem 0 2.5rem; }
   }
 </style>
 </head>
 <body>
 
-<header>
-  <span class="logo">FEISTTECH</span>
-  <span class="logo-sub">Systems &amp; Research</span>
+<header class="site-nav">
+  <div class="nav-inner">
+    <a href="index.html" class="brand">
+      <span class="brand-mark">FEISTTECH</span>
+      <span class="brand-sub">Systems &amp; Research</span>
+    </a>
+    <nav class="nav-links" id="navLinks">
+      <a href="#dispatches">Dispatches</a>
+      <a href="#instruments">Instruments</a>
+      <a href="#kaleidoscope">Kaleidoscope</a>
+      <a href="mailto:info@feisttech.com?subject=Hello%20from%20feisttech.com" class="nav-contact">Contact</a>
+    </nav>
+    <div class="nav-actions">
+      <button id="shareBtn" class="icon-btn" type="button">⤴ Share</button>
+      <button id="navToggle" class="nav-toggle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="navLinks">☰</button>
+    </div>
+  </div>
 </header>
 
-<main>
+<main class="frame">
 
-  <div class="section-label">Tools</div>
-  <div class="grid">
+  <!-- ═══════ Featured dispatch ═══════ -->
+  <section class="hero" id="hero" aria-label="Featured dispatch">
+    <p class="eyebrow">Featured Dispatch</p>
+    <h1 class="hero-title" id="heroTitle">Loading the archive…</h1>
+    <div class="hero-meta" id="heroMeta"></div>
+    <p class="hero-excerpt" id="heroExcerpt"></p>
+    <a class="btn-primary" id="heroReadMore" href="Manifold Atlas.html">Read the Full Story →</a>
+  </section>
 
-    <a href="Manifold Atlas.html" class="card featured">
-      <span class="card-icon">🌍</span>
-      <div class="card-name">Manifold Atlas <span style="font-size:.65em;opacity:.55;font-weight:400;">2D Classic</span></div>
-      <div class="card-desc">Geographic event viewer. Navigate historical nodes on an interactive globe with a time dial.</div>
-    </a>
+  <!-- ═══════ Recent dispatches ═══════ -->
+  <section class="section" id="dispatches">
+    <h2 class="section-title">Dispatches</h2>
+    <p class="section-sub">Field notes from the Manifold Atlas archive — connected historical events, each with a full dossier.</p>
+    <div class="article-grid" id="articleGrid"></div>
+  </section>
 
-    <a href="apps/webapps/tts/feisttech_reader_v9.html" class="card">
-      <span class="card-icon">🔊</span>
-      <div class="card-name">Reader</div>
-      <div class="card-desc">Multi-voice TTS reader for text, markdown, and PDF. Supports speaker tags for character voices.</div>
-    </a>
+  <!-- ═══════ Instruments (tools) ═══════ -->
+  <section class="section" id="instruments">
+    <h2 class="section-title">Instruments</h2>
+    <p class="section-sub">The working tools built around the archive.</p>
+    <div class="tool-grid">
 
-    <a href="apps/webapps/tts/rsvp.html" class="card">
-      <span class="card-icon">⚡</span>
-      <div class="card-name">RSVP Reader</div>
-      <div class="card-desc">Rapid serial visual presentation speed reader.</div>
-    </a>
+      <a href="Manifold Atlas.html" class="tool-card tool-card--flagship">
+        <span class="tool-icon">🌍</span>
+        <h3>Manifold Atlas <span class="tool-badge">flagship</span></h3>
+        <p>A time-dial and interactive globe for walking through connected historical events — full-text search, chronological reading, and a dossier for every node.</p>
+      </a>
 
-    <a href="apps/webapps/solsys.html" class="card">
-      <span class="card-icon">🪐</span>
-      <div class="card-name">Solar System</div>
-      <div class="card-desc">Interactive solar system visualization.</div>
-    </a>
-
-    <a href="apps/webapps/eigenstate-roll/index.html" class="card">
-      <span class="card-icon">🎲</span>
-      <div class="card-name">Eigenstate Roll</div>
-      <div class="card-desc">Quantum dicemancy oracle. Six sacred dice, an Antikythera triplicity dial, and a living Lo Shu vector map.</div>
-    </a>
-
-  </div>
-
-  <div class="section-label">Kalidascope</div>
-  <div class="grid">
-
-    <div class="card">
-      <span class="card-icon">✏️</span>
-      <div class="card-name">Kalidascope</div>
-      <div class="card-desc">Font &amp; vector design tools.</div>
-      <div class="card-links">
-        <a class="card-link" href="apps/webapps/kalidascope/vectorfontskalidascope.html">Vector Fonts</a>
-        <a class="card-link" href="apps/webapps/kalidascope/klidascopetopgunforge.html">Top Gun Forge</a>
-        <a class="card-link" href="apps/webapps/kalidascope/fontforge5.html">Font Forge 5</a>
+      <div class="tool-card">
+        <span class="tool-icon">🔊</span>
+        <h3>Reader <span class="tool-badge">+ RSVP mode</span></h3>
+        <p>Multi-voice text-to-speech for articles, markdown, and PDFs, with speaker tags for character voices.</p>
+        <div class="tool-links">
+          <a href="apps/webapps/tts/feisttech_reader_v9.html">Open Reader</a>
+          <a href="apps/webapps/tts/rsvp.html">RSVP speed-reading mode</a>
+        </div>
       </div>
-    </div>
 
-  </div>
+      <a href="apps/webapps/solsys.html" class="tool-card">
+        <span class="tool-icon">🪐</span>
+        <h3>Solar System</h3>
+        <p>A scaled, animated orrery — scrub the date slider across three millennia and watch the orbits move.</p>
+      </a>
+
+      <a href="apps/webapps/eigenstate-roll/index.html" class="tool-card">
+        <span class="tool-icon">🎲</span>
+        <h3>Eigenstate Roll</h3>
+        <p>A six-die dicemancy oracle with a live Antikythera triplicity dial and a Lo Shu vector map.</p>
+      </a>
+
+    </div>
+  </section>
+
+  <!-- ═══════ Kaleidoscope ═══════ -->
+  <section class="section" id="kaleidoscope">
+    <h2 class="section-title">Kaleidoscope</h2>
+    <p class="section-sub">Type &amp; vector design studio.</p>
+    <div class="tool-grid">
+
+      <a href="apps/webapps/kalidascope/vectorfontskalidascope.html" class="tool-card">
+        <span class="tool-icon">✏️</span>
+        <h3>Vector Fonts <span class="tool-badge">Symmetry Shadow Matrix v3</span></h3>
+        <p>Draw and export custom vector letterforms.</p>
+      </a>
+
+      <a href="apps/webapps/kalidascope/klidascopetopgunforge.html" class="tool-card">
+        <span class="tool-icon">🗝️</span>
+        <h3>Top Gun Forge <span class="tool-badge">KeyForge v2</span></h3>
+        <p>Vector pattern &amp; glyph forging workspace.</p>
+      </a>
+
+      <a href="apps/webapps/kalidascope/fontforge5.html" class="tool-card">
+        <span class="tool-icon">🔤</span>
+        <h3>Font Forge 5 <span class="tool-badge">Omni-Pattern Grand Forge v8</span></h3>
+        <p>Full vector typeface construction workspace.</p>
+      </a>
+
+    </div>
+  </section>
+
+  <!-- ═══════ In development ═══════ -->
+  <section class="section" id="in-development">
+    <h2 class="section-title">In Development</h2>
+    <p class="section-sub">Not live yet — linking here once they're pushed.</p>
+    <div class="soon-grid">
+
+      <div class="soon-card">
+        <h3>Trading Buddy <span class="soon-tag">Coming Soon</span></h3>
+        <p>A trading companion app.</p>
+        <div class="disclosure">Not financial advice.</div>
+      </div>
+
+      <div class="soon-card">
+        <h3>Low-Methionine Meal Builder <span class="soon-tag">Coming Soon</span></h3>
+        <p>A meal planner built around low-methionine dietary needs.</p>
+      </div>
+
+      <div class="soon-card">
+        <h3>Google Trends Anomaly <span class="soon-tag">Coming Soon</span></h3>
+        <p>Surfaces unusual spikes in search-trend data.</p>
+      </div>
+
+    </div>
+  </section>
 
 </main>
+
+<footer class="frame">
+  <span>FEISTTECH.COM</span>
+  <div class="footer-actions">
+    <a href="mailto:info@feisttech.com?subject=Hello%20from%20feisttech.com">info@feisttech.com</a>
+    <button id="shareBtnFooter" class="icon-btn" type="button">⤴ Share</button>
+  </div>
+</footer>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ── Mobile nav ── */
+  var navToggle = document.getElementById('navToggle');
+  var navLinks  = document.getElementById('navLinks');
+  navToggle.addEventListener('click', function () {
+    var open = navLinks.classList.toggle('open');
+    navToggle.setAttribute('aria-expanded', String(open));
+  });
+  navLinks.querySelectorAll('a').forEach(function (a) {
+    a.addEventListener('click', function () {
+      navLinks.classList.remove('open');
+      navToggle.setAttribute('aria-expanded', 'false');
+    });
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') { navLinks.classList.remove('open'); navToggle.setAttribute('aria-expanded', 'false'); }
+  });
+
+  /* ── Share ── */
+  function share() {
+    var data = { title: document.title, text: 'FeistTech — Systems & Research', url: location.href };
+    if (navigator.share) {
+      navigator.share(data).catch(function () {});
+    } else if (navigator.clipboard) {
+      navigator.clipboard.writeText(location.href).then(function () {
+        [shareBtn, shareBtnFooter].forEach(function (b) {
+          var original = b.textContent;
+          b.textContent = '✓ Link Copied';
+          setTimeout(function () { b.textContent = original; }, 1800);
+        });
+      });
+    }
+  }
+  var shareBtn = document.getElementById('shareBtn');
+  var shareBtnFooter = document.getElementById('shareBtnFooter');
+  shareBtn.addEventListener('click', share);
+  shareBtnFooter.addEventListener('click', share);
+
+  /* ── Featured dispatch + recent dispatches ──
+     FEATURED_ARTICLE_ID is a manual pin: set it to a node id (e.g.
+     "n06") once "The Veil of Babel" exists in data/events.json, and
+     the hero will pick it up automatically. Until then, the hero
+     falls back to the most recently-dated article in the archive. */
+  var FEATURED_ARTICLE_ID = null;
+
+  var MONTHS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  function fmtDate(d) {
+    var y = d.year, era = y < 1 ? ' BCE' : (y < 1000 ? ' CE' : '');
+    return String(d.day || 1).padStart(2, '0') + ' ' + MONTHS[(d.month || 1) - 1] + ' ' + Math.abs(y < 1 ? y - 1 : y) + era;
+  }
+  function trim(s, n) {
+    if (!s) return '';
+    return s.length > n ? s.slice(0, n).replace(/\s+\S*$/, '') + '…' : s;
+  }
+
+  fetch('data/events.json')
+    .then(function (r) { return r.json(); })
+    .then(function (articles) {
+      if (!articles || !articles.length) return;
+      var sorted = articles.slice().sort(function (a, b) {
+        return (b.date.year - a.date.year) ||
+               ((b.date.month || 1) - (a.date.month || 1)) ||
+               ((b.date.day || 1) - (a.date.day || 1));
+      });
+      var featured = (FEATURED_ARTICLE_ID && articles.find(function (a) { return a.id === FEATURED_ARTICLE_ID; })) || sorted[0];
+
+      document.getElementById('heroTitle').textContent = featured.title;
+      document.getElementById('heroMeta').innerHTML =
+        '<span>' + fmtDate(featured.date) + '</span><span>' + ((featured.location && featured.location.name) || '').toUpperCase() + '</span>';
+      document.getElementById('heroExcerpt').textContent = featured.excerpt || '';
+      document.getElementById('heroReadMore').href = 'articles/' + featured.id + '.html';
+      document.getElementById('hero').classList.add('ready');
+
+      var grid = document.getElementById('articleGrid');
+      grid.innerHTML = '';
+      sorted.filter(function (a) { return a.id !== featured.id; }).slice(0, 3).forEach(function (a) {
+        var card = document.createElement('article');
+        card.className = 'article-card';
+        card.innerHTML =
+          '<div class="article-date">' + fmtDate(a.date) + '</div>' +
+          '<h3 class="article-title">' + a.title + '</h3>' +
+          '<p class="article-excerpt">' + trim(a.excerpt || '', 160) + '</p>' +
+          '<a class="read-more" href="articles/' + a.id + '.html">Read More →</a>';
+        grid.appendChild(card);
+      });
+    })
+    .catch(function () {
+      // Archive couldn't load (offline / blocked) — fall back to a
+      // static link into the Atlas rather than an empty hero.
+      document.getElementById('heroTitle').textContent = 'Manifold Atlas';
+      document.getElementById('heroExcerpt').textContent = 'Connected historical events, navigable on a time-dial and interactive globe.';
+      document.getElementById('hero').classList.add('ready');
+    });
+})();
+</script>
 
 </body>
 </html>
