@@ -64,6 +64,58 @@ window.MA = window.MA || {};
     return `${String(d.day||1).padStart(2,'0')} ${months[(d.month||1)-1]} ${Math.abs(y < 1 ? y - 1 : y)}${era}`;
   }
 
+  /* ── Boolean full-text search ──────────────────────────────
+     Google-style syntax: implicit AND between bare terms, explicit
+     OR creates alternative match groups, NOT / a leading "-" negates
+     the next term, "quoted phrases" match as exact substrings.
+     No parentheses/nesting — deliberately simple. ── */
+  function parseBooleanQuery(q) {
+    const tokens = [];
+    const re = /"([^"]+)"|(\S+)/g;
+    let m;
+    while ((m = re.exec(q || ''))) {
+      if (m[1] !== undefined) tokens.push({ phrase: m[1].toLowerCase() });
+      else tokens.push({ word: m[2] });
+    }
+    const groups = [[]];
+    let pendingNeg = false;
+    for (const t of tokens) {
+      if (t.phrase !== undefined) {
+        groups[groups.length - 1].push({ term: t.phrase, neg: pendingNeg });
+        pendingNeg = false;
+        continue;
+      }
+      const upper = t.word.toUpperCase();
+      if (upper === 'OR') { groups.push([]); pendingNeg = false; continue; }
+      if (upper === 'AND') { pendingNeg = false; continue; }
+      if (upper === 'NOT') { pendingNeg = true; continue; }
+      let w = t.word, neg = pendingNeg;
+      if (w.startsWith('-') && w.length > 1) { neg = true; w = w.slice(1); }
+      pendingNeg = false;
+      if (!w) continue;
+      groups[groups.length - 1].push({ term: w.toLowerCase(), neg });
+    }
+    return groups.filter(g => g.length);
+  }
+
+  function articleHaystack(a) {
+    return [
+      a.title, a.excerpt, a.content, a.type, a.empire,
+      (a.location && a.location.name), (a.tags || []).join(' '),
+      (a.mechanism || []).join(' ')
+    ].filter(Boolean).join(' \n ').toLowerCase();
+  }
+
+  // true if the article matches ANY OR-group where EVERY term in that
+  // group is satisfied (present, or absent if negated)
+  function matchesQuery(haystack, groups) {
+    if (!groups.length) return true;
+    return groups.some(group => group.every(({ term, neg }) => {
+      const has = haystack.includes(term);
+      return neg ? !has : has;
+    }));
+  }
+
   /* ══════════════════════════════════════════════════════════
      ManifoldAtlas
      ══════════════════════════════════════════════════════════ */
@@ -77,6 +129,11 @@ window.MA = window.MA || {};
       this.articles = [];
       this.activeArticle = null;
       this.observerName = 'JERUSALEM';
+      // navContext describes how the reader got to the currently open
+      // article, so Prev/Next can follow either strict chronology or
+      // the order of an active search's results.
+      this.navContext = null;   // { kind:'chrono'|'search', order:[ids], query }
+      this._openingFromHistory = false;
 
       this._applyTheme(this.theme);
       this._wireChrome();
@@ -84,6 +141,8 @@ window.MA = window.MA || {};
       this._wireEarth();
       this._wireSky();
       this._wireDossier();
+      this._wireDossierNav();
+      this._wireHistory();
       this._wireTimebar();
       this._wireKeyboard();
       this.loadArticles();
@@ -136,32 +195,36 @@ window.MA = window.MA || {};
       });
     }
 
-    /* ── Boolean tag/content search ── */
+    /* ── Boolean full-text search ── searches title, excerpt, full
+       body content, tags, location, empire and mechanism — not just
+       tags. Supports "quoted phrases", OR, NOT / -exclude. Results
+       stay in the list's existing chronological order; matches are
+       recorded as this._activeSearchOrder so clicking a result opens
+       the article with a "search" nav context instead of "chrono". ── */
     _applySearch(raw) {
-      const terms = raw.trim().toLowerCase().split(/\s+/).filter(Boolean);
+      const query = raw.trim();
       const items = document.querySelectorAll('.nl-item');
-      if (!terms.length) {
+      if (!query) {
         items.forEach(li => li.classList.remove('dim'));
         if (this.earth) this.earth.setHighlightFilter(null);
+        this._activeSearchOrder = null;
+        this._activeSearchQuery = null;
         return;
       }
-      const matchIds = new Set();
+      const groups = parseBooleanQuery(query);
+      const matchIds = [];
       items.forEach(li => {
         const art = this.articles.find(a => a.id === li.dataset.id);
         if (!art) { li.classList.add('dim'); return; }
-        const blob = [
-          art.title, art.excerpt, art.type,
-          (art.tags || []).join(' '),
-          (art.mechanism || []).join(' '),
-          (art.empire || ''),
-          (art.content || ''),
-          (art.location && art.location.name) || '',
-        ].join(' ').toLowerCase();
-        const match = terms.every(t => blob.includes(t));
+        const match = matchesQuery(articleHaystack(art), groups);
         li.classList.toggle('dim', !match);
-        if (match) matchIds.add(art.id);
+        if (match) matchIds.push(art.id);
       });
-      if (this.earth) this.earth.setHighlightFilter(matchIds);
+      if (this.earth) this.earth.setHighlightFilter(new Set(matchIds));
+      // Preserve chronological order among matches (nl-list is already
+      // date-sorted) so Prev/Next through a search feels sequential.
+      this._activeSearchOrder = matchIds;
+      this._activeSearchQuery = query;
     }
 
     /* ── Dial wiring (atrium + corner) ── */
@@ -242,6 +305,74 @@ window.MA = window.MA || {};
       });
     }
 
+    /* ── Prev/Next through the dossier's active nav context ── */
+    _wireDossierNav() {
+      const prevBtn = document.getElementById('doss-prev');
+      const nextBtn = document.getElementById('doss-next');
+      if (prevBtn) prevBtn.addEventListener('click', () => this._stepDossier(-1));
+      if (nextBtn) nextBtn.addEventListener('click', () => this._stepDossier(1));
+    }
+
+    _stepDossier(delta) {
+      const ctx = this.navContext;
+      if (!ctx || !this.activeArticle) return;
+      const idx = ctx.order.indexOf(this.activeArticle.id);
+      if (idx === -1) return;
+      const nextId = ctx.order[idx + delta];
+      if (!nextId) return;
+      const art = this.articles.find(a => a.id === nextId);
+      if (art) this.openArticle(art, { navContext: ctx });
+    }
+
+    _updateDossierNav() {
+      const prevBtn = document.getElementById('doss-prev');
+      const nextBtn = document.getElementById('doss-next');
+      const label = document.getElementById('doss-nav-label');
+      const ctx = this.navContext;
+      if (!ctx || !this.activeArticle) {
+        if (prevBtn) prevBtn.disabled = true;
+        if (nextBtn) nextBtn.disabled = true;
+        if (label) label.textContent = '—';
+        return;
+      }
+      const idx = ctx.order.indexOf(this.activeArticle.id);
+      if (prevBtn) prevBtn.disabled = idx <= 0;
+      if (nextBtn) nextBtn.disabled = idx === -1 || idx >= ctx.order.length - 1;
+      if (label) {
+        const kindLabel = ctx.kind === 'search'
+          ? `SEARCH “${ctx.query}”`
+          : 'CHRONOLOGICAL';
+        label.textContent = idx === -1 ? kindLabel : `${idx + 1} / ${ctx.order.length} · ${kindLabel}`;
+      }
+    }
+
+    /* ── History / deep links ──
+       Opening an article pushes #node-{id} so the browser Back button
+       steps back through the reading trail (and the Forward button
+       steps forward again) instead of leaving the app entirely. The
+       nav context (chronological vs. search-result order) travels
+       inside the history state so Prev/Next keeps working after a
+       back/forward jump. ── */
+    _wireHistory() {
+      window.addEventListener('popstate', (e) => {
+        const state = e.state;
+        if (state && state.articleId) {
+          const art = this.articles.find(a => a.id === state.articleId);
+          if (art) {
+            this._openingFromHistory = true;
+            this.openArticle(art, { navContext: state.navContext || null, skipPush: true });
+            this._openingFromHistory = false;
+            return;
+          }
+        }
+        // No article in this history entry — close the dossier without
+        // pushing a new entry (we're already navigating history).
+        this._openingFromHistory = true;
+        this.closeArticle({ skipPush: true });
+        this._openingFromHistory = false;
+      });
+    }
+
     /* ── Time bar ── */
     _wireTimebar() {
       const slider = document.getElementById('date-slider');
@@ -302,9 +433,17 @@ window.MA = window.MA || {};
         const art = this.articles.find(a => a.id === nodeId);
         if (art) {
           if (this.view === 'atrium') this.setView('atlas');
-          setTimeout(() => this.openArticle(art), 200);
+          // The browser already created a history entry for this page
+          // load; attach our state to it (replace, don't push) so the
+          // very next Back leaves the dossier rather than reloading it.
+          setTimeout(() => {
+            this.openArticle(art, { skipPush: true });
+            history.replaceState({ articleId: art.id, navContext: this.navContext }, '', hash);
+          }, 200);
+          return;
         }
       }
+      history.replaceState({ articleId: null, navContext: null }, '', window.location.pathname + window.location.search);
     }
 
     _renderNodeList() {
@@ -319,6 +458,10 @@ window.MA = window.MA || {};
       // Dynamic count in node-list header
       const nlHead = document.querySelector('.node-list .nl-head');
       if (nlHead) nlHead.textContent = `DOSSIERS · ${this.articles.length} NODE${this.articles.length===1?'':'S'}`;
+      // Canonical chronological order — the default Prev/Next context,
+      // and the fallback context.order used by openArticle() whenever
+      // no explicit navContext is passed in.
+      this._chronoOrder = sorted.map(a => a.id);
       // Populate jump-to dropdown
       const sel = document.getElementById('node-jump');
       if (sel) {
@@ -341,13 +484,26 @@ window.MA = window.MA || {};
           <div class="nl-title">${art.title}</div>
           <div class="nl-loc">${(art.location.name||'').toUpperCase()}</div>
         `;
-        li.addEventListener('click', () => this.openArticle(art));
+        li.addEventListener('click', () => {
+          // If a search is active, reading Prev/Next should walk the
+          // filtered result set, not the full chronological list.
+          const ctx = this._activeSearchOrder
+            ? { kind: 'search', order: this._activeSearchOrder, query: this._activeSearchQuery }
+            : { kind: 'chrono', order: this._chronoOrder, query: null };
+          this.openArticle(art, { navContext: ctx });
+        });
         ul.appendChild(li);
       });
     }
 
-    openArticle(art) {
+    openArticle(art, opts) {
+      opts = opts || {};
       this.activeArticle = art;
+      // Nav context: honor an explicit one (search results, or one
+      // restored from history state); otherwise default to browsing
+      // chronologically through every loaded article.
+      this.navContext = opts.navContext || { kind: 'chrono', order: this._chronoOrder || [], query: null };
+
       this.earth.setActive(art);
       this.earth.setSpin(false);    // pause auto-spin once a dossier is open
 
@@ -364,16 +520,27 @@ window.MA = window.MA || {};
 
       // Populate dossier
       this._renderDossier(art);
+      this._updateDossierNav();
       document.getElementById('dossier').classList.add('on');
 
       // Highlight in node list
       document.querySelectorAll('.nl-item').forEach(li => {
         li.classList.toggle('active', li.dataset.id === art.id);
       });
+
+      // Push history so Back steps through the reading trail instead
+      // of leaving the app.
+      if (!opts.skipPush) {
+        history.pushState({ articleId: art.id, navContext: this.navContext }, '', '#node-' + art.id);
+      }
     }
 
-    closeArticle() {
+    closeArticle(opts) {
+      opts = opts || {};
       document.getElementById('dossier').classList.remove('on');
+      if (!opts.skipPush && window.location.hash) {
+        history.pushState(null, '', window.location.pathname + window.location.search);
+      }
     }
 
     _renderDossier(art) {
