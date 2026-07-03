@@ -476,6 +476,26 @@ body::after {
 .dossier .scroll { scrollbar-width:thin; scrollbar-color: var(--panel-edge) transparent; }
 .dossier .body::-webkit-scrollbar { width:5px; }
 .dossier .body::-webkit-scrollbar-thumb { background:var(--panel-edge); }
+
+.dossier .doss-nav {
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+  padding:9px 30px;
+  border-bottom:1px solid var(--panel-edge);
+  background:var(--bg-soft);
+}
+.dossier .doss-nav-btn {
+  background:transparent; border:1px solid var(--panel-edge);
+  color:var(--ink-dim); font-family:'Space Mono',monospace;
+  font-size:9px; letter-spacing:1.5px; padding:6px 10px;
+  border-radius:2px; transition:all .2s; cursor:pointer; white-space:nowrap;
+}
+.dossier .doss-nav-btn:hover:not(:disabled) { color:var(--accent); border-color:var(--accent); }
+.dossier .doss-nav-btn:disabled { opacity:.25; cursor:default; }
+.dossier .doss-nav-label {
+  flex:1; text-align:center; font-size:8px; letter-spacing:2px;
+  color:var(--ink-mute); text-transform:uppercase;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
 .article-link-btn {
   display:block; margin-top:2rem;
   font-family:'Space Mono',monospace;
