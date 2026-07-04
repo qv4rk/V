@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Low-Methionine Meal Builder — FeistTech</title>
+<meta name="description" content="Search USDA FoodData Central, track daily methionine intake, and build low-methionine recipes.">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../../app/theme-vars.css">
+<script src="../../../app/theme-switcher.js"></script>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <a href="../../../index.html">← FeistTech</a>
+    <div>
+      <h1>Low-Methionine Meal Builder</h1>
+      <div class="sub">USDA food search &amp; daily methionine tracker</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <span id="themeSwitcherMount"></span>
+    <button id="btnAbout" type="button" class="secondary">Why methionine?</button>
+    <button id="btnHelp" type="button">? Help</button>
+    <span class="badge">v1.0</span>
+  </div>
+</header>
+
+<main>
+  <div class="grid-2">
+
+    <div>
+      <div class="panel">
+        <div class="panel-title">Search USDA FoodData Central</div>
+        <div class="searchRow">
+          <input type="text" id="searchInput" placeholder="e.g. chicken breast, lentils, rice">
+          <button id="btnSearch" type="button">Search</button>
+        </div>
+        <div class="searchStatus" id="searchStatus"></div>
+        <div class="resultsList" id="resultsList"></div>
+        <div class="hint">Methionine data is only measured for whole/basic foods (Foundation &amp; SR Legacy) — most packaged "Branded" items won't have it.</div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">Today's Log</div>
+        <table class="logTable" id="logTable">
+          <thead>
+            <tr><th>Food</th><th>g</th><th>Cal</th><th>Met (mg)</th><th></th></tr>
+          </thead>
+          <tbody id="logBody"></tbody>
+          <tfoot>
+            <tr><td>Total</td><td></td><td id="logTotalCal">0</td><td id="logTotalMet">0</td><td></td></tr>
+          </tfoot>
+        </table>
+
+        <div class="metBudget">
+          <div class="metBudget-row">
+            <label for="dailyCapInput">Daily methionine cap (mg):</label>
+            <input type="number" id="dailyCapInput" value="150" min="10" step="10">
+          </div>
+          <div class="metBar"><div class="metBar-fill" id="metBarFill" style="width:0%"></div></div>
+          <div class="metBar-label" id="metBarLabel">0 / 150 mg</div>
+        </div>
+
+        <div class="addRow" style="margin-top:0.9rem;">
+          <button id="btnSaveRecipe" type="button" class="secondary">Save Log as Recipe</button>
+          <button id="btnClearLog" type="button" class="danger">Clear Log</button>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="panel">
+        <div class="panel-title">Recipes</div>
+        <div class="recipeList" id="recipeList"></div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- Help modal -->
+<div class="modalOverlay" id="helpOverlay" hidden>
+  <div class="modal" role="dialog" aria-labelledby="helpTitle">
+    <h2 id="helpTitle">How this works</h2>
+    <p>Search pulls live results from the USDA FoodData Central database. Each result shows calories, fat, carbs, and methionine per 100g where that data exists.</p>
+    <h3>Why some foods show "no methionine data"</h3>
+    <p>USDA only publishes full amino-acid breakdowns for "Foundation Foods" and "SR Legacy" entries — whole, basic foods like raw chicken breast, lentils, or rice. "Branded" packaged foods only carry the label macros (calories, fat, carbs, protein, sodium) because manufacturers aren't required to disclose amino acid content. If a food you care about shows no methionine value, try searching for its plain/whole-food equivalent instead.</p>
+    <h3>Log &amp; recipes</h3>
+    <p>Add a search result to Today's Log with a gram amount; the log scales calories and methionine to that portion automatically. Save the current log as a named recipe to reuse later — recipes are stored locally in your browser, nowhere else.</p>
+    <button type="button" class="closeModal" id="btnCloseHelp">Close</button>
+  </div>
+</div>
+
+<!-- About modal -->
+<div class="modalOverlay" id="aboutOverlay" hidden>
+  <div class="modal" role="dialog" aria-labelledby="aboutTitle">
+    <h2 id="aboutTitle">Why methionine?</h2>
+    <p>Methionine is an essential amino acid. Research by Professor Robert M. Hoffman (UCSD) found that many cancer cells are unusually dependent on external methionine for growth — a phenomenon sometimes called the "Hoffman Effect" or methionine addiction — even though, unlike normal cells, they're technically capable of producing some of their own. Restricting dietary methionine has been studied preclinically, and in some published case reports, as a way to selectively stress cancer cells and potentially sensitize them to chemotherapy (the "Hoffman Protocol").</p>
+    <h3>Important context</h3>
+    <p>This research is real but early-stage: the evidence base is mostly preclinical (cell and animal studies) plus individual clinical case reports, not large randomized controlled trials. Methionine restriction is not part of standard oncology treatment guidelines, and no methionine-restricting drug is FDA-approved for cancer treatment. This tool is for people who want to track and plan a lower-methionine diet for their own reasons — it is not medical advice.</p>
+    <div class="disclosure">This app is not a medical device and does not provide medical advice. Talk to a doctor or registered dietitian before making significant dietary changes, especially in the context of a cancer diagnosis or treatment.</div>
+    <button type="button" class="closeModal" id="btnCloseAbout">Close</button>
+  </div>
+</div>
+
+<script src="js/usda.js"></script>
+<script src="js/seed-recipes.js"></script>
+<script src="js/app.js"></script>
+
+</body>
+</html>
