@@ -122,7 +122,7 @@ window.MA = window.MA || {};
   class ManifoldAtlas {
     constructor() {
       this.view = 'atrium';
-      this.theme = localStorage.getItem('ma-theme') || 'patina';
+      this.theme = localStorage.getItem('feisttech-theme') || 'patina';
       this.jd = MA.jd(new Date());
       this.playing = false;
       this.speed = 30; // days per frame when playing
@@ -155,7 +155,7 @@ window.MA = window.MA || {};
     _applyTheme(t) {
       this.theme = t;
       document.documentElement.setAttribute('data-theme', t);
-      localStorage.setItem('ma-theme', t);
+      localStorage.setItem('feisttech-theme', t);
       // Update swatches
       document.querySelectorAll('.theme-swatch').forEach(s => {
         s.classList.toggle('on', s.dataset.theme === t);

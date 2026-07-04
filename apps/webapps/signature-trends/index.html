@@ -5,7 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Signature Trends — FeistTech</title>
 <meta name="description" content="Compare Google Trends search interest across terms, locations, and time windows in up to five side-by-side panels.">
-<link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../../app/theme-vars.css">
+<script src="../../../app/theme-switcher.js"></script>
 <link rel="stylesheet" href="css/style.css">
 <script type="text/javascript" src="https://ssl.gstatic.com/trends_nrtr/embed_loader.js"></script>
 </head>
@@ -19,7 +21,9 @@
       <div class="sub">Multi-panel Google Trends comparison</div>
     </div>
   </div>
-  <div>
+  <div class="header-right">
+    <span id="themeSwitcherMount"></span>
+    <button id="btnHelp" type="button">? Help</button>
     <span class="badge">v1.1</span>
   </div>
 </header>
@@ -36,15 +40,18 @@
     <div class="preset-actions">
       <button id="btnLoadPreset" type="button">Load → Active Panel</button>
       <button id="btnLoadFullPreset" type="button" style="border-color:var(--success); color:var(--success);">Load Across All Panels</button>
-      <button id="btnSavePreset" type="button" style="border-color:var(--secondary); color:var(--secondary);">+ Save Active Panel as Preset</button>
+      <button id="btnSavePreset" type="button" style="border-color:var(--accent-3); color:var(--accent-3);">+ Save Active Panel as Preset</button>
       <button id="btnDeletePreset" type="button" class="clear">Delete Preset</button>
+      <button id="btnExportPresets" type="button">⬇ Export Presets</button>
+      <button id="btnImportPresets" type="button">⬆ Import Presets</button>
+      <input type="file" id="importFileInput" accept="application/json" hidden>
     </div>
 
     <div id="presetInfo" class="preset-info"></div>
 
     <!-- Multi-term-group selector for presets with more than one group -->
-    <div id="presetTermSelector" style="display:none; width:100%; margin-top:0.5rem; padding-top:0.5rem; border-top:1px dashed var(--border);">
-      <div style="font-size:0.65rem; color:var(--dim); margin-bottom:0.3rem;">Term groups in this preset (check + add to active panel):</div>
+    <div id="presetTermSelector" style="display:none; width:100%; margin-top:0.5rem; padding-top:0.5rem; border-top:1px dashed var(--panel-edge);">
+      <div style="font-size:0.65rem; color:var(--ink-dim); margin-bottom:0.3rem;">Term groups in this preset (check + add to active panel):</div>
       <div id="presetTermCheckboxes" style="display:flex; flex-wrap:wrap; gap:0.35rem 0.6rem; max-height:110px; overflow:auto; padding:0.2rem 0;"></div>
       <button id="btnAddSelectedTerms" type="button" style="margin-top:0.4rem; font-size:0.7rem; padding:4px 10px;">Add checked terms to active panel</button>
     </div>
@@ -53,6 +60,36 @@
   <div id="panelContainer"></div>
 
 </main>
+
+<!-- Help modal -->
+<div class="helpOverlay" id="helpOverlay" hidden>
+  <div class="helpModal" role="dialog" aria-labelledby="helpTitle">
+    <h2 id="helpTitle">How Signature Trends works</h2>
+    <p>Each panel is an independent Google Trends comparison: up to 5 exact-phrase terms, an optional location, an optional topic category, a content type, and a date range. Type into the Location or Category fields to search — e.g. typing "phila" will surface every Philadelphia-area location across every state it spans.</p>
+
+    <h3>Presets</h3>
+    <p>Presets are entirely yours — nothing ships pre-loaded. Save a panel's terms/location/category/dates with "+ Save Active Panel as Preset," and it appears in the Preset dropdown next time, stored locally in your browser.</p>
+
+    <h3>Import / Export format</h3>
+    <p>"Export Presets" downloads a JSON file of everything currently saved, for backup or moving to another browser. "Import Presets" reads a JSON file in this exact shape and adds it to your saved list:</p>
+    <pre>[
+  {
+    "name": "My preset",
+    "termGroups": [
+      { "label": "Terms", "terms": ["term one", "term two"] }
+    ],
+    "geo": "US-NY-501",
+    "cat": "0",
+    "gprop": "",
+    "startDate": "2024-01-01",
+    "endDate": "2024-06-01"
+  }
+]</pre>
+    <p>Only <code>name</code> and <code>termGroups</code> are required — everything else defaults to "worldwide, all categories, web search, no date filter" if omitted. <code>geo</code> is a Google Trends location code (blank = worldwide); <code>cat</code> is a Google Trends category ID as a string (blank or "0" = all categories).</p>
+
+    <button type="button" class="closeHelp" id="btnCloseHelp">Close</button>
+  </div>
+</div>
 
 <script src="js/geo-data.js"></script>
 <script src="js/category-data.js"></script>

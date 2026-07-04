@@ -18,6 +18,74 @@
     try { localStorage.setItem(PRESETS_KEY, JSON.stringify(list)); } catch (e) {}
   }
 
+  function exportPresets() {
+    const presets = getPresets();
+    if (presets.length === 0) { alert('No presets saved yet — nothing to export.'); return; }
+    const blob = new Blob([JSON.stringify(presets, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'signature-trends-presets.json';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function validateImportedPreset(raw) {
+    if (!raw || typeof raw !== 'object') return null;
+    if (typeof raw.name !== 'string' || !raw.name.trim()) return null;
+    if (!Array.isArray(raw.termGroups)) return null;
+
+    const termGroups = raw.termGroups
+      .map(g => ({
+        label: (g && typeof g.label === 'string') ? g.label : 'Terms',
+        terms: (g && Array.isArray(g.terms))
+          ? g.terms.filter(t => typeof t === 'string' && t.trim()).slice(0, MAX_TERMS)
+          : []
+      }))
+      .filter(g => g.terms.length > 0);
+    if (termGroups.length === 0) return null;
+
+    const geo = typeof raw.geo === 'string' ? raw.geo : '';
+    const geoMatch = GEO_DATA.find(g => g.code === geo);
+    const cat = (typeof raw.cat === 'string' || typeof raw.cat === 'number') ? String(raw.cat) : '0';
+    const catMatch = CATEGORY_DATA.find(c => c.code === cat);
+
+    return {
+      id: 'preset_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 6),
+      name: raw.name.trim(),
+      createdAt: Date.now(),
+      termGroups,
+      geo,
+      geoLabel: typeof raw.geoLabel === 'string' ? raw.geoLabel : (geoMatch ? geoMatch.label : (geo || 'Worldwide')),
+      cat,
+      catLabel: typeof raw.catLabel === 'string' ? raw.catLabel : (catMatch ? catMatch.label : 'All categories'),
+      gprop: typeof raw.gprop === 'string' ? raw.gprop : '',
+      startDate: typeof raw.startDate === 'string' ? raw.startDate : '',
+      endDate: typeof raw.endDate === 'string' ? raw.endDate : ''
+    };
+  }
+
+  function importPresetsFromFile(file) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      let data;
+      try { data = JSON.parse(reader.result); }
+      catch (e) { alert('That file is not valid JSON. Check Help for the expected format.'); return; }
+      const list = Array.isArray(data) ? data : [data];
+      const valid = list.map(validateImportedPreset).filter(Boolean);
+      if (valid.length === 0) { alert('No valid presets found in that file. Check Help for the expected format.'); return; }
+      const presets = getPresets();
+      valid.forEach(p => presets.unshift(p));
+      savePresets(presets);
+      populatePresetSelect();
+      alert(`Imported ${valid.length} preset${valid.length === 1 ? '' : 's'}.`);
+    };
+    reader.onerror = () => alert('Could not read that file.');
+    reader.readAsText(file);
+  }
+
   // Full official Google Trends location + category lists, loaded from
   // js/geo-data.js and js/category-data.js.
   const GEO_DATA = (window.SIGTRENDS_GEOS || []).map(g => ({ code: g.code, label: g.label }));
@@ -396,7 +464,7 @@
         <button type="button" class="presetBtn" data-preset="90d">90d</button>
         <button type="button" class="presetBtn" data-preset="6mo">6mo</button>
         <button type="button" class="presetBtn" data-preset="saved">Saved preset's window</button>
-        <button type="button" class="clearDates" style="margin-left:0.4rem; font-size:0.62rem; padding:2px 6px; border-color:rgba(201,123,90,0.4); color:var(--accent);">Clear dates</button>
+        <button type="button" class="clearDates" style="margin-left:0.4rem; font-size:0.62rem; padding:2px 6px; border-color:color-mix(in srgb, var(--hot) 40%, transparent); color:var(--hot);">Clear dates</button>
       </div>
 
       <div class="panelControls">
@@ -495,8 +563,8 @@
     const fullUrl = `https://trends.google.com/trends/explore?${exploreQuery}`;
 
     host.innerHTML = `
-      <div style="padding:0.6rem; background:var(--bg2); border-radius:6px; margin-bottom:0.5rem; font-size:0.72rem;">
-        <div style="color:var(--dim); margin-bottom:0.25rem;">Full Google Trends URL (copy or open with all params):</div>
+      <div style="padding:0.6rem; background:var(--bg); border-radius:6px; margin-bottom:0.5rem; font-size:0.72rem;">
+        <div style="color:var(--ink-dim); margin-bottom:0.25rem;">Full Google Trends URL (copy or open with all params):</div>
         <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
           <a href="${fullUrl}" target="_blank" class="trendLink" style="flex:1; word-break:break-all;">${fullUrl}</a>
           <button type="button" class="copyBtn" data-url="${fullUrl}">⎘ Copy URL</button>
@@ -572,6 +640,27 @@
 
     const addTermsBtn = document.getElementById('btnAddSelectedTerms');
     if (addTermsBtn) addTermsBtn.addEventListener('click', addSelectedPresetTermsToActivePanel);
+
+    document.getElementById('btnExportPresets').addEventListener('click', exportPresets);
+    const importInput = document.getElementById('importFileInput');
+    document.getElementById('btnImportPresets').addEventListener('click', () => importInput.click());
+    importInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) importPresetsFromFile(file);
+      e.target.value = '';
+    });
+
+    const helpBtn = document.getElementById('btnHelp');
+    const helpOverlay = document.getElementById('helpOverlay');
+    const closeHelp = document.getElementById('btnCloseHelp');
+    if (helpBtn && helpOverlay) {
+      helpBtn.addEventListener('click', () => { helpOverlay.hidden = false; });
+      closeHelp.addEventListener('click', () => { helpOverlay.hidden = true; });
+      helpOverlay.addEventListener('click', (e) => { if (e.target === helpOverlay) helpOverlay.hidden = true; });
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape') helpOverlay.hidden = true; });
+    }
+
+    if (window.FeistTheme) FeistTheme.mount('#themeSwitcherMount');
   }
 
   init();
