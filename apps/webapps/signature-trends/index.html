@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Signature Trends — FeistTech</title>
+<meta name="description" content="Compare Google Trends search interest across terms, locations, and time windows in up to five side-by-side panels.">
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<script type="text/javascript" src="https://ssl.gstatic.com/trends_nrtr/embed_loader.js"></script>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <a href="../../../index.html">← FeistTech</a>
+    <div>
+      <h1>Signature Trends</h1>
+      <div class="sub">Multi-panel Google Trends comparison</div>
+    </div>
+  </div>
+  <div>
+    <span class="badge">v1.1</span>
+  </div>
+</header>
+
+<main>
+
+  <!-- SAVED PRESETS -->
+  <div class="preset-bar">
+    <label for="presetSelect">Preset:</label>
+    <select id="presetSelect" class="preset-select">
+      <option value="">— No presets saved yet —</option>
+    </select>
+
+    <div class="preset-actions">
+      <button id="btnLoadPreset" type="button">Load → Active Panel</button>
+      <button id="btnLoadFullPreset" type="button" style="border-color:var(--success); color:var(--success);">Load Across All Panels</button>
+      <button id="btnSavePreset" type="button" style="border-color:var(--secondary); color:var(--secondary);">+ Save Active Panel as Preset</button>
+      <button id="btnDeletePreset" type="button" class="clear">Delete Preset</button>
+    </div>
+
+    <div id="presetInfo" class="preset-info"></div>
+
+    <!-- Multi-term-group selector for presets with more than one group -->
+    <div id="presetTermSelector" style="display:none; width:100%; margin-top:0.5rem; padding-top:0.5rem; border-top:1px dashed var(--border);">
+      <div style="font-size:0.65rem; color:var(--dim); margin-bottom:0.3rem;">Term groups in this preset (check + add to active panel):</div>
+      <div id="presetTermCheckboxes" style="display:flex; flex-wrap:wrap; gap:0.35rem 0.6rem; max-height:110px; overflow:auto; padding:0.2rem 0;"></div>
+      <button id="btnAddSelectedTerms" type="button" style="margin-top:0.4rem; font-size:0.7rem; padding:4px 10px;">Add checked terms to active panel</button>
+    </div>
+  </div>
+
+  <div id="panelContainer"></div>
+
+</main>
+
+<script src="js/geo-data.js"></script>
+<script src="js/category-data.js"></script>
+<script src="js/app.js"></script>
+
+</body>
+</html>

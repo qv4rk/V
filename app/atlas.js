@@ -164,13 +164,29 @@ window.MA = window.MA || {};
 
     /* ── Chrome wiring (topbar) ── */
     _wireChrome() {
+      // Persistent hamburger nav — toggle open/closed, close on outside
+      // click, Escape, or after acting on any item inside it.
+      const toggle = document.getElementById('nav-toggle');
+      const menu = document.getElementById('chrome-menu');
+      const openMenu = () => { menu.classList.add('open'); toggle.setAttribute('aria-expanded', 'true'); };
+      const closeMenu = () => { menu.classList.remove('open'); toggle.setAttribute('aria-expanded', 'false'); };
+      this._closeNavMenu = closeMenu;
+      toggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        menu.classList.contains('open') ? closeMenu() : openMenu();
+      });
+      document.addEventListener('click', (e) => {
+        if (menu.classList.contains('open') && !menu.contains(e.target) && e.target !== toggle) closeMenu();
+      });
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeMenu(); });
+
       // View tabs
       document.querySelectorAll('.view-tabs button').forEach(b => {
-        b.addEventListener('click', () => this.setView(b.dataset.view));
+        b.addEventListener('click', () => { this.setView(b.dataset.view); this._closeNavMenu(); });
       });
       // Theme picker
       document.querySelectorAll('.theme-swatch').forEach(s => {
-        s.addEventListener('click', () => this._applyTheme(s.dataset.theme));
+        s.addEventListener('click', () => { this._applyTheme(s.dataset.theme); this._closeNavMenu(); });
       });
       // Jump-to-node dropdown
       const sel = document.getElementById('node-jump');
@@ -179,6 +195,7 @@ window.MA = window.MA || {};
         if (art) {
           if (this.view !== 'atlas') this.setView('atlas');
           this.openArticle(art);
+          this._closeNavMenu();
         }
         sel.value = '';
       });
@@ -627,7 +644,9 @@ window.MA = window.MA || {};
       document.querySelectorAll('.view-tabs button').forEach(b => {
         b.classList.toggle('on', b.dataset.view === v);
       });
-      // Show corner dial + chrome when not in atrium
+      // Corner dial is redundant with Atrium's own hero dial, so it stays
+      // hidden there — but the hamburger nav (#chrome-bar) is now
+      // persistent across all three views, Atrium included.
       document.getElementById('corner-dial').style.display = (v === 'atrium' ? 'none' : 'block');
       document.querySelectorAll('.atlas-only').forEach(el => {
         el.style.display = (v === 'atlas' ? '' : 'none');
@@ -635,7 +654,6 @@ window.MA = window.MA || {};
       document.querySelectorAll('.sky-only').forEach(el => {
         el.style.display = (v === 'sky' ? '' : 'none');
       });
-      document.getElementById('chrome-bar').style.display = (v === 'atrium' ? 'none' : '');
       // Sky: interactive first-person dome in sky view; silent backdrop everywhere else
       const skyCv = document.getElementById('sky-canvas');
       if (v === 'sky') {
