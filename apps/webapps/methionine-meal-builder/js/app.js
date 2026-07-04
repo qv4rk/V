@@ -2,20 +2,28 @@
   'use strict';
 
   const LOG_KEY = 'feisttech_met_daily_log';
+  const SHOPPING_KEY = 'feisttech_met_shopping_list';
   const CAP_KEY = 'feisttech_met_daily_cap';
   const RECIPES_KEY = 'feisttech_met_recipes';
 
-  let log = [];
+  const COMMON_FOODS = [
+    'Chicken breast', 'Eggs', 'Rice', 'Broccoli', 'Spinach', 'Canned tuna',
+    'Greek yogurt', 'Salmon', 'Black beans', 'Sweet potato', 'Ground beef', 'Tofu'
+  ];
+
+  let lists = { log: [], shopping: [] };
   let dailyCap = 150;
-  let lastSearchResults = [];
+  let activeTab = 'log';
+  let html5Qrcode = null;
 
   function loadState() {
-    try { log = JSON.parse(localStorage.getItem(LOG_KEY) || '[]'); } catch (e) { log = []; }
+    try { lists.log = JSON.parse(localStorage.getItem(LOG_KEY) || '[]'); } catch (e) { lists.log = []; }
+    try { lists.shopping = JSON.parse(localStorage.getItem(SHOPPING_KEY) || '[]'); } catch (e) { lists.shopping = []; }
     const cap = parseFloat(localStorage.getItem(CAP_KEY));
     if (!isNaN(cap) && cap > 0) dailyCap = cap;
   }
-  function saveLog() {
-    try { localStorage.setItem(LOG_KEY, JSON.stringify(log)); } catch (e) {}
+  function saveList(target) {
+    try { localStorage.setItem(target === 'log' ? LOG_KEY : SHOPPING_KEY, JSON.stringify(lists[target])); } catch (e) {}
   }
   function saveCap() {
     try { localStorage.setItem(CAP_KEY, String(dailyCap)); } catch (e) {}
@@ -31,106 +39,202 @@
     if (n === null || n === undefined) return '—';
     return Math.round(n * 10) / 10;
   }
+  function newId(prefix) {
+    return prefix + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  }
+
+  // When USDA has no measured methionine value, estimate it as a share of
+  // total protein: 1.5% for produce, 2.5% for canned goods, 3.5% for meat.
+  const MEAT_WORDS = ['chicken', 'beef', 'pork', 'turkey', 'lamb', 'fish', 'salmon', 'tuna', 'shrimp', 'poultry', 'bacon', 'sausage', 'veal', 'duck', 'goat', 'meat', 'steak', 'ham'];
+  const CANNED_WORDS = ['canned', 'can,', 'in syrup', 'in brine', 'in sauce'];
+  function estimateMethionineRate(description) {
+    const d = (description || '').toLowerCase();
+    if (CANNED_WORDS.some(w => d.includes(w))) return 0.025;
+    if (MEAT_WORDS.some(w => d.includes(w))) return 0.035;
+    return 0.015;
+  }
+  // USDA reports methionine (nutrient 506) in mg but protein (203) in g,
+  // so the protein-share estimate needs a g->mg conversion (*1000) to be
+  // comparable to real measured methionine values.
+  function estimateMethionine(proteinG, description) {
+    if (proteinG === null || proteinG === undefined) return null;
+    return proteinG * estimateMethionineRate(description) * 1000;
+  }
+
+  // ── Natural-language quantity parsing: "6 oz chicken breast" ──
+  function parseInputString(input) {
+    const regex = /^([\d.]+)\s*(oz|ounces?|lbs?|pounds?|g|grams?)\s*(?:of\s+)?(.*)$/i;
+    const match = input.match(regex);
+    let targetWeight = null;
+    let query = input;
+    if (match) {
+      const quantity = parseFloat(match[1]);
+      const unit = match[2].toLowerCase();
+      query = match[3];
+      if (unit.startsWith('oz') || unit.startsWith('ounce')) targetWeight = quantity * 28.3495;
+      else if (unit.startsWith('lb') || unit.startsWith('pound')) targetWeight = quantity * 453.592;
+      else if (unit.startsWith('g') || unit.startsWith('gram')) targetWeight = quantity;
+    }
+    return { query: query.trim(), targetWeight };
+  }
 
   // ── Search ──
   async function runSearch() {
-    const q = document.getElementById('searchInput').value.trim();
+    const raw = document.getElementById('searchInput').value.trim();
     const status = document.getElementById('searchStatus');
     const list = document.getElementById('resultsList');
-    if (!q) { status.textContent = 'Type a food to search.'; return; }
+    if (!raw) { status.textContent = 'Type a food to search.'; return; }
+    const { query, targetWeight } = parseInputString(raw);
     status.textContent = 'Searching USDA FoodData Central…';
     list.innerHTML = '';
     try {
-      const results = await window.USDA.searchFoods(q, 15);
-      lastSearchResults = results;
+      const results = await window.USDA.searchFoods(query, 15);
       status.textContent = results.length ? `${results.length} result${results.length === 1 ? '' : 's'}` : 'No results.';
-      renderResults(results);
+      renderResults(results, targetWeight);
     } catch (e) {
       status.textContent = 'Search failed: ' + e.message;
     }
   }
 
-  function renderResults(results) {
+  function getAddTarget() {
+    const checked = document.querySelector('input[name="addTarget"]:checked');
+    return checked ? checked.value : 'log';
+  }
+
+  function renderResults(results, targetWeight) {
     const list = document.getElementById('resultsList');
     list.innerHTML = '';
     results.forEach((food, idx) => {
-      const hasMet = food.nutrients.methionine !== null && food.nutrients.methionine !== undefined;
+      const n = food.nutrients;
+      const hasMet = n.methionine !== null && n.methionine !== undefined;
+      const estMet = hasMet ? null : estimateMethionine(n.protein, food.description);
       const isWholeFood = food.dataType === 'Foundation' || food.dataType === 'SR Legacy';
+      const defaultGrams = targetWeight ? Math.round(targetWeight) : 100;
       const row = document.createElement('div');
       row.className = 'resultItem';
       row.innerHTML = `
         <span class="resultName">${food.description}${food.brandOwner ? ' <span class="resultMeta">(' + food.brandOwner + ')</span>' : ''}</span>
         <span class="dtBadge ${isWholeFood ? 'good' : ''}">${food.dataType || 'unknown'}</span>
         <span class="nutrientRow">
-          per 100g — <strong>${fmt(food.nutrients.energy)}</strong> cal ·
-          fat <strong>${fmt(food.nutrients.fat)}</strong>g ·
-          carbs <strong>${fmt(food.nutrients.carbs)}</strong>g ·
-          methionine ${hasMet ? '<strong>' + fmt(food.nutrients.methionine) + '</strong> mg' : '<span class="metUnknown">not available</span>'}
+          per 100g — <strong>${fmt(n.energy)}</strong> cal ·
+          fat <strong>${fmt(n.fat)}</strong>g ·
+          carbs <strong>${fmt(n.carbs)}</strong>g ·
+          methionine ${
+            hasMet ? '<strong>' + fmt(n.methionine) + '</strong> mg'
+              : (estMet !== null ? '<span class="metEstimated">~' + fmt(estMet) + ' mg (estimated)</span>' : '<span class="metUnknown">not available</span>')
+          }
         </span>
         <span class="addRow">
-          <input type="number" class="gramsInput" value="100" min="1" step="1"> g
+          <input type="number" class="gramsInput" value="${defaultGrams}" min="1" step="1"> g
           <button type="button" class="addBtn" data-idx="${idx}">+ Add</button>
         </span>
       `;
       row.querySelector('.addBtn').addEventListener('click', () => {
         const grams = parseFloat(row.querySelector('.gramsInput').value) || 100;
-        addToLog(food, grams);
+        addToList(getAddTarget(), food, grams);
       });
       list.appendChild(row);
     });
   }
 
-  // ── Log ──
-  function addToLog(food, grams) {
+  // ── Lists (Today's Log + Shopping List) ──
+  function addToList(target, food, grams) {
     const scale = grams / 100;
     const n = food.nutrients;
-    log.push({
-      id: 'log_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+    const hasMet = n.methionine !== null && n.methionine !== undefined;
+    const metEstimated = !hasMet;
+    const met = hasMet ? n.methionine * scale : (estimateMethionine(n.protein, food.description) !== null ? estimateMethionine(n.protein, food.description) * scale : null);
+    lists[target].push({
+      id: newId('item'),
       name: food.description,
       grams,
       cal: n.energy !== null ? n.energy * scale : null,
       fat: n.fat !== null ? n.fat * scale : null,
       carbs: n.carbs !== null ? n.carbs * scale : null,
-      met: n.methionine !== null ? n.methionine * scale : null
+      met,
+      metEstimated,
+      fullNutrients: (food.fullNutrients || []).map(fn => ({ name: fn.name, unit: fn.unit, value: fn.value * scale }))
     });
-    saveLog();
-    renderLog();
+    saveList(target);
+    renderList(target);
   }
 
-  function removeFromLog(id) {
-    log = log.filter(l => l.id !== id);
-    saveLog();
-    renderLog();
+  function removeFromList(target, id) {
+    lists[target] = lists[target].filter(l => l.id !== id);
+    saveList(target);
+    renderList(target);
   }
 
-  function renderLog() {
-    const body = document.getElementById('logBody');
+  function renderList(target) {
+    const bodyId = target === 'log' ? 'logBody' : 'shoppingBody';
+    const totalCalId = target === 'log' ? 'logTotalCal' : 'shoppingTotalCal';
+    const totalMetId = target === 'log' ? 'logTotalMet' : 'shoppingTotalMet';
+    const body = document.getElementById(bodyId);
     body.innerHTML = '';
-    let totalCal = 0, totalMet = 0, hasUnknownMet = false;
-    log.forEach(item => {
+    let totalCal = 0, totalMet = 0, hasUnknownMet = false, hasEstimated = false;
+    lists[target].forEach(item => {
       totalCal += item.cal || 0;
-      if (item.met !== null) totalMet += item.met;
+      if (item.met !== null) { totalMet += item.met; if (item.metEstimated) hasEstimated = true; }
       else hasUnknownMet = true;
       const tr = document.createElement('tr');
+      const metCell = item.met === null
+        ? '<span class="metUnknown">?</span>'
+        : (item.metEstimated ? '<span class="metEstimated">~' + fmt(item.met) + '</span>' : fmt(item.met));
       tr.innerHTML = `
         <td>${item.name}</td>
-        <td>${fmt(item.grams)}</td>
+        <td>${item.grams !== null ? fmt(item.grams) : '—'}</td>
         <td>${fmt(item.cal)}</td>
-        <td>${item.met !== null ? fmt(item.met) : '<span class="metUnknown">?</span>'}</td>
+        <td>${metCell}</td>
         <td><button class="rmBtn" title="Remove">×</button></td>
       `;
-      tr.querySelector('.rmBtn').addEventListener('click', () => removeFromLog(item.id));
+      tr.querySelector('.rmBtn').addEventListener('click', () => removeFromList(target, item.id));
       body.appendChild(tr);
     });
-    document.getElementById('logTotalCal').textContent = fmt(totalCal);
-    document.getElementById('logTotalMet').textContent = fmt(totalMet) + (hasUnknownMet ? '+' : '');
+    document.getElementById(totalCalId).textContent = fmt(totalCal);
+    document.getElementById(totalMetId).textContent = fmt(totalMet) + (hasUnknownMet ? '+' : '') + (hasEstimated ? '*' : '');
 
-    const pct = dailyCap > 0 ? Math.min(100, (totalMet / dailyCap) * 100) : 0;
-    const fill = document.getElementById('metBarFill');
-    fill.style.width = pct + '%';
-    fill.classList.toggle('over', totalMet > dailyCap);
-    document.getElementById('metBarLabel').textContent =
-      `${fmt(totalMet)} / ${fmt(dailyCap)} mg` + (hasUnknownMet ? ' (some items have unmeasured methionine)' : '');
+    if (target === 'log') {
+      const pct = dailyCap > 0 ? Math.min(100, (totalMet / dailyCap) * 100) : 0;
+      const fill = document.getElementById('metBarFill');
+      fill.style.width = pct + '%';
+      fill.classList.toggle('over', totalMet > dailyCap);
+      let label = `${fmt(totalMet)} / ${fmt(dailyCap)} mg`;
+      if (hasEstimated) label += ' (* includes estimated values)';
+      if (hasUnknownMet) label += ' (some items have no methionine data)';
+      document.getElementById('metBarLabel').textContent = label;
+    }
+  }
+
+  // ── Full nutrition profile ──
+  function showFullProfile(target) {
+    const overlay = document.getElementById('profileOverlay');
+    const grid = document.getElementById('profileGrid');
+    const title = document.getElementById('profileTitle');
+    title.textContent = target === 'log' ? 'Complete Log Nutrition Profile' : 'Complete Shopping List Nutrition Profile';
+    grid.innerHTML = '';
+
+    const agg = {};
+    lists[target].forEach(item => {
+      (item.fullNutrients || []).forEach(fn => {
+        if (!agg[fn.name]) agg[fn.name] = { value: 0, unit: fn.unit };
+        agg[fn.name].value += fn.value;
+      });
+    });
+
+    const names = Object.keys(agg).sort();
+    if (names.length === 0) {
+      grid.innerHTML = '<div class="nutrientItem">No items with detailed nutrient data yet.</div>';
+    }
+    names.forEach(name => {
+      const data = agg[name];
+      if (data.value <= 0) return;
+      const val = Number.isInteger(data.value) ? data.value : parseFloat(data.value.toFixed(3));
+      const div = document.createElement('div');
+      div.className = 'nutrientItem';
+      div.innerHTML = `<strong>${name}</strong><span>${val} ${data.unit}</span>`;
+      grid.appendChild(div);
+    });
+    overlay.hidden = false;
   }
 
   // ── Recipes ──
@@ -200,50 +304,124 @@
   function loadSeedRecipe(recipe) {
     if (recipe.items) {
       recipe.items.forEach(i => {
-        log.push({
-          id: 'log_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
-          name: i[0], grams: i[1], cal: i[2], fat: i[3], carbs: i[4], met: i[5]
-        });
+        lists.log.push({ id: newId('item'), name: i[0], grams: i[1], cal: i[2], fat: i[3], carbs: i[4], met: i[5], metEstimated: false, fullNutrients: [] });
       });
     } else if (recipe.totals) {
-      log.push({
-        id: 'log_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+      lists.log.push({
+        id: newId('item'),
         name: recipe.name + ' (' + recipe.ingredients.join(' + ') + ')',
-        grams: null, cal: recipe.totals.cal, fat: recipe.totals.fat, carbs: recipe.totals.carbs, met: recipe.totals.met
+        grams: null, cal: recipe.totals.cal, fat: recipe.totals.fat, carbs: recipe.totals.carbs, met: recipe.totals.met,
+        metEstimated: false, fullNutrients: []
       });
     }
-    saveLog();
-    renderLog();
+    saveList('log');
+    renderList('log');
   }
 
   function loadCustomRecipe(recipe) {
     recipe.items.forEach(i => {
-      log.push({
-        id: 'log_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
-        name: i.name, grams: i.grams, cal: i.cal, fat: i.fat, carbs: i.carbs, met: i.met
-      });
+      lists.log.push({ id: newId('item'), name: i.name, grams: i.grams, cal: i.cal, fat: i.fat, carbs: i.carbs, met: i.met, metEstimated: !!i.metEstimated, fullNutrients: [] });
     });
-    saveLog();
-    renderLog();
+    saveList('log');
+    renderList('log');
   }
 
   function saveCurrentLogAsRecipe() {
-    if (log.length === 0) { alert('Add at least one item to today\'s log before saving it as a recipe.'); return; }
+    if (lists.log.length === 0) { alert('Add at least one item to today\'s log before saving it as a recipe.'); return; }
     const name = prompt('Name this recipe:', '');
     if (!name || !name.trim()) return;
     const totals = { cal: 0, fat: 0, carbs: 0, met: 0 };
-    log.forEach(i => { totals.cal += i.cal || 0; totals.fat += i.fat || 0; totals.carbs += i.carbs || 0; totals.met += i.met || 0; });
+    lists.log.forEach(i => { totals.cal += i.cal || 0; totals.fat += i.fat || 0; totals.carbs += i.carbs || 0; totals.met += i.met || 0; });
     const recipe = {
       id: 'recipe_' + Date.now().toString(36),
       name: name.trim(),
       createdAt: Date.now(),
-      items: log.map(i => ({ name: i.name, grams: i.grams, cal: i.cal, fat: i.fat, carbs: i.carbs, met: i.met })),
+      items: lists.log.map(i => ({ name: i.name, grams: i.grams, cal: i.cal, fat: i.fat, carbs: i.carbs, met: i.met, metEstimated: i.metEstimated })),
       totals
     };
     const recipes = getCustomRecipes();
     recipes.unshift(recipe);
     saveCustomRecipes(recipes);
     renderRecipes();
+  }
+
+  // ── Tabs ──
+  function wireTabs() {
+    document.querySelectorAll('#listTabs .tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        activeTab = btn.dataset.tab;
+        document.querySelectorAll('#listTabs .tab-btn').forEach(b => b.classList.toggle('active', b === btn));
+        document.getElementById('tab-log').classList.toggle('active', activeTab === 'log');
+        document.getElementById('tab-shopping').classList.toggle('active', activeTab === 'shopping');
+      });
+    });
+  }
+
+  // ── Voice input ──
+  function wireVoice() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const micBtn = document.getElementById('btnMic');
+    if (!SpeechRecognition) { micBtn.disabled = true; micBtn.title = 'Voice input not supported in this browser'; return; }
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    micBtn.addEventListener('click', () => {
+      recognition.start();
+      micBtn.classList.add('listening');
+    });
+    recognition.onresult = e => {
+      const txt = e.results[0][0].transcript;
+      document.getElementById('searchInput').value = txt;
+      runSearch();
+    };
+    recognition.onend = () => micBtn.classList.remove('listening');
+    recognition.onerror = () => micBtn.classList.remove('listening');
+  }
+
+  // ── Barcode scanning ──
+  function wireScan() {
+    const scanBtn = document.getElementById('btnScan');
+    const reader = document.getElementById('scanReader');
+    if (typeof Html5Qrcode === 'undefined') { scanBtn.disabled = true; scanBtn.title = 'Barcode scanning unavailable offline'; return; }
+    scanBtn.addEventListener('click', () => {
+      if (!reader.hidden) {
+        if (html5Qrcode) html5Qrcode.stop().catch(() => {});
+        reader.hidden = true;
+        return;
+      }
+      reader.hidden = false;
+      html5Qrcode = new Html5Qrcode('scanReader');
+      html5Qrcode.start(
+        { facingMode: 'environment' },
+        { fps: 10, qrbox: { width: 250, height: 150 } },
+        decodedText => {
+          html5Qrcode.stop().catch(() => {});
+          reader.hidden = true;
+          document.getElementById('searchInput').value = decodedText;
+          runSearch();
+        },
+        () => {}
+      ).catch(() => {
+        reader.hidden = true;
+        alert('Could not access the camera. Barcode scanning needs camera permission over HTTPS.');
+      });
+    });
+  }
+
+  // ── Quick add ──
+  function renderQuickAdd() {
+    const row = document.getElementById('quickAddRow');
+    row.innerHTML = '';
+    COMMON_FOODS.forEach(name => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'chipBtn';
+      btn.textContent = name;
+      btn.addEventListener('click', () => {
+        document.getElementById('searchInput').value = name;
+        runSearch();
+      });
+      row.appendChild(btn);
+    });
   }
 
   // ── Modals ──
@@ -258,8 +436,13 @@
 
   function init() {
     loadState();
-    renderLog();
+    renderList('log');
+    renderList('shopping');
     renderRecipes();
+    renderQuickAdd();
+    wireTabs();
+    wireVoice();
+    wireScan();
 
     document.getElementById('dailyCapInput').value = dailyCap;
     document.getElementById('btnSearch').addEventListener('click', runSearch);
@@ -268,22 +451,36 @@
     });
     document.getElementById('dailyCapInput').addEventListener('input', e => {
       const v = parseFloat(e.target.value);
-      if (!isNaN(v) && v > 0) { dailyCap = v; saveCap(); renderLog(); }
+      if (!isNaN(v) && v > 0) { dailyCap = v; saveCap(); renderList('log'); }
     });
     document.getElementById('btnSaveRecipe').addEventListener('click', saveCurrentLogAsRecipe);
     document.getElementById('btnClearLog').addEventListener('click', () => {
-      if (log.length && !confirm('Clear today\'s log?')) return;
-      log = [];
-      saveLog();
-      renderLog();
+      if (lists.log.length && !confirm('Clear today\'s log?')) return;
+      lists.log = [];
+      saveList('log');
+      renderList('log');
     });
+    document.getElementById('btnClearShopping').addEventListener('click', () => {
+      if (lists.shopping.length && !confirm('Clear the shopping list?')) return;
+      lists.shopping = [];
+      saveList('shopping');
+      renderList('shopping');
+    });
+    document.getElementById('btnPrintShopping').addEventListener('click', () => window.print());
+    document.getElementById('btnViewLogProfile').addEventListener('click', () => showFullProfile('log'));
+    document.getElementById('btnViewShoppingProfile').addEventListener('click', () => showFullProfile('shopping'));
 
     wireModal('btnHelp', 'helpOverlay', 'btnCloseHelp');
     wireModal('btnAbout', 'aboutOverlay', 'btnCloseAbout');
+    document.getElementById('btnCloseProfile').addEventListener('click', () => { document.getElementById('profileOverlay').hidden = true; });
+    document.getElementById('profileOverlay').addEventListener('click', e => {
+      if (e.target === document.getElementById('profileOverlay')) e.target.hidden = true;
+    });
     document.addEventListener('keydown', e => {
       if (e.key !== 'Escape') return;
       document.getElementById('helpOverlay').hidden = true;
       document.getElementById('aboutOverlay').hidden = true;
+      document.getElementById('profileOverlay').hidden = true;
     });
 
     if (window.FeistTheme) FeistTheme.mount('#themeSwitcherMount');

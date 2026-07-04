@@ -57,6 +57,20 @@ window.USDA = (function () {
     return out;
   }
 
+  // Every nutrient USDA returns, not just the 5 core ones — used for the
+  // "Full Nutrition Profile" view. Per 100g, matching extractNutrients.
+  function extractFullNutrients(foodNutrients) {
+    const list = [];
+    (foodNutrients || []).forEach(fn => {
+      const name = fn.nutrientName || (fn.nutrient && fn.nutrient.name);
+      const unit = fn.unitName || (fn.nutrient && fn.nutrient.unitName);
+      const value = fn.value !== undefined ? fn.value : (fn.amount !== undefined ? fn.amount : null);
+      if (!name || value === null || value <= 0) return;
+      list.push({ name, value, unit: unit || '' });
+    });
+    return list;
+  }
+
   async function searchFoods(query, pageSize) {
     const data = await fetchWithRotation(key =>
       `https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${key}&query=${encodeURIComponent(query)}&pageSize=${pageSize || 15}`
@@ -66,7 +80,8 @@ window.USDA = (function () {
       description: f.description,
       dataType: f.dataType,
       brandOwner: f.brandOwner || null,
-      nutrients: extractNutrients(f.foodNutrients)
+      nutrients: extractNutrients(f.foodNutrients),
+      fullNutrients: extractFullNutrients(f.foodNutrients)
     }));
   }
 
@@ -78,7 +93,8 @@ window.USDA = (function () {
       fdcId: data.fdcId,
       description: data.description,
       dataType: data.dataType,
-      nutrients: extractNutrients(data.foodNutrients)
+      nutrients: extractNutrients(data.foodNutrients),
+      fullNutrients: extractFullNutrients(data.foodNutrients)
     };
   }
 
