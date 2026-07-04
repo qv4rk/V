@@ -42,8 +42,10 @@
       <button id="btnLoadFullPreset" type="button" style="border-color:var(--success); color:var(--success);">Load Across All Panels</button>
       <button id="btnSavePreset" type="button" style="border-color:var(--accent-3); color:var(--accent-3);">+ Save Active Panel as Preset</button>
       <button id="btnDeletePreset" type="button" class="clear">Delete Preset</button>
+      <button id="btnLoadFromFile" type="button" style="border-color:var(--accent-3); color:var(--accent-3);">⬆ Load JSON → Active Panel</button>
       <button id="btnExportPresets" type="button">⬇ Export Presets</button>
       <button id="btnImportPresets" type="button">⬆ Import Presets</button>
+      <input type="file" id="loadFileInput" accept="application/json" hidden>
       <input type="file" id="importFileInput" accept="application/json" hidden>
     </div>
 
@@ -70,8 +72,8 @@
     <h3>Presets</h3>
     <p>Presets are entirely yours — nothing ships pre-loaded. Save a panel's terms/location/category/dates with "+ Save Active Panel as Preset," and it appears in the Preset dropdown next time, stored locally in your browser.</p>
 
-    <h3>Import / Export format</h3>
-    <p>"Export Presets" downloads a JSON file of everything currently saved, for backup or moving to another browser. "Import Presets" reads a JSON file in this exact shape and adds it to your saved list:</p>
+    <h3>Loading from a file</h3>
+    <p>"⬆ Load JSON → Active Panel" reads a JSON file and applies it straight to whichever panel your mouse is over — no saving or dropdown step required. "Import Presets" instead adds the file's contents to your saved preset list for later; "Export Presets" downloads everything currently saved, for backup or moving to another browser. All three expect this exact shape:</p>
     <pre>[
   {
     "name": "My preset",

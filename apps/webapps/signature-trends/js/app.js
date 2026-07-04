@@ -86,6 +86,25 @@
     reader.readAsText(file);
   }
 
+  function loadFileToPanel(file, panel) {
+    if (!panel) { alert('No panel found — hover a panel before choosing a file.'); return; }
+    const reader = new FileReader();
+    reader.onload = () => {
+      let data;
+      try { data = JSON.parse(reader.result); }
+      catch (e) { alert('That file is not valid JSON. Check Help for the expected format.'); return; }
+      const list = Array.isArray(data) ? data : [data];
+      const preset = list.map(validateImportedPreset).find(Boolean);
+      if (!preset) { alert('That file doesn\'t match the expected preset format. Check Help for the expected format.'); return; }
+      applyPresetToPanel(panel, preset, preset.termGroups[0].terms);
+      panel.style.transition = 'box-shadow 0.2s';
+      panel.style.boxShadow = '0 0 0 3px rgba(111,174,127,0.4)';
+      setTimeout(() => panel.style.boxShadow = '', 900);
+    };
+    reader.onerror = () => alert('Could not read that file.');
+    reader.readAsText(file);
+  }
+
   // Full official Google Trends location + category lists, loaded from
   // js/geo-data.js and js/category-data.js.
   const GEO_DATA = (window.SIGTRENDS_GEOS || []).map(g => ({ code: g.code, label: g.label }));
@@ -111,8 +130,22 @@
     ).join('');
   }
 
+  // "Active panel" is whichever panel the mouse is currently over, falling
+  // back to whichever panel was last focused/clicked into — hover alone
+  // breaks the moment the mouse moves to click a preset-bar button, which
+  // sits outside every .panel element.
+  let lastFocusedPanel = null;
+  document.addEventListener('focusin', e => {
+    const panel = e.target.closest && e.target.closest('.panel');
+    if (panel) lastFocusedPanel = panel;
+  });
+  document.addEventListener('mousedown', e => {
+    const panel = e.target.closest && e.target.closest('.panel');
+    if (panel) lastFocusedPanel = panel;
+  });
+
   function activePanel() {
-    return document.querySelector('.panel:hover') || document.querySelector('.panel');
+    return document.querySelector('.panel:hover') || lastFocusedPanel || document.querySelector('.panel');
   }
 
   // ── Searchable combobox (location + category pickers) ──
@@ -647,6 +680,18 @@
     importInput.addEventListener('change', (e) => {
       const file = e.target.files[0];
       if (file) importPresetsFromFile(file);
+      e.target.value = '';
+    });
+
+    const loadInput = document.getElementById('loadFileInput');
+    let loadTargetPanel = null;
+    document.getElementById('btnLoadFromFile').addEventListener('click', () => {
+      loadTargetPanel = activePanel();
+      loadInput.click();
+    });
+    loadInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) loadFileToPanel(file, loadTargetPanel);
       e.target.value = '';
     });
 
