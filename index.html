@@ -9,23 +9,21 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="app/theme-vars.css">
+<script src="app/theme-switcher.js"></script>
 <style>
+  /* --panel / --ink / --ink-dim / --ink-mute / --font-* come from
+     app/theme-vars.css so this page follows the site-wide theme;
+     the tokens below just keep this file's existing names working. */
   :root {
-    --bg: #050810;
-    --bg2: #0a0c14;
-    --panel: rgba(10,12,20,.72);
-    --gold: #c9a84c;
-    --gold-hi: #e8c96d;
-    --gold-dim: rgba(201,168,76,.3);
-    --cyan: #00e5ff;
-    --ink: #ddd5c0;
-    --ink-dim: #8a7e6a;
-    --ink-mute: #4a4030;
-    --border: rgba(201,168,76,.16);
-    --border-cyan: rgba(0,229,255,.14);
-    --font-display: 'Cinzel', serif;
-    --font-body: 'Cormorant Garamond', serif;
-    --font-mono: 'Space Mono', monospace;
+    --bg: var(--bg-deep);
+    --bg2: var(--bg-soft);
+    --gold: var(--accent);
+    --gold-hi: var(--accent-2);
+    --gold-dim: color-mix(in srgb, var(--accent) 30%, transparent);
+    --cyan: var(--accent-3);
+    --border: color-mix(in srgb, var(--accent) 16%, transparent);
+    --border-cyan: color-mix(in srgb, var(--accent-3) 14%, transparent);
   }
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html { scroll-behavior: smooth; }
@@ -279,6 +277,7 @@
       <a href="mailto:info@feisttech.com?subject=Hello%20from%20feisttech.com" class="nav-contact">Contact</a>
     </nav>
     <div class="nav-actions">
+      <span id="themeSwitcherMount"></span>
       <button id="shareBtn" class="icon-btn" type="button">⤴ Share</button>
       <button id="navToggle" class="nav-toggle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="navLinks">☰</button>
     </div>
@@ -343,6 +342,12 @@
         <p>Five-panel Google Trends comparison workspace with saveable, user-defined search presets.</p>
       </a>
 
+      <a href="apps/webapps/methionine-meal-builder/index.html" class="tool-card">
+        <span class="tool-icon">🍽️</span>
+        <h3>Low-Methionine Meal Builder</h3>
+        <p>Live USDA food search, a daily methionine tracker, and saveable recipes.</p>
+      </a>
+
     </div>
   </section>
 
@@ -385,11 +390,6 @@
         <div class="disclosure">Not financial advice.</div>
       </div>
 
-      <div class="soon-card">
-        <h3>Low-Methionine Meal Builder <span class="soon-tag">Coming Soon</span></h3>
-        <p>A meal planner built around low-methionine dietary needs.</p>
-      </div>
-
     </div>
   </section>
 
@@ -406,6 +406,9 @@
 <script>
 (function () {
   'use strict';
+
+  /* ── Theme switcher ── */
+  if (window.FeistTheme) FeistTheme.mount('#themeSwitcherMount');
 
   /* ── Mobile nav ── */
   var navToggle = document.getElementById('navToggle');
