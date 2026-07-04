@@ -44,14 +44,31 @@ window.USDA = (function () {
     throw lastError || new Error('All USDA API keys failed');
   }
 
+  // Methionine must always come out in mg — that's the unit people
+  // actually think in for amino acid limits (e.g. Hoffman-protocol
+  // discussions of a daily mg cap). USDA's own unitName tells us what the
+  // raw value actually is (amino acids are commonly reported in grams,
+  // not mg, unlike minerals) so we convert off that instead of assuming.
+  function toMg(value, unit) {
+    if (value === null || value === undefined) return null;
+    const u = (unit || '').toLowerCase();
+    if (u === 'mg') return value;
+    if (u === 'g') return value * 1000;
+    if (u === 'µg' || u === 'ug' || u === 'mcg') return value / 1000;
+    return value; // unrecognized unit — pass through rather than guess
+  }
+
   function extractNutrients(foodNutrients) {
     const out = { energy: null, protein: null, fat: null, carbs: null, methionine: null };
     (foodNutrients || []).forEach(fn => {
       const number = fn.nutrientNumber !== undefined ? fn.nutrientNumber : (fn.nutrient && fn.nutrient.number);
       if (number === undefined || number === null) return;
       const value = fn.value !== undefined ? fn.value : (fn.amount !== undefined ? fn.amount : null);
+      const unit = fn.unitName !== undefined ? fn.unitName : (fn.nutrient && fn.nutrient.unitName);
       for (const key in NUTRIENT_NUMBERS) {
-        if (String(number) === NUTRIENT_NUMBERS[key]) out[key] = value;
+        if (String(number) === NUTRIENT_NUMBERS[key]) {
+          out[key] = key === 'methionine' ? toMg(value, unit) : value;
+        }
       }
     });
     return out;
