@@ -7,6 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto+Mono:wght@300;400&family=Merriweather:wght@300;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
+    <script src="https://unpkg.com/jszip@3.10.1/dist/jszip.min.js"></script>
     <style>
         :root {
             --primary: #00f3ff;
@@ -117,6 +118,7 @@
                 <strong>📋 FORMAT:</strong><br>
                 Put <code>[SPKR: Name]</code> on its own line before each dialogue line.<br>
                 Narrator reads everything else automatically.<br><br>
+                <strong>🎙 VOICE CARDS:</strong> attach a card so the voice is assigned automatically — <code>[SPKR: Name|CARD]</code> (e.g. <code>[SPKR: Alice|ARIA]</code>). See <a href="edge-voices.json" target="_blank" style="color:var(--primary)">edge-voices.json</a> for the full card list. Only needed the first time a character speaks — after that the mapping sticks. You can still preview/override any voice manually in the VOICES panel.<br><br>
                 <strong>⌨️ SHORTCUTS:</strong> <span class="kbd">Space</span> play/pause &nbsp; <span class="kbd">→</span> next &nbsp; <span class="kbd">←</span> prev
             </div>
             <div class="upload-row">
@@ -135,10 +137,10 @@
 
 Example:
 The detective entered quietly.
-[SPKR: Alice]
+[SPKR: Alice|ARIA]
 Hello there!
 The narrator explains what happens next.
-[SPKR: Bob]
+[SPKR: Bob|GUY]
 How are you?"></textarea>
             <button class="btn-large" onclick="loadFromPaste()">INITIALIZE SYSTEM</button>
             <button class="btn" style="width:100%; margin-top:1rem; background:rgba(0,243,255,0.1);" onclick="triggerVoiceLoad()">🔊 LOAD VOICES (Required for Browser TTS)</button>
@@ -152,6 +154,7 @@ How are you?"></textarea>
                     <button class="btn btn-home" onclick="returnHome()">🏠</button>
                     <button class="btn" onclick="togglePanel()">🎙 VOICES</button>
                     <button class="btn" onclick="saveToDisk()">💾 EXPORT</button>
+                    <button class="btn" onclick="exportAllAudio()">🎵 SAVE AUDIO</button>
                 </div>
                 <select id="chapterSelect" onchange="jumpToChapter(this.value)" style="max-width: 200px; background:rgba(0,0,0,0.5); border:1px solid var(--border);"></select>
                 <div style="display:flex; gap:0.25rem;">
@@ -213,6 +216,20 @@ How are you?"></textarea>
     let nativeTTSActive = false;
     let voiceLoadAttempted = false;
     window.activeUtterances = [];
+
+    // --- VOICE CARDS (static shorthand -> Edge TTS ShortName, so voice
+    // assignment can be written directly into the manuscript instead of
+    // manually picked from a dropdown for every character every time) ---
+    let cardMap = {};
+    fetch('edge-voices.json').then(r => r.json()).then(list => {
+        list.forEach(v => { cardMap[v.card.toUpperCase()] = v.shortName; });
+    }).catch(e => console.warn('edge-voices.json not loaded', e));
+
+    function resolveCard(token) {
+        if(!token) return null;
+        const t = token.trim();
+        return cardMap[t.toUpperCase()] || t; // fall back to a literal ShortName if pasted directly
+    }
 
     // --- BACKGROUND ---
     const bgSystem = (function() {
@@ -331,8 +348,12 @@ How are you?"></textarea>
     }
 
     function detectSpkrs(text) {
-        const matches = text.matchAll(/\[SPKR:\s*([^\]]+)\]/gi);
-        for(const match of matches) detectedSpkrs.add(match[1].trim());
+        const matches = text.matchAll(/\[SPKR:\s*([^\|\]]+?)\s*(?:\|\s*([^\]]+))?\]/gi);
+        for(const match of matches) {
+            const name = match[1].trim();
+            detectedSpkrs.add(name);
+            if(match[2] && !voiceMapping[name]) voiceMapping[name] = resolveCard(match[2]);
+        }
     }
 
     function parseTextWithSpkrs(text) {
@@ -354,10 +375,11 @@ How are you?"></textarea>
                 return;
             }
 
-            const spkrMatch = line.match(/\[SPKR:\s*([^\]]+)\]/i);
+            const spkrMatch = line.match(/\[SPKR:\s*([^\|\]]+?)\s*(?:\|\s*([^\]]+))?\]/i);
             if(spkrMatch) {
                 currentSpkr = spkrMatch[1].trim();
                 detectedSpkrs.add(currentSpkr);
+                if(spkrMatch[2] && !voiceMapping[currentSpkr]) voiceMapping[currentSpkr] = resolveCard(spkrMatch[2]);
                 line = line.replace(/\[SPKR:\s*[^\]]+\]/i, '').trim();
             }
 
@@ -795,6 +817,59 @@ How are you?"></textarea>
         const a = document.createElement('a'); a.href=url; a.download=fn; a.click();
         URL.revokeObjectURL(url);
         showTTSStatus('💾 Saved: '+fn, 2000);
+    }
+
+    // --- AUDIO EXPORT (one file per line, numbered + labeled, zipped) ---
+    async function exportAllAudio() {
+        if(settings.useBrowserTTS) {
+            alert('Audio export needs Edge-TTS (Browser TTS can\'t produce a saveable file). Click "⚡ TRY EDGE-TTS" in the VOICES panel, then try again.');
+            return;
+        }
+        if(!segments.length) { alert('Load a manuscript first.'); return; }
+        if(!window.JSZip) { alert('ZIP library failed to load — check your connection and reload the page.'); return; }
+
+        const zip = new JSZip();
+        const total = segments.length;
+        const pad = String(total).length;
+        const fileNames = [];
+        let failures = 0;
+
+        for(let i = 0; i < total; i++) {
+            const seg = segments[i];
+            showTTSStatus(`🎵 Rendering ${i+1} / ${total}...`, 0);
+            const voice = voiceMapping[seg.spkr] || voiceMapping.narrator || voices[0]?.ShortName;
+            const safeSpkr = (seg.spkr || 'narrator').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'narrator';
+            const num = String(i + 1).padStart(pad, '0');
+            const fname = `${num}_${safeSpkr}.mp3`;
+            try {
+                const tts = new window.EdgeTTS({
+                    voice, text: seg.text,
+                    rate: (settings.speed - 1.0) * 100 + '%',
+                    pitch: '+0Hz',
+                    volume: `+${Math.round((settings.volume - 1) * 100)}%`
+                });
+                const result = await tts.synthesize();
+                zip.file(fname, result.audio);
+                fileNames.push(fname);
+            } catch(e) {
+                console.error(`Audio export failed on segment ${num} (${seg.spkr})`, e);
+                failures++;
+            }
+        }
+
+        // ffmpeg concat-demuxer list, in exact reading order, so stitching
+        // is a single command: ffmpeg -f concat -safe 0 -i filelist.txt -c copy full.mp3
+        const concatList = fileNames.map(f => `file '${f}'`).join('\n');
+        zip.file('filelist.txt', concatList);
+
+        showTTSStatus('📦 Zipping...', 0);
+        const blob = await zip.generateAsync({ type: 'blob' });
+        const now = new Date();
+        const ts = now.toISOString().slice(0,16).replace(/[:T]/g,'-');
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = `FeistTech_Audio_${ts}.zip`; a.click();
+        URL.revokeObjectURL(url);
+        showTTSStatus(failures ? `⚠ Exported ${fileNames.length}/${total} (${failures} failed)` : `✅ Exported ${fileNames.length} audio files`, 4000);
     }
 </script>
 

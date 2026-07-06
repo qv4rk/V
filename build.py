@@ -22,9 +22,11 @@ import markdown as md_lib
 
 SCRIPT_DIR   = os.path.dirname(os.path.abspath(__file__))
 NODES_DIR    = os.path.join(SCRIPT_DIR, 'nodes')
+TAGS_DIR     = os.path.join(NODES_DIR, 'tags')
 DATA_DIR     = os.path.join(SCRIPT_DIR, 'data')
 ARTICLES_DIR = os.path.join(SCRIPT_DIR, 'articles')
 SITE_URL     = 'https://feisttech.com'
+TAG_KEYWORDS_PATH = os.path.join(SCRIPT_DIR, 'tag-keywords.json')
 
 MONTH_NAMES = ['JAN','FEB','MAR','APR','MAY','JUN',
                'JUL','AUG','SEP','OCT','NOV','DEC']
@@ -71,6 +73,41 @@ def escape_html_attr(s):
             .replace('"', '&quot;')
             .replace('<', '&lt;')
             .replace('>', '&gt;'))
+
+
+def load_tag_keywords():
+    if not os.path.isfile(TAG_KEYWORDS_PATH):
+        return {}
+    with open(TAG_KEYWORDS_PATH, 'r', encoding='utf-8') as f:
+        return json.load(f)
+
+
+def resolve_tags(eid, fm, body, tag_keywords):
+    """
+    Manual tags in the node's frontmatter always win. If none are given,
+    look for a companion file at nodes/tags/{id}.json (never touches the
+    original node .md file). If that doesn't exist yet either, scan the
+    body against tag-keywords.json and write the result to that companion
+    file so it stays stable across rebuilds until the file is deleted.
+    """
+    manual_tags = fm.get('tags') or []
+    if manual_tags:
+        return manual_tags
+
+    tag_path = os.path.join(TAGS_DIR, f'{eid}.json')
+    if os.path.isfile(tag_path):
+        with open(tag_path, 'r', encoding='utf-8') as f:
+            return (json.load(f) or {}).get('tags', [])
+
+    lower_body = (body or '').lower()
+    matched = [tag for tag, keywords in tag_keywords.items()
+               if any(kw in lower_body for kw in keywords)]
+
+    os.makedirs(TAGS_DIR, exist_ok=True)
+    with open(tag_path, 'w', encoding='utf-8') as f:
+        json.dump({'tags': matched, 'auto_generated': True}, f, ensure_ascii=False, indent=2)
+    print(f'    Auto-tagged {eid}: {matched}')
+    return matched
 
 # ── Article HTML template ────────────────────────────────────────────────────
 # Uses __TOKEN__ placeholders (avoids collisions with CSS/JS curly braces).
@@ -495,6 +532,7 @@ def build():
 
     all_events = []
     sitemap_urls = []
+    tag_keywords = load_tag_keywords()
 
     for fname in md_files:
         path = os.path.join(NODES_DIR, fname)
@@ -505,6 +543,7 @@ def build():
 
         eid = fm.get('id') or fname[:-3]
         print(f'  Building: {eid}')
+        resolved_tags = resolve_tags(eid, fm, body, tag_keywords)
 
         # ── Event record for events.json ────────────────────────────────────
         date     = fm.get('date') or {}
@@ -526,7 +565,7 @@ def build():
             'type':        fm.get('type', ''),
             'nodeColor':   fm.get('nodeColor', '#a67041'),
             'nodeSize':    fm.get('nodeSize', 0.5),
-            'tags':        fm.get('tags') or [],
+            'tags':        resolved_tags,
             'connections': fm.get('connections') or [],
             'excerpt':     fm.get('excerpt', ''),
             'content':     body,
@@ -543,7 +582,7 @@ def build():
         content_html = md_to_html_segments(body)
         tags_html    = ''.join(
             f'<span class="article-tag">{escape_html_attr(t)}</span>'
-            for t in (fm.get('tags') or [])[:10]
+            for t in resolved_tags[:10]
         )
         works_cited  = render_works_cited(fm.get('references') or [])
         date_label   = fmt_date_label(date)
