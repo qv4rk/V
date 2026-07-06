@@ -467,15 +467,25 @@ How are you?"></textarea>
         }
     }
 
+    // Edge-TTS requires a signed whole-number percent string ("+12%", "-5%",
+    // "+0%"). Raw floating-point math produces things like "39.99999999999999%"
+    // (binary float rounding) or a bare "0%" with no sign, and the API
+    // rejects both with "Invalid rate" — Math.round + always-prefixed sign
+    // fixes both cases.
+    function formatEdgePct(val) {
+        const num = Math.round((val - 1.0) * 100);
+        return (num >= 0 ? '+' : '') + num + '%';
+    }
+
     async function playWithEdgeTTS(seg) {
         const voice = voiceMapping[seg.spkr] || voiceMapping.narrator || voices[0]?.ShortName;
         // Library signature is positional: (text, voice, options) — an
         // options object as the first arg reads as "text" and throws
         // "text must be a string".
         const tts = new window.EdgeTTS(String(seg.text || ' '), voice, {
-            rate: (settings.speed - 1.0) * 100 + '%',
+            rate: formatEdgePct(settings.speed),
             pitch: '+0Hz',
-            volume: `+${Math.round((settings.volume - 1) * 100)}%`
+            volume: formatEdgePct(settings.volume)
         });
         const result = await tts.synthesize();
         const blob = new Blob([result.audio], { type: 'audio/mp3' });
@@ -545,7 +555,7 @@ How are you?"></textarea>
             speechSynthesis.speak(u);
         } else {
             try {
-                const tts = new window.EdgeTTS(String(previewText), voiceName, { rate: (settings.speed-1)*100+'%', pitch:'+0Hz', volume:'+0%' });
+                const tts = new window.EdgeTTS(String(previewText), voiceName, { rate: formatEdgePct(settings.speed), pitch:'+0Hz', volume: formatEdgePct(settings.volume) });
                 const result = await tts.synthesize();
                 const blob = new Blob([result.audio], { type:'audio/mp3' });
                 const url = URL.createObjectURL(blob);
@@ -866,9 +876,9 @@ How are you?"></textarea>
             const fname = `${num}_${safeSpkr}.mp3`;
             try {
                 const tts = new window.EdgeTTS(String(seg.text || ' '), voice, {
-                    rate: (settings.speed - 1.0) * 100 + '%',
+                    rate: formatEdgePct(settings.speed),
                     pitch: '+0Hz',
-                    volume: `+${Math.round((settings.volume - 1) * 100)}%`
+                    volume: formatEdgePct(settings.volume)
                 });
                 const result = await tts.synthesize();
                 zip.file(fname, result.audio);
