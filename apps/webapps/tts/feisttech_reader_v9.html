@@ -200,7 +200,7 @@ How are you?"></textarea>
 </div>
 
 <script type="module">
-    import { EdgeTTS, VoicesManager } from 'https://unpkg.com/edge-tts-universal@latest/dist/browser.js';
+    import { EdgeTTS, VoicesManager } from 'https://unpkg.com/edge-tts-universal@1.4.0/dist/browser.js';
     window.EdgeTTS = EdgeTTS;
     window.VoicesManager = VoicesManager;
     window.appReady = true;
@@ -306,7 +306,15 @@ How are you?"></textarea>
     async function loadVoices() {
         try {
             const manager = await window.VoicesManager.create();
-            const edgeVoices = manager.getVoices();
+            // Library API has changed across versions (getVoices() was
+            // removed at some point in favor of find()) — try every shape
+            // we've seen rather than hard-coding one method name.
+            let edgeVoices;
+            if(typeof manager.getVoices === 'function') edgeVoices = manager.getVoices();
+            else if(typeof manager.find === 'function') edgeVoices = manager.find({});
+            else if(Array.isArray(manager)) edgeVoices = manager;
+            else if(Array.isArray(manager.voices)) edgeVoices = manager.voices;
+            else throw new Error('VoicesManager has no known voice-listing method');
             if(edgeVoices && edgeVoices.length > 0) {
                 voices = edgeVoices.filter(v => v.Locale.startsWith('en')).sort((a,b) => {
                     const score = v => { let s=0; if(v.Locale.includes('GB')) s+=15; else if(v.Locale.includes('US')) s+=10; else if(v.Locale.startsWith('en')) s+=5; if(v.Gender==='Female') s+=8; return s; };
@@ -322,10 +330,23 @@ How are you?"></textarea>
         initializeDefaultVoiceMapping();
     }
 
-    function loadBrowserVoices() {
+    function loadBrowserVoices(retriesLeft) {
+        if(retriesLeft === undefined) retriesLeft = 6;
         settings.useBrowserTTS = true;
         const bv = speechSynthesis.getVoices();
-        if(!bv.length) { voices = []; return; }
+        if(!bv.length) {
+            // Chrome/Edge often return an empty list on the very first
+            // synchronous read, before voices finish loading async.
+            // Retry a few times instead of silently giving up with 0 voices.
+            if(retriesLeft > 0) {
+                speechSynthesis.onvoiceschanged = () => loadBrowserVoices(0);
+                setTimeout(() => loadBrowserVoices(retriesLeft - 1), 300);
+            } else {
+                voices = [];
+                showTTSStatus('⚠ No TTS voices available in this browser', 4000);
+            }
+            return;
+        }
         voices = bv.filter(v => v.lang.startsWith('en')).map(v => ({
             ShortName: v.name, FriendlyName: v.name,
             Gender: (v.name.toLowerCase().includes('female')||['Samantha','Victoria','Zira'].some(n=>v.name.includes(n)))?'Female':'Male',
@@ -446,13 +467,25 @@ How are you?"></textarea>
         }
     }
 
+    // Edge-TTS requires a signed whole-number percent string ("+12%", "-5%",
+    // "+0%"). Raw floating-point math produces things like "39.99999999999999%"
+    // (binary float rounding) or a bare "0%" with no sign, and the API
+    // rejects both with "Invalid rate" — Math.round + always-prefixed sign
+    // fixes both cases.
+    function formatEdgePct(val) {
+        const num = Math.round((val - 1.0) * 100);
+        return (num >= 0 ? '+' : '') + num + '%';
+    }
+
     async function playWithEdgeTTS(seg) {
         const voice = voiceMapping[seg.spkr] || voiceMapping.narrator || voices[0]?.ShortName;
-        const tts = new window.EdgeTTS({
-            voice, text: seg.text,
-            rate: (settings.speed - 1.0) * 100 + '%',
+        // Library signature is positional: (text, voice, options) — an
+        // options object as the first arg reads as "text" and throws
+        // "text must be a string".
+        const tts = new window.EdgeTTS(String(seg.text || ' '), voice, {
+            rate: formatEdgePct(settings.speed),
             pitch: '+0Hz',
-            volume: `+${Math.round((settings.volume - 1) * 100)}%`
+            volume: formatEdgePct(settings.volume)
         });
         const result = await tts.synthesize();
         const blob = new Blob([result.audio], { type: 'audio/mp3' });
@@ -522,7 +555,7 @@ How are you?"></textarea>
             speechSynthesis.speak(u);
         } else {
             try {
-                const tts = new window.EdgeTTS({ voice: voiceName, text: previewText, rate: (settings.speed-1)*100+'%', pitch:'+0Hz', volume:'+0%' });
+                const tts = new window.EdgeTTS(String(previewText), voiceName, { rate: formatEdgePct(settings.speed), pitch:'+0Hz', volume: formatEdgePct(settings.volume) });
                 const result = await tts.synthesize();
                 const blob = new Blob([result.audio], { type:'audio/mp3' });
                 const url = URL.createObjectURL(blob);
@@ -842,11 +875,10 @@ How are you?"></textarea>
             const num = String(i + 1).padStart(pad, '0');
             const fname = `${num}_${safeSpkr}.mp3`;
             try {
-                const tts = new window.EdgeTTS({
-                    voice, text: seg.text,
-                    rate: (settings.speed - 1.0) * 100 + '%',
+                const tts = new window.EdgeTTS(String(seg.text || ' '), voice, {
+                    rate: formatEdgePct(settings.speed),
                     pitch: '+0Hz',
-                    volume: `+${Math.round((settings.volume - 1) * 100)}%`
+                    volume: formatEdgePct(settings.volume)
                 });
                 const result = await tts.synthesize();
                 zip.file(fname, result.audio);
