@@ -37,17 +37,19 @@ MONTH_NAMES = ['JAN','FEB','MAR','APR','MAY','JUN',
 # canonical (translationOf-less) node is the only one plotted on the Atlas
 # globe/search; translations still get their own article page + sitemap
 # entry, and a language-switcher linking all siblings together.
-LANG_LABELS = {'en': 'English', 'ar': 'العربية', 'he': 'עברית'}
+LANG_LABELS = {'en': 'English', 'ar': 'العربية', 'he': 'עברית', 'zh': '中文'}
 RTL_LANGS   = {'ar', 'he'}
 LANG_FONT_LINKS = {
     'en': '<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">',
     'ar': '<link href="https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@400;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">',
     'he': '<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Hebrew:wght@400;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">',
+    'zh': '<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">',
 }
 LANG_BODY_FONTS = {
     'en': "'Cormorant Garamond', serif",
     'ar': "'Noto Naskh Arabic', serif",
     'he': "'Noto Sans Hebrew', serif",
+    'zh': "'Noto Serif SC', serif",
 }
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
