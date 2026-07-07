@@ -35,7 +35,11 @@ body::after {
 }
 
 /* ─── App shell + view switching ─── */
-#app { position:relative; width:100vw; height:100vh; overflow:hidden; }
+#app {
+  position:relative; width:100vw; overflow:hidden;
+  height:100vh; /* fallback for browsers without dvh support */
+  height:100dvh; /* iOS Safari: excludes the collapsing toolbar, unlike 100vh */
+}
 .view {
   position:absolute; inset:0;
   opacity:0; visibility:hidden;
