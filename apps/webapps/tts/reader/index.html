@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>FeistTech Immersive Reader v10</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto+Mono:wght@300;400&family=Merriweather:wght@300;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
+</head>
+<body>
+<canvas id="bg-canvas"></canvas>
+<audio id="audioPlayer" controls></audio>
+
+<div id="app-container">
+
+    <!-- ========== SPLASH ========== -->
+    <div id="splashView">
+        <h1 class="splash-logo">FEISTTECH READER</h1>
+        <p class="splash-sub">MULTI-VOICE IMMERSIVE ENGINE · v10.0</p>
+
+        <!-- Resume banner -->
+        <div id="resumeBanner">
+            <div class="resume-info">
+                <strong>SESSION RESTORED</strong>
+                <span id="resumeDetail">Continue where you left off?</span>
+            </div>
+            <button class="btn" style="background:#00ff41;color:#000;border:none;flex-shrink:0;" onclick="resumeSession()">RESUME ▶</button>
+        </div>
+
+        <!-- STEP 1: Edge TTS -->
+        <div class="step-card s1">
+            <div class="step-header">
+                <div class="step-num">1</div>
+                UNLOCK PREMIUM VOICES FIRST
+            </div>
+            <div class="step-body">
+                <p style="margin:0 0 0.75rem;">This app uses your browser's built-in TTS engine. <strong style="color:var(--primary);">Microsoft Edge has 300+ premium voices</strong> — far better than Chrome or Firefox. To activate them:</p>
+
+                <div class="platform-tabs">
+                    <div class="ptab active" onclick="setPlatform('desktop',this)">🖥 Edge Desktop</div>
+                    <div class="ptab" onclick="setPlatform('mobile',this)">📱 Edge Mobile</div>
+                    <div class="ptab" onclick="setPlatform('other',this)">🌐 Other Browser</div>
+                </div>
+
+                <div id="inst-desktop" class="platform-inst active">
+                    <div class="inst-step"><span class="inst-arrow">▸</span><span>Right-click anywhere on this page (not on a button or link)</span></div>
+                    <div class="inst-step"><span class="inst-arrow">▸</span><span>Select <span class="kbd">Read aloud</span> from the context menu</span></div>
+                    <div class="inst-step"><span class="inst-arrow">▸</span><span>A reading toolbar appears at the top — click <span class="kbd">Voice options</span></span></div>
+                    <div class="inst-step"><span class="inst-arrow">▸</span><span>Change the voice once to force Edge to load its full voice list</span></div>
+                    <div class="inst-step"><span class="inst-arrow">▸</span><span>Close the toolbar, then click <strong style="color:var(--primary);">LOAD VOICES</strong> below</span></div>
+                    <div class="highlight-tip">💡 This only needs to be done once per browser session. Voices stay available until you close the tab.</div>
+                </div>
+
+                <div id="inst-mobile" class="platform-inst">
+                    <div class="inst-step"><span class="inst-arrow">▸</span><span>Tap the <strong>three-dot menu (⋯)</strong> at the bottom of Edge</span></div>
+                    <div class="inst-step"><span class="inst-arrow">▸</span><span>Scroll down and tap <span class="kbd">Read aloud</span></span></div>
+                    <div class="inst-step"><span class="inst-arrow">▸</span><span>Tap the voice name at the top to open voice selection</span></div>
+                    <div class="inst-step"><span class="inst-arrow">▸</span><span>Change the voice once, then close Read Aloud</span></div>
+                    <div class="inst-step"><span class="inst-arrow">▸</span><span>Tap <strong style="color:var(--primary);">LOAD VOICES</strong> below</span></div>
+                    <div class="highlight-tip">💡 If ⋯ is at the top instead, your Edge version may differ — look for <span class="kbd">Read aloud</span> in the same menu. On iPhone, Edge runs on the same underlying engine as Safari (Apple requires it), so this trick and the Edge-TTS engine below can behave the same as Safari, not like Edge on Windows.</div>
+                </div>
+
+                <div id="inst-other" class="platform-inst">
+                    <div class="inst-step"><span class="inst-arrow">▸</span><span>Chrome & Firefox have limited voices (~5–15 depending on your OS)</span></div>
+                    <div class="inst-step"><span class="inst-arrow">▸</span><span>Click <strong style="color:var(--primary);">LOAD VOICES</strong> below — it will show what's available</span></div>
+                    <div class="inst-step"><span class="inst-arrow">▸</span><span>For the best experience, open this page in <strong>Microsoft Edge</strong></span></div>
+                    <div class="highlight-tip">💡 On Windows, Edge is pre-installed. On Mac/Linux, download it free from microsoft.com/edge</div>
+                </div>
+
+                <button class="btn" style="width:100%; margin-top:1rem; background:rgba(0,243,255,0.12); font-size:0.8rem;" onclick="triggerVoiceLoad()">🔊 LOAD VOICES</button>
+                <div id="voiceLoadStatus" style="text-align:center; font-size:0.75rem; color:#666; margin-top:0.5rem; min-height:1rem;"></div>
+            </div>
+        </div>
+
+        <!-- STEP 2: Load Content -->
+        <div class="step-card s2">
+            <div class="step-header">
+                <div class="step-num">2</div>
+                LOAD YOUR CONTENT
+            </div>
+            <div class="step-body">
+                <div class="upload-row">
+                    <div class="upload-box" onclick="document.getElementById('fileInput').click()">
+                        <div class="icon">📄</div>
+                        <strong>TEXT / MD</strong>
+                        <div style="font-size:0.7rem;color:#666;margin-top:4px;">.txt .md .html</div>
+                    </div>
+                    <div class="upload-box" onclick="document.getElementById('pdfInput').click()">
+                        <div class="icon">📕</div>
+                        <strong>PDF</strong>
+                        <div style="font-size:0.7rem;color:#666;margin-top:4px;">auto-extracted</div>
+                    </div>
+                </div>
+                <input type="file" id="fileInput" accept=".txt,.html,.md" hidden onchange="handleFileSelect(this)">
+                <input type="file" id="pdfInput" accept=".pdf" hidden onchange="handlePDFSelect(this)">
+                <textarea id="pasteArea" class="text-input-area" placeholder="Or paste text here..."></textarea>
+                <button class="btn-large" onclick="loadFromPaste()">⚡ INITIALIZE READER</button>
+            </div>
+        </div>
+
+        <!-- STEP 3: Format Guide -->
+        <div class="step-card s3">
+            <div class="step-header">
+                <div class="step-num">3</div>
+                SPEAKER TAG FORMAT (OPTIONAL)
+            </div>
+            <div class="step-body" style="font-size:0.8rem;">
+                <p style="margin:0 0 0.5rem;">Add character voices by tagging dialogue lines:</p>
+                <pre style="background:rgba(0,0,0,0.4);padding:0.75rem;border-radius:6px;color:#ccc;overflow-x:auto;font-size:0.78rem;line-height:1.7;">The detective stepped into the rain.
+[SPKR: Alice]
+I've been waiting for you.
+She smiled, but her eyes were cold.
+[SPKR: Bob]
+You shouldn't have come here alone.</pre>
+                <p style="margin:0.5rem 0 0;color:#888;">Everything without a tag is read by <em>Narrator</em>. Each unique speaker name becomes its own character with its own voice.</p>
+                <div style="margin-top:0.75rem; display:flex; gap:1rem; flex-wrap:wrap; font-size:0.75rem; color:#666;">
+                    <span><span class="kbd">Space</span> play/pause</span>
+                    <span><span class="kbd">→</span> next segment</span>
+                    <span><span class="kbd">←</span> prev segment</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== READER ========== -->
+    <div id="readerView">
+        <nav class="nav">
+            <div class="nav-inner">
+                <div class="nav-group">
+                    <button class="btn btn-home btn-icon" onclick="returnHome()" title="Home">🏠</button>
+                    <button class="btn btn-icon" onclick="togglePanel()" title="Voice Settings">🎙</button>
+                    <button class="btn btn-icon" onclick="openSavePanel()" title="Save / Load slots">💾</button>
+                    <button class="btn btn-icon" onclick="saveToDisk()" title="Export HTML">⬇</button>
+                    <button class="btn btn-icon" id="saveChapterBtn" onclick="saveCurrentChapterAudio()" title="Save this chapter as one MP3">🎵</button>
+                </div>
+                <select id="chapterSelect" onchange="jumpToChapter(this.value)"></select>
+                <div class="ctrl-bar">
+                    <button class="btn btn-icon" onclick="skipSegment(-1)" title="Previous">⏮</button>
+                    <button class="btn btn-play" id="playBtn" onclick="togglePlay()">▶ PLAY</button>
+                    <button class="btn btn-icon" onclick="stopPlayback()" title="Stop">⏹</button>
+                    <button class="btn btn-icon" onclick="skipSegment(1)" title="Next">⏭</button>
+                </div>
+            </div>
+            <div class="progress-wrap">
+                <div id="progressBar"></div>
+            </div>
+        </nav>
+        <div class="container">
+            <main id="storyContainer"></main>
+        </div>
+    </div>
+</div>
+
+<!-- ========== VOICE PANEL ========== -->
+<div class="panel" id="settingsPanel">
+    <div class="panel-header">
+        <span class="panel-header-title">🎙 VOICE SETTINGS</span>
+        <button onclick="togglePanel()" class="btn">✕</button>
+    </div>
+
+    <div class="panel-section">
+        <div class="panel-section-title">Playback</div>
+        <div class="slider-row">
+            <span class="slider-label">SPEED</span>
+            <input type="range" min="0.5" max="3.0" step="0.1" value="1" id="speedSlider" oninput="onSpeedChange(this.value)">
+            <span class="slider-val" id="speedVal">1.0x</span>
+        </div>
+        <div class="slider-row">
+            <span class="slider-label">VOLUME</span>
+            <input type="range" min="0" max="1" step="0.05" value="1" id="volumeSlider" oninput="onVolumeChange(this.value)">
+            <span class="slider-val" id="volumeVal">100%</span>
+        </div>
+    </div>
+
+    <div class="panel-section">
+        <div class="panel-section-title">Engine</div>
+        <div id="engineStatus"></div>
+    </div>
+
+    <div class="panel-section">
+        <div class="panel-section-title">Character Voices</div>
+        <div style="font-size:0.72rem;color:#555;margin-bottom:0.6rem;">▶ = preview · dot color = working status</div>
+        <div id="voiceMappingContainer"></div>
+    </div>
+</div>
+
+<!-- ========== SAVE SLOTS PANEL ========== -->
+<div class="panel" id="savePanel" style="right:-460px;">
+    <div class="panel-header">
+        <span class="panel-header-title">💾 SAVE SLOTS</span>
+        <button onclick="closeSavePanel()" class="btn">✕</button>
+    </div>
+    <div style="padding:1rem 1.2rem;">
+        <button class="btn" style="width:100%;margin-bottom:1rem;" onclick="saveToSlot()">+ SAVE CURRENT POSITION</button>
+        <div id="saveSlotsContainer"></div>
+        <p style="color:#444;font-size:0.72rem;margin-top:1rem;">Up to 10 save slots. Stored in your browser's local storage — specific to this browser on this device.</p>
+    </div>
+</div>
+
+<div id="ttsStatus">
+    <div style="color:var(--primary);font-family:var(--font-head);font-size:0.75rem;margin-bottom:4px;">TTS</div>
+    <div id="ttsStatusText"></div>
+</div>
+
+<script type="module">
+    import { EdgeTTS, VoicesManager } from 'https://unpkg.com/edge-tts-universal@1.4.0/dist/browser.js';
+    window.EdgeTTS = EdgeTTS;
+    window.VoicesManager = VoicesManager;
+    window.appReady = true;
+</script>
+
+<script src="js/reader.js"></script>
+
+<!-- ========== DEBUGGER ========== -->
+<div id="uni-debug-icon" onclick="toggleDebugPanel()" title="Debugger" style="position:fixed;bottom:10px;left:10px;width:44px;height:44px;background:#ff0055;color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;z-index:999999;box-shadow:0 4px 10px rgba(0,0,0,0.5);border:2px solid white;">🐛</div>
+<div id="uni-debug-panel" style="display:none;position:fixed;bottom:60px;left:10px;width:min(90vw,560px);height:280px;background:rgba(13,13,13,0.97);border:1px solid #333;border-radius:8px;z-index:999999;box-shadow:0 10px 30px rgba(0,0,0,0.8);flex-direction:column;font-family:monospace;backdrop-filter:blur(10px);">
+    <div style="background:#222;padding:7px 12px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #333;color:#fff;font-size:11px;border-radius:8px 8px 0 0;">
+        <span>⚙ LIVE DEBUGGER</span>
+        <div style="display:flex;gap:4px;">
+            <button onclick="copyDebugReport()" style="background:#444;border:none;color:white;padding:3px 8px;border-radius:4px;cursor:pointer;font-size:10px;">📋 COPY FOR AI</button>
+            <button onclick="clearDebugLog()" style="background:#444;border:none;color:white;padding:3px 8px;border-radius:4px;cursor:pointer;font-size:10px;">🗑 CLEAR</button>
+            <button onclick="toggleDebugPanel()" style="background:#444;border:none;color:white;padding:3px 8px;border-radius:4px;cursor:pointer;font-size:10px;">✕</button>
+        </div>
+    </div>
+    <div id="uni-debug-content" style="flex:1;overflow-y:auto;padding:8px 10px;color:#ccc;font-size:10.5px;"></div>
+</div>
+<script src="js/debugger.js"></script>
+</body>
+</html>

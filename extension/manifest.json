@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "FeistTech Audio Capture Streamer",
+  "version": "1.0",
+  "permissions": ["tabCapture", "downloads", "activeTab"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["*://*.yourcustomdomain.com/*", "*://*.github.io/*"],
+      "js": ["content.js"]
+    }
+  ]
+}
