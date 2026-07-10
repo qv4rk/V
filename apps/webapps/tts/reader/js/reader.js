@@ -54,6 +54,10 @@ window.onload = () => {
     checkPersistence();
     waitForLib();
     setupKeyboard();
+    if(!localStorage.getItem('feist_visited')) {
+        expandHelp();
+        localStorage.setItem('feist_visited', '1');
+    }
     document.addEventListener('click', (e) => {
         const wrap = document.querySelector('.hamburger-wrap');
         if(wrap && !wrap.contains(e.target)) {
@@ -544,7 +548,12 @@ async function playWithEdgeTTS(seg) {
         if(currentSegmentIndex < segments.length) play();
         else { isPlaying = false; document.getElementById('playBtn').innerText = '▶ PLAY'; }
     };
-    audioPlayer.onerror = () => { throw new Error('Edge-TTS audio error'); };
+    audioPlayer.onerror = () => {
+        const mediaErr = audioPlayer.error;
+        const codeNames = {1:'ABORTED',2:'NETWORK',3:'DECODE',4:'SRC_NOT_SUPPORTED'};
+        const detail = mediaErr ? `${codeNames[mediaErr.code] || mediaErr.code}: ${mediaErr.message || 'no message'}` : 'no MediaError available';
+        throw new Error('Edge-TTS audio error — ' + detail);
+    };
     window.dispatchEvent(new CustomEvent('FeistTech_Audio_Start', { detail: { chapter: seg.chapter } }));
     await audioPlayer.play();
     document.getElementById('playBtn').innerText = '⏸ PAUSE';
@@ -912,6 +921,9 @@ function checkPersistence() {
         banner.classList.add('visible');
         const detail = document.getElementById('resumeDetail');
         detail.innerText = `Segment ${progress + 1} — tap to continue`;
+        // Keep the input panel open so the resume banner is visible without
+        // an extra tap; it collapses itself once the session is resumed.
+        expandInputPanel();
     }
 }
 
@@ -1070,18 +1082,18 @@ async function handlePDFSelect(input) {
 
 function initReader(html, isResume=false) {
     if(!html) return;
-    document.getElementById('splashView').style.display = 'none';
-    document.getElementById('readerView').style.display = 'flex';
     document.getElementById('storyContainer').innerHTML = html;
     processContent();
     populateChapters();
     if(!isResume) {
-        // First load: auto-assign voices if not already mapped
+        // First load or a re-submit after editing: auto-assign voices if
+        // not already mapped, restart from the top.
         if(voices.length > 0) autoAssignVoices();
         currentSegmentIndex = 0;
     }
     renderVoiceMapping();
     saveState();
+    collapseInputPanel();
 }
 
 function processContent() {
@@ -1134,17 +1146,34 @@ function togglePanel() {
     if(!wasOpen) panel.classList.add('open');
 }
 
-function returnHome() {
-    if(confirm('Return home? Your position is saved.')) {
-        saveState();
-        stopPlayback();
-        document.getElementById('readerView').style.display = 'none';
-        document.getElementById('splashView').style.display = 'flex';
-        segments = []; currentSegmentIndex = 0;
-        detectedSpkrs = new Set(['narrator']);
-        document.getElementById('resumeBanner').classList.add('visible');
-    }
+// Clears the currently loaded story so a new one can be typed/pasted in,
+// without leaving this page. The reader stays on one screen the whole
+// time — this just empties it and reopens the text panel.
+function startNewStory() {
+    if(!confirm('Start a new story? Your current position is saved and can be resumed later from the input panel.')) return;
+    saveState();
+    stopPlayback();
+    segments = [];
+    currentSegmentIndex = 0;
+    detectedSpkrs = new Set(['narrator']);
+    document.getElementById('storyContainer').innerHTML = '<p class="empty-state">Load some text above to begin.</p>';
+    populateChapters();
+    renderVoiceMapping();
+    document.getElementById('resumeBanner').classList.add('visible');
+    expandInputPanel();
 }
+
+// ==================== COLLAPSIBLE PANELS (help + text input) ====================
+function toggleInputPanel() { document.getElementById('inputPanel').classList.toggle('open'); }
+function expandInputPanel() { document.getElementById('inputPanel').classList.add('open'); }
+function collapseInputPanel() {
+    document.getElementById('inputPanel').classList.remove('open');
+    const label = document.getElementById('inputPanelLabel');
+    if(label) label.innerText = `✎ EDIT TEXT — ${segments.length} segments, ${new Set(segments.map(s=>s.chapter)).size} chapter(s)`;
+}
+
+function toggleHelp() { document.getElementById('helpPanel').classList.toggle('open'); }
+function expandHelp() { document.getElementById('helpPanel').classList.add('open'); }
 
 function saveToDisk() {
     const ts = new Date().toISOString().slice(0,16).replace(/[:T]/g,'-');
