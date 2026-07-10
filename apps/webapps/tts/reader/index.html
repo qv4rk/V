@@ -127,15 +127,23 @@ You shouldn't have come here alone.</pre>
     <!-- ========== READER ========== -->
     <div id="readerView">
         <nav class="nav">
-            <div class="nav-inner">
-                <div class="nav-group">
-                    <button class="btn btn-home btn-icon" onclick="returnHome()" title="Home">🏠</button>
-                    <button class="btn btn-icon" onclick="togglePanel()" title="Voice Settings">🎙</button>
-                    <button class="btn btn-icon" onclick="openSavePanel()" title="Save / Load slots">💾</button>
-                    <button class="btn btn-icon" onclick="saveToDisk()" title="Export HTML">⬇</button>
-                    <button class="btn btn-icon" id="saveChapterBtn" onclick="saveCurrentChapterAudio()" title="Save this chapter as one MP3">🎵</button>
+            <div class="nav-row nav-row-main">
+                <div class="hamburger-wrap">
+                    <button class="btn btn-icon" id="hamburgerBtn" onclick="toggleHamburger()" title="Menu">☰</button>
+                    <div class="hamburger-menu" id="hamburgerMenu">
+                        <button class="hb-item" onclick="closeAllPanels();returnHome();">🏠 Home</button>
+                        <button class="hb-item" onclick="openSavePanel()">💾 Save / load slots</button>
+                        <button class="hb-item" onclick="closeAllPanels();saveToDisk();">⬇ Export HTML</button>
+                        <button class="hb-item" id="saveChapterBtn" onclick="closeAllPanels();saveCurrentChapterAudio();">🎵 Save this chapter (MP3)</button>
+                        <button class="hb-item" id="saveAllBtn" onclick="closeAllPanels();saveAllChaptersAudio();">🎶 Save all chapters (MP3)</button>
+                        <button class="hb-item" id="hamburgerVoicesBtn" style="display:none;" onclick="togglePanel()">🎙 Voice settings</button>
+                    </div>
                 </div>
                 <select id="chapterSelect" onchange="jumpToChapter(this.value)"></select>
+                <div class="nav-right-spacer"></div>
+            </div>
+            <div class="char-row" id="charRow"></div>
+            <div class="nav-row nav-row-transport">
                 <div class="ctrl-bar">
                     <button class="btn btn-icon" onclick="skipSegment(-1)" title="Previous">⏮</button>
                     <button class="btn btn-play" id="playBtn" onclick="togglePlay()">▶ PLAY</button>
@@ -204,6 +212,17 @@ You shouldn't have come here alone.</pre>
     <div id="ttsStatusText"></div>
 </div>
 
+<!-- ========== VOICE PICKER (shared by inline char row + sliding panel) ========== -->
+<div class="voice-picker-backdrop" id="voicePickerBackdrop" onclick="closeVoicePicker()"></div>
+<div class="voice-picker" id="voicePicker">
+    <div class="vp-header">
+        <span id="vpTitle">Voice</span>
+        <button class="btn" onclick="closeVoicePicker()">✕</button>
+    </div>
+    <div class="vp-body" id="vpBody"></div>
+</div>
+
+<script src="js/voice-catalog.js"></script>
 <script type="module">
     import { EdgeTTS, VoicesManager } from 'https://unpkg.com/edge-tts-universal@1.4.0/dist/browser.js';
     window.EdgeTTS = EdgeTTS;

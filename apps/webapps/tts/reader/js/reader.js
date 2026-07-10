@@ -54,6 +54,12 @@ window.onload = () => {
     checkPersistence();
     waitForLib();
     setupKeyboard();
+    document.addEventListener('click', (e) => {
+        const wrap = document.querySelector('.hamburger-wrap');
+        if(wrap && !wrap.contains(e.target)) {
+            document.getElementById('hamburgerMenu')?.classList.remove('open');
+        }
+    });
 };
 
 function waitForLib() {
@@ -124,6 +130,39 @@ function triggerVoiceLoad() {
     if (window.speechSynthesis) speechSynthesis.speak(utterance);
 }
 
+// ==================== VOICE CATALOG (accent metadata) ====================
+// window.VOICE_CATALOG / window.VOICE_PRIORITY_ORDER come from
+// js/voice-catalog.js, generated from the full Azure voice list so every
+// voice gets a human accent label instead of a bare locale code.
+const catalogByShortName = {};
+(window.VOICE_CATALOG || []).forEach(v => { catalogByShortName[v.shortName] = v; });
+
+function accentForLocale(locale) {
+    const hit = (window.VOICE_CATALOG || []).find(v => v.locale === locale);
+    return hit ? hit.accent : (locale || 'Unknown');
+}
+
+function annotateVoice(v) {
+    const meta = catalogByShortName[v.ShortName];
+    return {
+        ...v,
+        accent: meta ? meta.accent : accentForLocale(v.Locale),
+        priority: meta ? meta.priority : null,
+    };
+}
+
+function sortVoicesByPriority(list) {
+    const order = window.VOICE_PRIORITY_ORDER || [];
+    return list.sort((a, b) => {
+        const ai = a.priority ? order.indexOf(a.priority) : 999;
+        const bi = b.priority ? order.indexOf(b.priority) : 999;
+        if(ai !== bi) return ai - bi;
+        const an = a.FriendlyName || a.ShortName || '';
+        const bn = b.FriendlyName || b.ShortName || '';
+        return an.localeCompare(bn);
+    });
+}
+
 async function loadEdgeVoices() {
     try {
         const manager = await window.VoicesManager.create();
@@ -136,23 +175,21 @@ async function loadEdgeVoices() {
         else if(typeof manager.find === 'function') edgeVoices = manager.find({});
         else edgeVoices = [];
 
-        if(edgeVoices && edgeVoices.length > 0) {
-            voices = edgeVoices.filter(v => v.Locale && v.Locale.startsWith('en')).sort((a,b) => {
-                const score = v => {
-                    let s = 0;
-                    if(v.Locale.includes('GB')) s += 15;
-                    else if(v.Locale.includes('US')) s += 10;
-                    if((v.Gender || '').toLowerCase() === 'female') s += 8;
-                    return s;
-                };
-                return score(b) - score(a);
-            });
-            voices.push(...edgeVoices.filter(v => !v.Locale || !v.Locale.startsWith('en')));
-            settings.useBrowserTTS = false;
-        } else throw new Error('No Edge voices array available');
+        if(!edgeVoices || edgeVoices.length === 0) throw new Error('No Edge voices array available');
+        voices = sortVoicesByPriority(edgeVoices.map(annotateVoice));
+        settings.useBrowserTTS = false;
     } catch(e) {
-        console.warn('Edge-TTS lib unavailable, using browser TTS fallback', e);
-        loadBrowserVoices();
+        // Listing the live catalog failed (offline, blocked, API drift) —
+        // fall back to the bundled catalog as the pickable list. Edge-TTS
+        // synthesis is a separate call from listing, so these ShortNames
+        // still work once played; the existing working/broken status-dot
+        // system will surface any that don't.
+        console.warn('Edge-TTS voice listing unavailable, using bundled catalog', e);
+        const fallback = (window.VOICE_CATALOG || []).map(v => ({
+            ShortName: v.shortName, FriendlyName: v.name, Gender: v.gender, Locale: v.locale
+        }));
+        voices = sortVoicesByPriority(fallback.map(annotateVoice));
+        settings.useBrowserTTS = false;
     }
     initializeDefaultVoiceMapping();
 }
@@ -170,26 +207,17 @@ function loadBrowserVoices() {
         const nameLow = v.name.toLowerCase();
         const isFemale = femaleKeywords.some(k => nameLow.includes(k));
         const isChild = childKeywords.some(k => nameLow.includes(k));
-        return {
+        return annotateVoice({
             ShortName: v.name,
             FriendlyName: v.name,
             Gender: isFemale ? 'Female' : 'Male',
             AgeGroup: isChild ? 'Child' : 'Adult',
             Locale: v.lang,
             _native: v
-        };
+        });
     });
 
-    voices.sort((a,b) => {
-        const score = v => {
-            let s = 0;
-            if(v.Locale.startsWith('en-GB')) s += 15;
-            else if(v.Locale.startsWith('en-US')) s += 12;
-            if((v.Gender || '').toLowerCase() === 'female') s += 3;
-            return s;
-        };
-        return score(b) - score(a);
-    });
+    voices = sortVoicesByPriority(voices);
     settings.voicesLoaded = true;
     if(!voiceMapping.narrator && voices.length > 0) voiceMapping.narrator = voices[0].ShortName;
 }
@@ -246,10 +274,36 @@ function renderVoiceMapping() {
     };
     engineDiv.appendChild(toggleBtn);
 
-    // Filter list to keep unique non-duplicated options inside viewports
-    [...detectedSpkrs].sort((a,b) => a==='narrator'?-1:b==='narrator'?1:a.localeCompare(b)).forEach(spkr => {
+    const spkrs = [...detectedSpkrs].sort((a,b) => a==='narrator'?-1:b==='narrator'?1:a.localeCompare(b));
+
+    spkrs.forEach(spkr => {
         const card = buildCharCard(spkr);
         container.appendChild(card);
+    });
+
+    renderCharRow(spkrs);
+
+    // 5 or fewer speakers: the inline row above the transport bar is the
+    // primary way to assign voices, so there's no need for a hamburger
+    // entry into the sliding panel too. More than 5: the panel is the only
+    // way to reach everyone, so surface it in the hamburger.
+    const hbVoicesBtn = document.getElementById('hamburgerVoicesBtn');
+    if(hbVoicesBtn) hbVoicesBtn.style.display = spkrs.length > 5 ? '' : 'none';
+}
+
+function renderCharRow(spkrs) {
+    const row = document.getElementById('charRow');
+    if(!row) return;
+    row.innerHTML = '';
+    if(spkrs.length === 0 || spkrs.length > 5) return;
+    spkrs.forEach(spkr => {
+        const chip = document.createElement('button');
+        chip.className = 'char-chip';
+        const meta = voices.find(v => v.ShortName === voiceMapping[spkr]);
+        const label = spkr === 'narrator' ? '📖 Narrator' : '💬 ' + spkr;
+        chip.innerHTML = `<span class="cc-name">${label}</span><span class="cc-voice">${meta ? (meta.FriendlyName || meta.ShortName) : 'choose…'}</span>`;
+        chip.onclick = () => openVoicePicker(spkr);
+        row.appendChild(chip);
     });
 }
 
@@ -263,125 +317,120 @@ function buildCharCard(spkr) {
     nameRow.innerText = spkr === 'narrator' ? '📖 NARRATOR' : '💬 ' + spkr.toUpperCase();
     card.appendChild(nameRow);
 
-    const row = document.createElement('div');
-    row.className = 'voice-select-row';
+    const trigger = document.createElement('div');
+    trigger.className = 'voice-trigger';
+    trigger.onclick = () => openVoicePicker(spkr);
 
-    const select = document.createElement('select');
-    populateVoiceSelect(select, voiceMapping[spkr]);
-
-    select.onchange = e => {
-        voiceMapping[spkr] = e.target.value;
-        saveState();
-        updateStatusDot(dot, spkr, e.target.value);
-
-        // Live update sibling cards without losing menu coordinates
-        const panel = document.getElementById('settingsPanel');
-        const currentScroll = panel.scrollTop;
-        renderVoiceMapping();
-        document.getElementById('settingsPanel').scrollTop = currentScroll;
-    };
-
-    const previewBtn = document.createElement('button');
-    previewBtn.className = 'preview-btn';
-    previewBtn.innerText = '▶';
-    previewBtn.onclick = async () => {
-        const voiceName = select.value;
-        previewBtn.innerText = '⏳';
-        const worked = await previewVoice(voiceName, spkr);
-        previewBtn.innerText = '▶';
-        voiceStatusMemory[voiceName] = worked ? 'working' : 'broken';
-        localStorage.setItem('feist_voiceStatus', JSON.stringify(voiceStatusMemory));
-        updateStatusDot(dot, spkr, voiceName);
-    };
+    const meta = voices.find(v => v.ShortName === voiceMapping[spkr]);
+    const info = document.createElement('div');
+    info.className = 'vt-info';
+    info.innerHTML = `<span class="vt-name">${meta ? (meta.FriendlyName || meta.ShortName) : 'Choose a voice…'}</span><span class="vt-accent">${meta ? meta.accent : ''}</span>`;
 
     const dot = document.createElement('div');
     dot.className = 'voice-status-dot';
     updateStatusDot(dot, spkr, voiceMapping[spkr]);
 
-    row.appendChild(select);
-    row.appendChild(previewBtn);
-    row.appendChild(dot);
-    card.appendChild(row);
+    trigger.appendChild(info);
+    trigger.appendChild(dot);
+    card.appendChild(trigger);
     return card;
 }
 
-function populateVoiceSelect(select, currentValue) {
-    select.innerHTML = '';
+// ==================== VOICE PICKER ====================
+// Shared popover for both the inline char row and the sliding panel's
+// char-cards, grouped by accent with the user's preferred regions first
+// and everything else behind "show more".
+let vpCurrentSpkr = null;
+let vpShowAll = false;
 
-    // De-duplicate: build inventory mapping of what characters own what voices
-    const claimedVoices = new Set();
-    Object.entries(voiceMapping).forEach(([name, voice]) => {
-        if(voice && voice !== currentValue) claimedVoices.add(voice);
+function openVoicePicker(spkr) {
+    vpCurrentSpkr = spkr;
+    vpShowAll = false;
+    document.getElementById('vpTitle').innerText = 'Voice for ' + (spkr === 'narrator' ? 'Narrator' : spkr);
+    renderVoicePickerBody();
+    document.getElementById('voicePickerBackdrop').classList.add('open');
+    document.getElementById('voicePicker').classList.add('open');
+}
+
+function closeVoicePicker() {
+    document.getElementById('voicePickerBackdrop').classList.remove('open');
+    document.getElementById('voicePicker').classList.remove('open');
+    vpCurrentSpkr = null;
+}
+
+function renderVoicePickerBody() {
+    const body = document.getElementById('vpBody');
+    body.innerHTML = '';
+    if(!vpCurrentSpkr) return;
+
+    const order = window.VOICE_PRIORITY_ORDER || [];
+    const groups = {};
+    voices.forEach(v => {
+        const key = v.priority || v.accent || 'Other';
+        (groups[key] || (groups[key] = [])).push(v);
     });
 
-    const filtered = voices.filter(v => {
-        const name = v.FriendlyName || v.ShortName || '';
+    const priorityKeys = order.filter(k => groups[k]);
+    const restKeys = Object.keys(groups).filter(k => !order.includes(k)).sort();
 
-        // Drop generic headless operating system tracks
-        const stripCheck = name.replace(/Microsoft|Google|Online|Natural|TTS|Engine/gi, '').trim();
-        const isGenericRobot = /^[^a-zA-Z]+$/.test(stripCheck) || stripCheck.length < 3 || /^(English|Spanish|French|German|Chinese|Assamese|Bulgarian)/i.test(stripCheck);
-        if (isGenericRobot) return false;
-
-        // Skip if another character claimed it
-        if(claimedVoices.has(v.ShortName)) return false;
-
-        return true;
-    });
-
-    if (filtered.length === 0) {
-        const opt = document.createElement('option');
-        opt.text = '(No unique voices left)'; opt.disabled = true;
-        select.appendChild(opt);
-        return;
-    }
-
-    const countryFlags = {
-        'US': '🇺🇸 US', 'GB': '🇬🇧 UK', 'AU': '🇦🇺 AU', 'CA': '🇨🇦 CA', 'IN': '🇮🇳 IN',
-        'IE': '🇮🇪 IE', 'NZ': '🇳🇿 NZ', 'PH': '🇵🇭 PH', 'SG': '🇸🇬 SG', 'ZA': '🇿🇦 ZA'
+    const renderGroup = key => {
+        const head = document.createElement('div');
+        head.className = 'vp-group-head';
+        head.innerText = key;
+        body.appendChild(head);
+        groups[key].forEach(v => body.appendChild(renderVoiceRow(v)));
     };
 
-    const groups = {};
-    filtered.forEach(v => {
-        let localeLabel = '🌍 INT';
-        if (v.Locale) {
-            const countryCode = v.Locale.split('-')[1] || v.Locale.split('-')[0];
-            localeLabel = countryFlags[countryCode.toUpperCase()] || `🌍 ${countryCode.toUpperCase()}`;
-        }
-        if (!groups[localeLabel]) groups[localeLabel] = [];
-        groups[localeLabel].push(v);
-    });
+    priorityKeys.forEach(renderGroup);
 
-    Object.keys(groups).sort().forEach(region => {
-        const group = document.createElement('optgroup');
-        group.label = region;
+    if(vpShowAll) {
+        restKeys.forEach(renderGroup);
+    } else if(restKeys.length) {
+        const more = document.createElement('button');
+        more.className = 'vp-showmore';
+        more.innerText = `Show ${restKeys.length} more accents ▾`;
+        more.onclick = () => { vpShowAll = true; renderVoicePickerBody(); };
+        body.appendChild(more);
+    }
+}
 
-        groups[region].forEach(v => {
-            const opt = document.createElement('option');
-            opt.value = v.ShortName;
+function renderVoiceRow(v) {
+    const row = document.createElement('div');
+    row.className = 'vp-voice-row';
 
-            let cleanLabel = v.FriendlyName || v.ShortName;
-            cleanLabel = cleanLabel
-                .replace(/Microsoft\s?/i, '')
-                .replace(/Online\s?\(Natural\)/i, '')
-                .replace(/Neural/i, '')
-                .split('-').slice(-1)[0]
-                .replace(/Multilingual/i, '')
-                .trim();
+    const dot = document.createElement('div');
+    dot.className = 'voice-status-dot';
+    updateStatusDot(dot, vpCurrentSpkr, v.ShortName);
 
-            const status = voiceStatusMemory[v.ShortName];
-            const prefix = status === 'working' ? '✓ ' : status === 'broken' ? '✗ ' : '';
+    const isSelected = voiceMapping[vpCurrentSpkr] === v.ShortName;
+    const main = document.createElement('div');
+    main.className = 'vp-voice-main';
+    main.innerHTML = `<span class="vn${isSelected ? ' selected' : ''}">${v.FriendlyName || v.ShortName}</span><span class="va">${v.accent || ''}</span>`;
+    main.onclick = () => {
+        voiceMapping[vpCurrentSpkr] = v.ShortName;
+        saveState();
+        closeVoicePicker();
+        renderVoiceMapping();
+    };
 
-            opt.text = `${prefix}${cleanLabel}`;
-            if (status === 'broken') opt.style.color = '#666';
-            if (status === 'working') opt.style.color = '#00ff41';
+    const testBtn = document.createElement('button');
+    testBtn.className = 'vp-test-btn';
+    testBtn.innerText = '🔊 Test';
+    testBtn.onclick = async (e) => {
+        e.stopPropagation();
+        const spkrAtClick = vpCurrentSpkr;
+        testBtn.innerText = '⏳';
+        const worked = await previewVoice(v.ShortName, spkrAtClick);
+        testBtn.innerText = '🔊 Test';
+        voiceStatusMemory[v.ShortName] = worked ? 'working' : 'broken';
+        localStorage.setItem('feist_voiceStatus', JSON.stringify(voiceStatusMemory));
+        updateStatusDot(dot, spkrAtClick, v.ShortName);
+    };
 
-            group.appendChild(opt);
-        });
-        select.appendChild(group);
-    });
-
-    if (currentValue) select.value = currentValue;
-    if (!select.value && filtered.length) select.value = filtered[0].ShortName;
+    row.appendChild(dot);
+    row.appendChild(main);
+    row.appendChild(testBtn);
+    return row;
 }
 
 function detectChapterBreak(line) {
@@ -507,6 +556,46 @@ function formatEdgePct(val) {
     return (num >= 0 ? '+' : '') + num + '%';
 }
 
+// Synthesizes and downloads one chapter's audio as a single stitched MP3.
+// Shared by the single-chapter button and the download-all loop below, so
+// neither path needs the user to have clicked into that chapter first.
+async function synthesizeAndDownloadChapter(chapterNum, btn) {
+    const chapterSegments = segments.filter(seg => seg.chapter === chapterNum);
+    if(chapterSegments.length === 0) return;
+
+    const audioBlobs = [];
+    for (let i = 0; i < chapterSegments.length; i++) {
+        const seg = chapterSegments[i];
+        const voice = String(voiceMapping[seg.spkr] || voiceMapping.narrator || voices[0]?.ShortName || 'en-US-AriaNeural');
+        const safeText = String(seg.text || ' ');
+
+        if(btn) btn.innerText = `⏳ Ch ${chapterNum}: ${i + 1} / ${chapterSegments.length}`;
+
+        const tts = new window.EdgeTTS(safeText, voice, {
+            rate: formatEdgePct(settings.speed),
+            pitch: '+0Hz',
+            volume: formatEdgePct(settings.volume)
+        });
+
+        const result = await tts.synthesize();
+        audioBlobs.push(new Blob([result.audio], { type: 'audio/mp3' }));
+
+        await new Promise(resolve => setTimeout(resolve, 200));
+    }
+
+    const finalBlob = new Blob(audioBlobs, { type: 'audio/mp3' });
+    const url = URL.createObjectURL(finalBlob);
+    const a = document.createElement('a');
+    a.href = url;
+
+    let safeTitle = chapterSegments[0].chapterTitle || `Chapter_${chapterNum}`;
+    safeTitle = safeTitle.replace(/[^a-z0-9]/gi, '_');
+
+    a.download = `FeistTech_${safeTitle}.mp3`;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
 async function saveCurrentChapterAudio() {
     if (segments.length === 0) {
         alert("Load a story first!");
@@ -517,55 +606,54 @@ async function saveCurrentChapterAudio() {
         return;
     }
 
-    const currentSeg = segments[currentSegmentIndex];
-    const targetChapter = currentSeg.chapter;
-    const chapterSegments = segments.filter(seg => seg.chapter === targetChapter);
-
+    const targetChapter = segments[currentSegmentIndex].chapter;
     const btn = document.getElementById('saveChapterBtn');
     const originalText = btn.innerText;
     btn.innerText = `⏳ Starting Ch ${targetChapter}...`;
     btn.disabled = true;
 
-    const audioBlobs = [];
-
     try {
-        for (let i = 0; i < chapterSegments.length; i++) {
-            const seg = chapterSegments[i];
-            const voice = String(voiceMapping[seg.spkr] || voiceMapping.narrator || voices[0]?.ShortName || 'en-US-AriaNeural');
-            const safeText = String(seg.text || ' ');
-
-            btn.innerText = `⏳ Ch ${targetChapter}: ${i + 1} / ${chapterSegments.length}`;
-
-            const tts = new window.EdgeTTS(safeText, voice, {
-                rate: formatEdgePct(settings.speed),
-                pitch: '+0Hz',
-                volume: formatEdgePct(settings.volume)
-            });
-
-            const result = await tts.synthesize();
-            audioBlobs.push(new Blob([result.audio], { type: 'audio/mp3' }));
-
-            await new Promise(resolve => setTimeout(resolve, 200));
-        }
-
-        btn.innerText = `⏳ Stitching...`;
-
-        const finalBlob = new Blob(audioBlobs, { type: 'audio/mp3' });
-        const url = URL.createObjectURL(finalBlob);
-        const a = document.createElement('a');
-        a.href = url;
-
-        let safeTitle = chapterSegments[0].chapterTitle || `Chapter_${targetChapter}`;
-        safeTitle = safeTitle.replace(/[^a-z0-9]/gi, '_');
-
-        a.download = `FeistTech_${safeTitle}.mp3`;
-        a.click();
-        URL.revokeObjectURL(url);
-
+        await synthesizeAndDownloadChapter(targetChapter, btn);
         btn.innerText = "✅ CHAPTER SAVED";
     } catch (e) {
         console.error("Chapter audio generation failed:", e);
         alert("Failed to generate chapter audio.");
+        btn.innerText = "❌ ERROR";
+    } finally {
+        setTimeout(() => {
+            btn.innerText = originalText;
+            btn.disabled = false;
+        }, 3000);
+    }
+}
+
+// Exports every chapter as its own MP3, one at a time, without requiring
+// the user to click into each chapter's first paragraph first.
+async function saveAllChaptersAudio() {
+    if (segments.length === 0) {
+        alert("Load a story first!");
+        return;
+    }
+    if (settings.useBrowserTTS) {
+        alert('Full-book export needs Edge-TTS — switch back to Edge-TTS in the VOICES panel and try again.');
+        return;
+    }
+
+    const chapters = [...new Set(segments.map(s => s.chapter))];
+    const btn = document.getElementById('saveAllBtn');
+    const originalText = btn.innerText;
+    btn.disabled = true;
+
+    try {
+        for (let c = 0; c < chapters.length; c++) {
+            btn.innerText = `⏳ Chapter ${c + 1} / ${chapters.length}...`;
+            await synthesizeAndDownloadChapter(chapters[c], btn);
+            await new Promise(resolve => setTimeout(resolve, 400));
+        }
+        btn.innerText = "✅ ALL CHAPTERS SAVED";
+    } catch (e) {
+        console.error("Full-book audio generation failed:", e);
+        alert("Failed to generate audio for all chapters.");
         btn.innerText = "❌ ERROR";
     } finally {
         setTimeout(() => {
@@ -662,8 +750,35 @@ function updateStatusDot(dot, spkr, voiceName) {
 }
 
 // ==================== VOICE PREVIEW ====================
+// A varied pool instead of one fixed line, so auditioning a voice across
+// several presses actually exercises different syllables/intonation
+// (questions, exclamations, longer and shorter clauses) rather than
+// hearing the exact same sentence every time.
+const SAMPLE_SENTENCES = [
+    "The quick brown fox jumps over the lazy dog while the owl watches quietly.",
+    "Could you really believe what happened at the harbor last night?",
+    "She whispered a secret beneath the flickering candlelight.",
+    "Thunder rolled across the valley as the storm approached the old mill.",
+    "Why does the market close so early on Tuesdays?",
+    "A curious squirrel darted between the twisted roots of the ancient oak.",
+    "He shouted with joy when the letter finally arrived.",
+    "The scientist measured every variable twice before recording the result.",
+    "Golden leaves drifted slowly across the quiet, empty street.",
+    "Is it true that the bridge collapsed during the flood?",
+    "The chef added a pinch of saffron to the simmering broth.",
+    "Nobody expected the negotiations to end so abruptly."
+];
+let lastSampleIndex = -1;
+function pickRandomSentence() {
+    let i;
+    do { i = Math.floor(Math.random() * SAMPLE_SENTENCES.length); }
+    while(SAMPLE_SENTENCES.length > 1 && i === lastSampleIndex);
+    lastSampleIndex = i;
+    return SAMPLE_SENTENCES[i];
+}
+
 async function previewVoice(voiceName, spkr) {
-    const previewText = `Hello. I'm the voice for ${spkr}.`;
+    const previewText = pickRandomSentence();
     return new Promise(resolve => {
         if(settings.useBrowserTTS || !window.EdgeTTS) {
             const u = new SpeechSynthesisUtterance(previewText);
@@ -900,6 +1015,7 @@ function deleteSlot(id) {
 }
 
 function openSavePanel() {
+    closeAllPanels();
     renderSaveSlots();
     document.getElementById('savePanel').style.right = '0';
 }
@@ -995,7 +1111,28 @@ function populateChapters() {
     });
 }
 
-function togglePanel() { document.getElementById('settingsPanel').classList.toggle('open'); }
+// Only one of {settings panel, save panel, hamburger menu} may be open at
+// once — they used to be independently toggled and would silently stack,
+// so opening one never actually brought it in front of another.
+function closeAllPanels() {
+    document.getElementById('settingsPanel').classList.remove('open');
+    document.getElementById('savePanel').style.right = '-460px';
+    document.getElementById('hamburgerMenu').classList.remove('open');
+}
+
+function toggleHamburger() {
+    const menu = document.getElementById('hamburgerMenu');
+    const wasOpen = menu.classList.contains('open');
+    closeAllPanels();
+    if(!wasOpen) menu.classList.add('open');
+}
+
+function togglePanel() {
+    const panel = document.getElementById('settingsPanel');
+    const wasOpen = panel.classList.contains('open');
+    closeAllPanels();
+    if(!wasOpen) panel.classList.add('open');
+}
 
 function returnHome() {
     if(confirm('Return home? Your position is saved.')) {
