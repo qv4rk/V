@@ -15,7 +15,8 @@
     { id: 'patina',   label: 'Patina',   swatch: '#c9a84c' },
     { id: 'cyan',     label: 'Cyan',     swatch: '#00e5ff' },
     { id: 'imperial', label: 'Imperial', swatch: '#e8c46a' },
-    { id: 'night',    label: 'Night',    swatch: '#e8d39a' }
+    { id: 'night',    label: 'Night',    swatch: '#e8d39a' },
+    { id: 'veil',     label: 'Veil of Babel', swatch: '#c5a059' }
   ];
 
   function get() {
