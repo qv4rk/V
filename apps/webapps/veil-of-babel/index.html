@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>THE VEIL OF BABEL: Presentation Template</title>
+
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=JetBrains+Mono:wght@100;400&display=swap" rel="stylesheet">
+
+	<style>
+		:root {
+			--bg-color: #050505;
+			--text-color: #e6e6e6;
+			--glass-base: 12, 12, 14;
+			--glass-opacity: 0.50;
+			--border: rgba(197, 160, 89, 0.15);
+			--accent-gold: #c5a059;
+			--accent-red: #8a1c1c;
+			--accent-teal: #4aa8a8;
+			--accent-purple: #8859c5;
+			--font-display: 'Cinzel', serif;
+			--font-body: 'Cormorant Garamond', serif;
+			--font-mono: 'JetBrains Mono', monospace;
+		}
+
+		* { box-sizing: border-box; }
+
+		body, html {
+			margin: 0; padding: 0;
+			width: 100%; height: 100%;
+			background-color: var(--bg-color);
+			color: var(--text-color);
+			font-family: var(--font-body);
+			overflow: hidden;
+		}
+
+		.scroll-container {
+			height: 100vh;
+			overflow-y: scroll;
+			scroll-snap-type: y mandatory;
+			position: relative;
+			z-index: 10;
+			scroll-behavior: smooth;
+		}
+
+		section {
+			min-height: 100vh;
+			width: 100vw;
+			scroll-snap-align: start;
+			display: flex; flex-direction: column;
+			justify-content: center; align-items: center;
+			padding: 4rem 2rem;
+			position: relative;
+		}
+
+		.content-card {
+			background: rgba(var(--glass-base), var(--glass-opacity));
+			border: 1px solid var(--border);
+			padding: 4rem 5rem;
+			max-width: 950px; width: 90%;
+			max-height: 85vh; overflow-y: auto;
+			box-shadow: 0 20px 60px rgba(0,0,0,0.9);
+			backdrop-filter: blur(12px);
+			opacity: 0; transform: translateY(30px);
+			transition: opacity 1s ease, transform 1s ease, background 0.2s;
+			z-index: 10;
+			position: relative;
+		}
+
+		section.active .content-card { opacity: 1; transform: translateY(0); }
+
+		h1 { font-family: var(--font-display); font-size: clamp(2.5rem, 6vw, 4.5rem); color: var(--accent-gold); border-bottom: 1px solid var(--accent-red); padding-bottom: 1.5rem; margin-bottom: 1.5rem; letter-spacing: 3px; text-align: center; }
+		h2 { font-family: var(--font-mono); font-size: 0.85rem; color: var(--accent-red); text-transform: uppercase; letter-spacing: 4px; text-align: center; margin-bottom: 3rem; }
+		h3 { font-family: var(--font-display); font-size: 2rem; color: #fff; margin-top: 3rem; border-left: 4px solid var(--accent-gold); padding-left: 1.5rem; }
+		p { font-size: 1.4rem; line-height: 1.7; margin-bottom: 1.8rem; color: #dcdcdc; text-align: justify; font-weight: 300; transition: color 0.3s; }
+
+		.quote-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2.5rem; padding-bottom: 2rem; border-bottom: 1px solid rgba(255,255,255,0.05); }
+		.mirror-quote { font-family: var(--font-mono); font-size: 0.85rem; color: #888; border-left: 2px solid var(--accent-red); padding: 1rem; background: rgba(255,255,255,0.02); line-height: 1.5; }
+		.reveal-list { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; font-family: var(--font-mono); font-size: 0.85rem; margin-top: 3rem; color: #888; text-align: left; }
+		.reveal-item { padding: 0.5rem; border-bottom: 1px solid #222; }
+
+		.ui-corner { position: fixed; top: 20px; z-index: 200; display: flex; gap: 10px; }
+		.top-left { left: 20px; }
+		.top-right { right: 20px; }
+		.icon-btn { background: rgba(0,0,0,0.6); border: 1px solid var(--border); color: var(--accent-gold); width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: all 0.2s; backdrop-filter: blur(4px); }
+		.opacity-box { display: flex; align-items: center; gap: 5px; background: rgba(0,0,0,0.6); padding: 5px 10px; border-radius: 20px; border: 1px solid var(--border); font-family: var(--font-mono); font-size: 0.7rem; color: var(--accent-gold); backdrop-filter: blur(4px); }
+		input[type=number] { background: transparent; border: none; border-bottom: 1px solid var(--accent-gold); color: #fff; width: 30px; text-align: center; font-family: inherit; }
+
+		@media (max-width: 768px) {
+			.content-card { padding: 2rem; width: 95%; }
+			.quote-grid, .reveal-list { grid-template-columns: 1fr; }
+			h1 { font-size: 2rem; }
+		}
+	</style>
+</head>
+<body>
+
+<div class="ui-corner top-left">
+	<button id="fs-btn" class="icon-btn" title="Toggle Fullscreen" onclick="if(!document.fullscreenElement){document.documentElement.requestFullscreen()}else{document.exitFullscreen()}">⛶</button>
+</div>
+
+<div class="ui-corner top-right">
+	<div class="opacity-box">
+		OP: <input type="number" id="opacity-val" min="1" max="99" value="50" oninput="document.documentElement.style.setProperty('--glass-opacity', this.value/100)">
+	</div>
+</div>
+
+<div class="scroll-container">
+
+	<section data-state="intact">
+		<div class="content-card">
+			</div>
+	</section>
+
+	<section data-state="split_start">
+		<div class="content-card">
+			<div class="quote-grid">
+				<div class="mirror-quote"></div>
+				<div class="mirror-quote"></div>
+			</div>
+			</div>
+	</section>
+
+	<section data-state="split_wide">
+		<div class="content-card">
+			<div class="quote-grid">
+				<div class="mirror-quote"></div>
+				<div class="mirror-quote"></div>
+			</div>
+			</div>
+	</section>
+
+	<section data-state="glitch">
+		<div class="content-card">
+			<div class="quote-grid">
+				<div class="mirror-quote"></div>
+				<div class="mirror-quote"></div>
+			</div>
+			</div>
+	</section>
+
+	<section data-state="split_wide">
+		<div class="content-card">
+			<div class="quote-grid">
+				<div class="mirror-quote"></div>
+				<div class="mirror-quote"></div>
+			</div>
+
+			<style>
+				.necronomy-terminal {
+					background-color: #050505;
+					color: #00ff41;
+					font-family: 'Courier New', Courier, monospace;
+					padding: 25px;
+					border: 1px solid #333;
+					border-radius: 6px;
+					box-shadow: 0 0 20px rgba(0, 255, 65, 0.05);
+					margin-bottom: 30px;
+					position: relative;
+					overflow: hidden;
+				}
+				.terminal-header {
+					border-bottom: 2px solid #00ff41;
+					padding-bottom: 10px;
+					margin-bottom: 20px;
+					font-weight: 900;
+					letter-spacing: 2px;
+					text-transform: uppercase;
+					display: flex;
+					justify-content: space-between;
+				}
+				.scanlines {
+					background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.2));
+					background-size: 100% 4px;
+					position: absolute;
+					top: 0; left: 0; right: 0; bottom: 0;
+					pointer-events: none;
+					z-index: 10;
+					opacity: 0.6;
+				}
+				.blink { animation: blinker 1s step-end infinite; }
+				@keyframes blinker { 50% { opacity: 0; } }
+				.ledger-table {
+					width: 100%;
+					border-collapse: collapse;
+					font-size: 0.8em;
+					z-index: 20;
+					position: relative;
+				}
+				.ledger-table th {
+					text-align: left;
+					color: #008f11;
+					border-bottom: 1px solid #004400;
+					padding: 10px;
+					text-transform: uppercase;
+				}
+				.ledger-table td {
+					padding: 12px 10px;
+					border-bottom: 1px solid #111;
+					vertical-align: middle;
+				}
+				.col-event { width: 25%; font-weight: bold; color: #ff3333; }
+				.col-date  { width: 15%; color: #888; }
+				.col-ticker{ width: 10%; color: #00ccff; font-weight: bold; }
+				.col-price { width: 35%; font-family: monospace; letter-spacing: -0.5px; color: #ddd; }
+				.col-gain  { width: 15%; text-align: right; }
+				.p-before { opacity: 0.6; }
+				.p-event  { color: #fff; background: #b30000; padding: 2px 4px; border-radius: 2px; font-weight: bold; }
+				.p-after  { opacity: 1.0; }
+				.flip-row {
+					animation: flipIn 0.8s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+					opacity: 0;
+					transform: perspective(1000px) rotateX(-90deg);
+					transform-origin: top;
+				}
+				@keyframes flipIn {
+					0% { opacity: 0; transform: perspective(1000px) rotateX(-90deg); }
+					100% { opacity: 1; transform: perspective(1000px) rotateX(0deg); }
+				}
+				.profit-pos { color: #00ff00; }
+			</style>
+
+			<div class="necronomy-terminal">
+				<div class="terminal-header">
+					<span><span class="blink">█</span> LEDGER: PEACE MARTYR ARBITRAGE</span>
+					<span style="font-size: 0.7em; opacity: 0.7;">SOURCE: NYSE ARCHIVE // SIPRI ARMS DB</span>
+				</div>
+				<table class="ledger-table">
+					<thead>
+						<tr>
+							<th class="col-event">TARGET (ASSASSINATION)</th>
+							<th class="col-date">DATE</th>
+							<th class="col-ticker">TICKER</th>
+							<th class="col-price">PRICE FLOW (PRE → EVENT → POST)</th>
+							<th class="col-gain">VOLATILITY</th>
+						</tr>
+					</thead>
+					<tbody id="ledger-content"></tbody>
+				</table>
+				<div class="scanlines"></div>
+			</div>
+
+			<script>
+				const ledgerData = [
+					{ event: "HIT: SAID HAMMAMI", loc: "London Office", date: "1978-01-04", ticker: "BA (Boeing)", prices: `<span class="p-before">21.12</span> → <span class="p-event">21.35</span> → <span class="p-after">21.60</span>`, gain: `<span class="profit-pos">+2.27%</span>` },
+					{ event: "HIT: SAID HAMMAMI", loc: "London Office", date: "1978-01-04", ticker: "GD (Gen Dyn)", prices: `<span class="p-before">44.50</span> → <span class="p-event">44.80</span> → <span class="p-after">45.20</span>`, gain: `<span class="profit-pos">+1.57%</span>` },
+					{ event: "HIT: ISSAM SARTAWI", loc: "Socialist Intl (Portugal)", date: "1983-04-10", ticker: "BA (Boeing)", prices: `<span class="p-before">Fri: 38.75</span> → <span class="p-event">Sun: CLOSED</span> → <span class="p-after">Mon: 40.12</span>`, gain: `<span class="profit-pos">GAP +3.53%</span>` },
+					{ event: "HIT: ISSAM SARTAWI", loc: "Socialist Intl (Portugal)", date: "1983-04-10", ticker: "RTN (Raytheon)", prices: `<span class="p-before">Fri: 48.20</span> → <span class="p-event">Sun: CLOSED</span> → <span class="p-after">Mon: 49.65</span>`, gain: `<span class="profit-pos">GAP +3.00%</span>` },
+					{ event: "HIT: ISSAM SARTAWI", loc: "Socialist Intl (Portugal)", date: "1983-04-10", ticker: "NOC (Northrop)", prices: `<span class="p-before">Fri: 58.10</span> → <span class="p-event">Sun: CLOSED</span> → <span class="p-after">Mon: 59.40</span>`, gain: `<span class="profit-pos">GAP +2.23%</span>` },
+					{ event: "HIT: AZIZ SHEHADEH", loc: "Ramallah", date: "1985-12-02", ticker: "LK (Lockheed)", prices: `<span class="p-before">45.50</span> → <span class="p-event">46.00</span> → <span class="p-after">46.80</span>`, gain: `<span class="profit-pos">+2.85%</span>` },
+					{ event: "HIT: AZIZ SHEHADEH", loc: "Ramallah", date: "1985-12-02", ticker: "ROK (Rockwell)", prices: `<span class="p-before">32.40</span> → <span class="p-event">32.90</span> → <span class="p-after">33.50</span>`, gain: `<span class="profit-pos">+3.39%</span>` },
+					{ event: "CONTEXT: 1982 LEBANON WAR", loc: "Post-Invasion Highs", date: "1982-06-08", ticker: "MD (McDonnell)", prices: `<span class="p-before">34.10</span> → <span class="p-event">35.50</span> → <span class="p-after">36.20</span>`, gain: `<span class="profit-pos">+6.15%</span>` },
+					{ event: "CONTEXT: ACHILLE LAURO", loc: "Hijacking Crisis", date: "1985-10-08", ticker: "MLM (Marietta)", prices: `<span class="p-before">38.15</span> → <span class="p-event">39.20</span> → <span class="p-after">40.05</span>`, gain: `<span class="profit-pos">+4.98%</span>` },
+					{ event: "CONTEXT: WAR OF CAMPS", loc: "Beirut Sieges", date: "1986-05-19", ticker: "UTX (United)", prices: `<span class="p-before">41.20</span> → <span class="p-event">41.80</span> → <span class="p-after">42.55</span>`, gain: `<span class="profit-pos">+3.27%</span>` },
+					{ event: "CONTEXT: INTIFADA START", loc: "Gaza/West Bank", date: "1987-12-09", ticker: "GQ (Grumman)", prices: `<span class="p-before">22.10</span> → <span class="p-event">22.80</span> → <span class="p-after">23.10</span>`, gain: `<span class="profit-pos">+4.52%</span>` },
+					{ event: "CONTEXT: 1983 BOMBINGS", loc: "Beirut Barracks", date: "1983-10-23", ticker: "LIT (Litton)", prices: `<span class="p-before">Fri: 62.10</span> → <span class="p-event">Sun: EVENT</span> → <span class="p-after">Mon: 64.50</span>`, gain: `<span class="profit-pos">+3.86%</span>` }
+				];
+				const tbody = document.getElementById("ledger-content");
+				let index = 0;
+				function renderRows() {
+					tbody.innerHTML = "";
+					for (let i = 0; i < 6; i++) {
+						const item = ledgerData[(index + i) % ledgerData.length];
+						const tr = document.createElement("tr");
+						tr.className = "flip-row";
+						tr.style.animationDelay = `${i * 100}ms`;
+						tr.innerHTML = `
+							<td class="col-event">${item.event}<br><span style="font-size:0.75em; opacity:0.7;">${item.loc}</span></td>
+							<td class="col-date">${item.date}</td>
+							<td class="col-ticker">${item.ticker}</td>
+							<td class="col-price">${item.prices}</td>
+							<td class="col-gain">${item.gain}</td>
+						`;
+						tbody.appendChild(tr);
+					}
+					index = (index + 1) % ledgerData.length;
+				}
+				renderRows();
+				setInterval(renderRows, 5000);
+			</script>
+			</div>
+	</section>
+
+	<section data-state="healed">
+		<div class="content-card">
+			</div>
+	</section>
+
+	<section data-state="healed">
+		<div class="content-card" style="text-align: center;">
+			<h1 style="border: none;">.</h1>
+			<div class="reveal-list">
+				</div>
+
+			<div style="margin-top: 4rem; font-family: var(--font-display); font-size: 1.4rem; color: var(--accent-gold); line-height: 2;">
+				</div>
+		</div>
+	</section>
+
+</div>
+
+<script>
+(function() {
+	const canvas = document.createElement('canvas');
+	canvas.id = 'dna-bg-layer';
+	Object.assign(canvas.style, {
+		position: 'fixed', top: '0', left: '0',
+		width: '100vw', height: '100vh',
+		zIndex: '0', pointerEvents: 'none', opacity: '0.6'
+	});
+	document.body.appendChild(canvas);
+	const ctx = canvas.getContext('2d');
+	let width, height, time = 0;
+	let separation = 0, targetSeparation = 0, isGlitching = false;
+	const colors = { A:'#c5a059', B:'#8a1c1c', link1:'#4aa8a8', link2:'#8859c5' };
+
+	function resize() { width = canvas.width = window.innerWidth; height = canvas.height = window.innerHeight; }
+	window.addEventListener('resize', resize); resize();
+
+	const observer = new IntersectionObserver((entries) => {
+		entries.forEach(e => {
+			if(e.isIntersecting) {
+				e.target.classList.add('active');
+				const st = e.target.getAttribute('data-state');
+				if(!st || st==='intact' || st==='healed') { targetSeparation=0; isGlitching=false; }
+				else if(st==='split_start') { targetSeparation=40; isGlitching=false; }
+				else if(st==='split_wide') { targetSeparation=120; isGlitching=false; }
+				else if(st==='glitch') { targetSeparation=180; isGlitching=true; }
+			}
+		});
+	}, {threshold: 0.3});
+	document.querySelectorAll('section').forEach(s => observer.observe(s));
+
+	function animate() {
+		ctx.fillStyle = 'rgba(5,5,5,0.2)';
+		ctx.fillRect(0,0,width,height);
+
+		separation += (targetSeparation - separation) * 0.05;
+		const cx = width/2;
+
+		for(let i=-50; i<150; i++) {
+			const y = (height/2) + (i*22) - 400 + Math.sin(time*0.05)*60;
+			const pA = Math.sin(time + i*0.15);
+			const pB = Math.sin(time + i*0.15 + Math.PI);
+			const j = isGlitching && Math.random()>0.85 ? (Math.random()-0.5)*30 : 0;
+
+			const xA = cx + (pA*100) - (separation*0.5) + j;
+			const xB = cx + (pB*100) + (separation*0.5) + j;
+
+			ctx.beginPath(); ctx.fillStyle=colors.A; ctx.arc(xA,y,3,0,Math.PI*2); ctx.fill();
+			ctx.beginPath(); ctx.fillStyle=colors.B; ctx.arc(xB,y,3,0,Math.PI*2); ctx.fill();
+
+			if(separation < 20) {
+				ctx.strokeStyle = (i%2) ? colors.link1 : colors.link2;
+				ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(xA,y); ctx.lineTo(xB,y); ctx.stroke();
+			} else {
+				ctx.strokeStyle = (i%2) ? colors.link1 : colors.link2;
+				ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(xA,y); ctx.lineTo(xA + (pA>0?-20:20), y); ctx.stroke();
+				ctx.beginPath(); ctx.moveTo(xB,y); ctx.lineTo(xB + (pB>0?-20:20), y); ctx.stroke();
+			}
+		}
+		time += 0.015; requestAnimationFrame(animate);
+	}
+	animate();
+})();
+</script>
+
+<!-- ══════════════════════════════════════════════════════════════
+     CANDLE FIELD + SHAMASH
+     Every candle now ages on its own (not one shared fade), and once
+     one gutters out it freezes exactly where it is, breathes a rising
+     wisp of white smoke, and darkens the canvas around itself. One
+     candle — the shamash, the "helper" candle a menorah is lit from —
+     stays lit permanently in the corner. Pick it up with a mouse or a
+     finger (Pointer Events cover both) and carry it to a dark candle;
+     get close enough and it tips over and relights it.
+     ══════════════════════════════════════════════════════════════ -->
+<script>
+(function() {
+	const canvas = document.createElement('canvas');
+	canvas.id = 'candle-layer';
+	Object.assign(canvas.style, {
+		position: 'fixed', top: '0', left: '0',
+		width: '100vw', height: '100vh',
+		zIndex: '100', pointerEvents: 'none', mixBlendMode: 'screen'
+	});
+	document.body.appendChild(canvas);
+
+	const ctx = canvas.getContext('2d');
+	let width, height, scrollPercent = 0;
+	const CFG = { count: 18, color: '#ffaa00' };
+	const RELIGHT_RADIUS = 46;
+
+	// Declared before resize() runs below, since resize() calls placeShamash().
+	const shamash = { x: 0, y: 0, dragging: false, tilt: 0, tiltTarget: 0, grabDX: 0, grabDY: 0 };
+	function placeShamash() { if (!shamash.dragging) { shamash.x = width - 70; shamash.y = height - 110; } }
+
+	function resize() { width = canvas.width = window.innerWidth; height = canvas.height = window.innerHeight; placeShamash(); }
+	window.addEventListener('resize', resize);
+	window.addEventListener('scroll', () => {
+		const docH = document.documentElement.scrollHeight - window.innerHeight;
+		scrollPercent = window.scrollY / (docH || 1);
+	});
+	resize();
+
+	class SoulCandle {
+		constructor(i) { this.i = i; this.reset(); }
+		reset() {
+			this.x = Math.random() * width;
+			this.y = Math.random() * height + 100;
+			this.z = Math.random() * 2 + 0.5;
+			this.phase = Math.random() * Math.PI * 2;
+			this.state = 'lit';                       // 'lit' | 'extinguished'
+			this.life = 1;
+			this.dieAt = 0.1 + Math.random() * 0.8;    // scroll fraction where this one starts guttering
+			this.smoke = [];
+		}
+		update(t) {
+			if (this.state === 'lit') {
+				if (scrollPercent > this.dieAt) {
+					this.life -= 0.006;
+					if (this.life <= 0) { this.life = 0; this.state = 'extinguished'; }
+				}
+				// Only lit candles drift — an extinguished one freezes in
+				// place, which is what makes it read as "gone out" rather
+				// than just dim.
+				this.y -= 0.5 * this.z;
+				this.x += Math.sin(t * 0.01 + this.phase) * this.z;
+				if (this.y < -100) this.reset();
+			} else if (Math.random() < 0.06) {
+				this.smoke.push({ x: this.x, y: this.y - 20, age: 0, drift: (Math.random() - 0.5) * 0.6 });
+			}
+			this.smoke.forEach(p => { p.age += 1; p.y -= 0.6; p.x += p.drift; });
+			this.smoke = this.smoke.filter(p => p.age < 90);
+		}
+		drawDarken() {
+			if (this.state !== 'extinguished') return;
+			const g = ctx.createRadialGradient(this.x, this.y - 10, 4, this.x, this.y - 10, 90);
+			g.addColorStop(0, 'rgba(0,0,0,0.55)');
+			g.addColorStop(1, 'rgba(0,0,0,0)');
+			ctx.beginPath(); ctx.fillStyle = g; ctx.arc(this.x, this.y - 10, 90, 0, Math.PI*2); ctx.fill();
+		}
+		draw(t) {
+			const scale = this.z * 0.6;
+			const life = this.state === 'lit' ? Math.max(0, this.life) : 0;
+
+			ctx.save();
+			ctx.translate(this.x, this.y);
+			ctx.scale(scale, scale);
+			ctx.strokeStyle = `rgba(255,255,255, ${0.1 * this.z})`;
+			ctx.lineWidth = 2;
+			ctx.strokeRect(-6, 0, 12, 60);
+
+			if(life > 0) {
+				const flicker = (Math.random()*0.2 + 0.8) * life;
+				ctx.shadowBlur = 20 * flicker;
+				ctx.shadowColor = CFG.color;
+				ctx.fillStyle = `rgba(255, 170, 0, ${flicker})`;
+				ctx.beginPath(); ctx.moveTo(0,0); ctx.quadraticCurveTo(-10, -15, 0, -40*life); ctx.quadraticCurveTo(10, -15, 0, 0); ctx.fill();
+			}
+			ctx.restore();
+
+			if (this.state === 'extinguished') {
+				this.smoke.forEach(p => {
+					const a = Math.max(0, 1 - p.age / 90) * 0.35;
+					ctx.beginPath(); ctx.fillStyle = `rgba(255,255,255,${a})`;
+					ctx.arc(p.x, p.y, 3 + p.age * 0.05, 0, Math.PI*2); ctx.fill();
+				});
+			}
+		}
+	}
+
+	const candles = Array.from({length: CFG.count}, (_, i) => new SoulCandle(i));
+	placeShamash();
+
+	function drawShamashBody() {
+		shamash.tilt += (shamash.tiltTarget - shamash.tilt) * 0.2;
+		ctx.save();
+		ctx.translate(shamash.x, shamash.y);
+		ctx.rotate(shamash.tilt);
+		ctx.scale(1.3, 1.3);
+		ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+		ctx.lineWidth = 2;
+		ctx.strokeRect(-6, 0, 12, 60);
+		const flicker = Math.random()*0.2 + 0.8;
+		ctx.shadowBlur = 20 * flicker;
+		ctx.shadowColor = CFG.color;
+		ctx.fillStyle = `rgba(255,170,0,${flicker})`;
+		ctx.beginPath(); ctx.moveTo(0,0); ctx.quadraticCurveTo(-10,-15,0,-40); ctx.quadraticCurveTo(10,-15,0,0); ctx.fill();
+		ctx.restore();
+	}
+
+	function tryRelight() {
+		candles.forEach(c => {
+			if (c.state !== 'extinguished') return;
+			const dx = c.x - shamash.x, dy = (c.y - 20) - shamash.y;
+			if (Math.sqrt(dx*dx + dy*dy) < RELIGHT_RADIUS) {
+				shamash.tiltTarget = dx > 0 ? 0.9 : -0.9;
+				c.state = 'lit';
+				c.life = 1;
+				c.smoke = [];
+				c.dieAt = Math.min(1, scrollPercent + 0.2 + Math.random()*0.6);
+				setTimeout(() => { shamash.tiltTarget = 0; }, 260);
+			}
+		});
+	}
+
+	const handle = document.createElement('div');
+	handle.id = 'shamash-handle';
+	handle.title = 'Carry the shamash to a dark candle to relight it';
+	Object.assign(handle.style, {
+		position: 'fixed', width: '48px', height: '92px',
+		transform: 'translate(-50%, -70%)', zIndex: '101',
+		cursor: 'grab', touchAction: 'none', pointerEvents: 'auto', background: 'transparent'
+	});
+	document.body.appendChild(handle);
+	function positionHandle() { handle.style.left = shamash.x + 'px'; handle.style.top = shamash.y + 'px'; }
+
+	handle.addEventListener('pointerdown', (e) => {
+		shamash.dragging = true;
+		shamash.grabDX = shamash.x - e.clientX;
+		shamash.grabDY = shamash.y - e.clientY;
+		handle.setPointerCapture(e.pointerId);
+		handle.style.cursor = 'grabbing';
+	});
+	handle.addEventListener('pointermove', (e) => {
+		if (!shamash.dragging) return;
+		shamash.x = e.clientX + shamash.grabDX;
+		shamash.y = e.clientY + shamash.grabDY;
+		tryRelight();
+	});
+	['pointerup', 'pointercancel'].forEach(ev => handle.addEventListener(ev, () => {
+		shamash.dragging = false;
+		handle.style.cursor = 'grab';
+	}));
+
+	let time = 0;
+
+	function animate() {
+		ctx.clearRect(0, 0, width, height);
+		time++;
+		candles.forEach(c => { c.update(time); c.drawDarken(); });
+		candles.forEach(c => c.draw(time));
+		drawShamashBody();
+		positionHandle();
+		requestAnimationFrame(animate);
+	}
+	animate();
+
+	window.VeilCandles = { candles, shamash };
+})();
+</script>
+
+</body>
+</html>
