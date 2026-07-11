@@ -839,7 +839,7 @@ function updateMediaSession(seg) {
     if('mediaSession' in navigator) {
         navigator.mediaSession.metadata = new MediaMetadata({
             title: seg.spkr === 'narrator' ? 'Narrator' : seg.spkr,
-            artist: 'FeistTech Reader',
+            artist: 'The Reading Room — FeistTech',
             album: settings.useBrowserTTS ? 'Browser TTS' : 'Edge TTS'
         });
         navigator.mediaSession.setActionHandler('nexttrack', () => skipSegment(1));
