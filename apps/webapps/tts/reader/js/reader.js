@@ -54,6 +54,7 @@ window.onload = () => {
     checkPersistence();
     waitForLib();
     setupKeyboard();
+    if(window.FeistTheme) FeistTheme.mount('#themeSwitcherMount');
     if(!localStorage.getItem('feist_visited')) {
         expandHelp();
         localStorage.setItem('feist_visited', '1');

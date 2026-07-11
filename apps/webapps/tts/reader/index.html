@@ -4,8 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>The Reading Room — FeistTech</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto+Mono:wght@300;400&family=Merriweather:wght@300;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto+Mono:wght@300;400&family=Merriweather:wght@300;700&family=Cinzel:wght@400;700&family=Cormorant+Garamond:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
+    <script src="../../../../app/theme-switcher.js"></script>
+    <script src="../../../../app/veil-theme.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
 </head>
@@ -16,8 +18,9 @@
 <div id="app-container">
 
     <div class="site-nav">
-        <a href="../../../index.html" class="site-back">← FEISTTECH</a>
+        <a href="../../../../index.html" class="site-back">← FEISTTECH</a>
         <span class="site-brand">THE READING ROOM · MULTI-VOICE IMMERSIVE ENGINE</span>
+        <span id="themeSwitcherMount" style="margin-left:auto;"></span>
     </div>
 
     <!-- ========== HELP (auto-expands once on a visitor's first visit,
