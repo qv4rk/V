@@ -220,3 +220,31 @@ input[type=range] { flex: 1; accent-color: var(--primary); }
     #chapterSelect { max-width: 120px; }
     .btn { padding: 0.4rem 0.6rem; font-size: 0.68rem; }
 }
+
+/* ============ RSVP ============ */
+#rsvpOverlay {
+    display: none; position: fixed; inset: 0; z-index: 900;
+    background: var(--bg-dark); backdrop-filter: blur(20px);
+    flex-direction: column; align-items: center; justify-content: center;
+}
+#rsvpOverlay.open { display: flex; }
+#rsvpSpeakerTag {
+    color: var(--secondary); font-size: 1rem; margin-bottom: 1.5rem;
+    text-transform: uppercase; letter-spacing: 0.3em; font-weight: bold; font-family: var(--font-head);
+}
+#rsvpStage {
+    font-size: clamp(2.5rem, 8vw, 5rem); font-weight: 800; height: 160px; width: 90%; max-width: 700px;
+    display: flex; align-items: center; justify-content: center; text-align: center;
+    text-shadow: 0 0 25px var(--primary); font-family: var(--font-body);
+    letter-spacing: -0.02em; color: #fff;
+}
+.rsvp-controls {
+    position: absolute; bottom: 6vh; width: 90%; max-width: 560px;
+    background: rgba(255,255,255,0.04); padding: 1.5rem; border-radius: 12px;
+    border: 1px solid var(--border); box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+}
+#rsvpProgressWrap { width: 100%; height: 4px; background: #222; margin-bottom: 1.2rem; border-radius: 2px; overflow: hidden; }
+#rsvpProgressBar { width: 0%; height: 100%; background: var(--primary); transition: width 0.1s linear; }
+.rsvp-row { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.8rem; }
+.rsvp-row:last-of-type { margin-bottom: 0; }
+.rsvp-row input[type=range] { flex: 1; accent-color: var(--primary); }
