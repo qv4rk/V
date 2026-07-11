@@ -1,10 +1,11 @@
 /* ─────────────────────────────────────────────────────────────
    FEISTTECH — "Veil of Babel" theme.
-   The one theme with a living background: a splitting double helix
-   that separates as the visitor scrolls, and a field of drifting
-   candles that gutter out over the course of a long page. One
-   candle is always lit and can be picked up (mouse or touch) and
-   carried to a dark one to relight it.
+   The page itself reads in near-darkness. Each lit candle burns a
+   soft circular window into that darkness, giving light to whatever
+   text sits under it; an extinguished one gives none, so the reader
+   has to carry the shamash back to it to see that part of the page
+   again. Eight candles, plus the shamash — a Hanukkiah, not an
+   arbitrary count.
 
    Mounts itself only while data-theme="veil" is active, listening
    for FeistTheme's change event; tears itself down completely
@@ -18,12 +19,12 @@
   var raf = null;
   var width, height;
 
-  var dnaCanvas, dnaCtx, candleCanvas, candleCtx, carrierHandle;
+  var dnaCanvas, dnaCtx, maskCanvas, maskCtx, candleCanvas, candleCtx, carrierHandle;
 
   function resize() {
     width = window.innerWidth;
     height = window.innerHeight;
-    [dnaCanvas, candleCanvas].forEach(function (c) {
+    [dnaCanvas, maskCanvas, candleCanvas].forEach(function (c) {
       if (c) { c.width = width; c.height = height; }
     });
     placeCarrier();
@@ -65,8 +66,9 @@
   }
 
   /* ================= CANDLES ================= */
-  var CANDLE_COUNT = 14;
-  var RELIGHT_RADIUS = 46;
+  var CANDLE_COUNT = 8;          // + the shamash = a Hanukkiah's 9
+  var LIGHT_RADIUS = 130;        // how far a lit candle's window into the dark reaches
+  var RELIGHT_RADIUS = 46;       // how close the shamash has to physically get to relight
   var candles = [];
 
   function makeCandle() {
@@ -112,18 +114,20 @@
     c.smoke = c.smoke.filter(function (p) { return p.age < 90; });
   }
 
+  // Flame is deliberately subtle -- it's a light SOURCE, not the thing
+  // meant to hold your eye. The text it reveals is.
   function drawCandleBody(ctx, x, y, z, flameStrength, tilt) {
     var scale = z * 0.6;
     ctx.save();
     ctx.translate(x, y);
     if (tilt) ctx.rotate(tilt);
     ctx.scale(scale, scale);
-    ctx.strokeStyle = 'rgba(255,255,255,' + (0.1 * z) + ')';
+    ctx.strokeStyle = 'rgba(255,255,255,' + (0.08 * z) + ')';
     ctx.lineWidth = 2;
     ctx.strokeRect(-6, 0, 12, 60);
     if (flameStrength > 0) {
-      var flicker = (Math.random() * 0.2 + 0.8) * flameStrength;
-      ctx.shadowBlur = 20 * flicker;
+      var flicker = (Math.random() * 0.15 + 0.55) * flameStrength;
+      ctx.shadowBlur = 14 * flicker;
       ctx.shadowColor = '#ffaa00';
       ctx.fillStyle = 'rgba(255,170,0,' + flicker + ')';
       ctx.beginPath();
@@ -145,22 +149,41 @@
     });
   }
 
-  function drawDarkenPatch(ctx, x, y) {
-    var g = ctx.createRadialGradient(x, y, 4, x, y, 90);
-    g.addColorStop(0, 'rgba(0,0,0,0.55)');
+  // Burns a soft round window into the darkness mask at (x,y) -- this is
+  // what actually makes the page readable under a lit candle.
+  function punchLight(ctx, x, y, radius) {
+    var g = ctx.createRadialGradient(x, y, 0, x, y, radius);
+    g.addColorStop(0, 'rgba(0,0,0,1)');
+    g.addColorStop(0.65, 'rgba(0,0,0,0.9)');
     g.addColorStop(1, 'rgba(0,0,0,0)');
     ctx.beginPath();
     ctx.fillStyle = g;
-    ctx.arc(x, y, 90, 0, Math.PI * 2);
+    ctx.arc(x, y, radius, 0, Math.PI * 2);
     ctx.fill();
+  }
+
+  function drawMask() {
+    maskCtx.globalCompositeOperation = 'source-over';
+    maskCtx.fillStyle = 'rgba(2,2,2,0.94)';
+    maskCtx.fillRect(0, 0, width, height);
+
+    maskCtx.globalCompositeOperation = 'destination-out';
+    candles.forEach(function (c) {
+      if (c.state !== 'lit') return;
+      punchLight(maskCtx, c.x, c.y - 20, LIGHT_RADIUS * Math.max(0.35, c.life));
+    });
+    // The shamash lights whatever it's over, whether it's resting in its
+    // corner or being carried across the page.
+    punchLight(maskCtx, carrier.x, carrier.y - 20, LIGHT_RADIUS * 1.05);
+    maskCtx.globalCompositeOperation = 'source-over';
   }
 
   function drawCandles() {
     candleCtx.clearRect(0, 0, width, height);
-    candles.forEach(function (c) {
-      updateCandle(c);
-      if (c.state === 'extinguished') drawDarkenPatch(candleCtx, c.x, c.y - 10);
-    });
+    candles.forEach(function (c) { updateCandle(c); });
+
+    drawMask();
+
     candles.forEach(function (c) {
       drawCandleBody(candleCtx, c.x, c.y, c.z, c.state === 'lit' ? Math.max(0, c.life) : 0, 0);
       if (c.state === 'extinguished') drawSmoke(candleCtx, c);
@@ -233,7 +256,13 @@
     dnaCanvas.style.opacity = '0.6';
     dnaCtx = dnaCanvas.getContext('2d');
 
-    candleCanvas = buildLayer('veil-candle-layer', 100);
+    // Stacked well above any existing site chrome (nav/panels top out
+    // around z:300) so the darkness always wins, with the candle
+    // sprites just above the mask so flames poke through it.
+    maskCanvas = buildLayer('veil-mask-layer', 500);
+    maskCtx = maskCanvas.getContext('2d');
+
+    candleCanvas = buildLayer('veil-candle-layer', 501);
     candleCanvas.style.mixBlendMode = 'screen';
     candleCtx = candleCanvas.getContext('2d');
 
@@ -242,7 +271,7 @@
     carrierHandle.title = 'Carry this flame to a dark candle to relight it';
     Object.assign(carrierHandle.style, {
       position: 'fixed', width: '44px', height: '84px',
-      transform: 'translate(-50%, -70%)', zIndex: '101',
+      transform: 'translate(-50%, -70%)', zIndex: '502',
       cursor: 'grab', touchAction: 'none', pointerEvents: 'auto', background: 'transparent'
     });
     document.body.appendChild(carrierHandle);
@@ -265,10 +294,10 @@
     if (!mounted) return;
     mounted = false;
     if (raf) cancelAnimationFrame(raf);
-    [dnaCanvas, candleCanvas, carrierHandle].forEach(function (el) {
+    [dnaCanvas, maskCanvas, candleCanvas, carrierHandle].forEach(function (el) {
       if (el && el.parentNode) el.parentNode.removeChild(el);
     });
-    dnaCanvas = candleCanvas = carrierHandle = null;
+    dnaCanvas = maskCanvas = candleCanvas = carrierHandle = null;
     window.removeEventListener('resize', resize);
   }
 
