@@ -67,8 +67,8 @@
 
   /* ================= CANDLES ================= */
   var CANDLE_COUNT = 8;          // + the shamash = a Hanukkiah's 9
-  var LIGHT_RADIUS = 130;        // how far a lit candle's window into the dark reaches
-  var RELIGHT_RADIUS = 46;       // how close the shamash has to physically get to relight
+  var LIGHT_RADIUS = 230;        // how far a lit candle's window into the dark reaches
+  var RELIGHT_RADIUS = 60;       // how close the shamash has to physically get to relight
   var candles = [];
 
   function makeCandle() {
@@ -90,10 +90,20 @@
   }
 
   // The one always-lit candle the visitor can grab and carry.
-  var carrier = { x: 0, y: 0, dragging: false, tilt: 0, tiltTarget: 0, grabDX: 0, grabDY: 0 };
+  var carrier = {
+    x: 0, y: 0, homeX: 0, homeY: 0, dragging: false, tilt: 0, tiltTarget: 0,
+    grabDX: 0, grabDY: 0, mode: 'idle', targetCandle: null,
+    flightFrom: null, flightTo: null, flightStart: 0
+  };
+  var candleHandles = [];
 
   function placeCarrier() {
-    if (!carrier.dragging) { carrier.x = width - 70; carrier.y = height - 110; }
+    carrier.homeX = width - 70;
+    carrier.homeY = height - 110;
+    if (!carrier.dragging && carrier.mode === 'idle') {
+      carrier.x = carrier.homeX;
+      carrier.y = carrier.homeY;
+    }
   }
 
   function updateCandle(c) {
@@ -165,28 +175,60 @@
     ctx.fill();
   }
 
+  // Ambient brightness is a function of how many candles are actually
+  // lit, not a fixed dark backdrop: all 8 lit should read as "the whole
+  // thing is lit" (barely any veil left at all), and all 8 out should
+  // read as moonlight -- dim, but still navigable, never near-black.
+  // Warm additive glow layered on top of a punched hole -- erasing the
+  // dark mask only reveals the page's true (often very dark) colors, it
+  // doesn't brighten them, so without this a "lit" spot can paradoxically
+  // read darker than the moonlit ambient around it wherever the actual
+  // page content is dim.
+  function glow(ctx, x, y, radius) {
+    var g = ctx.createRadialGradient(x, y, 0, x, y, radius);
+    g.addColorStop(0, 'rgba(255,205,130,0.20)');
+    g.addColorStop(1, 'rgba(255,205,130,0)');
+    ctx.beginPath();
+    ctx.fillStyle = g;
+    ctx.arc(x, y, radius, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
   function drawMask() {
-    // Dim by default, not pitch black -- you should be able to tell
-    // there's a page here. A lit candle clears its whole radius back to
-    // full brightness (comfortable reading), not just a pinpoint center.
+    const litCount = candles.filter(function (c) { return c.state === 'lit'; }).length;
+    const litFrac = litCount / candles.length;
+    const ambientAlpha = 0.26 - litFrac * 0.22; // 0 lit -> 0.26 (moonlit), 8 lit -> 0.04
+
+    // A cool blue-grey rather than near-black -- an overlay this color
+    // reads as moonlight even at low alpha, where a near-black overlay
+    // just adds more darkness on top of an already-dark page.
     maskCtx.globalCompositeOperation = 'source-over';
-    maskCtx.fillStyle = 'rgba(4,4,6,0.82)';
+    maskCtx.fillStyle = 'rgba(24,28,40,' + ambientAlpha + ')';
     maskCtx.fillRect(0, 0, width, height);
 
     maskCtx.globalCompositeOperation = 'destination-out';
     candles.forEach(function (c) {
       if (c.state !== 'lit') return;
-      punchLight(maskCtx, c.x, c.y - 20, LIGHT_RADIUS * Math.max(0.35, c.life));
+      punchLight(maskCtx, c.x, c.y - 20, LIGHT_RADIUS * Math.max(0.45, c.life));
     });
     // The shamash lights whatever it's over, whether it's resting in its
     // corner or being carried across the page.
-    punchLight(maskCtx, carrier.x, carrier.y - 20, LIGHT_RADIUS * 1.05);
+    punchLight(maskCtx, carrier.x, carrier.y - 20, LIGHT_RADIUS * 1.15);
+
+    maskCtx.globalCompositeOperation = 'lighter';
+    candles.forEach(function (c) {
+      if (c.state !== 'lit') return;
+      glow(maskCtx, c.x, c.y - 20, LIGHT_RADIUS * 0.6 * Math.max(0.45, c.life));
+    });
+    glow(maskCtx, carrier.x, carrier.y - 20, LIGHT_RADIUS * 0.65);
+
     maskCtx.globalCompositeOperation = 'source-over';
   }
 
   function drawCandles() {
     candleCtx.clearRect(0, 0, width, height);
     candles.forEach(function (c) { updateCandle(c); });
+    updateCarrierFlight();
 
     drawMask();
 
@@ -198,6 +240,7 @@
     carrier.tilt += (carrier.tiltTarget - carrier.tilt) * 0.2;
     drawCandleBody(candleCtx, carrier.x, carrier.y, 2.2, 1, carrier.tilt);
     positionHandle();
+    positionCandleHandles();
   }
 
   function positionHandle() {
@@ -206,21 +249,77 @@
     carrierHandle.style.top = carrier.y + 'px';
   }
 
+  function positionCandleHandles() {
+    candles.forEach(function (c, i) {
+      var el = candleHandles[i];
+      if (!el) return;
+      el.style.left = c.x + 'px';
+      el.style.top = c.y + 'px';
+    });
+  }
+
+  function relight(c, tiltFromX) {
+    c.state = 'lit';
+    c.life = 1;
+    c.smoke = [];
+    c.dieAt = Math.min(1, scrollPercent() + 0.2 + Math.random() * 0.6);
+    carrier.tiltTarget = tiltFromX > 0 ? 0.9 : -0.9;
+    setTimeout(function () { carrier.tiltTarget = 0; }, 260);
+  }
+
   // Bringing the lit carrier candle within reach of a dark one tips it
   // over and relights it — the whole point of carrying it in the first place.
   function tryRelight() {
     candles.forEach(function (c) {
       if (c.state !== 'extinguished') return;
       var dx = c.x - carrier.x, dy = (c.y - 20) - carrier.y;
-      if (Math.sqrt(dx * dx + dy * dy) < RELIGHT_RADIUS) {
-        carrier.tiltTarget = dx > 0 ? 0.9 : -0.9;
-        c.state = 'lit';
-        c.life = 1;
-        c.smoke = [];
-        c.dieAt = Math.min(1, scrollPercent() + 0.2 + Math.random() * 0.6);
-        setTimeout(function () { carrier.tiltTarget = 0; }, 260);
-      }
+      if (Math.sqrt(dx * dx + dy * dy) < RELIGHT_RADIUS) relight(c, dx);
     });
+  }
+
+  // ── Tap-to-send: for touch, dragging the shamash precisely is unreliable
+  // (the page wants to scroll, a thumb covers the target). Tapping an
+  // extinguished candle instead sends the shamash on a slow, watchable
+  // flight over to it, tilts to relight it, pauses, then flies home —
+  // a little ritual rather than an instant teleport.
+  var FLIGHT_MS = 2000;
+
+  function sendShamashTo(candle) {
+    if (carrier.dragging || carrier.mode !== 'idle') return;
+    carrier.mode = 'flying-out';
+    carrier.targetCandle = candle;
+    carrier.flightFrom = { x: carrier.x, y: carrier.y };
+    carrier.flightTo = { x: candle.x, y: candle.y - 20 };
+    carrier.flightStart = performance.now();
+  }
+
+  function easeInOut(t) { return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2; }
+
+  function updateCarrierFlight() {
+    if (carrier.dragging) { carrier.mode = 'idle'; return; }
+    if (carrier.mode !== 'flying-out' && carrier.mode !== 'flying-back') return;
+
+    const t = Math.min(1, (performance.now() - carrier.flightStart) / FLIGHT_MS);
+    const e = easeInOut(t);
+    carrier.x = carrier.flightFrom.x + (carrier.flightTo.x - carrier.flightFrom.x) * e;
+    carrier.y = carrier.flightFrom.y + (carrier.flightTo.y - carrier.flightFrom.y) * e;
+    if (t < 1) return;
+
+    if (carrier.mode === 'flying-out') {
+      const c = carrier.targetCandle;
+      if (c && c.state === 'extinguished') relight(c, c.x - carrier.x);
+      // Pause a beat at the newly-lit candle before heading home, so the
+      // relighting itself is the moment the eye lands on, not a blur.
+      setTimeout(function () {
+        carrier.mode = 'flying-back';
+        carrier.flightFrom = { x: carrier.x, y: carrier.y };
+        carrier.flightTo = { x: carrier.homeX, y: carrier.homeY };
+        carrier.flightStart = performance.now();
+      }, 700);
+      carrier.mode = 'paused'; // holds position during the setTimeout above
+    } else {
+      carrier.mode = 'idle';
+    }
   }
 
   function attachDrag() {
@@ -286,6 +385,7 @@
     resetCandles();
     placeCarrier();
     attachDrag();
+    buildCandleHandles();
     window.addEventListener('resize', resize);
 
     (function loop() {
@@ -296,14 +396,33 @@
     })();
   }
 
+  function buildCandleHandles() {
+    candleHandles = candles.map(function (c) {
+      var el = document.createElement('div');
+      el.className = 'veil-candle-handle';
+      el.title = 'Tap to send the shamash over to relight this candle';
+      Object.assign(el.style, {
+        position: 'fixed', width: '48px', height: '76px',
+        transform: 'translate(-50%, -60%)', zIndex: '501',
+        pointerEvents: 'auto', cursor: 'pointer', touchAction: 'manipulation', background: 'transparent'
+      });
+      el.addEventListener('click', function () {
+        if (c.state === 'extinguished') sendShamashTo(c);
+      });
+      document.body.appendChild(el);
+      return el;
+    });
+  }
+
   function unmount() {
     if (!mounted) return;
     mounted = false;
     if (raf) cancelAnimationFrame(raf);
-    [dnaCanvas, maskCanvas, candleCanvas, carrierHandle].forEach(function (el) {
+    [dnaCanvas, maskCanvas, candleCanvas, carrierHandle].concat(candleHandles).forEach(function (el) {
       if (el && el.parentNode) el.parentNode.removeChild(el);
     });
     dnaCanvas = maskCanvas = candleCanvas = carrierHandle = null;
+    candleHandles = [];
     window.removeEventListener('resize', resize);
   }
 

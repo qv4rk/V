@@ -3,9 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>FeistTech Immersive Reader v10</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto+Mono:wght@300;400&family=Merriweather:wght@300;700&display=swap" rel="stylesheet">
+    <title>The Reading Room — FeistTech</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto+Mono:wght@300;400&family=Merriweather:wght@300;700&family=Cinzel:wght@400;700&family=Cormorant+Garamond:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
+    <script src="../../../../app/theme-switcher.js"></script>
+    <script src="../../../../app/veil-theme.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
 </head>
@@ -16,8 +18,9 @@
 <div id="app-container">
 
     <div class="site-nav">
-        <a href="../../../index.html" class="site-back">← FEISTTECH</a>
-        <span class="site-brand">READER · MULTI-VOICE IMMERSIVE ENGINE</span>
+        <a href="../../../../index.html" class="site-back">← FEISTTECH</a>
+        <span class="site-brand">THE READING ROOM · MULTI-VOICE IMMERSIVE ENGINE</span>
+        <span id="themeSwitcherMount" style="margin-left:auto;"></span>
     </div>
 
     <!-- ========== HELP (auto-expands once on a visitor's first visit,
@@ -142,6 +145,7 @@ You shouldn't have come here alone.</pre>
                     <div class="hamburger-menu" id="hamburgerMenu">
                         <button class="hb-item" onclick="closeAllPanels();startNewStory();">🗑 Clear / start new</button>
                         <button class="hb-item" onclick="closeAllPanels();expandHelp();">❓ Help</button>
+                        <button class="hb-item" onclick="closeAllPanels();openRsvp();">👁 RSVP speed-read</button>
                         <button class="hb-item" onclick="openSavePanel()">💾 Save / load slots</button>
                         <button class="hb-item" onclick="closeAllPanels();saveToDisk();">⬇ Export HTML</button>
                         <button class="hb-item" id="saveChapterBtn" onclick="closeAllPanels();saveCurrentChapterAudio();">🎵 Save this chapter (MP3)</button>
@@ -230,6 +234,28 @@ You shouldn't have come here alone.</pre>
         <button class="btn" onclick="closeVoicePicker()">✕</button>
     </div>
     <div class="vp-body" id="vpBody"></div>
+</div>
+
+<!-- ========== RSVP (purely visual word-flash pacer -- never touches
+     speechSynthesis or audioPlayer, so it can never interrupt whatever
+     Edge-TTS audio is already playing) ========== -->
+<div id="rsvpOverlay">
+    <div id="rsvpSpeakerTag">NARRATOR</div>
+    <div id="rsvpStage">READY</div>
+    <div class="rsvp-controls">
+        <div id="rsvpProgressWrap"><div id="rsvpProgressBar"></div></div>
+        <div class="rsvp-row" style="justify-content:center;">
+            <button class="btn btn-icon" onclick="rsvpSkip(-15)">«</button>
+            <button class="btn btn-play" id="rsvpPlayBtn" onclick="rsvpToggle()">▶ START</button>
+            <button class="btn btn-icon" onclick="rsvpSkip(15)">»</button>
+        </div>
+        <div class="rsvp-row">
+            <span class="slider-label">WPM <span id="rsvpWpmDisplay">300</span></span>
+            <input type="range" min="150" max="900" value="300" id="rsvpWpmInput" oninput="rsvpUpdateWpm(this.value)">
+            <button class="btn" onclick="closeRsvp()">EXIT</button>
+        </div>
+        <p style="font-size:0.68rem;color:#666;margin:0.6rem 0 0;text-align:center;">Visual pacing only -- your audio (if playing) keeps going untouched.</p>
+    </div>
 </div>
 
 <script src="js/voice-catalog.js"></script>

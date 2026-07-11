@@ -54,6 +54,7 @@ window.onload = () => {
     checkPersistence();
     waitForLib();
     setupKeyboard();
+    if(window.FeistTheme) FeistTheme.mount('#themeSwitcherMount');
     if(!localStorage.getItem('feist_visited')) {
         expandHelp();
         localStorage.setItem('feist_visited', '1');
@@ -839,7 +840,7 @@ function updateMediaSession(seg) {
     if('mediaSession' in navigator) {
         navigator.mediaSession.metadata = new MediaMetadata({
             title: seg.spkr === 'narrator' ? 'Narrator' : seg.spkr,
-            artist: 'FeistTech Reader',
+            artist: 'The Reading Room — FeistTech',
             album: settings.useBrowserTTS ? 'Browser TTS' : 'Edge TTS'
         });
         navigator.mediaSession.setActionHandler('nexttrack', () => skipSegment(1));
@@ -870,6 +871,14 @@ function setupKeyboard() {
     document.addEventListener('keydown', e => {
         const tag = document.activeElement.tagName;
         if(tag === 'TEXTAREA' || tag === 'INPUT' || tag === 'SELECT') return;
+        const rsvpOpen = document.getElementById('rsvpOverlay').classList.contains('open');
+        if(rsvpOpen) {
+            if(e.code === 'Escape') { e.preventDefault(); closeRsvp(); }
+            if(e.code === 'Space') { e.preventDefault(); rsvpToggle(); }
+            if(e.code === 'ArrowRight') { e.preventDefault(); rsvpSkip(15); }
+            if(e.code === 'ArrowLeft') { e.preventDefault(); rsvpSkip(-15); }
+            return;
+        }
         if(e.code === 'Space') { e.preventDefault(); togglePlay(); }
         if(e.code === 'ArrowRight') { e.preventDefault(); skipSegment(1); }
         if(e.code === 'ArrowLeft') { e.preventDefault(); skipSegment(-1); }
@@ -1183,4 +1192,84 @@ function saveToDisk() {
     const a = document.createElement('a'); a.href = url; a.download = fn; a.click();
     URL.revokeObjectURL(url);
     showTTSStatus('💾 ' + fn, 2500);
+}
+
+// ==================== RSVP (visual speed-read, audio-independent) ====================
+// This is a purely visual word-flash pacer. It never touches speechSynthesis
+// or audioPlayer, so opening it can never interrupt audio the user already
+// has playing — it just paces through the same text on screen.
+let rsvpQueue = [];      // flat list of { word, segIdx }
+let rsvpPos = 0;
+let rsvpWpm = 300;
+let rsvpPlaying = false;
+let rsvpTimer = null;
+
+function rsvpBuildQueueFrom(startSegIdx) {
+    rsvpQueue = [];
+    for(let i = Math.max(0, startSegIdx); i < segments.length; i++) {
+        const words = segments[i].text.split(/\s+/).filter(Boolean);
+        words.forEach(word => rsvpQueue.push({ word, segIdx: i }));
+    }
+}
+
+function openRsvp() {
+    if(segments.length === 0) { showTTSStatus('⚠️ Load a story first', 2000); return; }
+    rsvpBuildQueueFrom(currentSegmentIndex);
+    rsvpPos = 0;
+    document.getElementById('rsvpOverlay').classList.add('open');
+    rsvpShowWord();
+    rsvpPlaying = false;
+    document.getElementById('rsvpPlayBtn').innerText = '▶ START';
+}
+
+function closeRsvp() {
+    rsvpPause();
+    document.getElementById('rsvpOverlay').classList.remove('open');
+}
+
+function rsvpToggle() {
+    if(rsvpPlaying) rsvpPause(); else rsvpPlay();
+}
+
+function rsvpPlay() {
+    if(rsvpQueue.length === 0) return;
+    if(rsvpPos >= rsvpQueue.length) rsvpPos = 0;
+    rsvpPlaying = true;
+    document.getElementById('rsvpPlayBtn').innerText = '⏸ PAUSE';
+    rsvpTick();
+}
+
+function rsvpPause() {
+    rsvpPlaying = false;
+    if(rsvpTimer) { clearTimeout(rsvpTimer); rsvpTimer = null; }
+    const btn = document.getElementById('rsvpPlayBtn');
+    if(btn) btn.innerText = '▶ START';
+}
+
+function rsvpTick() {
+    if(!rsvpPlaying) return;
+    if(rsvpPos >= rsvpQueue.length) { rsvpPause(); return; }
+    rsvpShowWord();
+    rsvpPos++;
+    const msPerWord = 60000 / rsvpWpm;
+    rsvpTimer = setTimeout(rsvpTick, msPerWord);
+}
+
+function rsvpShowWord() {
+    const entry = rsvpQueue[rsvpPos];
+    if(!entry) return;
+    const seg = segments[entry.segIdx];
+    document.getElementById('rsvpStage').innerText = entry.word;
+    document.getElementById('rsvpSpeakerTag').innerText = (seg?.spkr || 'narrator').toUpperCase();
+    document.getElementById('rsvpProgressBar').style.width = (rsvpPos / rsvpQueue.length * 100) + '%';
+}
+
+function rsvpSkip(n) {
+    rsvpPos = Math.max(0, Math.min(rsvpQueue.length - 1, rsvpPos + n));
+    rsvpShowWord();
+}
+
+function rsvpUpdateWpm(v) {
+    rsvpWpm = parseInt(v);
+    document.getElementById('rsvpWpmDisplay').innerText = rsvpWpm;
 }

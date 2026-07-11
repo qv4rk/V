@@ -10,6 +10,36 @@
     --font-read: 'Merriweather', serif;
     --text-main: #e0e0e0;
 }
+
+/* ============ SITE-WIDE THEMES ============
+   The reader keeps its own variable names (unlike the shared
+   app/theme-vars.css token set) since --accent and --font-body would
+   otherwise collide with that file's tokens; these are hand-mapped
+   equivalents of the same five palettes instead. Cyan is left as a
+   near no-op since it's already this app's native look. Veil of
+   Babel additionally gets the living candle/DNA background — see
+   app/veil-theme.js, which mounts itself on any page purely from the
+   data-theme="veil" attribute, no per-page wiring needed. */
+[data-theme="patina"] {
+    --primary: #c9a84c; --secondary: #438f7e; --accent: #c0392b;
+    --bg-dark: #0c0a07; --glass: rgba(20,17,11,0.85); --border: rgba(201,168,76,0.3);
+    --font-head: 'Cinzel', serif; --font-body: 'Cormorant Garamond', serif; --text-main: #d4c39a;
+}
+[data-theme="imperial"] {
+    --primary: #e8c46a; --secondary: #c9514b; --accent: #a02828;
+    --bg-dark: #100706; --glass: rgba(26,13,9,0.88); --border: rgba(232,196,106,0.3);
+    --font-head: 'Cinzel', serif; --font-body: 'Cormorant Garamond', serif; --text-main: #e8d39a;
+}
+[data-theme="night"] {
+    --primary: #e8d39a; --secondary: #88c0d0; --accent: #d05050;
+    --bg-dark: #050810; --glass: rgba(11,18,31,0.88); --border: rgba(216,224,236,0.22);
+    --font-head: 'Cinzel', serif; --font-body: 'Cormorant Garamond', serif; --text-main: #d8e0ec;
+}
+[data-theme="veil"] {
+    --primary: #c5a059; --secondary: #4aa8a8; --accent: #8a1c1c;
+    --bg-dark: #030303; --glass: rgba(12,12,14,0.65); --border: rgba(197,160,89,0.25);
+    --font-head: 'Cinzel', serif; --font-body: 'Cormorant Garamond', serif; --text-main: #e6e6e6;
+}
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 body { margin: 0; background: var(--bg-dark); color: var(--text-main); font-family: var(--font-body); overflow-x: hidden; min-height: 100vh; }
 #bg-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; opacity: 0.8; pointer-events: none; }
@@ -220,3 +250,31 @@ input[type=range] { flex: 1; accent-color: var(--primary); }
     #chapterSelect { max-width: 120px; }
     .btn { padding: 0.4rem 0.6rem; font-size: 0.68rem; }
 }
+
+/* ============ RSVP ============ */
+#rsvpOverlay {
+    display: none; position: fixed; inset: 0; z-index: 900;
+    background: var(--bg-dark); backdrop-filter: blur(20px);
+    flex-direction: column; align-items: center; justify-content: center;
+}
+#rsvpOverlay.open { display: flex; }
+#rsvpSpeakerTag {
+    color: var(--secondary); font-size: 1rem; margin-bottom: 1.5rem;
+    text-transform: uppercase; letter-spacing: 0.3em; font-weight: bold; font-family: var(--font-head);
+}
+#rsvpStage {
+    font-size: clamp(2.5rem, 8vw, 5rem); font-weight: 800; height: 160px; width: 90%; max-width: 700px;
+    display: flex; align-items: center; justify-content: center; text-align: center;
+    text-shadow: 0 0 25px var(--primary); font-family: var(--font-body);
+    letter-spacing: -0.02em; color: #fff;
+}
+.rsvp-controls {
+    position: absolute; bottom: 6vh; width: 90%; max-width: 560px;
+    background: rgba(255,255,255,0.04); padding: 1.5rem; border-radius: 12px;
+    border: 1px solid var(--border); box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+}
+#rsvpProgressWrap { width: 100%; height: 4px; background: #222; margin-bottom: 1.2rem; border-radius: 2px; overflow: hidden; }
+#rsvpProgressBar { width: 0%; height: 100%; background: var(--primary); transition: width 0.1s linear; }
+.rsvp-row { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.8rem; }
+.rsvp-row:last-of-type { margin-bottom: 0; }
+.rsvp-row input[type=range] { flex: 1; accent-color: var(--primary); }

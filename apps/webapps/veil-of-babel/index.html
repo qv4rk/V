@@ -405,12 +405,20 @@
 	const ctx = canvas.getContext('2d');
 	let width, height, scrollPercent = 0;
 	const CFG = { count: 8, color: '#ffaa00' };   // + the shamash = a Hanukkiah's 9
-	const LIGHT_RADIUS = 130;
-	const RELIGHT_RADIUS = 46;
+	const LIGHT_RADIUS = 230;
+	const RELIGHT_RADIUS = 60;
+	const FLIGHT_MS = 2000;
 
 	// Declared before resize() runs below, since resize() calls placeShamash().
-	const shamash = { x: 0, y: 0, dragging: false, tilt: 0, tiltTarget: 0, grabDX: 0, grabDY: 0 };
-	function placeShamash() { if (!shamash.dragging) { shamash.x = width - 70; shamash.y = height - 110; } }
+	const shamash = {
+		x: 0, y: 0, homeX: 0, homeY: 0, dragging: false, tilt: 0, tiltTarget: 0,
+		grabDX: 0, grabDY: 0, mode: 'idle', targetCandle: null, flightFrom: null, flightTo: null, flightStart: 0
+	};
+	function placeShamash() {
+		shamash.homeX = width - 70;
+		shamash.homeY = height - 110;
+		if (!shamash.dragging && shamash.mode === 'idle') { shamash.x = shamash.homeX; shamash.y = shamash.homeY; }
+	}
 
 	function resize() {
 		width = canvas.width = maskCanvas.width = window.innerWidth;
@@ -514,36 +522,102 @@
 		maskCtx.beginPath(); maskCtx.fillStyle = g; maskCtx.arc(x, y, radius, 0, Math.PI*2); maskCtx.fill();
 	}
 
+	// Warm additive glow on top of a punched hole -- erasing the dark mask
+	// only reveals the page's true (often very dark) colors, it doesn't
+	// brighten them, so without this a "lit" spot can read darker than the
+	// moonlit ambient wherever the actual page content underneath is dim.
+	function glow(x, y, radius) {
+		const g = maskCtx.createRadialGradient(x, y, 0, x, y, radius);
+		g.addColorStop(0, 'rgba(255,205,130,0.20)');
+		g.addColorStop(1, 'rgba(255,205,130,0)');
+		maskCtx.beginPath(); maskCtx.fillStyle = g; maskCtx.arc(x, y, radius, 0, Math.PI*2); maskCtx.fill();
+	}
+
 	function drawMask() {
-		// Dim by default, not pitch black. A lit candle clears its whole
-		// radius to full brightness, not just a pinpoint at its center.
+		// Ambient brightness scales with how many candles are lit: all 8
+		// lit reads as "the whole thing is lit," all 8 out reads as
+		// moonlight -- dim, but still navigable, never near-black.
+		const litCount = candles.filter(c => c.state === 'lit').length;
+		const litFrac = litCount / candles.length;
+		const ambientAlpha = 0.26 - litFrac * 0.22; // 0 lit -> 0.26, 8 lit -> 0.04
+
 		maskCtx.globalCompositeOperation = 'source-over';
-		maskCtx.fillStyle = 'rgba(4,4,6,0.82)';
+		maskCtx.fillStyle = `rgba(24,28,40,${ambientAlpha})`;
 		maskCtx.fillRect(0, 0, width, height);
 
 		maskCtx.globalCompositeOperation = 'destination-out';
 		candles.forEach(c => {
 			if (c.state !== 'lit') return;
-			punchLight(c.x, c.y - 20, LIGHT_RADIUS * Math.max(0.35, c.life));
+			punchLight(c.x, c.y - 20, LIGHT_RADIUS * Math.max(0.45, c.life));
 		});
 		// The shamash lights whatever it's over, resting or carried.
-		punchLight(shamash.x, shamash.y - 20, LIGHT_RADIUS * 1.05);
+		punchLight(shamash.x, shamash.y - 20, LIGHT_RADIUS * 1.15);
+
+		maskCtx.globalCompositeOperation = 'lighter';
+		candles.forEach(c => {
+			if (c.state !== 'lit') return;
+			glow(c.x, c.y - 20, LIGHT_RADIUS * 0.6 * Math.max(0.45, c.life));
+		});
+		glow(shamash.x, shamash.y - 20, LIGHT_RADIUS * 0.65);
+
 		maskCtx.globalCompositeOperation = 'source-over';
+	}
+
+	function relight(c, dx) {
+		c.state = 'lit';
+		c.life = 1;
+		c.smoke = [];
+		c.dieAt = Math.min(1, scrollPercent + 0.2 + Math.random()*0.6);
+		shamash.tiltTarget = dx > 0 ? 0.9 : -0.9;
+		setTimeout(() => { shamash.tiltTarget = 0; }, 260);
 	}
 
 	function tryRelight() {
 		candles.forEach(c => {
 			if (c.state !== 'extinguished') return;
 			const dx = c.x - shamash.x, dy = (c.y - 20) - shamash.y;
-			if (Math.sqrt(dx*dx + dy*dy) < RELIGHT_RADIUS) {
-				shamash.tiltTarget = dx > 0 ? 0.9 : -0.9;
-				c.state = 'lit';
-				c.life = 1;
-				c.smoke = [];
-				c.dieAt = Math.min(1, scrollPercent + 0.2 + Math.random()*0.6);
-				setTimeout(() => { shamash.tiltTarget = 0; }, 260);
-			}
+			if (Math.sqrt(dx*dx + dy*dy) < RELIGHT_RADIUS) relight(c, dx);
 		});
+	}
+
+	// Tap-to-send: on touch, dragging the shamash precisely is unreliable
+	// (the page wants to scroll, a thumb covers the target). Tapping an
+	// extinguished candle instead sends the shamash on a slow, watchable
+	// flight to it, tilts to relight it, pauses, then flies home.
+	function sendShamashTo(candle) {
+		if (shamash.dragging || shamash.mode !== 'idle') return;
+		shamash.mode = 'flying-out';
+		shamash.targetCandle = candle;
+		shamash.flightFrom = { x: shamash.x, y: shamash.y };
+		shamash.flightTo = { x: candle.x, y: candle.y - 20 };
+		shamash.flightStart = performance.now();
+	}
+
+	function easeInOut(t) { return t < 0.5 ? 2*t*t : 1 - Math.pow(-2*t+2, 2)/2; }
+
+	function updateShamashFlight() {
+		if (shamash.dragging) { shamash.mode = 'idle'; return; }
+		if (shamash.mode !== 'flying-out' && shamash.mode !== 'flying-back') return;
+
+		const t = Math.min(1, (performance.now() - shamash.flightStart) / FLIGHT_MS);
+		const e = easeInOut(t);
+		shamash.x = shamash.flightFrom.x + (shamash.flightTo.x - shamash.flightFrom.x) * e;
+		shamash.y = shamash.flightFrom.y + (shamash.flightTo.y - shamash.flightFrom.y) * e;
+		if (t < 1) return;
+
+		if (shamash.mode === 'flying-out') {
+			const c = shamash.targetCandle;
+			if (c && c.state === 'extinguished') relight(c, c.x - shamash.x);
+			setTimeout(() => {
+				shamash.mode = 'flying-back';
+				shamash.flightFrom = { x: shamash.x, y: shamash.y };
+				shamash.flightTo = { x: shamash.homeX, y: shamash.homeY };
+				shamash.flightStart = performance.now();
+			}, 700);
+			shamash.mode = 'paused';
+		} else {
+			shamash.mode = 'idle';
+		}
 	}
 
 	const handle = document.createElement('div');
@@ -575,16 +649,35 @@
 		handle.style.cursor = 'grab';
 	}));
 
+	const candleHandles = candles.map(c => {
+		const el = document.createElement('div');
+		el.className = 'veil-candle-handle';
+		el.title = 'Tap to send the shamash over to relight this candle';
+		Object.assign(el.style, {
+			position: 'fixed', width: '48px', height: '76px',
+			transform: 'translate(-50%, -60%)', zIndex: '101',
+			pointerEvents: 'auto', cursor: 'pointer', touchAction: 'manipulation', background: 'transparent'
+		});
+		el.addEventListener('click', () => { if (c.state === 'extinguished') sendShamashTo(c); });
+		document.body.appendChild(el);
+		return el;
+	});
+	function positionCandleHandles() {
+		candles.forEach((c, i) => { candleHandles[i].style.left = c.x + 'px'; candleHandles[i].style.top = c.y + 'px'; });
+	}
+
 	let time = 0;
 
 	function animate() {
 		ctx.clearRect(0, 0, width, height);
 		time++;
 		candles.forEach(c => c.update(time));
+		updateShamashFlight();
 		drawMask();
 		candles.forEach(c => c.draw(time));
 		drawShamashBody();
 		positionHandle();
+		positionCandleHandles();
 		requestAnimationFrame(animate);
 	}
 	animate();
