@@ -127,3 +127,34 @@
   --milky:      rgba(216,224,236,0.05);
   --vignette:   radial-gradient(ellipse at center, transparent 35%, rgba(0,0,0,0.5) 100%);
 }
+
+/* VEIL OF BABEL — black glass, gold + blood-red, candlelight and a
+   splitting double helix. The only theme with a living background:
+   see app/veil-theme.js for the DNA/candle canvas layers it mounts. */
+[data-theme="veil"] {
+  --bg-deep:    #030303;
+  --bg:         #050505;
+  --bg-soft:    #0c0c0e;
+  --panel:      rgba(12,12,14,0.65);
+  --panel-edge: rgba(197,160,89,0.18);
+  --ink:        #e6e6e6;
+  --ink-dim:    #999999;
+  --ink-mute:   #555555;
+  --accent:     #c5a059;          /* gold */
+  --accent-2:   #dbbd82;          /* gold hi */
+  --accent-3:   #4aa8a8;          /* teal */
+  --warm:       #a67041;
+  --warm-dk:    #2a0e0e;
+  --warm-lt:    #d8b98a;
+  --hot:        #8a1c1c;          /* blood red */
+  --earth-land: #1a1214;
+  --earth-line: #c5a059;
+  --earth-grid: rgba(197,160,89,0.09);
+  --earth-bg:   #030303;
+  --node-color: #dbbd82;
+  --node-glow:  #ffe6a8;
+  --star:       #f0e0c0;
+  --constellation: rgba(74,168,168,0.38);
+  --milky:      rgba(197,160,89,0.04);
+  --vignette:   radial-gradient(ellipse at center, transparent 25%, rgba(0,0,0,0.75) 100%);
+}

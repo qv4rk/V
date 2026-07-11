@@ -148,6 +148,7 @@
         <div class="theme-swatch"    data-theme="imperial" style="--col:#e8c46a" title="Imperial Gold"></div>
         <div class="theme-swatch"    data-theme="night"    style="--col:#88c0d0" title="Night Plate"></div>
       </div>
+      <button class="home-link" id="share-btn" style="width:100%;text-align:left;background:transparent;border:none;cursor:pointer;font:inherit;">⤴ Share this view</button>
     </nav>
   </div>
 
@@ -188,6 +189,7 @@
   <div class="timebar" id="timebar" style="display:none">
     <div class="date-line">
       <div class="date" id="date-display">—</div>
+      <input type="date" id="date-input" class="date-input" title="Jump to any exact date — a birthday, an eclipse, anything" min="0100-01-01" max="9999-12-31">
       <div class="meta"><span class="span-pill">RANGE −3000 / +1000</span></div>
     </div>
     <input type="range" id="date-slider" min="-3026" max="1000" value="0" step="1">
@@ -256,9 +258,6 @@
 <script>
   // Boot
   const _atlas = new MA.ManifoldAtlas();
-
-  // Initial date set
-  _atlas.setDate(MA.jd(new Date('1839-06-15')));   // Opium War era — in range of the loaded nodes
 
   // ── Timebar visibility: hide in atrium, show in atlas/sky ──
   const tb = document.getElementById('timebar');

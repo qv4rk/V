@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Standard Nobody Else Meets · Manifold Atlas</title>
+<meta name="description" content="A demand for an unbroken, name-by-name maternal chain across two millennia sounds rigorous — until you notice the tradition making the demand doesn't apply that standard to itself anywhere else. Working the mtDNA dating and the mathematics of pedigree collapse honestly leads somewhere stranger than either side wants: not a proof, but a doubt the tradition already has a name for.">
+<meta name="robots" content="index, follow">
+<meta property="og:title" content="The Standard Nobody Else Meets">
+<meta property="og:description" content="A demand for an unbroken, name-by-name maternal chain across two millennia sounds rigorous — until you notice the tradition making the demand doesn't apply that standard to itself anywhere else. Working the mtDNA dating and the mathematics of pedigree collapse honestly leads somewhere stranger than either side wants: not a proof, but a doubt the tradition already has a name for.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://feisttech.com/articles/n06.html">
+<meta property="article:published_time" content="0110-01-01">
+<link rel="canonical" href="https://feisttech.com/articles/n06.html">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #050810;
+  --bg2: #0a0c14;
+  --primary: #00e5ff;
+  --gold: #c9a84c;
+  --gold-dim: rgba(201,168,76,.3);
+  --ink: #ddd5c0;
+  --ink-dim: #8a7e6a;
+  --ink-mute: #3a3228;
+  --border: rgba(0,229,255,.12);
+  --panel: rgba(5,8,16,.96);
+  --reading-bg: rgba(0,229,255,.07);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 18px;
+  line-height: 1.8;
+  min-height: 100vh;
+}
+
+/* ── Nav ── */
+.site-nav {
+  position: sticky; top: 0; z-index: 50;
+  background: rgba(5,8,16,.97);
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: 10px 18px;
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+}
+.nav-btn {
+  font-family: 'Space Mono', monospace;
+  font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--ink-dim); text-decoration: none;
+  background: transparent; border: 1px solid var(--gold-dim);
+  padding: 6px 12px; border-radius: 2px; cursor: pointer;
+  transition: color .2s, border-color .2s;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.nav-btn:hover { color: var(--gold); border-color: var(--gold); }
+.nav-btn.atlas { border-color: rgba(0,229,255,.25); color: rgba(0,229,255,.7); }
+.nav-btn.atlas:hover { border-color: var(--primary); color: var(--primary); }
+.nav-spacer { flex: 1; min-width: 8px; }
+
+/* ── Language switcher ── */
+.lang-switch {
+  max-width: 720px; margin: 0 auto; padding: 10px 1.5rem 0;
+  font-family: 'Space Mono', monospace;
+  font-size: 9px; letter-spacing: 1px; text-transform: uppercase;
+  color: var(--ink-mute);
+}
+.lang-switch a.lang-link { color: var(--gold); text-decoration: none; }
+.lang-switch a.lang-link:hover { text-decoration: underline; }
+.lang-switch .lang-current { color: var(--ink); }
+
+/* ── Article ── */
+article {
+  max-width: 720px; margin: 0 auto;
+  padding: 3rem 1.5rem 120px;
+}
+.article-meta {
+  font-family: 'Space Mono', monospace;
+  font-size: 8px; letter-spacing: 3px; text-transform: uppercase;
+  color: var(--ink-dim); margin-bottom: 1rem;
+}
+.article-tag {
+  display: inline-block;
+  background: rgba(201,168,76,.08);
+  border: 1px solid var(--gold-dim);
+  color: var(--gold); padding: 2px 8px; border-radius: 2px;
+  font-size: 8px; letter-spacing: 2px; text-transform: uppercase;
+  font-family: 'Space Mono', monospace;
+  margin: 0 4px 4px 0;
+}
+.article-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(1.7rem, 5vw, 2.5rem);
+  font-weight: 600; line-height: 1.25;
+  color: var(--ink); margin: 1rem 0 1.5rem;
+}
+.article-excerpt {
+  font-size: 1.1rem; line-height: 1.65;
+  color: var(--ink-dim); font-style: italic;
+  border-left: 3px solid rgba(201,168,76,.4);
+  padding: 0.5rem 1rem; margin-bottom: 2.5rem;
+}
+/* Content paragraphs — clickable for TTS */
+#article-content p {
+  margin-bottom: 1.4em;
+  padding: 0.35rem 0.6rem;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background .15s;
+  border-left: 3px solid transparent;
+}
+#article-content p:hover { background: rgba(255,255,255,.025); }
+#article-content p.reading {
+  background: var(--reading-bg);
+  border-left-color: var(--primary);
+}
+#article-content h1, #article-content h2, #article-content h3 {
+  font-family: 'Cormorant Garamond', serif;
+  margin: 2.5rem 0 0.75rem; font-weight: 600; line-height: 1.3;
+}
+#article-content h1 { font-size: 1.9rem; }
+#article-content h2 { font-size: 1.5rem; color: var(--gold); }
+#article-content h3 { font-size: 1.2rem; color: var(--ink-dim); }
+#article-content strong { color: var(--ink); }
+#article-content em { font-style: italic; color: var(--ink-dim); }
+#article-content code { font-family: 'Space Mono', monospace; font-size: .82em; background: rgba(255,255,255,.05); padding: 1px 5px; border-radius: 2px; }
+
+/* ── Works Cited (outside main, never TTS-read) ── */
+#works-cited {
+  max-width: 720px; margin: 0 auto 6rem;
+  padding: 2rem 1.5rem;
+  border-top: 1px solid rgba(255,255,255,.06);
+}
+#works-cited h2 {
+  font-family: 'Space Mono', monospace;
+  font-size: 8px; letter-spacing: 3px; text-transform: uppercase;
+  color: var(--ink-mute); margin-bottom: 1.25rem;
+}
+#works-cited ol { padding-left: 1.5rem; }
+#works-cited li { font-size: .82rem; color: var(--ink-dim); line-height: 1.7; margin-bottom: .75rem; }
+
+/* ── TTS Bar ── */
+#tts-bar {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+  background: rgba(5,8,16,.98);
+  border-top: 1px solid var(--border);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  padding: 10px 14px;
+  display: flex; align-items: center; gap: 6px; flex-wrap: nowrap;
+  padding-bottom: max(10px, env(safe-area-inset-bottom, 0px));
+}
+.tts-btn {
+  background: transparent;
+  border: 1px solid var(--gold-dim);
+  color: var(--ink-dim);
+  width: 36px; height: 36px;
+  border-radius: 2px; cursor: pointer; font-size: 13px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: color .2s, border-color .2s, background .2s;
+}
+.tts-btn:hover { color: var(--gold); border-color: var(--gold); }
+.tts-btn.active { background: rgba(201,168,76,.12); color: var(--gold); border-color: var(--gold); }
+#tts-progress {
+  flex: 1; font-family: 'Space Mono', monospace;
+  font-size: 8px; letter-spacing: 1px; color: var(--ink-dim);
+  text-align: center; min-width: 50px;
+}
+#tts-voice, #tts-speed {
+  background: var(--bg2); color: var(--ink-dim);
+  border: 1px solid var(--gold-dim); border-radius: 2px;
+  font-family: 'Space Mono', monospace; font-size: 8px;
+  letter-spacing: 1px; padding: 4px 6px; cursor: pointer;
+}
+#tts-voice { max-width: 130px; flex: 1 1 80px; }
+#tts-speed { width: 68px; flex-shrink: 0; }
+
+/* ── RSVP Overlay ── */
+#rsvp-overlay {
+  display: none;
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(2,4,10,.98);
+  flex-direction: column; align-items: center; justify-content: center;
+  gap: 1.5rem; padding: 2rem;
+}
+#rsvp-word {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(2.5rem, 10vw, 5rem);
+  color: var(--ink); text-align: center; min-height: 1.3em;
+  letter-spacing: -.01em;
+}
+#rsvp-wpm-display {
+  font-family: 'Space Mono', monospace;
+  font-size: 9px; letter-spacing: 3px; color: var(--ink-dim);
+}
+.rsvp-btns { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+
+/* Mobile */
+@media (max-width: 600px) {
+  .site-nav { padding: 8px 12px; }
+  article { padding: 2rem 1rem 110px; }
+  #tts-bar { flex-wrap: wrap; }
+  #tts-voice { display: none; }
+}
+</style>
+</head>
+<body>
+
+<nav class="site-nav">
+  <a href="../index.html" class="nav-btn">← Home</a>
+  <a href="../Manifold%20Atlas.html#node-n06" class="nav-btn atlas">◆ View on Atlas</a>
+  <span class="nav-spacer"></span>
+  <button class="nav-btn" onclick="launchRSVP()">⚡ RSVP</button>
+</nav>
+
+<article>
+  <div class="article-meta">ESSAY — GENEALOGY & HALAKHIC ARGUMENT · 01 JAN 110 BCE · Idumea & the Judean Hills, Hasmonean Judea</div>
+  <span class="article-tag">genealogy</span><span class="article-tag">mtdna</span><span class="article-tag">haplogroup</span><span class="article-tag">halakha</span><span class="article-tag">hasmonean</span><span class="article-tag">idumea</span><span class="article-tag">conversion</span><span class="article-tag">chazakah</span><span class="article-tag">safek</span><span class="article-tag">pedigree-collapse</span>
+  <h1 class="article-title">The Standard Nobody Else Meets</h1>
+  <blockquote class="article-excerpt">A demand for an unbroken, name-by-name maternal chain across two millennia sounds rigorous — until you notice the tradition making the demand doesn't apply that standard to itself anywhere else. Working the mtDNA dating and the mathematics of pedigree collapse honestly leads somewhere stranger than either side wants: not a proof, but a doubt the tradition already has a name for.</blockquote>
+  <div id="article-content">
+<p>The demand is always phrased the same way, and it is always phrased as though it were reasonable. Prove it. Not "make a plausible case" — prove it. Produce the unbroken chain, name by name, mother to daughter, back through the centuries, or the claim doesn't hold. Genetics gives you a pool, not a pedigree. A shared haplogroup is not a family tree. Until you can hand over a name from 110 BCE and trace her daughter, and her daughter's daughter, in an unbroken line to a specific woman standing in front of you today, you have a correlation, not a lineage, and correlations don't confer status.</p>
+<p>It sounds rigorous. It sounds like the kind of standard a serious tradition would insist on before it let anyone claim something as consequential as covenantal status. The trouble is that the tradition making this argument doesn't apply this standard anywhere else. Not once. Not to its own members.</p>
+<p>Halakha runs on presumption. It has always run on presumption. A person's status — married or unmarried, permitted or forbidden, Jewish or not — is routinely settled by <em>chazakah</em>, the presumption that an established state of affairs continues until evidence shows otherwise, and by <em>rov</em>, the principle that where a mixture or a doubtful case exists, the halakhic conclusion follows the majority. Nobody produces a notarized chain of custody to establish that the milk in front of them is kosher, or that the woman they're marrying was born to a Jewish mother, or that the meat came from an animal slaughtered correctly. The system runs on documented majorities and maintained presumptions constantly, because a system that required unbroken, individually verified proof for every status claim would grind its own daily life to a halt. Demanding an unbroken, name-by-name maternal chain across two thousand years — a standard so strict that almost no Jew currently alive could meet it either, if it were actually applied — isn't rigor. It's a standard invented for the occasion and abandoned the moment it's inconvenient.</p>
+<p>So let's actually look at what the standard would need to hold, and where it collapses on contact with its own terms.</p>
+<hr />
+<p>Mitochondrial DNA does not recombine. It passes from mother to child, all children, but only the daughters carry it forward. A son who has children of his own passes nothing of his mother's mtDNA down the line — his children inherit their own mother's mitochondria instead. This means that if a woman today carries a specific mtDNA sub-clade, her line back to the woman in whom that mutation first arose is, by definition, unbroken. No skips. No sons anywhere in that specific chain, because a son would have ended it. This is not an inference. It's what the molecule does.</p>
+<p>Here is where the confident version of the argument overreaches. A broad haplogroup — say, "J" — might trace to a mutation twenty thousand years old. Two people sharing it share an Ice Age grandmother and nothing more specific than that. Finer sub-clades, dated by mutation-rate modeling, narrow the window — sometimes to a span of a few centuries. But "a few centuries" is not the same claim as "the Hasmonean conversion, specifically." A sub-clade dated to roughly 2,000 to 3,000 years ago sits inside a thousand-year window. John Hyrcanus's Idumean policy ran for perhaps a decade, around 110 to 104 BCE. Even generously extended out to the end of Hasmonean rule in 63 BCE, that's a slice of less than a century sitting inside a thousand-year band. Do the arithmetic honestly and the Hasmonean window occupies less than a tenth of the range. A woman whose line dates to that window is, on pure time-proportion alone, more likely to predate the conversion by centuries than to have lived through it.</p>
+<p>That matters, because "more likely to predate it" doesn't kill the argument — it redirects it. If the founding woman of an unbroken chain lived before the Hasmonean policy, then by the nature of an unbroken chain, someone in that same line was necessarily alive during the conversion window too, because the chain occupies every point in time between its origin and today without a gap. The chain doesn't skip decades. So the question was never really "did the founding mother live during the conversion" — it's "was whoever occupied that link in the chain, at that specific moment, actually swept up in it." And that's a harder question than a date can answer, because a haplogroup carries no record of geography or religion. The mutation that defines H, or J, or T, arose long before Hyrcanus was born, and it was carried by Idumeans and by their unconverted Nabatean and Canaanite neighbors alike, by Judeans who never needed converting because they were already Jewish, by Samaritans, by Phoenician traders on the coast. A shared sub-clade tells you two people's grandmothers eventually meet somewhere in the ancient Levant. It does not tell you whether that meeting point stood inside Hyrcanus's decree or three villages outside it.</p>
+<p>There's a move available here that looks like a shortcut and is actually a trade. If a woman in the chain was already Jewish by birth before any Hasmonean policy touched her, then whether she counts is moot — status was already established at that link regardless of conversion, and irrevocable status, once acquired, doesn't care by what door it came in. <em>Yisrael af al pi she-chata, Yisrael hu</em> — an Israelite, even having sinned, remains one — says nothing about the mechanism of entry, only about what happens after entry. So "she might have already been Jewish" doesn't weaken the argument. It widens it. You no longer need the Hasmonean conversion specifically; you need only some point, anywhere across the whole span of Israelite presence in the region, where a woman in an unbroken line held Jewish status. That's a far easier claim to sustain, and it doesn't require Josephus, Tel Maresha, or a single date from the 2nd century BCE.</p>
+<p>Except it closes exactly one door on the way through: Idumeans. Edomite genealogy is distinct from Israel by definition, going back to the founding narrative itself — not a Jewish population living apart, but a different one entirely, which is precisely why Hyrcanus's decree existed at all. For a woman in an Idumean line, "she might already have been Jewish" isn't available as an escape hatch, because the category itself says she wasn't. So the shortcut rescues the broad claim about ancient Israelite maternal survival in general. It cannot rescue the narrower, more specific claim this argument actually leads with — the one about Idumeans and Itureans in particular — because that population is defined by not already having the status the shortcut needs.</p>
+<hr />
+<p>What was the interior actually like, demographically, in the relevant span? Here the honest answer sits somewhere between silence and overreach. No published study pins a precise figure — not 90%, not any other single number — on what fraction of the inland Southern Levant was Jewish or Judaized after the Hasmonean expansions. What exists is Magen Broshi's demographic reconstruction of Roman-era Western Palestine, putting the total population near a million, with Jewish numbers in the high hundreds of thousands by the Herodian period; archaeological proxies — the sudden density of ritual baths, the Judean chalkstone vessels, the decline of pig bones in faunal assemblages — concentrated in the inland highlands rather than the Hellenized coastal cities; and scholarly description of Galilee and the Judean interior as Jewish-dominated in the century following annexation. Strip out the coastal strip — Gaza, Ashkelon, Caesarea, the Greek-oriented port cities that stayed demographically and culturally distinct — and what's left is consistent with a strong, likely large, majority in the highland core. Consistent with. Not proof of a number. The distance between "a defensible qualitative inference from converging archaeological and demographic evidence" and "90% of the region converted" is real, and it should stay marked, not smoothed over because the rounder number is more satisfying to say out loud.</p>
+<p>Loosen the claim from a specific conversion event to a broad, centuries-long Jewish-majority interior, though, and something useful happens: the dating problem gets easier, not harder. A woman doesn't need to fall inside an eighty-year policy window anymore. She needs only to fall somewhere inside a span of Jewish demographic dominance that ran for generations before the Hasmoneans and generations after them. That's a claim the mtDNA dating uncertainty can actually support, where the narrow Hasmonean-specific version couldn't. The argument gets more honest by getting less specific, and it gets stronger for the same reason.</p>
+<hr />
+<p>Now the part that should be said before anyone else gets to say it, because saying it first changes what it does.</p>
+<p>There is a mathematical result — Joseph Chang's 1999 paper, later refined by Rohde, Olson, and Chang in 2004 — called the Identical Ancestors Point. If lineage is allowed to run through both sons and daughters, not strictly mother to daughter, then going back only a modest number of generations produces more ancestor slots than the historical population could ever have filled. Pedigree collapse follows: nearly everyone who left any descendants at all in a given region a thousand years ago is an ancestor of nearly everyone in that region today, by many redundant paths. For interconnected regional populations, the point where literally everyone alive converges as a common ancestor of everyone living now can be startlingly recent — plausibly within the last one to two thousand years for a place with the continuous, dense habitation the Levant has had.</p>
+<p>If that's true, it should make every reader stop and question what they thought was settled — including the reader who came to this essay already agreeing with its thesis. Because the same math that would make a Hasmonean-era Idumean convert an ancestor of a modern Palestinian family makes the Roman legionary who crucified rebels outside Jerusalem an ancestor of that same family, with equal mathematical force. It makes the Crusader who burned Jerusalem in 1099 an ancestor too. It makes everyone who left descendants in the region an ancestor of nearly everyone descended from the region, indiscriminately — the convert and the conqueror in the same tree, no more privileged relationship to one than the other. A result that proves your chosen ancestor also proves fifty ancestors you would never choose to claim isn't really proving your ancestor specifically. It's proving something else, larger and stranger, that happens to include her.</p>
+<p>This should not be buried in a footnote or left for a critic to find. It should be said first, said plainly, and said by the person whose argument it complicates most — not because the argument is being abandoned, but because naming your own weakest point before anyone else can is the only way to make the rest of what you're saying trustworthy. What survives past the self-inflicted wound isn't the narrow claim it looked like walking in — I am specifically descended from this convert, therefore this status is mine. What survives is bigger and less comfortable: everyone in this land is entangled with everyone who ever lived and had children in it, the executed and the executioner both, in the same collapsing tree. That's not a weaker thesis. It's a stranger one, and it doesn't need a single unprovable haplogroup to carry it, because it was never really about one woman to begin with.</p>
+<hr />
+<p>Here is what actually follows from all of this, and it is smaller than either side wants it to be, which is usually the sign that it's the true version.</p>
+<p>Halakha itself already has a category for exactly this situation — a chain plausible enough to take seriously, specific enough to matter, and too separated by time to verify by any method the tradition currently accepts as proof. It's called <em>safek</em>, genuine doubt, and the tradition's answer to genuine doubt is not dismissal. For cases involving long-separated lineage and uncertain status, some authorities have pointed toward a formal, precautionary process — <em>giyur l'chumra</em>, conversion undertaken out of stringency, addressing the doubt directly rather than either declaring it settled or waving it away. That is what the tradition does with uncertainty it takes seriously. It does not do nothing. It does not demand impossible proof and then treat the absence of that proof as a verdict.</p>
+<p>So to the man who already holds every premise this argument needs and has held them his whole life — who already believes, without argument from anyone, that covenantal status once acquired cannot be revoked, that it passes strictly through the mother, that a people forced from their land or from their faith by circumstance does not thereby forfeit what was established at birth — the question isn't whether to accept something foreign. It's whether to apply what he already believes consistently, in both directions, instead of only in the one that costs him nothing.</p>
+<p>He does not have to declare any specific woman before him halakhically Jewish. Nobody is asking that, and the tradition itself, through <em>safek</em>, says that declaration isn't his to make casually in either direction. But he cannot, from inside his own belief, declare the category <em>empty</em> — cannot assume with certainty that the population in front of him carries none of these lines, none, as though that were a settled premise requiring no defense. His own axioms don't grant him that certainty. They grant him doubt, the same doubt his own tradition has a name for and a process to address, and doubt is not the same thing as dismissal. He does not get to demand an unbroken, name-by-name chain from an argument he disagrees with while resting his own disagreement on an assumption that could never survive the same demand. That is the whole of it. Not a claim on his covenant. A claim on his consistency.</p>
+  </div>
+</article>
+
+<!-- Works Cited — outside <article>, skipped by TTS engine -->
+<section id="works-cited">
+<h2>Works Cited</h2><ol><li>Joseph T. Chang, &quot;Recent common ancestors of all present-day individuals,&quot; Advances in Applied Probability, 1999.</li><li>D. L. T. Rohde, S. Olson, J. T. Chang, &quot;Modelling the recent common ancestry of all living humans,&quot; Nature, 2004.</li><li>Magen Broshi, demographic reconstruction of Roman-era Western Palestine.</li></ol>
+</section>
+
+<!-- RSVP Overlay -->
+<div id="rsvp-overlay">
+  <div id="rsvp-word">—</div>
+  <div id="rsvp-wpm-display">300 WPM</div>
+  <div class="rsvp-btns">
+    <button class="nav-btn" onclick="rsvpAdjust(-50)">− Slower</button>
+    <button class="nav-btn" id="rsvp-toggle" onclick="rsvpToggle()">⏸ Pause</button>
+    <button class="nav-btn" onclick="stopRSVP()">✕ Close</button>
+    <button class="nav-btn" onclick="rsvpAdjust(50)">+ Faster</button>
+  </div>
+</div>
+
+<!-- TTS Control Bar -->
+<div id="tts-bar">
+  <button class="tts-btn" onclick="ttsStep(-1)" title="Previous">◀</button>
+  <button class="tts-btn" id="tts-play" onclick="ttsToggle()" title="Play">▶</button>
+  <button class="tts-btn" onclick="ttsStep(1)" title="Next">▶▶</button>
+  <button class="tts-btn" onclick="ttsStop()" title="Stop">■</button>
+  <div id="tts-progress">— / —</div>
+  <select id="tts-voice" onchange="voiceChange()"></select>
+  <select id="tts-speed" onchange="speedChange()">
+    <option value="0.7">0.7×</option>
+    <option value="0.85">0.85×</option>
+    <option value="1.0" selected>1.0×</option>
+    <option value="1.2">1.2×</option>
+    <option value="1.5">1.5×</option>
+    <option value="1.8">1.8×</option>
+  </select>
+</div>
+
+<script>
+// ── TTS (Web Speech API — no CDN) ────────────────────────────────────────────
+const segs = Array.from(document.querySelectorAll('#article-content p'));
+let cur = -1, playing = false, rate = 1.0, voice = null;
+const synth = window.speechSynthesis;
+
+segs.forEach((p, i) => p.addEventListener('click', () => { ttsStop(); _speakFrom(i); }));
+
+function _loadVoices() {
+  if (!synth) return;
+  const vs = synth.getVoices().filter(v => v.lang && v.lang.startsWith('en'));
+  const sel = document.getElementById('tts-voice');
+  sel.innerHTML = '';
+  vs.forEach((v, i) => {
+    const o = document.createElement('option');
+    o.value = i;
+    o.textContent = v.name.slice(0, 22);
+    if (v.default) { o.selected = true; voice = v; }
+    sel.appendChild(o);
+  });
+  if (!voice && vs.length) voice = vs[0];
+}
+if (synth) { synth.onvoiceschanged = _loadVoices; _loadVoices(); }
+
+function voiceChange() {
+  const vs = synth.getVoices().filter(v => v.lang && v.lang.startsWith('en'));
+  voice = vs[+document.getElementById('tts-voice').value] || null;
+}
+function speedChange() { rate = +document.getElementById('tts-speed').value; }
+
+function _speakFrom(idx) {
+  if (!synth || idx < 0 || idx >= segs.length) return;
+  synth.cancel();
+  cur = idx; playing = true;
+  _say(idx);
+}
+
+function _say(idx) {
+  if (!synth || !playing || idx < 0 || idx >= segs.length) return;
+  cur = idx;
+  _highlight(idx);
+  const u = new SpeechSynthesisUtterance(segs[idx].innerText);
+  u.rate = rate;
+  if (voice) u.voice = voice;
+  u.onend = () => { if (playing && idx + 1 < segs.length) _say(idx + 1); else { playing = false; _ui(); } };
+  u.onerror = () => { playing = false; _ui(); };
+  synth.speak(u);
+  _ui();
+}
+
+function ttsToggle() {
+  if (!synth) return;
+  if (playing) { synth.pause(); playing = false; }
+  else if (synth.paused) { synth.resume(); playing = true; }
+  else _speakFrom(cur < 0 ? 0 : cur);
+  _ui();
+}
+
+function ttsStep(dir) {
+  const next = Math.max(0, Math.min(segs.length - 1, (cur < 0 ? 0 : cur) + dir));
+  ttsStop(); _speakFrom(next);
+}
+
+function ttsStop() {
+  if (synth) synth.cancel();
+  playing = false; cur = -1;
+  segs.forEach(s => s.classList.remove('reading'));
+  _ui();
+}
+
+function _highlight(idx) {
+  segs.forEach((s, i) => s.classList.toggle('reading', i === idx));
+  if (segs[idx]) segs[idx].scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function _ui() {
+  document.getElementById('tts-play').textContent = (playing && !synth.paused) ? '⏸' : '▶';
+  document.getElementById('tts-play').classList.toggle('active', playing);
+  document.getElementById('tts-progress').textContent =
+    (cur < 0 ? '—' : cur + 1) + ' / ' + segs.length;
+}
+
+// ── RSVP ─────────────────────────────────────────────────────────────────────
+let rWords = [], rIdx = 0, rTimer = null, rRunning = false, rWpm = 300;
+
+function launchRSVP() {
+  ttsStop();
+  rWords = segs.map(p => p.innerText).join(' ').split(/\s+/).filter(Boolean);
+  rIdx = 0; rRunning = true;
+  document.getElementById('rsvp-overlay').style.display = 'flex';
+  document.getElementById('rsvp-toggle').textContent = '⏸ Pause';
+  _rTick();
+}
+
+function _rTick() {
+  if (!rRunning) return;
+  if (rIdx >= rWords.length) { stopRSVP(); return; }
+  document.getElementById('rsvp-word').textContent = rWords[rIdx++];
+  rTimer = setTimeout(_rTick, 60000 / rWpm);
+}
+
+function rsvpToggle() {
+  rRunning = !rRunning;
+  document.getElementById('rsvp-toggle').textContent = rRunning ? '⏸ Pause' : '▶ Resume';
+  if (rRunning) _rTick();
+}
+
+function stopRSVP() {
+  rRunning = false; clearTimeout(rTimer);
+  document.getElementById('rsvp-overlay').style.display = 'none';
+}
+
+function rsvpAdjust(delta) {
+  rWpm = Math.max(60, Math.min(1200, rWpm + delta));
+  document.getElementById('rsvp-wpm-display').textContent = rWpm + ' WPM';
+}
+
+// Init
+_ui();
+</script>
+</body>
+</html>
