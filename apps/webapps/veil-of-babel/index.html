@@ -461,7 +461,7 @@
 			ctx.save();
 			ctx.translate(this.x, this.y);
 			ctx.scale(scale, scale);
-			ctx.strokeStyle = `rgba(255,255,255, ${0.08 * this.z})`;
+			ctx.strokeStyle = `rgba(255,255,255, ${Math.max(0.4, 0.14 * this.z)})`;
 			ctx.lineWidth = 2;
 			ctx.strokeRect(-6, 0, 12, 60);
 
@@ -509,14 +509,16 @@
 	function punchLight(x, y, radius) {
 		const g = maskCtx.createRadialGradient(x, y, 0, x, y, radius);
 		g.addColorStop(0, 'rgba(0,0,0,1)');
-		g.addColorStop(0.65, 'rgba(0,0,0,0.9)');
+		g.addColorStop(0.8, 'rgba(0,0,0,1)');
 		g.addColorStop(1, 'rgba(0,0,0,0)');
 		maskCtx.beginPath(); maskCtx.fillStyle = g; maskCtx.arc(x, y, radius, 0, Math.PI*2); maskCtx.fill();
 	}
 
 	function drawMask() {
+		// Dim by default, not pitch black. A lit candle clears its whole
+		// radius to full brightness, not just a pinpoint at its center.
 		maskCtx.globalCompositeOperation = 'source-over';
-		maskCtx.fillStyle = 'rgba(2,2,2,0.94)';
+		maskCtx.fillStyle = 'rgba(4,4,6,0.82)';
 		maskCtx.fillRect(0, 0, width, height);
 
 		maskCtx.globalCompositeOperation = 'destination-out';

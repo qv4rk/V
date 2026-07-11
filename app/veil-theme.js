@@ -115,14 +115,17 @@
   }
 
   // Flame is deliberately subtle -- it's a light SOURCE, not the thing
-  // meant to hold your eye. The text it reveals is.
+  // meant to hold your eye. The text it reveals is. The wax outline is
+  // the opposite: it has to stay clearly visible even when the candle
+  // is small/distant and even after it's gone out, or there's no way to
+  // tell where to bring the shamash.
   function drawCandleBody(ctx, x, y, z, flameStrength, tilt) {
     var scale = z * 0.6;
     ctx.save();
     ctx.translate(x, y);
     if (tilt) ctx.rotate(tilt);
     ctx.scale(scale, scale);
-    ctx.strokeStyle = 'rgba(255,255,255,' + (0.08 * z) + ')';
+    ctx.strokeStyle = 'rgba(255,255,255,' + Math.max(0.4, 0.14 * z) + ')';
     ctx.lineWidth = 2;
     ctx.strokeRect(-6, 0, 12, 60);
     if (flameStrength > 0) {
@@ -154,7 +157,7 @@
   function punchLight(ctx, x, y, radius) {
     var g = ctx.createRadialGradient(x, y, 0, x, y, radius);
     g.addColorStop(0, 'rgba(0,0,0,1)');
-    g.addColorStop(0.65, 'rgba(0,0,0,0.9)');
+    g.addColorStop(0.8, 'rgba(0,0,0,1)');
     g.addColorStop(1, 'rgba(0,0,0,0)');
     ctx.beginPath();
     ctx.fillStyle = g;
@@ -163,8 +166,11 @@
   }
 
   function drawMask() {
+    // Dim by default, not pitch black -- you should be able to tell
+    // there's a page here. A lit candle clears its whole radius back to
+    // full brightness (comfortable reading), not just a pinpoint center.
     maskCtx.globalCompositeOperation = 'source-over';
-    maskCtx.fillStyle = 'rgba(2,2,2,0.94)';
+    maskCtx.fillStyle = 'rgba(4,4,6,0.82)';
     maskCtx.fillRect(0, 0, width, height);
 
     maskCtx.globalCompositeOperation = 'destination-out';
