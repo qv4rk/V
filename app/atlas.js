@@ -145,10 +145,84 @@ window.MA = window.MA || {};
       this._wireHistory();
       this._wireTimebar();
       this._wireKeyboard();
+      this._wireShare();
+      this._restoreFromURL();
       this.loadArticles();
       this._loop = this._loop.bind(this);
       requestAnimationFrame(this._loop);
       window.addEventListener('resize', () => this._onResize());
+      // Catches state that changes continuously (playback, dragging the
+      // globe, zooming the sky) without hammering replaceState on every
+      // animation frame — explicit calls elsewhere cover the discrete
+      // actions (opening a node, changing view, jumping to a date) instantly.
+      setInterval(() => this._syncURL(), 1000);
+    }
+
+    /* ── Shareable URL: date, view, earth rotation, sky zoom, and
+       (via the existing #node-id hash) any open dossier. Always
+       replaceState, never pushState, so this never creates its own
+       back-button entries — openArticle()/closeArticle() already own
+       that via the reading-trail history. ── */
+    _syncURL() {
+      const params = new URLSearchParams();
+      params.set('jd', this.jd.toFixed(2));
+      params.set('view', this.view);
+      if (this.earth && Array.isArray(this.earth.rotation)) {
+        params.set('rot', this.earth.rotation.slice(0, 2).map(n => n.toFixed(1)).join(','));
+      }
+      if (this.sky && typeof this.sky.zoom === 'number') {
+        params.set('zoom', this.sky.zoom.toFixed(2));
+      }
+      const url = window.location.pathname + '?' + params.toString() + window.location.hash;
+      history.replaceState(history.state, '', url);
+    }
+
+    _restoreFromURL() {
+      const params = new URLSearchParams(window.location.search);
+      if (params.has('jd')) {
+        const jd = parseFloat(params.get('jd'));
+        if (!isNaN(jd)) this.setDate(jd);
+      } else {
+        // No shared date to restore -- still run setDate() once so the
+        // HUD/dial/timebar actually populate with today's date instead
+        // of sitting on their placeholder "-" until the user interacts.
+        this.setDate(this.jd);
+      }
+      if (params.has('view')) {
+        const v = params.get('view');
+        if (v === 'atrium' || v === 'atlas' || v === 'sky') this.setView(v);
+      }
+      if (params.has('rot') && this.earth && Array.isArray(this.earth.rotation)) {
+        const parts = params.get('rot').split(',').map(Number);
+        if (parts.length === 2 && parts.every(n => !isNaN(n))) {
+          this.earth.rotation[0] = parts[0];
+          this.earth.rotation[1] = parts[1];
+        }
+      }
+      if (params.has('zoom') && this.sky) {
+        const z = parseFloat(params.get('zoom'));
+        if (!isNaN(z)) this.sky.zoom = Math.max(0.45, Math.min(4, z));
+      }
+    }
+
+    /* ── Share ── */
+    _wireShare() {
+      const btn = document.getElementById('share-btn');
+      if (!btn) return;
+      btn.addEventListener('click', () => {
+        this._syncURL();
+        const data = { title: document.title, text: 'Manifold Atlas — ' + MA.fmtDate(this.jd), url: location.href };
+        if (navigator.share) {
+          navigator.share(data).catch(() => {});
+        } else if (navigator.clipboard) {
+          navigator.clipboard.writeText(location.href).then(() => {
+            const original = btn.textContent;
+            btn.textContent = '✓ Link copied';
+            setTimeout(() => { btn.textContent = original; }, 1800);
+          });
+        }
+        this._closeNavMenu();
+      });
     }
 
     /* ── Theme ── */
@@ -402,6 +476,21 @@ window.MA = window.MA || {};
         document.getElementById('play-btn').textContent = '▶';
       });
 
+      // Exact date entry — a birthday, an eclipse, any specific day —
+      // instead of only being able to scrub the slider to a whole year.
+      // <input type="date"> can't represent BCE years, so it covers the
+      // CE range; the slider still reaches the deep past.
+      const dateInput = document.getElementById('date-input');
+      if (dateInput) {
+        dateInput.addEventListener('change', () => {
+          if (!dateInput.value) return;
+          const [y, m, d] = dateInput.value.split('-').map(Number);
+          this.setDate(MA.ymdToJd(y, m, d));
+          this.playing = false;
+          document.getElementById('play-btn').textContent = '▶';
+        });
+      }
+
       document.getElementById('play-btn').addEventListener('click', () => {
         this.playing = !this.playing;
         document.getElementById('play-btn').textContent = this.playing ? '⏸' : '▶';
@@ -621,6 +710,16 @@ window.MA = window.MA || {};
       const d = MA.dj(jdt);
       const yr = d.getUTCFullYear();
       slider.value = yr - 2026;
+      const dateInput = document.getElementById('date-input');
+      if (dateInput && yr >= 1) {
+        // <input type="date"> only accepts CE years — leave it blank for
+        // BCE dates rather than showing something wrong.
+        const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
+        const dd = String(d.getUTCDate()).padStart(2, '0');
+        dateInput.value = `${String(yr).padStart(4, '0')}-${mm}-${dd}`;
+      } else if (dateInput) {
+        dateInput.value = '';
+      }
       document.getElementById('date-display').textContent = MA.fmtDate(jdt);
       document.getElementById('hud-date').textContent = MA.fmtDate(jdt);
       document.getElementById('hud-year').textContent = yr < 1 ? `${Math.abs(yr-1)} BCE` : `${yr} CE`;
