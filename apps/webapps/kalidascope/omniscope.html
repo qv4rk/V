@@ -739,11 +739,21 @@
 	   redrawing each with the config it was originally drawn under --
 	   same idea as the ghost/loop systems in the other three apps, just
 	   backed by the one shared strokeHistory array instead of a second
-	   parallel data structure. */
+	   parallel data structure.
+
+	   Each point's "prev" comes from the SAME shared lastUV that live
+	   drawing uses (see TOUCH / COLOR IDENTITY above), not from the
+	   previous point within its own stroke -- so a replayed multi-finger
+	   session reproduces the same "line jumps to whoever drew most
+	   recently" wire-mesh look live drawing has, instead of each finger
+	   replaying as an isolated clean path. Previously this used a
+	   per-stroke prev, which is why an imported multi-finger piece came
+	   out as separate untangled lines instead of the crisscrossed mesh
+	   the same gesture produces live. */
 	let ghostFlatIdx = 0, ghostDir = 1;
 	function flattenHistory() {
 		const flat = [];
-		strokeHistory.forEach(s => s.points.forEach((pt, i) => flat.push({ pt, prev: i > 0 ? s.points[i - 1] : null, colorIndex: s.colorIndex, cfg: s.cfg })));
+		strokeHistory.forEach(s => s.points.forEach(pt => flat.push({ pt, colorIndex: s.colorIndex, cfg: s.cfg })));
 		return flat;
 	}
 	function stepGhostReplay() {
@@ -757,7 +767,8 @@
 				const sName = name.includes("Shadow") ? name : name + " Shadow";
 				return { pal: p, shadowPal: colorPalettes[sName] || p };
 			})();
-			getCenters().forEach(c => renderPass(ctx, c.x, c.y, entry.pt, entry.prev, entry.colorIndex, pal, shadowPal, entry.cfg));
+			getCenters().forEach(c => renderPass(ctx, c.x, c.y, entry.pt, lastUV, entry.colorIndex, pal, shadowPal, entry.cfg));
+			lastUV = entry.pt;
 			ghostFlatIdx += ghostDir;
 			if (ghostFlatIdx >= flat.length - 1) { ghostFlatIdx = flat.length - 1; ghostDir = -1; }
 			else if (ghostFlatIdx <= 0) { ghostFlatIdx = 0; ghostDir = 1; }
@@ -858,15 +869,20 @@
 				default: return [{ x: baseW / 2, y: baseH / 2 }];
 			}
 		}
+		// Shared across every stroke in the export, same as live drawing
+		// and ghost replay -- a point's "prev" is whoever drew last,
+		// not its own stroke's previous point (see the note above
+		// flattenHistory()).
+		let exportLastUV = null;
 		strokeHistory.forEach(s => {
 			const name = paletteNames[s.cfg.paletteIndex] || paletteNames[0];
 			const pal = colorPalettes[name];
 			const sName = name.includes("Shadow") ? name : name + " Shadow";
 			const shadowPal = colorPalettes[sName] || pal;
 			const centers = centersFor(s.cfg.gridMode);
-			s.points.forEach((pt, i) => {
-				const prev = i > 0 ? s.points[i - 1] : null;
-				centers.forEach(c => renderPass(octx, c.x, c.y, pt, prev, s.colorIndex, pal, shadowPal, s.cfg));
+			s.points.forEach(pt => {
+				centers.forEach(c => renderPass(octx, c.x, c.y, pt, exportLastUV, s.colorIndex, pal, shadowPal, s.cfg));
+				exportLastUV = pt;
 			});
 		});
 
