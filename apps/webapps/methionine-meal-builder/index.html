@@ -23,47 +23,48 @@
   </div>
   <div class="header-right">
     <span id="themeSwitcherMount"></span>
+    <button id="btnRecipes" type="button" class="secondary">📖 Recipes</button>
     <button id="btnAbout" type="button" class="secondary">Why methionine?</button>
     <button id="btnHelp" type="button">? Help</button>
-    <span class="badge">v1.1</span>
+    <span class="badge">v1.2</span>
   </div>
 </header>
 
 <main>
-  <div class="grid-2">
 
-    <div>
-      <div class="panel">
-        <div class="panel-title">Search USDA FoodData Central</div>
-
-        <div class="quickAddRow" id="quickAddRow"></div>
-
-        <div id="scanReader" class="scanReader" hidden></div>
-
-        <div class="searchRow">
-          <input type="text" id="searchInput" placeholder="e.g. 6 oz chicken breast, 100g broccoli">
-          <button id="btnMic" type="button" class="iconBtn" title="Voice input">🎤</button>
-          <button id="btnScan" type="button" class="iconBtn" title="Scan barcode">📷</button>
-          <button id="btnSearch" type="button">Search</button>
-        </div>
-        <div class="searchStatus" id="searchStatus"></div>
-        <div class="addTargetRow">
-          Adding to:
-          <label><input type="radio" name="addTarget" value="log" checked> Today's Log</label>
-          <label><input type="radio" name="addTarget" value="shopping"> Shopping List</label>
-        </div>
-        <div class="resultsList" id="resultsList"></div>
-        <div class="hint">Methionine is only directly measured for whole/basic foods (Foundation &amp; SR Legacy). When it's missing, this tool estimates it from protein content: 1.5% for produce, 2.5% for canned goods, 3.5% for meat — clearly marked as an estimate.</div>
+  <div class="panel totalsPanel">
+    <div class="panel-title">Today's Methionine Total</div>
+    <div class="metBudget">
+      <div class="metBudget-row">
+        <label for="dailyCapInput">Daily methionine cap (mg):</label>
+        <input type="number" id="dailyCapInput" value="150" min="10" step="10">
       </div>
+      <div class="metBar"><div class="metBar-fill" id="metBarFill" style="width:0%"></div></div>
+      <div class="metBar-label" id="metBarLabel">0 / 150 mg</div>
     </div>
+  </div>
 
-    <div>
-      <div class="panel">
-        <div class="panel-title">Recipes</div>
-        <div class="recipeList" id="recipeList"></div>
-      </div>
+  <div class="panel">
+    <div class="panel-title">Search USDA FoodData Central</div>
+
+    <div class="quickAddRow" id="quickAddRow"></div>
+
+    <div id="scanReader" class="scanReader" hidden></div>
+
+    <div class="searchRow">
+      <input type="text" id="searchInput" placeholder="e.g. 6 oz chicken breast, 100g broccoli">
+      <button id="btnMic" type="button" class="iconBtn" title="Voice input">🎤</button>
+      <button id="btnScan" type="button" class="iconBtn" title="Scan barcode">📷</button>
+      <button id="btnSearch" type="button">Search</button>
     </div>
-
+    <div class="searchStatus" id="searchStatus"></div>
+    <div class="addTargetRow">
+      Adding to:
+      <label><input type="radio" name="addTarget" value="log" checked> Today's Log</label>
+      <label><input type="radio" name="addTarget" value="shopping"> Shopping List</label>
+    </div>
+    <div class="resultsList" id="resultsList"></div>
+    <div class="hint">Methionine is only directly lab-measured for whole/basic foods (Foundation &amp; SR Legacy, marked <span class="dtBadge good" style="vertical-align:1px;">good</span>). Name-brand results are grouped separately because manufacturer numbers vary by product and are often estimated from protein content instead of measured — tap "Source" on any result to see USDA's original record.</div>
   </div>
 
   <div class="tabs" id="listTabs">
@@ -81,15 +82,6 @@
         <tr><td>Total</td><td></td><td id="logTotalCal">0</td><td id="logTotalMet">0</td><td></td></tr>
       </tfoot>
     </table>
-
-    <div class="metBudget">
-      <div class="metBudget-row">
-        <label for="dailyCapInput">Daily methionine cap (mg):</label>
-        <input type="number" id="dailyCapInput" value="150" min="10" step="10">
-      </div>
-      <div class="metBar"><div class="metBar-fill" id="metBarFill" style="width:0%"></div></div>
-      <div class="metBar-label" id="metBarLabel">0 / 150 mg</div>
-    </div>
 
     <div class="addRow" style="margin-top:0.9rem;">
       <button id="btnSaveRecipe" type="button" class="secondary">Save Log as Recipe</button>
@@ -116,6 +108,18 @@
   </div>
 </main>
 
+<!-- Recipes drawer -->
+<div class="drawerOverlay" id="recipeDrawerOverlay" hidden>
+  <div class="drawer" role="dialog" aria-labelledby="recipeDrawerTitle">
+    <div class="drawer-header">
+      <h2 id="recipeDrawerTitle">Recipes</h2>
+      <button type="button" class="closeModal" id="btnCloseRecipes">Close</button>
+    </div>
+    <div class="hint" style="margin-bottom:0.6rem;">Tap "Load" to add a recipe's ingredients to Today's Log. Loading doesn't happen automatically — nothing here is added until you tap it.</div>
+    <div class="recipeList" id="recipeList"></div>
+  </div>
+</div>
+
 <!-- Full nutrition profile modal -->
 <div class="modalOverlay" id="profileOverlay" hidden>
   <div class="modal" role="dialog" aria-labelledby="profileTitle">
@@ -134,14 +138,14 @@
     <p>You'll see amounts written like "646 mg" — <strong>mg is short for milligram</strong>, just a small unit of weight, the same way an inch is a unit of length. You don't need to do any math; the tool adds everything up for you.</p>
     <p><strong>Step 1 — Look up a food.</strong> Type it into the search box (e.g. "chicken breast," or "6 oz chicken breast" if you know the amount), tap the microphone (🎤) and say it out loud, or tap the camera (📷) to scan a package barcode. There's also a row of buttons above the search box for common foods — just tap one instead of typing.</p>
     <p><strong>Step 2 — Add it to your list.</strong> Each search result has a box for how many grams and a <strong>+ Add</strong> button. Change the amount to match your portion, then tap Add. The "Adding to" choice above the search box sends it either to Today's Log (what you're eating now) or the Shopping List (planning ahead — doesn't count toward your total).</p>
-    <p><strong>Step 3 — Read your total.</strong> Scroll to Today's Log to see a running total in mg and a bar showing how close you are to whatever daily amount your doctor has given you (type it into the box there — this tool doesn't suggest a number itself). Tap the small × next to any item to remove it.</p>
+    <p><strong>Step 3 — Read your total.</strong> The bar at the very top of the page always shows your running total in mg against whatever daily amount your doctor has given you (type it into the box there — this tool doesn't suggest a number itself). Tap the small × next to any item in Today's Log to remove it.</p>
 
     <h3>Search details</h3>
     <p>Search pulls live results from the USDA FoodData Central database. Voice input (🎤) and barcode scanning (📷, using your camera) work the same way as typing — whatever text they produce gets searched.</p>
     <h3>Why some foods show "estimated" methionine</h3>
     <p>USDA only publishes full amino-acid breakdowns for "Foundation Foods" and "SR Legacy" entries — whole, basic foods like raw chicken breast, lentils, or rice. "Branded" packaged foods only carry label macros, because manufacturers aren't required to disclose amino acid content. When methionine isn't in the data, this tool estimates it as a share of the food's protein content — 1.5% for produce, 2.5% for canned goods, 3.5% for meat — and always marks it as an estimate (in italics, with a ~), never presenting it as measured.</p>
     <h3>Log, Shopping List &amp; recipes</h3>
-    <p>The log tracks what you've eaten against your daily methionine cap; the shopping list is just a running total for planning ahead, with a print button. Save the current log as a named recipe to reuse later — everything is stored locally in your own browser, nowhere else.</p>
+    <p>The log tracks what you've eaten against your daily methionine cap; the shopping list is just a running total for planning ahead, with a print button. Tap "📖 Recipes" in the top-right to open the recipe drawer — nothing there gets added to your log until you tap "Load" on a specific recipe. Save the current log as a named recipe to reuse later — everything is stored locally in your own browser, nowhere else.</p>
     <button type="button" class="closeModal" id="btnCloseHelp">Close</button>
   </div>
 </div>
