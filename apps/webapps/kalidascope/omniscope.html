@@ -910,6 +910,13 @@
 		document.getElementById('param1Val').textContent = CONFIG.param1;
 		document.getElementById('param2').value = CONFIG.param2;
 		document.getElementById('param2Val').textContent = CONFIG.param2;
+		document.getElementById('fadeRate').value = CONFIG.fadeRate;
+		document.getElementById('fadeRateVal').textContent = CONFIG.fadeRate === 0 ? '0 (permanent)' : CONFIG.fadeRate.toFixed(3);
+		document.getElementById('rotation').value = CONFIG.rotation;
+		document.getElementById('rotationVal').textContent = CONFIG.rotation + '°';
+		const ghostBtn = document.getElementById('ghostToggle');
+		ghostBtn.textContent = `Ghost Replay: ${CONFIG.ghostReplay ? 'ON' : 'OFF'}`;
+		ghostBtn.classList.toggle('active', CONFIG.ghostReplay);
 	}
 
 	document.getElementById('importJsonBtn').addEventListener('click', () => document.getElementById('importInput').click());
@@ -925,7 +932,7 @@
 					while (historyPointCount > CONFIG.maxHistory && strokeHistory.length > 1) { historyPointCount -= strokeHistory[0].points.length; strokeHistory.shift(); }
 				}
 				if (data.meta && data.meta.config) {
-					['mirrors', 'gridMode', 'patternIndex', 'paletteIndex', 'thickness', 'stampSize', 'param1', 'param2'].forEach(k => {
+					['mirrors', 'gridMode', 'patternIndex', 'paletteIndex', 'thickness', 'stampSize', 'param1', 'param2', 'fadeRate', 'rotation', 'ghostReplay'].forEach(k => {
 						if (data.meta.config[k] !== undefined) CONFIG[k] = data.meta.config[k];
 					});
 					syncUIFromConfig();
