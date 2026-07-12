@@ -529,6 +529,67 @@
 				ctx.strokeStyle = pal[(colorIndex + 1) % pal.length];
 				ctx.lineWidth = p.thickness * 0.5; ctx.stroke();
 			}
+		},
+		{
+			// Heading-oriented vehicle silhouette: body + hood + trunk +
+			// two spiral-tread tires, all rotated to face the direction of
+			// travel (computed from prev->current), so it reads correctly
+			// whether driving, turning, or reversing. Kept general-purpose
+			// (param1/param2 control body proportions) rather than a
+			// single hardcoded shape.
+			name: "Perspective Car", spacing: 1.4,
+			draw: (ctx, x, y, size, pal, p, prev, colorIndex) => {
+				if (!prev) return;
+				const color = pal[colorIndex % pal.length];
+				const heading = Math.atan2(y - prev.y, x - prev.x);
+				const bodyLen = size * (1.2 + p.param1 * 1.2);
+				const bodyWid = size * (0.45 + p.param2 * 0.35);
+				const hoodLen = bodyLen * 0.22, trunkLen = bodyLen * 0.18;
+				ctx.save();
+				ctx.translate(x, y);
+				ctx.rotate(heading);
+				ctx.strokeStyle = color;
+				ctx.lineWidth = p.thickness;
+				ctx.strokeRect(-bodyLen / 2, -bodyWid / 2, bodyLen, bodyWid);
+				ctx.strokeRect(bodyLen / 2, -bodyWid * 0.32, hoodLen, bodyWid * 0.64);
+				ctx.strokeRect(-bodyLen / 2 - trunkLen, -bodyWid * 0.28, trunkLen, bodyWid * 0.56);
+				[[-bodyLen * 0.26, bodyWid * 0.5], [bodyLen * 0.26, bodyWid * 0.5]].forEach(([tx, ty]) => {
+					const tr = size * 0.16;
+					ctx.beginPath(); ctx.arc(tx, ty, tr, 0, Math.PI * 2); ctx.stroke();
+					ctx.beginPath();
+					for (let a = 0; a < Math.PI * 4; a += 0.3) {
+						const r = (tr / (Math.PI * 4)) * a;
+						const px = tx + r * Math.cos(a), py = ty + r * Math.sin(a);
+						if (a === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+					}
+					ctx.stroke();
+				});
+				ctx.restore();
+			}
+		},
+		{
+			// Overlapping scalloped arcs -- shingle/scale texture, useful
+			// for terrain, roofs, or reptilian surfaces. A terrain stroke
+			// with many stamped points builds up a continuous scaled
+			// ground plane.
+			name: "Scale Terrain", spacing: 0.5,
+			draw: (ctx, x, y, size, pal, p, prev, colorIndex) => {
+				const color = pal[colorIndex % pal.length];
+				ctx.strokeStyle = color; ctx.lineWidth = p.thickness;
+				const rows = 2 + Math.round(p.param1 * 2);
+				const cols = 4 + Math.round(p.param2 * 3);
+				const scaleR = size * 0.16;
+				for (let r = 0; r < rows; r++) {
+					const rowOffset = (r % 2) ? scaleR : 0;
+					for (let c = 0; c < cols; c++) {
+						const sx = x + (c - cols / 2) * scaleR * 1.7 + rowOffset;
+						const sy = y + r * scaleR * 1.1;
+						ctx.beginPath();
+						ctx.arc(sx, sy, scaleR, Math.PI * 0.12, Math.PI * 0.88);
+						ctx.stroke();
+					}
+				}
+			}
 		}
 	];
 
