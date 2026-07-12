@@ -33,7 +33,7 @@
 <main>
 
   <div class="panel totalsPanel">
-    <div class="panel-title">Today's Methionine Total</div>
+    <div class="panel-title">Today's Totals</div>
     <div class="metBudget">
       <div class="metBudget-row">
         <label for="dailyCapInput">Daily methionine cap (mg):</label>
@@ -41,6 +41,14 @@
       </div>
       <div class="metBar"><div class="metBar-fill" id="metBarFill" style="width:0%"></div></div>
       <div class="metBar-label" id="metBarLabel">0 / 150 mg</div>
+    </div>
+    <div class="metBudget proBudget">
+      <div class="metBudget-row">
+        <label for="dailyProteinFloorInput">Daily protein floor (g):</label>
+        <input type="number" id="dailyProteinFloorInput" value="50" min="0" step="5">
+      </div>
+      <div class="metBar"><div class="metBar-fill proBar-fill" id="proBarFill" style="width:0%"></div></div>
+      <div class="metBar-label" id="proBarLabel">0 / 50 g</div>
     </div>
   </div>
 
@@ -75,11 +83,11 @@
   <div class="panel tab-panel active" id="tab-log">
     <table class="logTable" id="logTable">
       <thead>
-        <tr><th>Food</th><th>g</th><th>Cal</th><th>Met (mg)</th><th></th></tr>
+        <tr><th>Food</th><th>g</th><th>Cal</th><th>Pro (g)</th><th>Met (mg)</th><th></th></tr>
       </thead>
       <tbody id="logBody"></tbody>
       <tfoot>
-        <tr><td>Total</td><td></td><td id="logTotalCal">0</td><td id="logTotalMet">0</td><td></td></tr>
+        <tr><td>Total</td><td></td><td id="logTotalCal">0</td><td id="logTotalPro">0</td><td id="logTotalMet">0</td><td></td></tr>
       </tfoot>
     </table>
 
@@ -93,11 +101,11 @@
   <div class="panel tab-panel" id="tab-shopping">
     <table class="logTable" id="shoppingTable">
       <thead>
-        <tr><th>Food</th><th>g</th><th>Cal</th><th>Met (mg)</th><th></th></tr>
+        <tr><th>Food</th><th>g</th><th>Cal</th><th>Pro (g)</th><th>Met (mg)</th><th></th></tr>
       </thead>
       <tbody id="shoppingBody"></tbody>
       <tfoot>
-        <tr><td>Total</td><td></td><td id="shoppingTotalCal">0</td><td id="shoppingTotalMet">0</td><td></td></tr>
+        <tr><td>Total</td><td></td><td id="shoppingTotalCal">0</td><td id="shoppingTotalPro">0</td><td id="shoppingTotalMet">0</td><td></td></tr>
       </tfoot>
     </table>
     <div class="addRow" style="margin-top:0.9rem;">

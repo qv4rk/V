@@ -4,6 +4,7 @@
   const LOG_KEY = 'feisttech_met_daily_log';
   const SHOPPING_KEY = 'feisttech_met_shopping_list';
   const CAP_KEY = 'feisttech_met_daily_cap';
+  const PROTEIN_FLOOR_KEY = 'feisttech_met_protein_floor';
   const RECIPES_KEY = 'feisttech_met_recipes';
 
   const COMMON_FOODS = [
@@ -13,6 +14,7 @@
 
   let lists = { log: [], shopping: [] };
   let dailyCap = 150;
+  let proteinFloor = 50;
   let activeTab = 'log';
   let html5Qrcode = null;
 
@@ -21,12 +23,17 @@
     try { lists.shopping = JSON.parse(localStorage.getItem(SHOPPING_KEY) || '[]'); } catch (e) { lists.shopping = []; }
     const cap = parseFloat(localStorage.getItem(CAP_KEY));
     if (!isNaN(cap) && cap > 0) dailyCap = cap;
+    const floor = parseFloat(localStorage.getItem(PROTEIN_FLOOR_KEY));
+    if (!isNaN(floor) && floor >= 0) proteinFloor = floor;
   }
   function saveList(target) {
     try { localStorage.setItem(target === 'log' ? LOG_KEY : SHOPPING_KEY, JSON.stringify(lists[target])); } catch (e) {}
   }
   function saveCap() {
     try { localStorage.setItem(CAP_KEY, String(dailyCap)); } catch (e) {}
+  }
+  function saveProteinFloor() {
+    try { localStorage.setItem(PROTEIN_FLOOR_KEY, String(proteinFloor)); } catch (e) {}
   }
   function getCustomRecipes() {
     try { return JSON.parse(localStorage.getItem(RECIPES_KEY) || '[]'); } catch (e) { return []; }
@@ -208,6 +215,7 @@
       name: food.description,
       grams,
       cal: n.energy !== null ? n.energy * scale : null,
+      protein: n.protein !== null ? n.protein * scale : null,
       fat: n.fat !== null ? n.fat * scale : null,
       carbs: n.carbs !== null ? n.carbs * scale : null,
       met,
@@ -227,22 +235,27 @@
   function renderList(target) {
     const bodyId = target === 'log' ? 'logBody' : 'shoppingBody';
     const totalCalId = target === 'log' ? 'logTotalCal' : 'shoppingTotalCal';
+    const totalProId = target === 'log' ? 'logTotalPro' : 'shoppingTotalPro';
     const totalMetId = target === 'log' ? 'logTotalMet' : 'shoppingTotalMet';
     const body = document.getElementById(bodyId);
     body.innerHTML = '';
-    let totalCal = 0, totalMet = 0, hasUnknownMet = false, hasEstimated = false;
+    let totalCal = 0, totalPro = 0, totalMet = 0, hasUnknownMet = false, hasEstimated = false, hasUnknownPro = false;
     lists[target].forEach(item => {
       totalCal += item.cal || 0;
+      if (item.protein !== null && item.protein !== undefined) totalPro += item.protein;
+      else hasUnknownPro = true;
       if (item.met !== null) { totalMet += item.met; if (item.metEstimated) hasEstimated = true; }
       else hasUnknownMet = true;
       const tr = document.createElement('tr');
       const metCell = item.met === null
         ? '<span class="metUnknown">?</span>'
         : (item.metEstimated ? '<span class="metEstimated">~' + fmt(item.met) + '</span>' : fmt(item.met));
+      const proCell = (item.protein === null || item.protein === undefined) ? '<span class="metUnknown">?</span>' : fmt(item.protein);
       tr.innerHTML = `
         <td>${item.name}</td>
         <td>${item.grams !== null ? fmt(item.grams) : '—'}</td>
         <td>${fmt(item.cal)}</td>
+        <td>${proCell}</td>
         <td>${metCell}</td>
         <td><button class="rmBtn" title="Remove">×</button></td>
       `;
@@ -250,6 +263,7 @@
       body.appendChild(tr);
     });
     document.getElementById(totalCalId).textContent = fmt(totalCal);
+    document.getElementById(totalProId).textContent = fmt(totalPro) + (hasUnknownPro ? '+' : '');
     document.getElementById(totalMetId).textContent = fmt(totalMet) + (hasUnknownMet ? '+' : '') + (hasEstimated ? '*' : '');
 
     if (target === 'log') {
@@ -261,6 +275,14 @@
       if (hasEstimated) label += ' (* includes estimated values)';
       if (hasUnknownMet) label += ' (some items have no methionine data)';
       document.getElementById('metBarLabel').textContent = label;
+
+      const proPct = proteinFloor > 0 ? Math.min(100, (totalPro / proteinFloor) * 100) : 100;
+      const proFill = document.getElementById('proBarFill');
+      proFill.style.width = proPct + '%';
+      proFill.classList.toggle('met', totalPro >= proteinFloor);
+      let proLabel = `${fmt(totalPro)} / ${fmt(proteinFloor)} g`;
+      if (hasUnknownPro) proLabel += ' (some items have no protein data)';
+      document.getElementById('proBarLabel').textContent = proLabel;
     }
   }
 
@@ -339,9 +361,18 @@
     }
   }
 
+  // Seed-recipe ingredient arrays only carry verified [name, grams, cal,
+  // fat, carbs, met] data — no protein figure was collected for them, so
+  // rather than reporting a fabricated 0g we surface the total as unknown
+  // ('—') the moment any ingredient is missing a real protein value.
   function computeItemTotals(items) {
-    const t = { cal: 0, fat: 0, carbs: 0, met: 0 };
-    (items || []).forEach(i => { t.cal += i[2] || 0; t.fat += i[3] || 0; t.carbs += i[4] || 0; t.met += i[5] || 0; });
+    const t = { cal: 0, fat: 0, carbs: 0, met: 0, pro: 0 };
+    let missingPro = false;
+    (items || []).forEach(i => {
+      t.cal += i[2] || 0; t.fat += i[3] || 0; t.carbs += i[4] || 0; t.met += i[5] || 0;
+      if (i[6] === undefined || i[6] === null) missingPro = true; else t.pro += i[6];
+    });
+    if (missingPro) t.pro = null;
     return t;
   }
 
@@ -350,7 +381,7 @@
     row.className = 'recipeItem';
     row.innerHTML = `
       <span class="name">${name}<br><span class="meta">${ingredientNames.join(', ')}</span></span>
-      <span class="meta">${fmt(totals.cal)} cal · ${fmt(totals.met)} mg met</span>
+      <span class="meta">${fmt(totals.cal)} cal · ${fmt(totals.pro)} g pro · ${fmt(totals.met)} mg met</span>
     `;
     const loadBtn = document.createElement('button');
     loadBtn.type = 'button';
@@ -363,13 +394,14 @@
   function loadSeedRecipe(recipe) {
     if (recipe.items) {
       recipe.items.forEach(i => {
-        lists.log.push({ id: newId('item'), name: i[0], grams: i[1], cal: i[2], fat: i[3], carbs: i[4], met: i[5], metEstimated: false, fullNutrients: [] });
+        lists.log.push({ id: newId('item'), name: i[0], grams: i[1], cal: i[2], fat: i[3], carbs: i[4], met: i[5], protein: i[6] !== undefined ? i[6] : null, metEstimated: false, fullNutrients: [] });
       });
     } else if (recipe.totals) {
       lists.log.push({
         id: newId('item'),
         name: recipe.name + ' (' + recipe.ingredients.join(' + ') + ')',
         grams: null, cal: recipe.totals.cal, fat: recipe.totals.fat, carbs: recipe.totals.carbs, met: recipe.totals.met,
+        protein: recipe.totals.pro !== undefined ? recipe.totals.pro : null,
         metEstimated: false, fullNutrients: []
       });
     }
@@ -379,7 +411,7 @@
 
   function loadCustomRecipe(recipe) {
     recipe.items.forEach(i => {
-      lists.log.push({ id: newId('item'), name: i.name, grams: i.grams, cal: i.cal, fat: i.fat, carbs: i.carbs, met: i.met, metEstimated: !!i.metEstimated, fullNutrients: [] });
+      lists.log.push({ id: newId('item'), name: i.name, grams: i.grams, cal: i.cal, fat: i.fat, carbs: i.carbs, met: i.met, protein: i.protein !== undefined ? i.protein : null, metEstimated: !!i.metEstimated, fullNutrients: [] });
     });
     saveList('log');
     renderList('log');
@@ -389,13 +421,18 @@
     if (lists.log.length === 0) { alert('Add at least one item to today\'s log before saving it as a recipe.'); return; }
     const name = prompt('Name this recipe:', '');
     if (!name || !name.trim()) return;
-    const totals = { cal: 0, fat: 0, carbs: 0, met: 0 };
-    lists.log.forEach(i => { totals.cal += i.cal || 0; totals.fat += i.fat || 0; totals.carbs += i.carbs || 0; totals.met += i.met || 0; });
+    const totals = { cal: 0, fat: 0, carbs: 0, met: 0, pro: 0 };
+    let missingPro = false;
+    lists.log.forEach(i => {
+      totals.cal += i.cal || 0; totals.fat += i.fat || 0; totals.carbs += i.carbs || 0; totals.met += i.met || 0;
+      if (i.protein === null || i.protein === undefined) missingPro = true; else totals.pro += i.protein;
+    });
+    if (missingPro) totals.pro = null;
     const recipe = {
       id: 'recipe_' + Date.now().toString(36),
       name: name.trim(),
       createdAt: Date.now(),
-      items: lists.log.map(i => ({ name: i.name, grams: i.grams, cal: i.cal, fat: i.fat, carbs: i.carbs, met: i.met, metEstimated: i.metEstimated })),
+      items: lists.log.map(i => ({ name: i.name, grams: i.grams, cal: i.cal, fat: i.fat, carbs: i.carbs, met: i.met, protein: i.protein, metEstimated: i.metEstimated })),
       totals
     };
     const recipes = getCustomRecipes();
@@ -504,6 +541,7 @@
     wireScan();
 
     document.getElementById('dailyCapInput').value = dailyCap;
+    document.getElementById('dailyProteinFloorInput').value = proteinFloor;
     document.getElementById('btnSearch').addEventListener('click', runSearch);
     document.getElementById('searchInput').addEventListener('keydown', e => {
       if (e.key === 'Enter') runSearch();
@@ -511,6 +549,10 @@
     document.getElementById('dailyCapInput').addEventListener('input', e => {
       const v = parseFloat(e.target.value);
       if (!isNaN(v) && v > 0) { dailyCap = v; saveCap(); renderList('log'); }
+    });
+    document.getElementById('dailyProteinFloorInput').addEventListener('input', e => {
+      const v = parseFloat(e.target.value);
+      if (!isNaN(v) && v >= 0) { proteinFloor = v; saveProteinFloor(); renderList('log'); }
     });
     document.getElementById('btnSaveRecipe').addEventListener('click', saveCurrentLogAsRecipe);
     document.getElementById('btnClearLog').addEventListener('click', () => {
