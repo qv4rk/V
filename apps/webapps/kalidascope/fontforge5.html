@@ -297,10 +297,20 @@
             return [{x: w/2, y: h/2}];
         }
 
+        // Shared "last drawn position" across every touch/ghost -- same
+        // mechanic as the Symmetry Painting app's lastUV (deliberate, not a
+        // bug: a line-connecting pattern's "prev" point is whoever drew
+        // most recently, not tracked per-touch). Previously coreRenderPass
+        // passed a hardcoded null here on every call, which meant any
+        // pattern that checks prev (only "Standard Line" does) could never
+        // draw anything at all, in live drawing, ghost replay, or export.
+        let lastDrawUV = null;
+
         // Abstraction for High-Res Vector Export compatibility
         function coreRenderPass(ctxTarget, activePtsMap, uv, pat, pal, config, c, isStaticPass = false) {
             const step = (Math.PI * 2) / config.mirrors;
             const loops = Math.ceil(config.mirrors);
+            const prevUV = lastDrawUV;
 
             ctxTarget.save();
             ctxTarget.translate(c.x, c.y);
@@ -309,10 +319,10 @@
                 ctxTarget.save();
                 ctxTarget.rotate(i * step);
                 if(config.mirrors >= 2 && i%2===1) ctxTarget.scale(1, -1);
-                
+
                 // 1. Geometric Pattern (e.g. Spiral)
                 if(CLUSTER.mode === 'off' || CLUSTER.mode === 'set') {
-                    pat.draw(ctxTarget, uv.x - c.x, uv.y - c.y, config.size, 10, pal, config, null);
+                    pat.draw(ctxTarget, uv.x - c.x, uv.y - c.y, config.size, 10, pal, config, prevUV ? { x: prevUV.x - c.x, y: prevUV.y - c.y } : null);
                 }
 
                 // 2. TRUE ANGEL-HAIR GLITCH MESH (Per-Wall Color Assignment)
@@ -347,6 +357,7 @@
                 ctxTarget.restore();
             }
             ctxTarget.restore();
+            lastDrawUV = uv;
         }
 
         function drawOnTexture(uv) {
@@ -802,6 +813,23 @@
                     map.forEach((pts, id) => {
                         gestureStack.push({ points: pts, curIdx: 0, dir: 1, id: "import_"+id, groupId: 99, isCluster: false, clusterOffsets: [] });
                     });
+                    // Previously the imported file's own config was silently
+                    // dropped -- only the points made it in, so a session
+                    // couldn't restore the mirrors/pattern/fade/etc it was
+                    // authored under (same gap fixed in Omniscope's importer).
+                    if (data.metadata && data.metadata.config) {
+                        ['mirrors', 'gridMode', 'patternIdx', 'paletteIdx', 'thickness', 'size', 'param1', 'param2', 'fadeRate', 'glitchMode'].forEach(k => {
+                            if (data.metadata.config[k] !== undefined) CONFIG[k] = data.metadata.config[k];
+                        });
+                    }
+                    // CLUSTER isn't part of CONFIG, so it needs its own key --
+                    // it also gates whether PATTERNS[].draw() fires at all
+                    // (coreRenderPass only calls it when CLUSTER.mode is
+                    // 'off' or 'set'), so without this an imported file using
+                    // a normal pattern would import cleanly but draw nothing.
+                    if (data.metadata && data.metadata.clusterMode) {
+                        CLUSTER.mode = data.metadata.clusterMode;
+                    }
                     showHUD("Imported", `${data.telemetry.length} Vectors Restored`);
                 } catch(err) { showHUD("Import Failed", "Corrupt JSON"); }
             };
