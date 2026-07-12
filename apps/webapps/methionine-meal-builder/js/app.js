@@ -101,40 +101,99 @@
     return checked ? checked.value : 'log';
   }
 
+  // Lab-measured (Foundation/SR Legacy) and survey entries come first;
+  // name-brand products vary by manufacturer and are often estimated, not
+  // measured, so they're ranked last and grouped behind a toggle instead
+  // of interleaved with the generic results people actually search for.
+  function sourceRank(food) {
+    if (food.dataType === 'Foundation') return 0;
+    if (food.dataType === 'SR Legacy') return 1;
+    if (food.dataType === 'Survey (FNDDS)') return 2;
+    return 3; // Branded
+  }
+
+  // The same food is often returned more than once (different fdcId per
+  // USDA dataset revision) — collapse exact-description duplicates and
+  // keep the highest-ranked (most likely lab-measured) copy.
+  function dedupeAndRank(results) {
+    const seen = new Set();
+    const deduped = [];
+    results.forEach(food => {
+      const key = (food.description || '').trim().toLowerCase() + '|' + (food.dataType || '') + '|' + (food.brandOwner || '');
+      if (seen.has(key)) return;
+      seen.add(key);
+      deduped.push(food);
+    });
+    deduped.sort((a, b) => sourceRank(a) - sourceRank(b));
+    return deduped;
+  }
+
+  const INITIAL_RESULTS = 5;
+
   function renderResults(results, targetWeight) {
     const list = document.getElementById('resultsList');
     list.innerHTML = '';
-    results.forEach((food, idx) => {
-      const n = food.nutrients;
-      const hasMet = n.methionine !== null && n.methionine !== undefined;
-      const estMet = hasMet ? null : estimateMethionine(n.protein, food.description);
-      const isWholeFood = food.dataType === 'Foundation' || food.dataType === 'SR Legacy';
-      const defaultGrams = targetWeight ? Math.round(targetWeight) : 100;
-      const row = document.createElement('div');
-      row.className = 'resultItem';
-      row.innerHTML = `
-        <span class="resultName">${food.description}${food.brandOwner ? ' <span class="resultMeta">(' + food.brandOwner + ')</span>' : ''}</span>
-        <span class="dtBadge ${isWholeFood ? 'good' : ''}">${food.dataType || 'unknown'}</span>
-        <span class="nutrientRow">
-          per 100g — <strong>${fmt(n.energy)}</strong> cal ·
-          fat <strong>${fmt(n.fat)}</strong>g ·
-          carbs <strong>${fmt(n.carbs)}</strong>g ·
-          methionine ${
-            hasMet ? '<strong>' + fmt(n.methionine) + '</strong> mg'
-              : (estMet !== null ? '<span class="metEstimated">~' + fmt(estMet) + ' mg (estimated)</span>' : '<span class="metUnknown">not available</span>')
-          }
-        </span>
-        <span class="addRow">
-          <input type="number" class="gramsInput" value="${defaultGrams}" min="1" step="1"> g
-          <button type="button" class="addBtn" data-idx="${idx}">+ Add</button>
-        </span>
-      `;
-      row.querySelector('.addBtn').addEventListener('click', () => {
-        const grams = parseFloat(row.querySelector('.gramsInput').value) || 100;
-        addToList(getAddTarget(), food, grams);
-      });
-      list.appendChild(row);
+    const ranked = dedupeAndRank(results);
+    const generic = ranked.filter(f => f.dataType !== 'Branded');
+    const branded = ranked.filter(f => f.dataType === 'Branded');
+
+    generic.slice(0, INITIAL_RESULTS).forEach(food => list.appendChild(buildResultRow(food, targetWeight)));
+    const genericMore = generic.slice(INITIAL_RESULTS);
+    if (genericMore.length) {
+      list.appendChild(buildShowMoreRow(`Show ${genericMore.length} more result${genericMore.length === 1 ? '' : 's'}`, genericMore, targetWeight));
+    }
+    if (branded.length) {
+      list.appendChild(buildShowMoreRow(`Show ${branded.length} name-brand result${branded.length === 1 ? '' : 's'} (varies by manufacturer)`, branded, targetWeight));
+    }
+  }
+
+  function buildShowMoreRow(label, foods, targetWeight) {
+    const wrap = document.createElement('div');
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'secondary showMoreBtn';
+    btn.textContent = label;
+    btn.addEventListener('click', () => {
+      foods.forEach(food => wrap.parentNode.insertBefore(buildResultRow(food, targetWeight), wrap));
+      wrap.remove();
     });
+    wrap.appendChild(btn);
+    return wrap;
+  }
+
+  function buildResultRow(food, targetWeight) {
+    const n = food.nutrients;
+    const hasMet = n.methionine !== null && n.methionine !== undefined;
+    const estMet = hasMet ? null : estimateMethionine(n.protein, food.description);
+    const isWholeFood = food.dataType === 'Foundation' || food.dataType === 'SR Legacy';
+    const defaultGrams = targetWeight ? Math.round(targetWeight) : 100;
+    const sourceUrl = `https://fdc.nal.usda.gov/food-details/${food.fdcId}/nutrients`;
+    const row = document.createElement('div');
+    row.className = 'resultItem';
+    row.innerHTML = `
+      <span class="resultName">${food.description}${food.brandOwner ? ' <span class="resultMeta">(' + food.brandOwner + ')</span>' : ''}</span>
+      <span class="dtBadge ${isWholeFood ? 'good' : ''}">${food.dataType || 'unknown'}</span>
+      <a class="sourceLink" href="${sourceUrl}" target="_blank" rel="noopener">Source ↗</a>
+      <span class="nutrientRow">
+        per 100g — <strong>${fmt(n.energy)}</strong> cal ·
+        protein <strong>${fmt(n.protein)}</strong>g ·
+        fat <strong>${fmt(n.fat)}</strong>g ·
+        carbs <strong>${fmt(n.carbs)}</strong>g ·
+        methionine ${
+          hasMet ? '<strong>' + fmt(n.methionine) + '</strong> mg'
+            : (estMet !== null ? '<span class="metEstimated">~' + fmt(estMet) + ' mg (estimated)</span>' : '<span class="metUnknown">not available</span>')
+        }
+      </span>
+      <span class="addRow">
+        <input type="number" class="gramsInput" value="${defaultGrams}" min="1" step="1"> g
+        <button type="button" class="addBtn">+ Add</button>
+      </span>
+    `;
+    row.querySelector('.addBtn').addEventListener('click', () => {
+      const grams = parseFloat(row.querySelector('.gramsInput').value) || 100;
+      addToList(getAddTarget(), food, grams);
+    });
+    return row;
   }
 
   // ── Lists (Today's Log + Shopping List) ──
@@ -472,6 +531,7 @@
 
     wireModal('btnHelp', 'helpOverlay', 'btnCloseHelp');
     wireModal('btnAbout', 'aboutOverlay', 'btnCloseAbout');
+    wireModal('btnRecipes', 'recipeDrawerOverlay', 'btnCloseRecipes');
     document.getElementById('btnCloseProfile').addEventListener('click', () => { document.getElementById('profileOverlay').hidden = true; });
     document.getElementById('profileOverlay').addEventListener('click', e => {
       if (e.target === document.getElementById('profileOverlay')) e.target.hidden = true;
@@ -481,6 +541,7 @@
       document.getElementById('helpOverlay').hidden = true;
       document.getElementById('aboutOverlay').hidden = true;
       document.getElementById('profileOverlay').hidden = true;
+      document.getElementById('recipeDrawerOverlay').hidden = true;
     });
 
     if (window.FeistTheme) FeistTheme.mount('#themeSwitcherMount');
