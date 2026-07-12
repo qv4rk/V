@@ -397,6 +397,20 @@
     }
   }
 
+  // ── Feedback ──
+  // A plain mailto: link — no backend, no form to host, works from any
+  // email app already signed in on the phone. The variant label + URL
+  // ride along in the body so a reply makes clear which version it's
+  // about, since testers are comparing several at once.
+  function sendFeedback() {
+    const variantLabel = CONFIG.variantLabel || document.title;
+    const subject = encodeURIComponent(`Methionine tracker feedback — ${variantLabel}`);
+    const body = encodeURIComponent(
+      `Version: ${variantLabel}\nLink: ${window.location.href}\n\nWhat worked:\n\n\nWhat didn't:\n\n`
+    );
+    window.location.href = `mailto:nutritiontracker@feisttech.com?subject=${subject}&body=${body}`;
+  }
+
   // ── Cap editing ──
   function editCap() {
     const v = prompt('Daily methionine limit (mg):', String(dailyCap));
@@ -455,7 +469,12 @@
     document.getElementById('btnMethioNo').addEventListener('click', () => setMethio(false));
     document.getElementById('btnMethioSave').addEventListener('click', saveMethioDetails);
 
+    document.getElementById('btnFeedback').addEventListener('click', sendFeedback);
     document.getElementById('btnShare').addEventListener('click', shareSummary);
+    document.getElementById('btnMoreOptions').addEventListener('click', () => {
+      const opts = document.getElementById('moreOptions');
+      opts.hidden = !opts.hidden;
+    });
     document.getElementById('btnPrint').addEventListener('click', () => window.print());
     document.getElementById('btnCopy').addEventListener('click', copySummary);
 

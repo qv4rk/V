@@ -58,24 +58,28 @@ header h1 { font-size: 1.3rem; margin: 0; color: var(--ink); flex: 1; }
   white-space: nowrap;
 }
 
-main { max-width: 640px; margin: 0 auto; padding: 1.2rem 1rem 4rem; }
+main { max-width: 640px; margin: 0 auto; padding: 1.4rem 1.1rem 4rem; }
 
+/* Open, uncluttered feel: soft shadow instead of a hard border, more
+   breathing room between blocks rather than dense stacked boxes. */
 .card {
   background: var(--panel);
-  border: 2px solid var(--edge);
-  border-radius: 16px;
-  padding: 1.3rem;
-  margin-bottom: 1.2rem;
+  border: none;
+  box-shadow: 0 1px 3px rgba(16,21,28,0.08);
+  border-radius: 18px;
+  padding: 1.5rem 1.4rem;
+  margin-bottom: 1.7rem;
 }
-.card h2 { font-size: 1.25rem; margin: 0 0 0.8rem; color: var(--ink); }
+.card h2 { font-size: 1.2rem; margin: 0 0 1rem; color: var(--ink); font-weight: 700; }
 
 /* Big total */
 .totalCard {
   background: var(--panel);
-  border: 3px solid var(--edge);
-  border-radius: 20px;
-  padding: 1.4rem;
-  margin-bottom: 1.2rem;
+  border: none;
+  box-shadow: 0 2px 8px rgba(16,21,28,0.10);
+  border-radius: 22px;
+  padding: 1.7rem 1.4rem;
+  margin-bottom: 1.7rem;
   text-align: center;
 }
 .statusPill {
@@ -97,7 +101,7 @@ main { max-width: 640px; margin: 0 auto; padding: 1.2rem 1rem 4rem; }
 .bigTotal.over { color: var(--over); }
 .bigTotalUnit { font-size: 1.8rem; font-weight: 700; color: var(--ink-dim); }
 
-.bigBar { height: 28px; border-radius: 14px; background: var(--bg-soft); border: 2px solid var(--edge); overflow: hidden; margin: 1rem 0 0.6rem; }
+.bigBar { height: 26px; border-radius: 13px; background: var(--bg-soft); overflow: hidden; margin: 1.1rem 0 0.7rem; }
 .bigBarFill { height: 100%; background: var(--safe); transition: width 0.25s ease, background-color 0.25s ease; }
 .bigBarFill.caution { background: var(--caution); }
 .bigBarFill.over { background: var(--over); }
@@ -131,6 +135,24 @@ main { max-width: 640px; margin: 0 auto; padding: 1.2rem 1rem 4rem; }
 
 .shareHint { font-size: 0.85rem; color: var(--ink-dim); margin: -0.3rem 0 0.9rem; }
 
+.linkBtn {
+  display: block;
+  width: 100%;
+  text-align: center;
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+  font-family: inherit;
+  padding: 8px;
+  margin-top: 0.2rem;
+}
+.moreOptions { margin-top: 0.8rem; }
+.moreOptions[hidden] { display: none; }
+
 /* Toast confirmation */
 .toast {
   position: fixed;
@@ -154,7 +176,7 @@ main { max-width: 640px; margin: 0 auto; padding: 1.2rem 1rem 4rem; }
 .toast.over { background: var(--over); }
 
 /* Quick add grid */
-.quickGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.7rem; margin-bottom: 0.9rem; }
+.quickGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; margin-bottom: 1rem; }
 @media (max-width: 420px) { .quickGrid { grid-template-columns: 1fr; } }
 .quickBtn {
   min-height: 64px;
@@ -162,7 +184,7 @@ main { max-width: 640px; margin: 0 auto; padding: 1.2rem 1rem 4rem; }
   font-weight: 700;
   padding: 10px 14px;
   border-radius: 14px;
-  border: 2px solid var(--edge);
+  border: 1px solid var(--edge);
   background: var(--bg);
   color: var(--ink);
   cursor: pointer;
@@ -180,13 +202,13 @@ main { max-width: 640px; margin: 0 auto; padding: 1.2rem 1rem 4rem; }
   font-size: 1.05rem;
   padding: 12px 14px;
   border-radius: 10px;
-  border: 2px solid var(--edge);
+  border: 1px solid var(--edge);
   font-family: inherit;
 }
 .searchStatus { font-size: 0.95rem; color: var(--ink-dim); margin-top: 0.5rem; min-height: 1.3em; }
 .resultsList { display: flex; flex-direction: column; gap: 0.6rem; margin-top: 0.7rem; }
 .resultItem {
-  border: 2px solid var(--edge);
+  border: 1px solid var(--edge);
   border-radius: 12px;
   padding: 0.8rem 0.9rem;
 }
@@ -201,12 +223,13 @@ main { max-width: 640px; margin: 0 auto; padding: 1.2rem 1rem 4rem; }
 .methioButtons { display: flex; gap: 0.7rem; flex-wrap: wrap; }
 .methioButtons .bigBtn { flex: 1; min-width: 160px; }
 .methioDetails { margin-top: 1rem; display: flex; flex-direction: column; gap: 0.7rem; }
+.methioDetails[hidden] { display: none; }
 .methioDetails label { font-size: 0.95rem; font-weight: 700; display: flex; flex-direction: column; gap: 0.3rem; }
 .methioDetails input, .methioDetails textarea {
   font-size: 1rem;
   padding: 10px 12px;
   border-radius: 10px;
-  border: 2px solid var(--edge);
+  border: 1px solid var(--edge);
   font-family: inherit;
   font-weight: 400;
 }
@@ -218,7 +241,7 @@ main { max-width: 640px; margin: 0 auto; padding: 1.2rem 1rem 4rem; }
   justify-content: space-between;
   align-items: center;
   gap: 0.6rem;
-  border: 2px solid var(--edge);
+  border: 1px solid var(--edge);
   border-radius: 12px;
   padding: 0.7rem 0.9rem;
 }
@@ -273,7 +296,7 @@ main { max-width: 640px; margin: 0 auto; padding: 1.2rem 1rem 4rem; }
   font-size: 1rem;
   padding: 10px 12px;
   border-radius: 10px;
-  border: 2px solid var(--edge);
+  border: 1px solid var(--edge);
   font-family: inherit;
 }
 .modalActions { display: flex; gap: 0.7rem; margin-top: 1rem; justify-content: flex-end; }
