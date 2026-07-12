@@ -890,6 +890,28 @@
 		URL.revokeObjectURL(url);
 		hud('EXPORTED', `${strokeHistory.length} strokes`);
 	});
+	// Reflects CONFIG's current values back onto the visible sliders/
+	// selects. Needed after JSON import, which writes straight into
+	// CONFIG (so drawing/export is correct immediately) but doesn't
+	// otherwise touch the DOM -- without this the panel would keep
+	// showing stale defaults even though the imported settings are
+	// already live.
+	function syncUIFromConfig() {
+		document.getElementById('mirrors').value = CONFIG.mirrors;
+		document.getElementById('mirrorsVal').textContent = CONFIG.mirrors;
+		document.getElementById('gridMode').value = CONFIG.gridMode;
+		document.getElementById('stampSize').value = CONFIG.stampSize;
+		document.getElementById('stampSizeVal').textContent = CONFIG.stampSize;
+		document.getElementById('thickness').value = CONFIG.thickness;
+		document.getElementById('thicknessVal').textContent = CONFIG.thickness;
+		document.getElementById('pattern').value = CONFIG.patternIndex;
+		document.getElementById('palette').value = CONFIG.paletteIndex;
+		document.getElementById('param1').value = CONFIG.param1;
+		document.getElementById('param1Val').textContent = CONFIG.param1;
+		document.getElementById('param2').value = CONFIG.param2;
+		document.getElementById('param2Val').textContent = CONFIG.param2;
+	}
+
 	document.getElementById('importJsonBtn').addEventListener('click', () => document.getElementById('importInput').click());
 	document.getElementById('importInput').addEventListener('change', e => {
 		const file = e.target.files[0];
@@ -906,6 +928,7 @@
 					['mirrors', 'gridMode', 'patternIndex', 'paletteIndex', 'thickness', 'stampSize', 'param1', 'param2'].forEach(k => {
 						if (data.meta.config[k] !== undefined) CONFIG[k] = data.meta.config[k];
 					});
+					syncUIFromConfig();
 				}
 				hud('IMPORTED', `${(data.strokeHistory || []).length} strokes`);
 			} catch (err) { hud('IMPORT FAILED', String(err.message || err)); }
