@@ -625,34 +625,43 @@
 	let ongoingTouches = [];
 	let touchColorCounter = 10;
 
-	/* ================= STROKE HISTORY =================
+	/* ================= HISTORY =================
 	   Backs ghost replay, high-res re-render export, and JSON telemetry
-	   export/import all from one place, rather than three separate
-	   systems like the source apps had. Capped at CONFIG.maxHistory total
-	   points (oldest strokes dropped first) so a long session doesn't
-	   grow unbounded. */
-	let strokeHistory = [];
-	let currentStrokes = {}; // colorIndex -> stroke object, while pointer is down
+	   export/import all from one place. This is a SINGLE flat, truly
+	   chronological stream of draw events -- not grouped by finger/stroke.
+
+	   Grouping by finger was the bug: real simultaneous touches never
+	   arrive bucketed like that, every sample lands in one timeline in
+	   the order it actually happened, so "connect to whatever was drawn
+	   immediately before" naturally jumps between fingers constantly
+	   (that's the whole crisscross mechanic). Storing each finger's
+	   points in its own array and replaying them one stroke at a time
+	   threw that interleaving away -- cross-finger connections only
+	   happened at the two or three seams between strokes instead of
+	   continuously, which is why an imported multi-finger piece came out
+	   as separate untangled lines instead of a wire-mesh.
+
+	   `null` entries are stroke-break markers (all pointers lifted) --
+	   without them a brand new, unrelated gesture drawn later would
+	   still connect back to wherever the last one ended. Capped at
+	   CONFIG.maxHistory real points (oldest dropped first, breaks free). */
+	let history = [];
 	let historyPointCount = 0;
+	let activePointerCount = 0;
 
 	function beginStroke(colorIndex) {
-		const strokeCfg = { mirrors: CONFIG.mirrors, gridMode: CONFIG.gridMode, patternIndex: CONFIG.patternIndex, paletteIndex: CONFIG.paletteIndex, thickness: CONFIG.thickness, stampSize: CONFIG.stampSize, param1: CONFIG.param1, param2: CONFIG.param2 };
-		const stroke = { colorIndex, cfg: strokeCfg, points: [] };
-		strokeHistory.push(stroke);
-		currentStrokes[colorIndex] = stroke;
-		return stroke;
+		if (activePointerCount === 0 && history.length > 0) history.push(null);
+		activePointerCount++;
 	}
 	function appendToStroke(colorIndex, x, y) {
-		const s = currentStrokes[colorIndex];
-		if (!s) return;
-		s.points.push({ x, y });
+		const cfg = { mirrors: CONFIG.mirrors, gridMode: CONFIG.gridMode, patternIndex: CONFIG.patternIndex, paletteIndex: CONFIG.paletteIndex, thickness: CONFIG.thickness, stampSize: CONFIG.stampSize, param1: CONFIG.param1, param2: CONFIG.param2 };
+		history.push({ colorIndex, cfg, x, y });
 		historyPointCount++;
-		while (historyPointCount > CONFIG.maxHistory && strokeHistory.length > 1) {
-			historyPointCount -= strokeHistory[0].points.length;
-			strokeHistory.shift();
+		while (historyPointCount > CONFIG.maxHistory && history.length > 0) {
+			if (history.shift()) historyPointCount--;
 		}
 	}
-	function endStroke(colorIndex) { delete currentStrokes[colorIndex]; }
+	function endStroke(colorIndex) { activePointerCount = Math.max(0, activePointerCount - 1); }
 
 	/* ================= CORE RENDER PASS =================
 	   True reflective kaleidoscope math (rotate per wedge, alternate
@@ -796,42 +805,33 @@
 	canvas.addEventListener('touchcancel', endTouch);
 
 	/* ================= GHOST REPLAY =================
-	   Ping-pongs back and forth through strokeHistory's flattened points,
-	   redrawing each with the config it was originally drawn under --
-	   same idea as the ghost/loop systems in the other three apps, just
-	   backed by the one shared strokeHistory array instead of a second
-	   parallel data structure.
-
-	   Each point's "prev" comes from the SAME shared lastUV that live
-	   drawing uses (see TOUCH / COLOR IDENTITY above), not from the
-	   previous point within its own stroke -- so a replayed multi-finger
-	   session reproduces the same "line jumps to whoever drew most
-	   recently" wire-mesh look live drawing has, instead of each finger
-	   replaying as an isolated clean path. Previously this used a
-	   per-stroke prev, which is why an imported multi-finger piece came
-	   out as separate untangled lines instead of the crisscrossed mesh
-	   the same gesture produces live. */
+	   Ping-pongs back and forth through the flat `history` stream,
+	   redrawing each point with the config it was originally drawn
+	   under. A point's "prev" is literally the adjacent entry in the
+	   stream (in whichever direction the ping-pong is currently
+	   heading) -- since `history` is one true chronological timeline
+	   across every finger, not grouped by finger, that adjacency IS the
+	   crisscrossing mechanic: consecutive samples in the stream jump
+	   between whichever touches were actually active at that moment,
+	   exactly like live drawing. A null entry (stroke break) resets
+	   continuity so unrelated gestures don't connect to each other. */
 	let ghostFlatIdx = 0, ghostDir = 1;
-	function flattenHistory() {
-		const flat = [];
-		strokeHistory.forEach(s => s.points.forEach(pt => flat.push({ pt, colorIndex: s.colorIndex, cfg: s.cfg })));
-		return flat;
-	}
 	function stepGhostReplay() {
-		const flat = flattenHistory();
-		if (flat.length < 2) return;
+		if (history.length < 2) return;
 		for (let step = 0; step < 3; step++) {
-			const entry = flat[ghostFlatIdx];
-			const { pal, shadowPal } = (() => {
-				const name = paletteNames[entry.cfg.paletteIndex] || paletteNames[0];
-				const p = colorPalettes[name];
-				const sName = name.includes("Shadow") ? name : name + " Shadow";
-				return { pal: p, shadowPal: colorPalettes[sName] || p };
-			})();
-			getCenters().forEach(c => renderPass(ctx, c.x, c.y, entry.pt, lastUV, entry.colorIndex, pal, shadowPal, entry.cfg));
-			lastUV = entry.pt;
+			const entry = history[ghostFlatIdx];
+			if (entry) {
+				const { pal, shadowPal } = (() => {
+					const name = paletteNames[entry.cfg.paletteIndex] || paletteNames[0];
+					const p = colorPalettes[name];
+					const sName = name.includes("Shadow") ? name : name + " Shadow";
+					return { pal: p, shadowPal: colorPalettes[sName] || p };
+				})();
+				const prevEntry = history[ghostFlatIdx - ghostDir] || null;
+				getCenters().forEach(c => renderPass(ctx, c.x, c.y, entry, prevEntry, entry.colorIndex, pal, shadowPal, entry.cfg));
+			}
 			ghostFlatIdx += ghostDir;
-			if (ghostFlatIdx >= flat.length - 1) { ghostFlatIdx = flat.length - 1; ghostDir = -1; }
+			if (ghostFlatIdx >= history.length - 1) { ghostFlatIdx = history.length - 1; ghostDir = -1; }
 			else if (ghostFlatIdx <= 0) { ghostFlatIdx = 0; ghostDir = 1; }
 		}
 	}
@@ -878,7 +878,7 @@
 
 	document.getElementById('clearBtn').addEventListener('click', () => {
 		ctx.clearRect(0, 0, canvas.width, canvas.height);
-		strokeHistory = []; currentStrokes = {}; historyPointCount = 0;
+		history = []; historyPointCount = 0; activePointerCount = 0;
 		ghostFlatIdx = 0; ghostDir = 1;
 		hud('CLEARED', '');
 	});
@@ -910,11 +910,11 @@
 		a.download = 'omniscope.png'; a.href = canvas.toDataURL('image/png'); a.click();
 	});
 
-	// High-res re-render export -- replays the FULL strokeHistory onto a
-	// scaled offscreen canvas rather than upscaling the raster, same
-	// lossless approach the other three apps used for their PNG export.
+	// High-res re-render export -- replays the FULL history onto a scaled
+	// offscreen canvas rather than upscaling the raster, same lossless
+	// approach the other three apps used for their PNG export.
 	function exportHighRes(multiplier) {
-		if (strokeHistory.length === 0) { hud('EXPORT', 'nothing drawn yet'); return; }
+		if (!history.some(Boolean)) { hud('EXPORT', 'nothing drawn yet'); return; }
 		const baseW = W, baseH = H;
 		const off = document.createElement('canvas');
 		off.width = baseW * multiplier; off.height = baseH * multiplier;
@@ -930,21 +930,19 @@
 				default: return [{ x: baseW / 2, y: baseH / 2 }];
 			}
 		}
-		// Shared across every stroke in the export, same as live drawing
-		// and ghost replay -- a point's "prev" is whoever drew last,
-		// not its own stroke's previous point (see the note above
-		// flattenHistory()).
-		let exportLastUV = null;
-		strokeHistory.forEach(s => {
-			const name = paletteNames[s.cfg.paletteIndex] || paletteNames[0];
+		// One forward pass through the true chronological stream -- a
+		// null entry (stroke break) resets continuity so unrelated
+		// gestures/layers don't connect to each other.
+		let prevEntry = null;
+		history.forEach(entry => {
+			if (!entry) { prevEntry = null; return; }
+			const name = paletteNames[entry.cfg.paletteIndex] || paletteNames[0];
 			const pal = colorPalettes[name];
 			const sName = name.includes("Shadow") ? name : name + " Shadow";
 			const shadowPal = colorPalettes[sName] || pal;
-			const centers = centersFor(s.cfg.gridMode);
-			s.points.forEach(pt => {
-				centers.forEach(c => renderPass(octx, c.x, c.y, pt, exportLastUV, s.colorIndex, pal, shadowPal, s.cfg));
-				exportLastUV = pt;
-			});
+			const centers = centersFor(entry.cfg.gridMode);
+			centers.forEach(c => renderPass(octx, c.x, c.y, entry, prevEntry, entry.colorIndex, pal, shadowPal, entry.cfg));
+			prevEntry = entry;
 		});
 
 		const a = document.createElement('a');
@@ -954,18 +952,18 @@
 	document.getElementById('export2xBtn').addEventListener('click', () => exportHighRes(2));
 	document.getElementById('export4xBtn').addEventListener('click', () => exportHighRes(4));
 
-	// JSON telemetry export/import -- the full stroke history plus the
-	// config it was drawn under, so a session can be reloaded and either
-	// inspected, continued, or re-rendered later.
+	// JSON telemetry export/import -- the full chronological history plus
+	// the live config, so a session can be reloaded and either inspected,
+	// continued, or re-rendered later.
 	document.getElementById('exportJsonBtn').addEventListener('click', () => {
-		if (strokeHistory.length === 0) { hud('EXPORT', 'nothing drawn yet'); return; }
-		const data = { meta: { date: new Date().toISOString(), config: CONFIG }, strokeHistory };
+		if (!history.some(Boolean)) { hud('EXPORT', 'nothing drawn yet'); return; }
+		const data = { meta: { date: new Date().toISOString(), config: CONFIG }, history };
 		const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
 		const url = URL.createObjectURL(blob);
 		const a = document.createElement('a');
 		a.download = `omniscope_session_${Date.now()}.json`; a.href = url; a.click();
 		URL.revokeObjectURL(url);
-		hud('EXPORTED', `${strokeHistory.length} strokes`);
+		hud('EXPORTED', `${history.filter(Boolean).length} points`);
 	});
 	// Reflects CONFIG's current values back onto the visible sliders/
 	// selects. Needed after JSON import, which writes straight into
@@ -1004,9 +1002,28 @@
 		reader.onload = evt => {
 			try {
 				const data = JSON.parse(evt.target.result);
-				if (Array.isArray(data.strokeHistory)) {
-					data.strokeHistory.forEach(s => { strokeHistory.push(s); historyPointCount += s.points.length; });
-					while (historyPointCount > CONFIG.maxHistory && strokeHistory.length > 1) { historyPointCount -= strokeHistory[0].points.length; strokeHistory.shift(); }
+				let importedCount = 0;
+				if (history.length > 0) history.push(null); // break before appending an imported session
+				if (Array.isArray(data.history)) {
+					data.history.forEach(entry => {
+						history.push(entry);
+						if (entry) { historyPointCount++; importedCount++; }
+					});
+				} else if (Array.isArray(data.strokeHistory)) {
+					// Legacy format (grouped per-stroke instead of one true
+					// chronological stream) -- still importable, just without
+					// true cross-finger interleaving within each old stroke,
+					// since that ordering was never recorded to begin with.
+					data.strokeHistory.forEach(s => {
+						if (history.length > 0) history.push(null);
+						s.points.forEach(pt => {
+							history.push({ colorIndex: s.colorIndex, cfg: s.cfg, x: pt.x, y: pt.y });
+							historyPointCount++; importedCount++;
+						});
+					});
+				}
+				while (historyPointCount > CONFIG.maxHistory && history.length > 0) {
+					if (history.shift()) historyPointCount--;
 				}
 				if (data.meta && data.meta.config) {
 					['mirrors', 'gridMode', 'patternIndex', 'paletteIndex', 'thickness', 'stampSize', 'param1', 'param2', 'fadeRate', 'rotation', 'ghostReplay'].forEach(k => {
@@ -1014,7 +1031,7 @@
 					});
 					syncUIFromConfig();
 				}
-				hud('IMPORTED', `${(data.strokeHistory || []).length} strokes`);
+				hud('IMPORTED', `${importedCount} points`);
 			} catch (err) { hud('IMPORT FAILED', String(err.message || err)); }
 		};
 		reader.readAsText(file);
