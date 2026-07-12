@@ -1,13 +1,19 @@
 (function () {
   'use strict';
 
-  // Same keys as the detailed app's js/app.js — both views read/write the
-  // same daily log and cap, so an item logged in one shows up in the other.
-  const LOG_KEY = 'feisttech_met_daily_log';
-  const CAP_KEY = 'feisttech_met_daily_cap';
-  const QUICKADD_KEY = 'feisttech_met_accessible_quickadd';
-  const QUICKADD_CACHE_KEY = 'feisttech_met_accessible_quickadd_cache';
-  const METHIO_KEY = 'feisttech_met_methioninase_log';
+  // A page can set window.ACCESSIBLE_CONFIG before this script loads to
+  // pick a demo variant: { storagePrefix, defaultCap, lockCap }. With no
+  // config (the real production page) this falls through to the exact
+  // keys/defaults the app always used, so it still shares its log with
+  // the detailed view untouched.
+  const CONFIG = window.ACCESSIBLE_CONFIG || {};
+  const KEY_PREFIX = CONFIG.storagePrefix || '';
+
+  const LOG_KEY = KEY_PREFIX + 'feisttech_met_daily_log';
+  const CAP_KEY = KEY_PREFIX + 'feisttech_met_daily_cap';
+  const QUICKADD_KEY = KEY_PREFIX + 'feisttech_met_accessible_quickadd';
+  const QUICKADD_CACHE_KEY = KEY_PREFIX + 'feisttech_met_accessible_quickadd_cache';
+  const METHIO_KEY = KEY_PREFIX + 'feisttech_met_methioninase_log';
 
   // A neutral starting list, not a medical recommendation — a caregiver
   // should replace this with whatever the care team has actually approved
@@ -18,7 +24,7 @@
   ];
 
   let log = [];
-  let dailyCap = 150;
+  let dailyCap = CONFIG.defaultCap || 150;
   let quickAddFoods = DEFAULT_QUICKADD.slice();
   let quickAddCache = {};
   let lastAddedId = null;
@@ -424,7 +430,17 @@
 
     document.getElementById('btnUndo').addEventListener('click', undoLast);
     document.getElementById('btnReadAloud').addEventListener('click', readTotalAloud);
-    document.getElementById('btnEditCap').addEventListener('click', editCap);
+    if (CONFIG.lockCap) {
+      document.getElementById('btnEditCap').hidden = true;
+      document.getElementById('capLockedNote').hidden = false;
+    } else {
+      document.getElementById('btnEditCap').addEventListener('click', editCap);
+    }
+
+    if (CONFIG.variantLabel) {
+      const badge = document.getElementById('variantBadge');
+      if (badge) { badge.textContent = CONFIG.variantLabel; badge.hidden = false; }
+    }
 
     document.getElementById('btnToggleSearch').addEventListener('click', () => {
       const area = document.getElementById('searchArea');

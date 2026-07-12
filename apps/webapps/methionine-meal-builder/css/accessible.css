@@ -47,7 +47,16 @@ header {
   white-space: nowrap;
 }
 .backLink:hover { text-decoration: underline; }
-header h1 { font-size: 1.3rem; margin: 0; color: var(--ink); }
+header h1 { font-size: 1.3rem; margin: 0; color: var(--ink); flex: 1; }
+.variantBadge {
+  font-size: 0.85rem;
+  font-weight: 800;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #ffffff;
+  white-space: nowrap;
+}
 
 main { max-width: 640px; margin: 0 auto; padding: 1.2rem 1rem 4rem; }
 
@@ -95,6 +104,7 @@ main { max-width: 640px; margin: 0 auto; padding: 1.2rem 1rem 4rem; }
 
 .bigSubline { font-size: 1.05rem; color: var(--ink-dim); margin-bottom: 1rem; }
 .editCapLink { font-size: 0.95rem; color: var(--accent); background: none; border: none; text-decoration: underline; cursor: pointer; padding: 4px; font-family: inherit; }
+.capLockedNote { font-size: 0.95rem; color: var(--ink-dim); font-weight: 700; }
 
 .totalActions { display: flex; flex-wrap: wrap; gap: 0.7rem; justify-content: center; }
 

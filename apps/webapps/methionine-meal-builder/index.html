@@ -74,6 +74,27 @@
   .choiceCard.accessible .go { color: var(--accent-3); border-color: var(--accent-3); }
 
   .note { margin-top: 2rem; font-size: 0.68rem; color: var(--ink-dim); text-align: center; }
+
+  .demoSection {
+    margin-top: 2.6rem;
+    padding-top: 1.8rem;
+    border-top: 1px solid var(--panel-edge);
+  }
+  .demoSection h2 { font-family: var(--font-display, 'Cinzel', sans-serif); font-size: 1.05rem; margin: 0 0 0.5rem; color: var(--ink); text-align: center; }
+  .demoSection p { font-size: 0.75rem; color: var(--ink-dim); text-align: center; max-width: 520px; margin: 0 auto 1rem; }
+  .demoLinks { display: flex; flex-direction: column; gap: 0.5rem; max-width: 420px; margin: 0 auto; }
+  .demoLinks a {
+    display: block;
+    text-align: center;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--accent-3);
+    border: 1px solid var(--panel-edge);
+    border-radius: 8px;
+    padding: 9px 12px;
+    text-decoration: none;
+  }
+  .demoLinks a:hover { border-color: var(--accent-3); }
 </style>
 </head>
 <body>
@@ -110,6 +131,17 @@
   </div>
 
   <div class="note">Neither view gives medical advice. Always follow your doctor's or care team's instructions.</div>
+
+  <div class="demoSection">
+    <h2>Feedback demos — daily tracker variants</h2>
+    <p>Four combinations of the same feature set, each with its own isolated data (not connected to the real log above) so they're safe to click around in side by side.</p>
+    <div class="demoLinks">
+      <a href="demo-a/index.html">Demo A — 150mg cap · editable →</a>
+      <a href="demo-b/index.html">Demo B — 200mg cap · editable →</a>
+      <a href="demo-c/index.html">Demo C — 150mg cap · locked to caregiver →</a>
+      <a href="demo-d/index.html">Demo D — 200mg cap · locked to caregiver →</a>
+    </div>
+  </div>
 </main>
 
 <script>
