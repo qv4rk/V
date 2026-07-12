@@ -368,6 +368,29 @@
     }
   }
 
+  // There's no consumer Google Keep write API to call directly — the
+  // Web Share API is the real equivalent: it hands the summary to the
+  // OS share sheet, where Keep (or any notes app) shows up as a target
+  // if it's installed. Desktop browsers mostly don't support it, so
+  // fall back to clipboard there.
+  async function shareSummary() {
+    const text = buildSummaryText();
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: 'Methionine Log — ' + todayISO(), text });
+        return;
+      } catch (e) {
+        if (e && e.name === 'AbortError') return; // user closed the share sheet
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(text);
+      showToast('Sharing isn\'t available in this browser — copied instead. Paste it into Keep.', null);
+    } catch (e2) {
+      alert(text);
+    }
+  }
+
   // ── Cap editing ──
   function editCap() {
     const v = prompt('Daily methionine limit (mg):', String(dailyCap));
@@ -416,6 +439,7 @@
     document.getElementById('btnMethioNo').addEventListener('click', () => setMethio(false));
     document.getElementById('btnMethioSave').addEventListener('click', saveMethioDetails);
 
+    document.getElementById('btnShare').addEventListener('click', shareSummary);
     document.getElementById('btnPrint').addEventListener('click', () => window.print());
     document.getElementById('btnCopy').addEventListener('click', copySummary);
 

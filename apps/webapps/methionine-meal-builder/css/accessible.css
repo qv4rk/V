@@ -119,6 +119,8 @@ main { max-width: 640px; margin: 0 auto; padding: 1.2rem 1rem 4rem; }
 .bigBtn.yes { background: var(--safe); border-color: var(--safe); }
 .bigBtn.no { background: var(--bg); color: var(--over); border-color: var(--over); }
 
+.shareHint { font-size: 0.85rem; color: var(--ink-dim); margin: -0.3rem 0 0.9rem; }
+
 /* Toast confirmation */
 .toast {
   position: fixed;
