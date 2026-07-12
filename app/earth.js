@@ -15,6 +15,20 @@ window.MA = window.MA || {};
 
   const COASTLINE_URL = 'https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/land-110m.json';
 
+  // Major annual meteor showers — real active windows (month/day, no year:
+  // they recur every year). Intensity is decorative, not a literal ZHR sim,
+  // just enough to make the peak night feel busier than the shoulder days.
+  const METEOR_SHOWERS = [
+    { name: 'QUADRANTID',      start: [12, 28], peak: [1, 3],   end: [1, 12]  },
+    { name: 'LYRID',           start: [4, 14],  peak: [4, 22],  end: [4, 30]  },
+    { name: 'ETA AQUARIID',    start: [4, 19],  peak: [5, 5],   end: [5, 28]  },
+    { name: 'PERSEID',         start: [7, 14],  peak: [8, 12],  end: [9, 1]   },
+    { name: 'ORIONID',         start: [10, 2],  peak: [10, 21], end: [11, 7]  },
+    { name: 'LEONID',          start: [11, 6],  peak: [11, 17], end: [11, 30] },
+    { name: 'GEMINID',         start: [12, 4],  peak: [12, 13], end: [12, 17] },
+    { name: 'URSID',           start: [12, 17], peak: [12, 22], end: [12, 26] }
+  ];
+
   class EarthGlobe {
     constructor(canvas, getTheme) {
       this.cv  = canvas;
@@ -37,6 +51,9 @@ window.MA = window.MA || {};
       this.onNodeHover = null;
       this.dragging = false;
       this.dragLast = null;
+      this.meteors = [];
+      this._meteorSpawnAt = 0;
+      this._lastFrameT = null;
       this._loadLand();
       this._bind();
       this.resize();
@@ -225,6 +242,106 @@ window.MA = window.MA || {};
       };
     }
 
+    // Cumulative non-leap day-of-year for the 1st of each month — precise
+    // enough for a decorative window check, no need for leap-year math.
+    _dayNum(m, d) {
+      const cum = [0,31,59,90,120,151,181,212,243,273,304,334];
+      return cum[m-1] + d;
+    }
+
+    // Which shower (if any) is active for the globe's current selected date,
+    // and how close to its peak — driven by this.jd, not the wall clock, so
+    // scrubbing the timebar or fast-forwarding through time both trigger it.
+    _activeShower() {
+      const d = MA.dj(this.jd);
+      const dayNum = this._dayNum(d.getUTCMonth() + 1, d.getUTCDate());
+      for (const sh of METEOR_SHOWERS) {
+        const s = this._dayNum(sh.start[0], sh.start[1]);
+        const e = this._dayNum(sh.end[0], sh.end[1]);
+        const p = this._dayNum(sh.peak[0], sh.peak[1]);
+        const inWindow = s <= e ? (dayNum >= s && dayNum <= e) : (dayNum >= s || dayNum <= e);
+        if (!inWindow) continue;
+        let dist = Math.abs(dayNum - p);
+        if (dist > 182) dist = 365 - dist;
+        const half = Math.max(1, Math.abs((s <= e ? e - s : 365 - s + e) / 2));
+        const intensity = Math.max(0, Math.min(1, 1 - dist / half));
+        return { name: sh.name, intensity };
+      }
+      return null;
+    }
+
+    _spawnMeteor() {
+      const R = this.scale, cx = this.W/2, cy = this.H/2;
+      const angle = (30 + Math.random() * 20) * Math.PI / 180; // 30-50° below horizontal
+      const speed = 380 + Math.random() * 260; // px/sec
+      this.meteors.push({
+        x: cx - R * 1.4 + Math.random() * R * 1.6,
+        y: cy - R * 1.3 + Math.random() * R * 0.6,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        len: 30 + Math.random() * 45,
+        age: 0,
+        life: 0.5 + Math.random() * 0.35
+      });
+    }
+
+    // Spawns and advances streaks; called once per render frame. Only ever
+    // active a handful of weeks a year, so the cost is zero the rest of the
+    // time (no shower found -> no spawns, empty array -> nothing to draw).
+    _updateMeteors() {
+      const now = performance.now();
+      if (this._lastFrameT == null) this._lastFrameT = now;
+      const dt = Math.min(0.1, (now - this._lastFrameT) / 1000);
+      this._lastFrameT = now;
+
+      this._activeShowerInfo = this._activeShower();
+      if (this._activeShowerInfo) {
+        // ~1/sec at full peak intensity, tapering off toward the shoulders.
+        if (Math.random() < this._activeShowerInfo.intensity * 0.02) this._spawnMeteor();
+      }
+
+      this.meteors.forEach(m => { m.x += m.vx * dt; m.y += m.vy * dt; m.age += dt; });
+      this.meteors = this.meteors.filter(m => m.age < m.life);
+    }
+
+    _renderMeteors(theme) {
+      const ctx = this.ctx;
+      if (this.meteors.length) {
+        ctx.save();
+        this.meteors.forEach(m => {
+          const fadeIn = Math.min(1, m.age / 0.08);
+          const fadeOut = Math.min(1, (m.life - m.age) / 0.15);
+          const alpha = Math.max(0, Math.min(fadeIn, fadeOut));
+          if (alpha <= 0) return;
+          const mag = Math.hypot(m.vx, m.vy) || 1;
+          const tx = m.x - (m.vx / mag) * m.len;
+          const ty = m.y - (m.vy / mag) * m.len;
+          const grad = ctx.createLinearGradient(tx, ty, m.x, m.y);
+          grad.addColorStop(0, 'rgba(255,255,255,0)');
+          grad.addColorStop(1, `rgba(255,246,220,${alpha})`);
+          ctx.strokeStyle = grad;
+          ctx.lineWidth = 1.6;
+          ctx.lineCap = 'round';
+          ctx.beginPath();
+          ctx.moveTo(tx, ty);
+          ctx.lineTo(m.x, m.y);
+          ctx.stroke();
+          ctx.fillStyle = `rgba(255,252,235,${alpha})`;
+          ctx.beginPath();
+          ctx.arc(m.x, m.y, 1.4, 0, Math.PI * 2);
+          ctx.fill();
+        });
+        ctx.restore();
+      }
+      if (this._activeShowerInfo) {
+        ctx.fillStyle = theme.accent;
+        ctx.font = "8px 'Space Mono', monospace";
+        ctx.textAlign = 'center';
+        ctx.fillText(`☄ ${this._activeShowerInfo.name} METEOR SHOWER`, this.W/2, this.H/2 - this.scale - 12);
+        ctx.textAlign = 'left';
+      }
+    }
+
     render() {
       const ctx = this.ctx, W = this.W, H = this.H;
       const theme = this._themeColors();
@@ -330,6 +447,11 @@ window.MA = window.MA || {};
 
       // Article nodes
       this._renderNodes(theme);
+
+      // Meteor showers — only ever draws anything during a real annual
+      // shower's active window, keyed off the globe's selected date.
+      this._updateMeteors();
+      this._renderMeteors(theme);
 
       // Loading hint
       if (!this.land) {
