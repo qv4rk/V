@@ -1,7 +1,18 @@
-const DOC_PATTERNS = [
-  { pattern: /docs\.google\.com/, label: 'Google Docs' },
-  { pattern: /sheets\.google\.com/, label: 'Google Sheets' },
-  { pattern: /slides\.google\.com/, label: 'Google Slides' }
+// Badge patterns purely label tabs for convenience — capture itself works
+// on any tab, this list just gets a nicer chip than the generic "tab".
+const SITE_PATTERNS = [
+  { pattern: /docs\.google\.com/, label: 'Google Docs', color: '#4285f4' },
+  { pattern: /sheets\.google\.com/, label: 'Google Sheets', color: '#0f9d58' },
+  { pattern: /slides\.google\.com/, label: 'Google Slides', color: '#f4b400' },
+  { pattern: /gemini\.google\.com/, label: 'Gemini', color: '#1a73e8' },
+  { pattern: /chatgpt\.com|chat\.openai\.com/, label: 'ChatGPT', color: '#10a37f' },
+  { pattern: /claude\.ai/, label: 'Claude', color: '#d97706' },
+  { pattern: /grok\.com/, label: 'Grok', color: '#888' },
+  { pattern: /chat\.deepseek\.com/, label: 'DeepSeek', color: '#4d6bfe' },
+  { pattern: /perplexity\.ai/, label: 'Perplexity', color: '#20b2aa' },
+  { pattern: /copilot\.com/, label: 'Copilot', color: '#0078d4' },
+  { pattern: /poe\.com/, label: 'Poe', color: '#6366f1' },
+  { pattern: /notebooklm\.google\.com/, label: 'NotebookLM', color: '#a142f4' }
 ];
 
 const statusText = document.getElementById('statusText');
@@ -10,14 +21,14 @@ const timerEl = document.getElementById('timer');
 const stopBtn = document.getElementById('stopBtn');
 const tabList = document.getElementById('tabList');
 const refreshBtn = document.getElementById('refreshBtn');
+const waitForSoundEl = document.getElementById('waitForSound');
 
-let currentState = { recording: false, tabId: null, title: '', startedAt: 0, lastError: '' };
+let currentState = { recording: false, armed: false, tabId: null, title: '', startedAt: 0, lastError: '' };
 let tickInterval = null;
 let knownTabs = [];
 
-function labelForUrl(url) {
-  const hit = DOC_PATTERNS.find((d) => d.pattern.test(url || ''));
-  return hit ? hit.label : null;
+function siteForUrl(url) {
+  return SITE_PATTERNS.find((s) => s.pattern.test(url || '')) || null;
 }
 
 function formatElapsed(startedAt) {
@@ -29,22 +40,26 @@ function formatElapsed(startedAt) {
 
 function renderState(state) {
   currentState = state;
+  statusbar.classList.remove('recording', 'armed');
+  statusText.classList.remove('recording', 'armed');
+  if (tickInterval) { clearInterval(tickInterval); tickInterval = null; }
+
   if (state.recording) {
     statusText.textContent = `Recording: ${state.title || 'tab'}`;
     statusText.classList.add('recording');
     statusbar.classList.add('recording');
     stopBtn.disabled = false;
-    if (tickInterval) clearInterval(tickInterval);
-    tickInterval = setInterval(() => {
-      timerEl.textContent = formatElapsed(state.startedAt);
-    }, 500);
+    tickInterval = setInterval(() => { timerEl.textContent = formatElapsed(state.startedAt); }, 500);
     timerEl.textContent = formatElapsed(state.startedAt);
+  } else if (state.armed) {
+    statusText.textContent = `Armed — waiting for audio: ${state.title || 'tab'}`;
+    statusText.classList.add('armed');
+    statusbar.classList.add('armed');
+    stopBtn.disabled = false;
+    timerEl.textContent = 'listening…';
   } else {
     statusText.textContent = state.lastError ? `Error: ${state.lastError}` : 'Idle';
-    statusText.classList.remove('recording');
-    statusbar.classList.remove('recording');
     stopBtn.disabled = true;
-    if (tickInterval) { clearInterval(tickInterval); tickInterval = null; }
     timerEl.textContent = '00:00';
   }
   renderTabList();
@@ -57,20 +72,22 @@ function renderTabList() {
     return;
   }
 
+  const busy = currentState.recording || currentState.armed;
   const sorted = [...knownTabs].sort((a, b) => {
-    const aDocs = labelForUrl(a.url) ? 0 : 1;
-    const bDocs = labelForUrl(b.url) ? 0 : 1;
-    return aDocs - bDocs;
+    const aKnown = siteForUrl(a.url) ? 0 : 1;
+    const bKnown = siteForUrl(b.url) ? 0 : 1;
+    return aKnown - bKnown;
   });
 
   sorted.forEach((tab) => {
-    const label = labelForUrl(tab.url);
+    const site = siteForUrl(tab.url);
     const row = document.createElement('div');
-    row.className = 'tab-row' + (label ? ' docs' : '');
+    row.className = 'tab-row' + (site ? ' known' : '');
 
     const badge = document.createElement('span');
     badge.className = 'badge';
-    badge.textContent = label || 'tab';
+    badge.textContent = site ? site.label : 'tab';
+    if (site) { badge.style.background = site.color; badge.style.color = '#0c0c12'; }
 
     const info = document.createElement('div');
     info.className = 'tab-info';
@@ -85,11 +102,11 @@ function renderTabList() {
 
     const btn = document.createElement('button');
     btn.className = 'captureBtn';
-    const isThisRecording = currentState.recording && currentState.tabId === tab.id;
-    if (isThisRecording) {
-      btn.textContent = '● Recording…';
+    const isThisOne = busy && currentState.tabId === tab.id;
+    if (isThisOne) {
+      btn.textContent = currentState.recording ? '● Recording…' : '● Armed…';
       btn.disabled = true;
-    } else if (currentState.recording) {
+    } else if (busy) {
       btn.textContent = '● Capture';
       btn.disabled = true;
     } else {
@@ -114,7 +131,7 @@ async function discoverTabs() {
 
 function startCapture(tab) {
   chrome.runtime.sendMessage(
-    { type: 'start-capture', tabId: tab.id, title: tab.title || tab.url },
+    { type: 'start-capture', tabId: tab.id, title: tab.title || tab.url, waitForSound: waitForSoundEl.checked },
     (resp) => {
       if (!resp || !resp.ok) {
         statusText.textContent = `Error: ${resp?.error || 'unknown'}`;

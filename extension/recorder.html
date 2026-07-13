@@ -35,8 +35,10 @@
     margin-bottom: 18px;
   }
   .statusbar.recording { border-color: #c62828; }
+  .statusbar.armed { border-color: #c9a84c; }
   #statusText { flex: 1; font-size: 14px; }
   #statusText.recording { color: #ff6b6b; }
+  #statusText.armed { color: #e8c96d; }
   #timer {
     font-family: ui-monospace, monospace;
     font-size: 18px;
@@ -78,14 +80,22 @@
     padding: 10px 12px;
     margin-bottom: 8px;
   }
-  .tab-row.docs { border-color: #2a5d3a; }
+  .tab-row.known { border-color: #333; }
   .badge {
     font-size: 10px;
     padding: 2px 7px;
     border-radius: 10px;
-    background: #2a5d3a;
-    color: #9de3ae;
+    background: #2a2a3a;
+    color: #ccc;
     white-space: nowrap;
+  }
+  .waitrow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: #aaa;
+    margin-bottom: 14px;
   }
   .tab-info { flex: 1; min-width: 0; }
   .tab-title {
@@ -142,6 +152,12 @@
     <button id="stopBtn" disabled>■ Stop &amp; Save</button>
   </div>
 
+  <label class="waitrow">
+    <input type="checkbox" id="waitForSound" checked>
+    Wait for audio before recording (trims the silent gap while you switch
+    tabs and press play)
+  </label>
+
   <div class="toolbar">
     <h2>Open tabs</h2>
     <button id="refreshBtn">↻ Refresh</button>
@@ -149,10 +165,12 @@
   <div id="tabList"></div>
 
   <div id="hint">
-    Press play on the doc's read-aloud voice first, then hit Capture on that
-    tab below. The tab keeps playing normally — this loops the audio back
-    to your speakers while it also records it. Only one tab can be
-    captured at a time.
+    Hit Capture, then switch to that tab and press its read-aloud/listen
+    button — recording starts automatically the moment sound is detected
+    (or immediately if you unchecked the wait option above). The tab keeps
+    playing normally the whole time; this just loops the audio back to
+    your speakers while also saving it. Only one tab can be captured at a
+    time.
   </div>
 
   <script src="recorder.js"></script>
