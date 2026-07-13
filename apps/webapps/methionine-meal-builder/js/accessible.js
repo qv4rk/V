@@ -15,8 +15,8 @@
   const QUICKADD_CACHE_KEY = KEY_PREFIX + 'feisttech_met_accessible_quickadd_cache';
   const METHIO_KEY = KEY_PREFIX + 'feisttech_met_methioninase_log';
 
-  // A neutral starting list, not a medical recommendation — a caregiver
-  // should replace this with whatever the care team has actually approved
+  // A neutral starting list, not a medical recommendation — replace this
+  // with whatever the care team has actually approved
   // via "Edit This List".
   const DEFAULT_QUICKADD = [
     'Apple', 'Banana', 'White rice, cooked', 'Broccoli, cooked',
