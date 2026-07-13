@@ -34,10 +34,11 @@ body {
 header {
   background: var(--bg);
   border-bottom: 2px solid var(--edge);
-  padding: 1rem 1.2rem;
+  padding: 0.9rem 1.2rem;
   display: flex;
   align-items: center;
-  gap: 1rem;
+  flex-wrap: wrap;
+  gap: 0.6rem 0.8rem;
 }
 .backLink {
   color: var(--accent);
@@ -45,18 +46,37 @@ header {
   font-weight: 700;
   font-size: 1rem;
   white-space: nowrap;
+  flex: none;
 }
 .backLink:hover { text-decoration: underline; }
-header h1 { font-size: 1.3rem; margin: 0; color: var(--ink); flex: 1; }
+header h1 { font-size: 1.2rem; margin: 0; color: var(--ink); flex: 1 1 auto; min-width: 140px; }
 .variantBadge {
-  font-size: 0.85rem;
+  font-size: 0.78rem;
   font-weight: 800;
   padding: 5px 12px;
   border-radius: 999px;
   background: var(--accent);
   color: #ffffff;
   white-space: nowrap;
+  flex: none;
 }
+.helpFab {
+  flex: none;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #ffffff;
+  border: none;
+  font-size: 1.3rem;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+.helpFab:hover { filter: brightness(1.08); }
 
 main { max-width: 640px; margin: 0 auto; padding: 1.4rem 1.1rem 4rem; }
 
@@ -300,6 +320,19 @@ main { max-width: 640px; margin: 0 auto; padding: 1.4rem 1.1rem 4rem; }
   font-family: inherit;
 }
 .modalActions { display: flex; gap: 0.7rem; margin-top: 1rem; justify-content: flex-end; }
+
+/* Tutorial walkthrough */
+.tutorialModal { text-align: center; }
+.tutorialProgress { font-size: 0.85rem; color: var(--ink-dim); font-weight: 700; margin-bottom: 0.5rem; }
+.tutorialIcon { font-size: 3rem; margin-bottom: 0.4rem; }
+.tutorialModal h2 { font-size: 1.3rem; margin: 0 0 0.7rem; }
+.tutorialModal p { font-size: 1.08rem; color: var(--ink); line-height: 1.6; margin: 0 0 1.2rem; }
+.tutorialDots { display: flex; justify-content: center; gap: 7px; margin-bottom: 1.2rem; }
+.tutorialDot { width: 9px; height: 9px; border-radius: 50%; background: var(--edge); }
+.tutorialDot.active { background: var(--accent); }
+.tutorialNav { display: flex; align-items: center; gap: 0.6rem; }
+.tutorialNav .bigBtn { flex: 1; }
+.tutorialNav .linkBtn { flex: none; margin-top: 0; width: auto; padding: 8px 6px; }
 
 @media print {
   header, .totalActions, .card:has(#btnToggleSearch), .card:has(#btnMethioYes), .card:has(#btnPrint), .disclaimer { display: none !important; }

@@ -411,6 +411,63 @@
     window.location.href = `mailto:nutritiontracker@feisttech.com?subject=${subject}&body=${body}`;
   }
 
+  // ── Tutorial walkthrough ──
+  // One short idea per screen, big Back/Next/Skip targets, a "seen it"
+  // flag per storage prefix so it only auto-opens once per device per
+  // variant — but the ❓ button always reopens it from step 1 on demand.
+  let tutorialStep = 0;
+  function tutorialSteps() {
+    const capLine = CONFIG.lockCap
+      ? ' Your daily limit is set by your care team.'
+      : ' Tap "Change daily limit" if that number ever needs to change.';
+    return [
+      { icon: '🔢', title: 'Your Daily Total', text: `This big number shows how much methionine you've eaten today. Green means safe, yellow means getting close, red means you're over your limit.${capLine}` },
+      { icon: '🍽️', title: 'Quick Add', text: 'Tap any food button below and it gets added right away — no extra steps.' },
+      { icon: '↩️', title: 'Made A Mistake?', text: 'Tap "Undo Last Add" any time to remove the food you just added.' },
+      { icon: '🔍', title: "Can't Find Your Food?", text: 'Tap "Search For Another Food" to look up anything that isn\'t in the quick list.' },
+      { icon: '💊', title: 'Methioninase', text: 'If you take methioninase, tap Yes or No each day to keep a record of it.' },
+      { icon: '📤', title: 'Sharing Your Log', text: 'Use Send Feedback, Share, or Print any time to send today\'s log to your care team.' }
+    ];
+  }
+  function renderTutorialStep() {
+    const steps = tutorialSteps();
+    const step = steps[tutorialStep];
+    document.getElementById('tutorialProgress').textContent = `Step ${tutorialStep + 1} of ${steps.length}`;
+    document.getElementById('tutorialIcon').textContent = step.icon;
+    document.getElementById('tutorialTitle').textContent = step.title;
+    document.getElementById('tutorialText').textContent = step.text;
+
+    const dots = document.getElementById('tutorialDots');
+    dots.innerHTML = '';
+    steps.forEach((s, i) => {
+      const dot = document.createElement('span');
+      dot.className = 'tutorialDot' + (i === tutorialStep ? ' active' : '');
+      dots.appendChild(dot);
+    });
+
+    document.getElementById('btnTutorialBack').hidden = tutorialStep === 0;
+    document.getElementById('btnTutorialNext').textContent = tutorialStep === steps.length - 1 ? 'Done' : 'Next';
+  }
+  function openTutorial() {
+    tutorialStep = 0;
+    renderTutorialStep();
+    document.getElementById('tutorialOverlay').hidden = false;
+  }
+  function closeTutorial() {
+    document.getElementById('tutorialOverlay').hidden = true;
+    try { localStorage.setItem(KEY_PREFIX + 'feisttech_met_tutorial_seen', '1'); } catch (e) {}
+  }
+  function tutorialNext() {
+    if (tutorialStep >= tutorialSteps().length - 1) { closeTutorial(); return; }
+    tutorialStep++;
+    renderTutorialStep();
+  }
+  function tutorialBack() {
+    if (tutorialStep === 0) return;
+    tutorialStep--;
+    renderTutorialStep();
+  }
+
   // ── Cap editing ──
   function editCap() {
     const v = prompt('Daily methionine limit (mg):', String(dailyCap));
@@ -484,6 +541,23 @@
     document.getElementById('editOverlay').addEventListener('click', e => {
       if (e.target === document.getElementById('editOverlay')) document.getElementById('editOverlay').hidden = true;
     });
+
+    document.getElementById('btnHelp').addEventListener('click', openTutorial);
+    document.getElementById('btnTutorialNext').addEventListener('click', tutorialNext);
+    document.getElementById('btnTutorialBack').addEventListener('click', tutorialBack);
+    document.getElementById('btnTutorialSkip').addEventListener('click', closeTutorial);
+    document.getElementById('tutorialOverlay').addEventListener('click', e => {
+      if (e.target === document.getElementById('tutorialOverlay')) closeTutorial();
+    });
+    document.addEventListener('keydown', e => {
+      if (e.key !== 'Escape') return;
+      document.getElementById('editOverlay').hidden = true;
+      document.getElementById('tutorialOverlay').hidden = true;
+    });
+
+    let alreadySeenTutorial = false;
+    try { alreadySeenTutorial = !!localStorage.getItem(KEY_PREFIX + 'feisttech_met_tutorial_seen'); } catch (e) {}
+    if (!alreadySeenTutorial) openTutorial();
   }
 
   init();
