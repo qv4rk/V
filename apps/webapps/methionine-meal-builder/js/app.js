@@ -86,18 +86,42 @@
   }
 
   // ── Search ──
-  async function runSearch() {
+  // USDA's search endpoint indexes gtinUpc in whichever format that
+  // product's source data used — 12-digit UPC-A or 13-digit EAN with a
+  // leading 0 — so a scanned code that comes back empty is retried in
+  // the other format before giving up, instead of just reporting "no
+  // results" for a product that's actually in the database.
+  async function searchBarcodeVariants(code) {
+    const digits = code.replace(/\D/g, '');
+    const candidates = [digits];
+    if (digits.length === 12) candidates.push('0' + digits);
+    if (digits.length === 13 && digits[0] === '0') candidates.push(digits.slice(1));
+    for (const candidate of candidates) {
+      if (!candidate) continue;
+      const results = await window.USDA.searchFoods(candidate, 15);
+      if (results.length) return results;
+    }
+    return [];
+  }
+
+  async function runSearch(fromBarcode) {
     const raw = document.getElementById('searchInput').value.trim();
     const status = document.getElementById('searchStatus');
     const list = document.getElementById('resultsList');
     if (!raw) { status.textContent = 'Type a food to search.'; return; }
-    const { query, targetWeight } = parseInputString(raw);
     status.textContent = 'Searching USDA FoodData Central…';
     list.innerHTML = '';
     try {
-      const results = await window.USDA.searchFoods(query, 15);
-      status.textContent = results.length ? `${results.length} result${results.length === 1 ? '' : 's'}` : 'No results.';
-      renderResults(results, targetWeight);
+      if (fromBarcode) {
+        const results = await searchBarcodeVariants(raw);
+        status.textContent = results.length ? `${results.length} result${results.length === 1 ? '' : 's'}` : 'No results for that barcode — try searching by name instead.';
+        renderResults(results, null, true);
+      } else {
+        const { query, targetWeight } = parseInputString(raw);
+        const results = await window.USDA.searchFoods(query, 15);
+        status.textContent = results.length ? `${results.length} result${results.length === 1 ? '' : 's'}` : 'No results.';
+        renderResults(results, targetWeight, false);
+      }
     } catch (e) {
       status.textContent = 'Search failed: ' + e.message;
     }
@@ -137,10 +161,20 @@
 
   const INITIAL_RESULTS = 5;
 
-  function renderResults(results, targetWeight) {
+  function renderResults(results, targetWeight, fromBarcode) {
     const list = document.getElementById('resultsList');
     list.innerHTML = '';
     const ranked = dedupeAndRank(results);
+
+    // A scanned barcode already identifies one specific commercial
+    // product — there's no generic-vs-name-brand ambiguity to collapse
+    // behind a toggle, so show every match directly instead of making
+    // a successful scan require an extra tap to actually see it.
+    if (fromBarcode) {
+      ranked.forEach(food => list.appendChild(buildResultRow(food, targetWeight)));
+      return;
+    }
+
     const generic = ranked.filter(f => f.dataType !== 'Branded');
     const branded = ranked.filter(f => f.dataType === 'Branded');
 
@@ -203,25 +237,50 @@
     return row;
   }
 
+  function mergeFullNutrients(a, b) {
+    const map = {};
+    (a || []).forEach(fn => { map[fn.name] = { name: fn.name, unit: fn.unit, value: fn.value }; });
+    (b || []).forEach(fn => {
+      if (map[fn.name]) map[fn.name].value += fn.value;
+      else map[fn.name] = { name: fn.name, unit: fn.unit, value: fn.value };
+    });
+    return Object.values(map);
+  }
+
   // ── Lists (Today's Log + Shopping List) ──
+  // Adding the same food again merges into its existing row (grams and
+  // every nutrient add up) instead of creating a second line.
   function addToList(target, food, grams) {
     const scale = grams / 100;
     const n = food.nutrients;
     const hasMet = n.methionine !== null && n.methionine !== undefined;
     const metEstimated = !hasMet;
     const met = hasMet ? n.methionine * scale : (estimateMethionine(n.protein, food.description) !== null ? estimateMethionine(n.protein, food.description) * scale : null);
-    lists[target].push({
-      id: newId('item'),
-      name: food.description,
-      grams,
-      cal: n.energy !== null ? n.energy * scale : null,
-      protein: n.protein !== null ? n.protein * scale : null,
-      fat: n.fat !== null ? n.fat * scale : null,
-      carbs: n.carbs !== null ? n.carbs * scale : null,
-      met,
-      metEstimated,
-      fullNutrients: (food.fullNutrients || []).map(fn => ({ name: fn.name, unit: fn.unit, value: fn.value * scale }))
-    });
+    const newFullNutrients = (food.fullNutrients || []).map(fn => ({ name: fn.name, unit: fn.unit, value: fn.value * scale }));
+
+    const existing = lists[target].find(i => i.name === food.description && i.metEstimated === metEstimated);
+    if (existing) {
+      existing.grams = (existing.grams || 0) + grams;
+      existing.cal = (existing.cal || 0) + (n.energy !== null ? n.energy * scale : 0);
+      existing.protein = (existing.protein || 0) + (n.protein !== null ? n.protein * scale : 0);
+      existing.fat = (existing.fat || 0) + (n.fat !== null ? n.fat * scale : 0);
+      existing.carbs = (existing.carbs || 0) + (n.carbs !== null ? n.carbs * scale : 0);
+      existing.met = (existing.met === null && met === null) ? null : (existing.met || 0) + (met || 0);
+      existing.fullNutrients = mergeFullNutrients(existing.fullNutrients, newFullNutrients);
+    } else {
+      lists[target].push({
+        id: newId('item'),
+        name: food.description,
+        grams,
+        cal: n.energy !== null ? n.energy * scale : null,
+        protein: n.protein !== null ? n.protein * scale : null,
+        fat: n.fat !== null ? n.fat * scale : null,
+        carbs: n.carbs !== null ? n.carbs * scale : null,
+        met,
+        metEstimated,
+        fullNutrients: newFullNutrients
+      });
+    }
     saveList(target);
     renderList(target);
   }
@@ -493,7 +552,7 @@
           html5Qrcode.stop().catch(() => {});
           reader.hidden = true;
           document.getElementById('searchInput').value = decodedText;
-          runSearch();
+          runSearch(true);
         },
         () => {}
       ).catch(() => {
@@ -542,7 +601,7 @@
 
     document.getElementById('dailyCapInput').value = dailyCap;
     document.getElementById('dailyProteinFloorInput').value = proteinFloor;
-    document.getElementById('btnSearch').addEventListener('click', runSearch);
+    document.getElementById('btnSearch').addEventListener('click', () => runSearch());
     document.getElementById('searchInput').addEventListener('keydown', e => {
       if (e.key === 'Enter') runSearch();
     });
