@@ -13,6 +13,7 @@
   <a href="../index.html" class="backLink">← Tracker Home</a>
   <h1>Today's Methionine</h1>
   <span class="variantBadge" id="variantBadge" hidden></span>
+  <button type="button" class="helpFab" id="btnHelp" aria-label="How to use this">❓</button>
 </header>
 
 <main>
@@ -102,6 +103,21 @@
     <div class="modalActions">
       <button type="button" class="bigBtn secondary" id="btnCancelEdit">Cancel</button>
       <button type="button" class="bigBtn" id="btnSaveEdit">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="modalOverlay" id="tutorialOverlay" hidden>
+  <div class="modal tutorialModal" role="dialog" aria-labelledby="tutorialTitle">
+    <div class="tutorialProgress" id="tutorialProgress">Step 1 of 6</div>
+    <div class="tutorialIcon" id="tutorialIcon">🔢</div>
+    <h2 id="tutorialTitle">Your Daily Total</h2>
+    <p id="tutorialText"></p>
+    <div class="tutorialDots" id="tutorialDots"></div>
+    <div class="tutorialNav">
+      <button type="button" class="bigBtn secondary" id="btnTutorialBack">Back</button>
+      <button type="button" class="linkBtn" id="btnTutorialSkip">Skip</button>
+      <button type="button" class="bigBtn" id="btnTutorialNext">Next</button>
     </div>
   </div>
 </div>
