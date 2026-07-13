@@ -3,9 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Demo A (150mg · editable) — Daily Methionine Tracker</title>
+<title>Tracker 1 (150mg) — Daily Methionine Tracker</title>
 <meta name="description" content="Large-text, high-contrast daily methionine tracker with one-tap quick-add foods and methioninase logging.">
 <link rel="stylesheet" href="../css/accessible.css">
+<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 </head>
 <body>
 
@@ -23,8 +24,19 @@
     <div class="bigTotal safe" id="bigTotal">0<span class="bigTotalUnit"> / 150 mg</span></div>
     <div class="bigBar"><div class="bigBarFill" id="bigBarFill" style="width:0%"></div></div>
     <div class="bigSubline" id="bigSubline">0 mg used today · 150 mg still safe to eat</div>
-    <button type="button" class="editCapLink" id="btnEditCap">Change daily limit</button>
-    <span class="capLockedNote" id="capLockedNote" hidden>🔒 Daily limit set by care team</span>
+
+    <div id="capEditRow">
+      <button type="button" class="editCapLink" id="btnEditCap">Change daily limit</button>
+      <span class="capLockedNote" id="capLockedNote" hidden>🔒 Daily limit set by care team</span>
+    </div>
+    <div id="capEditFormWrap" hidden>
+      <form id="capEditForm" class="capEditForm">
+        <input type="number" inputmode="decimal" id="capEditInput" min="1" step="1">
+        <button type="submit" class="bigBtn compact">Save</button>
+        <button type="button" class="linkBtn" id="btnCapCancel">Cancel</button>
+      </form>
+    </div>
+
     <div class="totalActions" style="margin-top:0.9rem;">
       <button type="button" class="bigBtn secondary" id="btnReadAloud">🔊 Read Total Aloud</button>
       <button type="button" class="bigBtn secondary" id="btnUndo" disabled>↩️ Undo Last Add</button>
@@ -32,18 +44,24 @@
   </section>
 
   <section class="card">
-    <h2>Quick Add</h2>
+    <div class="cardHeaderRow">
+      <h2>Quick Add</h2>
+      <button type="button" class="iconEditBtn" id="btnEditQuickAdd" aria-label="Edit quick-add foods">✏️</button>
+    </div>
     <div class="quickGrid" id="quickGrid"></div>
-    <button type="button" class="bigBtn secondary fullWidth" id="btnEditQuickAdd" style="margin-top:0.3rem;">✏️ Edit This List</button>
   </section>
 
   <section class="card">
     <button type="button" class="bigBtn secondary fullWidth" id="btnToggleSearch">🔍 Search For Another Food</button>
     <div id="searchArea" hidden>
-      <div class="searchRow">
+      <div id="scanReader" class="scanReader" hidden></div>
+      <form id="searchForm" class="searchRow">
+        <span class="searchIcon">🔍</span>
         <input type="text" id="searchInput" placeholder="Type a food, like apple">
-        <button type="button" class="bigBtn" id="btnSearch">Go</button>
-      </div>
+        <button type="button" class="iconBtn" id="btnMic" title="Voice input">🎤</button>
+        <button type="button" class="iconBtn" id="btnScan" title="Scan barcode">📷</button>
+        <button type="submit" class="bigBtn compact">Go</button>
+      </form>
       <div class="searchStatus" id="searchStatus"></div>
       <div class="resultsList" id="resultsList"></div>
     </div>
@@ -51,12 +69,13 @@
 
   <section class="card">
     <h2>Methioninase Today</h2>
-    <div class="methioStatus" id="methioStatus">Not logged yet</div>
-    <div class="methioButtons">
+    <div class="methioStatus" id="methioStatus" hidden></div>
+    <button type="button" class="linkBtn" id="btnMethioEdit" hidden>✏️ Edit today's entry</button>
+    <div class="methioButtons" id="methioButtons">
       <button type="button" class="bigBtn yes" id="btnMethioYes">✅ Yes, took it</button>
       <button type="button" class="bigBtn no" id="btnMethioNo">❌ No, not today</button>
     </div>
-    <div class="methioDetails" id="methioDetails" hidden>
+    <form class="methioDetails" id="methioDetails" hidden>
       <label>Time
         <input type="text" id="methioTime" placeholder="e.g. 8:00 AM">
       </label>
@@ -66,8 +85,8 @@
       <label>Notes
         <textarea id="methioNotes" rows="2" placeholder="Optional notes"></textarea>
       </label>
-      <button type="button" class="bigBtn" id="btnMethioSave">Save</button>
-    </div>
+      <button type="submit" class="bigBtn" id="btnMethioSave">Save</button>
+    </form>
   </section>
 
   <section class="card">
@@ -76,10 +95,10 @@
   </section>
 
   <section class="card">
-    <button type="button" class="bigBtn fullWidth" id="btnFeedback">📧 Send Feedback</button>
-    <div class="shareHint">Opens your email app, addressed to the team, with this version's link already filled in.</div>
-    <button type="button" class="bigBtn secondary fullWidth" id="btnShare">📤 Share to Notes App</button>
-    <div class="shareHint">On a phone or tablet, this opens the normal Share menu — pick Google Keep (or any notes app) if it's installed.</div>
+    <div class="actionRow">
+      <button type="button" class="bigBtn compact" id="btnFeedback">📧 Feedback</button>
+      <button type="button" class="bigBtn compact secondary" id="btnShare">📤 Share</button>
+    </div>
     <button type="button" class="linkBtn" id="btnMoreOptions">More options (print, copy)</button>
     <div class="moreOptions" id="moreOptions" hidden>
       <button type="button" class="bigBtn secondary fullWidth" id="btnPrint">🖨️ Print Today's Log</button>
@@ -88,7 +107,7 @@
   </section>
 
   <div class="disclaimer">
-    This tool helps track numbers only. It does not give medical advice. Always follow your doctor's instructions. Methioninase and diet changes should only be done under medical supervision.
+    ⚠️ This tool helps track numbers only. It does not give medical advice. Always follow your doctor's instructions. Methioninase and diet changes should only be done under medical supervision.
   </div>
 
 </main>
@@ -98,8 +117,9 @@
 <div class="modalOverlay" id="editOverlay" hidden>
   <div class="modal" role="dialog" aria-labelledby="editTitle">
     <h2 id="editTitle">Edit Quick-Add Foods</h2>
-    <p>One food per line — these become the big buttons above. A caregiver should set this list to match what's actually approved.</p>
-    <textarea id="editQuickAddText" rows="8"></textarea>
+    <p>Set this list to match what's actually approved for daily use.</p>
+    <div class="editFoodList" id="editFoodList"></div>
+    <button type="button" class="linkBtn" id="btnAddFoodRow">+ Add another food</button>
     <div class="modalActions">
       <button type="button" class="bigBtn secondary" id="btnCancelEdit">Cancel</button>
       <button type="button" class="bigBtn" id="btnSaveEdit">Save</button>
@@ -127,7 +147,7 @@
     storagePrefix: 'demo_a_',
     defaultCap: 150,
     lockCap: false,
-    variantLabel: 'Demo A — 150mg · editable'
+    variantLabel: 'Tracker 1 — 150mg'
   };
 </script>
 <script src="../js/usda.js"></script>
