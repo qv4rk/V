@@ -114,7 +114,9 @@
     try {
       if (fromBarcode) {
         const results = await searchBarcodeVariants(raw);
-        status.textContent = results.length ? `${results.length} result${results.length === 1 ? '' : 's'}` : 'No results for that barcode — try searching by name instead.';
+        status.textContent = results.length
+          ? `${results.length} result${results.length === 1 ? '' : 's'}`
+          : `Barcode ${raw} isn't in USDA's database — this happens a lot, since USDA only has products a manufacturer specifically submitted, not a general UPC lookup. Try searching by name instead.`;
         renderResults(results, null, true);
       } else {
         const { query, targetWeight } = parseInputString(raw);
