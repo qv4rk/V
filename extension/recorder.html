@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Doc Audio Capture</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: #0c0c12;
+    color: #eee;
+    padding: 20px;
+    max-width: 720px;
+    margin: 0 auto;
+  }
+  h1 {
+    font-size: 20px;
+    margin: 10px 0 4px;
+  }
+  .sub {
+    color: #888;
+    font-size: 13px;
+    margin-bottom: 20px;
+  }
+  .statusbar {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: #17171f;
+    border: 1px solid #26263a;
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 18px;
+  }
+  .statusbar.recording { border-color: #c62828; }
+  #statusText { flex: 1; font-size: 14px; }
+  #statusText.recording { color: #ff6b6b; }
+  #timer {
+    font-family: ui-monospace, monospace;
+    font-size: 18px;
+    color: #9cf;
+  }
+  #stopBtn {
+    background: #c62828;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 9px 16px;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  #stopBtn:disabled { display: none; }
+  .toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .toolbar h2 { font-size: 14px; color: #9cf; margin: 0; }
+  #refreshBtn {
+    background: #23233a;
+    color: #ccc;
+    border: 1px solid #333;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .tab-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #15151d;
+    border: 1px solid #23233a;
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+  }
+  .tab-row.docs { border-color: #2a5d3a; }
+  .badge {
+    font-size: 10px;
+    padding: 2px 7px;
+    border-radius: 10px;
+    background: #2a5d3a;
+    color: #9de3ae;
+    white-space: nowrap;
+  }
+  .tab-info { flex: 1; min-width: 0; }
+  .tab-title {
+    font-size: 13px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .tab-url {
+    font-size: 11px;
+    color: #666;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .captureBtn {
+    background: #2e7d32;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 14px;
+    font-size: 12px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .captureBtn:disabled {
+    background: #333;
+    color: #777;
+    cursor: default;
+  }
+  .empty {
+    color: #666;
+    font-size: 13px;
+    padding: 20px;
+    text-align: center;
+  }
+  #hint {
+    margin-top: 24px;
+    font-size: 12px;
+    color: #777;
+    line-height: 1.5;
+    border-top: 1px solid #23233a;
+    padding-top: 14px;
+  }
+</style>
+</head>
+<body>
+  <h1>Doc Audio Capture</h1>
+  <div class="sub">Records a tab's audio output (e.g. Google Docs' "Listen to this document") to a file.</div>
+
+  <div class="statusbar" id="statusbar">
+    <div id="statusText">Idle</div>
+    <div id="timer">00:00</div>
+    <button id="stopBtn" disabled>■ Stop &amp; Save</button>
+  </div>
+
+  <div class="toolbar">
+    <h2>Open tabs</h2>
+    <button id="refreshBtn">↻ Refresh</button>
+  </div>
+  <div id="tabList"></div>
+
+  <div id="hint">
+    Press play on the doc's read-aloud voice first, then hit Capture on that
+    tab below. The tab keeps playing normally — this loops the audio back
+    to your speakers while it also records it. Only one tab can be
+    captured at a time.
+  </div>
+
+  <script src="recorder.js"></script>
+</body>
+</html>

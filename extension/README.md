@@ -2,7 +2,13 @@
 
 Manifest V3 extension that records whatever audio a browser tab is
 currently playing — e.g. Google Docs' "Listen to this document" — and
-saves it as a `.webm` file via the popup's Start/Stop buttons.
+saves it as a `.webm` file.
+
+Like the FeistTech Archiver extension, this has no popup — Kiwi's popup
+rendering is unreliable, so `action` is empty and clicking the toolbar
+icon instead opens (or refocuses) a singleton **Recorder tab**
+(`recorder.html`). That tab lists your open tabs and lets you start/stop
+capture on whichever one is playing the doc's voice.
 
 ## Load it in Kiwi Browser (Android)
 
@@ -16,10 +22,14 @@ saves it as a `.webm` file via the popup's Start/Stop buttons.
 ## Use it
 
 1. Open the Google Doc, start "Listen to this document".
-2. Tap the extension icon → **Start Capture**.
-3. Let it play through. The tab keeps sounding normal — capture loops
-   the audio back to the speakers so you still hear it.
-4. Tap the icon → **Stop & Save**. The `.webm` lands in Downloads.
+2. Tap the extension icon → it opens the **Recorder** tab.
+3. Find the Google Docs tab in the list (badged "Google Docs") and tap
+   **● Capture**. The tab keeps sounding normal — capture loops the
+   audio back to the speakers so you still hear it.
+4. Tap **■ Stop & Save** in the status bar when done. The `.webm` lands
+   in Downloads.
+5. Switch back to the doc tab any time — the Recorder tab keeps running
+   in the background and you can flip back to it to stop the capture.
 
 ## Two things to verify before relying on this
 
