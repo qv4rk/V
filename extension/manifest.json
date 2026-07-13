@@ -1,15 +1,14 @@
 {
   "manifest_version": 3,
-  "name": "FeistTech Audio Capture Streamer",
+  "name": "Feist Doc Audio Capture",
+  "description": "Record a tab's audio (e.g. Google Docs \"Listen to this document\") and save it as a file.",
   "version": "1.0",
-  "permissions": ["tabCapture", "downloads", "activeTab"],
+  "permissions": ["tabCapture", "downloads", "offscreen"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Capture tab audio"
+  },
   "background": {
     "service_worker": "background.js"
-  },
-  "content_scripts": [
-    {
-      "matches": ["*://*.yourcustomdomain.com/*", "*://*.github.io/*"],
-      "js": ["content.js"]
-    }
-  ]
+  }
 }

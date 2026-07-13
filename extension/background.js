@@ -1,41 +1,71 @@
-let mediaRecorder;
-let audioChunks = [];
-let currentChapter = "0";
+const OFFSCREEN_URL = 'offscreen.html';
 
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.action === "START_CAPTURE") {
-    currentChapter = message.chapter;
+let state = { recording: false, title: '', startedAt: 0, lastError: '' };
 
-    chrome.tabCapture.capture({ audio: true, video: false }, (stream) => {
-      if (!stream) return;
+function broadcastState() {
+  chrome.runtime.sendMessage({ type: 'state-changed', state }).catch(() => {});
+}
 
-      const audioContext = new AudioContext();
-      const streamSource = audioContext.createMediaStreamSource(stream);
-      streamSource.connect(audioContext.destination);
+async function ensureOffscreenDocument() {
+  const has = await chrome.offscreen.hasDocument();
+  if (has) return;
+  await chrome.offscreen.createDocument({
+    url: OFFSCREEN_URL,
+    reasons: ['USER_MEDIA'],
+    justification: 'Record a tab\'s audio stream to a downloadable file.'
+  });
+}
 
-      audioChunks = [];
-      mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+function sanitizeFilename(name) {
+  return (name || 'tab-audio').replace(/[\\/:*?"<>|]+/g, '_').slice(0, 80);
+}
 
-      mediaRecorder.ondataavailable = (e) => {
-        if (e.data.size > 0) audioChunks.push(e.data);
-      };
-
-      mediaRecorder.onstop = () => {
-        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-        const url = URL.createObjectURL(audioBlob);
-
-        chrome.downloads.download({
-          url: url,
-          filename: `FeistTech_Ch_${currentChapter}_${Date.now()}.webm`,
-          saveAs: false
-        });
-      };
-
-      mediaRecorder.start();
-    });
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  if (msg.type === 'get-state') {
+    sendResponse(state);
+    return;
   }
 
-  if (message.action === "STOP_CAPTURE" && mediaRecorder && mediaRecorder.state !== "inactive") {
-    mediaRecorder.stop();
+  if (msg.type === 'start-capture') {
+    (async () => {
+      if (state.recording) {
+        sendResponse({ ok: false, error: 'already recording' });
+        return;
+      }
+      try {
+        const streamId = await chrome.tabCapture.getMediaStreamId({ targetTabId: msg.tabId });
+        await ensureOffscreenDocument();
+        const ts = new Date().toISOString().replace(/[:.]/g, '-');
+        const filename = `DocAudio_${sanitizeFilename(msg.title)}_${ts}.webm`;
+        await chrome.runtime.sendMessage({ type: 'offscreen-start', streamId, filename });
+        state = { recording: true, title: msg.title || '', startedAt: Date.now(), lastError: '' };
+        broadcastState();
+        sendResponse({ ok: true });
+      } catch (e) {
+        state.lastError = e.message || String(e);
+        broadcastState();
+        sendResponse({ ok: false, error: state.lastError });
+      }
+    })();
+    return true;
+  }
+
+  if (msg.type === 'stop-capture') {
+    chrome.runtime.sendMessage({ type: 'offscreen-stop' }).catch(() => {});
+    return;
+  }
+
+  if (msg.type === 'recording-saved') {
+    state = { recording: false, title: '', startedAt: 0, lastError: '' };
+    broadcastState();
+    chrome.offscreen.closeDocument().catch(() => {});
+    return;
+  }
+
+  if (msg.type === 'recording-error') {
+    state = { recording: false, title: '', startedAt: 0, lastError: msg.error || 'recording failed' };
+    broadcastState();
+    chrome.offscreen.closeDocument().catch(() => {});
+    return;
   }
 });
