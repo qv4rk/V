@@ -113,8 +113,18 @@
     list.innerHTML = '';
     try {
       if (fromBarcode) {
-        const results = await searchBarcodeVariants(raw);
-        status.textContent = results.length ? `${results.length} result${results.length === 1 ? '' : 's'}` : 'No results for that barcode — try searching by name instead.';
+        let results = await searchBarcodeVariants(raw);
+        let usedFallback = false;
+        if (!results.length && window.OpenFoodFacts) {
+          status.textContent = 'Not in USDA — checking Open Food Facts…';
+          try {
+            const offFood = await window.OpenFoodFacts.lookupBarcode(raw);
+            if (offFood) { results = [offFood]; usedFallback = true; }
+          } catch (e) {}
+        }
+        status.textContent = results.length
+          ? `${results.length} result${results.length === 1 ? '' : 's'}${usedFallback ? ' (from Open Food Facts — methionine will be estimated, not measured)' : ''}`
+          : `Barcode ${raw} isn't in USDA or Open Food Facts — try searching by name instead.`;
         renderResults(results, null, true);
       } else {
         const { query, targetWeight } = parseInputString(raw);
@@ -208,7 +218,7 @@
     const estMet = hasMet ? null : estimateMethionine(n.protein, food.description);
     const isWholeFood = food.dataType === 'Foundation' || food.dataType === 'SR Legacy';
     const defaultGrams = targetWeight ? Math.round(targetWeight) : 100;
-    const sourceUrl = `https://fdc.nal.usda.gov/food-details/${food.fdcId}/nutrients`;
+    const sourceUrl = food.sourceUrl || `https://fdc.nal.usda.gov/food-details/${food.fdcId}/nutrients`;
     const row = document.createElement('div');
     row.className = 'resultItem';
     row.innerHTML = `

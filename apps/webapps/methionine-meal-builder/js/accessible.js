@@ -274,7 +274,23 @@
   }
 
   // ── Search (secondary path) ──
-  async function runSearch() {
+  // USDA indexes gtinUpc in whichever format a product's source data
+  // used, so a scanned code that comes back empty is retried in the
+  // other UPC-A/EAN-13 format before falling back to Open Food Facts.
+  async function searchBarcodeVariants(code) {
+    const digits = code.replace(/\D/g, '');
+    const candidates = [digits];
+    if (digits.length === 12) candidates.push('0' + digits);
+    if (digits.length === 13 && digits[0] === '0') candidates.push(digits.slice(1));
+    for (const candidate of candidates) {
+      if (!candidate) continue;
+      const results = await window.USDA.searchFoods(candidate, 15);
+      if (results.length) return results;
+    }
+    return [];
+  }
+
+  async function runSearch(fromBarcode) {
     const raw = document.getElementById('searchInput').value.trim();
     const status = document.getElementById('searchStatus');
     const list = document.getElementById('resultsList');
@@ -282,8 +298,28 @@
     status.textContent = 'Searching…';
     list.innerHTML = '';
     try {
-      const results = await window.USDA.searchFoods(raw, 8);
-      status.textContent = results.length ? `${results.length} result${results.length === 1 ? '' : 's'}` : 'No results — try a different word.';
+      let results;
+      let usedFallback = false;
+      if (fromBarcode) {
+        results = await searchBarcodeVariants(raw);
+        if (!results.length && window.OpenFoodFacts) {
+          status.textContent = 'Not in USDA — checking Open Food Facts…';
+          try {
+            const offFood = await window.OpenFoodFacts.lookupBarcode(raw);
+            if (offFood) { results = [offFood]; usedFallback = true; }
+          } catch (e) {}
+        }
+      } else {
+        results = await window.USDA.searchFoods(raw, 8);
+      }
+
+      if (!results.length) {
+        status.textContent = fromBarcode
+          ? `Barcode ${raw} isn't in USDA or Open Food Facts — try Search by name instead.`
+          : 'No results — try a different word.';
+        return;
+      }
+      status.textContent = `${results.length} result${results.length === 1 ? '' : 's'}${usedFallback ? ' (from Open Food Facts)' : ''}`;
       results.slice(0, 8).forEach(food => {
         const n = food.nutrients;
         const hasMet = n.methionine !== null && n.methionine !== undefined;
@@ -293,7 +329,7 @@
         row.className = 'resultItem';
         row.innerHTML = `
           <span class="rName">${food.description}</span>
-          <span class="rMeta">per 100g — ${fmt(n.energy)} cal · ${metText} methionine</span>
+          <span class="rMeta">per 100g — ${fmt(n.energy)} cal · ${metText} methionine${food.dataType === 'OpenFoodFacts' ? ' · Open Food Facts' : ''}</span>
           <button type="button" class="bigBtn">+ Add 100g</button>
         `;
         row.querySelector('button').addEventListener('click', () => addFoodToLog(food, 100));
@@ -617,7 +653,7 @@
           html5Qrcode.stop().catch(() => {});
           reader.hidden = true;
           document.getElementById('searchInput').value = decodedText;
-          runSearch();
+          runSearch(true);
         },
         () => {}
       ).catch(() => {
