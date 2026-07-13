@@ -91,6 +91,19 @@ main { max-width: 640px; margin: 0 auto; padding: 1.4rem 1.1rem 4rem; }
   margin-bottom: 1.7rem;
 }
 .card h2 { font-size: 1.2rem; margin: 0 0 1rem; color: var(--ink); font-weight: 700; }
+.cardHeaderRow { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+.cardHeaderRow h2 { margin: 0; }
+.iconEditBtn {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--bg);
+  border: 1px solid var(--edge);
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+.iconEditBtn:hover { border-color: var(--accent); }
 
 /* Big total */
 .totalCard {
@@ -129,6 +142,16 @@ main { max-width: 640px; margin: 0 auto; padding: 1.4rem 1.1rem 4rem; }
 .bigSubline { font-size: 1.05rem; color: var(--ink-dim); margin-bottom: 1rem; }
 .editCapLink { font-size: 0.95rem; color: var(--accent); background: none; border: none; text-decoration: underline; cursor: pointer; padding: 4px; font-family: inherit; }
 .capLockedNote { font-size: 0.95rem; color: var(--ink-dim); font-weight: 700; }
+.capEditForm { display: flex; gap: 0.6rem; align-items: center; justify-content: center; flex-wrap: wrap; }
+.capEditForm input {
+  width: 110px;
+  font-size: 1.1rem;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--edge);
+  font-family: inherit;
+  text-align: center;
+}
 
 .totalActions { display: flex; flex-wrap: wrap; gap: 0.7rem; justify-content: center; }
 
@@ -152,8 +175,11 @@ main { max-width: 640px; margin: 0 auto; padding: 1.4rem 1.1rem 4rem; }
 .bigBtn.fullWidth { width: 100%; margin-bottom: 0.6rem; }
 .bigBtn.yes { background: var(--safe); border-color: var(--safe); }
 .bigBtn.no { background: var(--bg); color: var(--over); border-color: var(--over); }
+.bigBtn.compact { min-height: 46px; font-size: 0.92rem; padding: 9px 14px; }
 
 .shareHint { font-size: 0.85rem; color: var(--ink-dim); margin: -0.3rem 0 0.9rem; }
+.actionRow { display: flex; gap: 0.6rem; margin-bottom: 0.6rem; }
+.actionRow .bigBtn { flex: 1; }
 
 .linkBtn {
   display: block;
@@ -170,6 +196,7 @@ main { max-width: 640px; margin: 0 auto; padding: 1.4rem 1.1rem 4rem; }
   padding: 8px;
   margin-top: 0.2rem;
 }
+.linkBtn[hidden] { display: none; }
 .moreOptions { margin-top: 0.8rem; }
 .moreOptions[hidden] { display: none; }
 
@@ -216,15 +243,32 @@ main { max-width: 640px; margin: 0 auto; padding: 1.4rem 1.1rem 4rem; }
 .quickBtn .qLoading { font-size: 0.85rem; color: var(--ink-dim); font-weight: 500; display: block; }
 
 /* Search */
-.searchRow { display: flex; gap: 0.6rem; margin-top: 0.8rem; }
+.searchRow { display: flex; gap: 0.5rem; margin-top: 0.8rem; align-items: center; flex-wrap: wrap; }
+.searchIcon { font-size: 1.1rem; flex: none; }
 .searchRow input {
-  flex: 1;
+  flex: 1 1 140px;
   font-size: 1.05rem;
   padding: 12px 14px;
   border-radius: 10px;
-  border: 1px solid var(--edge);
+  border: 2px solid var(--accent);
   font-family: inherit;
 }
+.searchRow .iconBtn {
+  flex: none;
+  min-height: 46px;
+  width: 46px;
+  padding: 0;
+  font-size: 1.15rem;
+  border-radius: 10px;
+  border: 1px solid var(--edge);
+  background: var(--bg);
+  color: var(--ink);
+  cursor: pointer;
+}
+.searchRow .iconBtn:hover { border-color: var(--accent); }
+.searchRow .iconBtn.listening { animation: pulse 1.3s infinite; border-color: var(--over); color: var(--over); }
+@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+.scanReader { width: 100%; max-width: 360px; margin: 0.8rem 0; border-radius: 10px; overflow: hidden; }
 .searchStatus { font-size: 0.95rem; color: var(--ink-dim); margin-top: 0.5rem; min-height: 1.3em; }
 .resultsList { display: flex; flex-direction: column; gap: 0.6rem; margin-top: 0.7rem; }
 .resultItem {
@@ -241,6 +285,7 @@ main { max-width: 640px; margin: 0 auto; padding: 1.4rem 1.1rem 4rem; }
 .methioStatus.logged-yes { background: var(--safe-bg); color: var(--safe); }
 .methioStatus.logged-no { background: var(--bg-soft); color: var(--ink-dim); }
 .methioButtons { display: flex; gap: 0.7rem; flex-wrap: wrap; }
+.methioButtons[hidden] { display: none; }
 .methioButtons .bigBtn { flex: 1; min-width: 160px; }
 .methioDetails { margin-top: 1rem; display: flex; flex-direction: column; gap: 0.7rem; }
 .methioDetails[hidden] { display: none; }
@@ -282,14 +327,14 @@ main { max-width: 640px; margin: 0 auto; padding: 1.4rem 1.1rem 4rem; }
 
 .disclaimer {
   margin-top: 1.5rem;
-  padding: 1rem 1.1rem;
-  border: 2px solid var(--over);
+  padding: 1.1rem 1.2rem;
+  border: 3px solid var(--over);
   background: var(--over-bg);
   color: var(--ink);
   border-radius: 12px;
-  font-size: 0.92rem;
-  font-weight: 600;
-  line-height: 1.5;
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.55;
 }
 
 /* Edit quick-add modal */
@@ -320,6 +365,30 @@ main { max-width: 640px; margin: 0 auto; padding: 1.4rem 1.1rem 4rem; }
   font-family: inherit;
 }
 .modalActions { display: flex; gap: 0.7rem; margin-top: 1rem; justify-content: flex-end; }
+
+/* Quick-add food editor: one row per button, edit or remove in place */
+.editFoodList { display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 0.6rem; }
+.editFoodRow { display: flex; gap: 0.5rem; align-items: center; }
+.editFoodInput {
+  flex: 1;
+  font-size: 1rem;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--edge);
+  font-family: inherit;
+}
+.editFoodRow .rmBtn {
+  flex: none;
+  background: none;
+  border: 2px solid var(--over);
+  color: var(--over);
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 800;
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+}
 
 /* Tutorial walkthrough */
 .tutorialModal { text-align: center; }

@@ -16,8 +16,7 @@
   const METHIO_KEY = KEY_PREFIX + 'feisttech_met_methioninase_log';
 
   // A neutral starting list, not a medical recommendation — replace this
-  // with whatever the care team has actually approved
-  // via "Edit This List".
+  // with whatever the care team has actually approved via "Edit This List".
   const DEFAULT_QUICKADD = [
     'Apple', 'Banana', 'White rice, cooked', 'Broccoli, cooked',
     'Sweet potato, baked', 'Applesauce', 'Grapes', 'Carrots, cooked'
@@ -27,7 +26,8 @@
   let dailyCap = CONFIG.defaultCap || 150;
   let quickAddFoods = DEFAULT_QUICKADD.slice();
   let quickAddCache = {};
-  let lastAddedId = null;
+  let lastAction = null; // { id, delta, wasNew } — what "Undo Last Add" should reverse
+  let html5Qrcode = null;
 
   function todayISO() {
     return new Date().toISOString().slice(0, 10);
@@ -137,6 +137,9 @@
   }
 
   // ── Adding / removing items ──
+  // Logging the same food again merges into its existing row (grams and
+  // every nutrient add up) instead of creating a second line, so the log
+  // reads as "Apple — 200g" rather than two separate "Apple — 100g" rows.
   function addFoodToLog(food, grams) {
     const scale = grams / 100;
     const n = food.nutrients;
@@ -145,20 +148,41 @@
     const metPer100 = hasMet ? n.methionine : estimateMethionine(n.protein, food.description);
     const met = metPer100 !== null ? metPer100 * scale : null;
     const before = totalMet();
-    const item = {
-      id: newId('item'),
-      name: food.description,
+
+    const delta = {
       grams,
-      cal: n.energy !== null ? n.energy * scale : null,
-      protein: n.protein !== null ? n.protein * scale : null,
-      fat: n.fat !== null ? n.fat * scale : null,
-      carbs: n.carbs !== null ? n.carbs * scale : null,
-      met,
-      metEstimated,
-      fullNutrients: []
+      cal: n.energy !== null ? n.energy * scale : 0,
+      protein: n.protein !== null ? n.protein * scale : 0,
+      fat: n.fat !== null ? n.fat * scale : 0,
+      carbs: n.carbs !== null ? n.carbs * scale : 0,
+      met: met !== null ? met : 0
     };
-    log.push(item);
-    lastAddedId = item.id;
+
+    const existing = log.find(i => i.name === food.description && i.metEstimated === metEstimated);
+    if (existing) {
+      existing.grams = (existing.grams || 0) + delta.grams;
+      existing.cal = (existing.cal || 0) + delta.cal;
+      existing.protein = (existing.protein || 0) + delta.protein;
+      existing.fat = (existing.fat || 0) + delta.fat;
+      existing.carbs = (existing.carbs || 0) + delta.carbs;
+      existing.met = (existing.met === null && met === null) ? null : (existing.met || 0) + delta.met;
+      lastAction = { id: existing.id, delta, wasNew: false };
+    } else {
+      const item = {
+        id: newId('item'),
+        name: food.description,
+        grams,
+        cal: n.energy !== null ? n.energy * scale : null,
+        protein: n.protein !== null ? n.protein * scale : null,
+        fat: n.fat !== null ? n.fat * scale : null,
+        carbs: n.carbs !== null ? n.carbs * scale : null,
+        met,
+        metEstimated,
+        fullNutrients: []
+      };
+      log.push(item);
+      lastAction = { id: item.id, delta: null, wasNew: true };
+    }
     saveLog();
     renderAll();
 
@@ -169,18 +193,37 @@
 
   function undoLast() {
     if (!log.length) return;
-    const idx = lastAddedId ? log.findIndex(i => i.id === lastAddedId) : log.length - 1;
-    const removeIdx = idx >= 0 ? idx : log.length - 1;
-    const removed = log.splice(removeIdx, 1)[0];
-    lastAddedId = null;
+    if (!lastAction) {
+      const removed = log.pop();
+      saveLog();
+      renderAll();
+      if (removed) showToast(`Removed ${removed.name}.`, null);
+      return;
+    }
+    const { id, delta, wasNew } = lastAction;
+    const item = log.find(i => i.id === id);
+    lastAction = null;
+    if (!item) { renderAll(); return; }
+    const name = item.name;
+    if (wasNew) {
+      log = log.filter(i => i.id !== id);
+    } else {
+      item.grams -= delta.grams;
+      item.cal -= delta.cal;
+      item.protein -= delta.protein;
+      item.fat -= delta.fat;
+      item.carbs -= delta.carbs;
+      if (item.met !== null) item.met -= delta.met;
+      if (item.grams <= 0) log = log.filter(i => i.id !== id);
+    }
     saveLog();
     renderAll();
-    if (removed) showToast(`Removed ${removed.name}.`, null);
+    showToast(`Undid last add to ${name}.`, null);
   }
 
   function removeItem(id) {
     log = log.filter(i => i.id !== id);
-    if (lastAddedId === id) lastAddedId = null;
+    if (lastAction && lastAction.id === id) lastAction = null;
     saveLog();
     renderAll();
   }
@@ -286,24 +329,38 @@
   }
 
   // ── Methioninase ──
+  // The Time/Amount/Notes form only auto-opens right after tapping "Yes"
+  // (there's a time to record); tapping "No" just logs a plain no, and
+  // once anything's logged the Yes/No buttons hide behind a status line
+  // + a small Edit link so the screen doesn't stack banner + buttons +
+  // an empty form all at once.
   function renderMethio() {
     const all = loadMethio();
     const entry = all[todayISO()];
     const statusEl = document.getElementById('methioStatus');
+    const buttonsRow = document.getElementById('methioButtons');
+    const editLink = document.getElementById('btnMethioEdit');
+
     if (!entry) {
-      statusEl.textContent = 'Not logged yet';
-      statusEl.className = 'methioStatus';
-    } else if (entry.took) {
-      statusEl.textContent = '✅ Took methioninase today' + (entry.time ? ` at ${entry.time}` : '');
-      statusEl.className = 'methioStatus logged-yes';
+      statusEl.hidden = true;
+      buttonsRow.hidden = false;
+      editLink.hidden = true;
     } else {
-      statusEl.textContent = '❌ Not taken today';
-      statusEl.className = 'methioStatus logged-no';
+      statusEl.hidden = false;
+      buttonsRow.hidden = true;
+      editLink.hidden = false;
+      if (entry.took) {
+        statusEl.textContent = '✅ Took methioninase today' + (entry.time ? ` at ${entry.time}` : '');
+        statusEl.className = 'methioStatus logged-yes';
+      } else {
+        statusEl.textContent = '❌ Not taken today';
+        statusEl.className = 'methioStatus logged-no';
+      }
     }
     document.getElementById('methioTime').value = entry ? (entry.time || '') : '';
     document.getElementById('methioAmount').value = entry ? (entry.amount || '') : '';
     document.getElementById('methioNotes').value = entry ? (entry.notes || '') : '';
-    document.getElementById('methioDetails').hidden = !entry;
+    document.getElementById('methioDetails').hidden = true;
   }
 
   function setMethio(took) {
@@ -312,9 +369,11 @@
     all[todayISO()] = Object.assign({}, existing, { took, loggedAt: Date.now() });
     saveMethio(all);
     renderMethio();
+    if (took) document.getElementById('methioDetails').hidden = false;
   }
 
-  function saveMethioDetails() {
+  function saveMethioDetails(e) {
+    if (e) e.preventDefault();
     const all = loadMethio();
     const existing = all[todayISO()] || { took: true };
     all[todayISO()] = Object.assign({}, existing, {
@@ -398,10 +457,6 @@
   }
 
   // ── Feedback ──
-  // A plain mailto: link — no backend, no form to host, works from any
-  // email app already signed in on the phone. The variant label + URL
-  // ride along in the body so a reply makes clear which version it's
-  // about, since testers are comparing several at once.
   function sendFeedback() {
     const variantLabel = CONFIG.variantLabel || document.title;
     const subject = encodeURIComponent(`Methionine tracker feedback — ${variantLabel}`);
@@ -412,9 +467,9 @@
   }
 
   // ── Tutorial walkthrough ──
-  // One short idea per screen, big Back/Next/Skip targets, a "seen it"
-  // flag per storage prefix so it only auto-opens once per device per
-  // variant — but the ❓ button always reopens it from step 1 on demand.
+  // Only opens on demand from the ❓ button now — it doesn't auto-launch,
+  // since forcing a 6-step walkthrough in front of a quick-logging tool
+  // is friction, not help.
   let tutorialStep = 0;
   function tutorialSteps() {
     const capLine = CONFIG.lockCap
@@ -424,7 +479,7 @@
       { icon: '🔢', title: 'Your Daily Total', text: `This big number shows how much methionine you've eaten today. Green means safe, yellow means getting close, red means you're over your limit.${capLine}` },
       { icon: '🍽️', title: 'Quick Add', text: 'Tap any food button below and it gets added right away — no extra steps.' },
       { icon: '↩️', title: 'Made A Mistake?', text: 'Tap "Undo Last Add" any time to remove the food you just added.' },
-      { icon: '🔍', title: "Can't Find Your Food?", text: 'Tap "Search For Another Food" to look up anything that isn\'t in the quick list.' },
+      { icon: '🔍', title: "Can't Find Your Food?", text: 'Tap "Search For Another Food" to type it in, say it out loud, or scan a barcode.' },
       { icon: '💊', title: 'Methioninase', text: 'If you take methioninase, tap Yes or No each day to keep a record of it.' },
       { icon: '📤', title: 'Sharing Your Log', text: 'Use Send Feedback, Share, or Print any time to send today\'s log to your care team.' }
     ];
@@ -455,7 +510,6 @@
   }
   function closeTutorial() {
     document.getElementById('tutorialOverlay').hidden = true;
-    try { localStorage.setItem(KEY_PREFIX + 'feisttech_met_tutorial_seen', '1'); } catch (e) {}
   }
   function tutorialNext() {
     if (tutorialStep >= tutorialSteps().length - 1) { closeTutorial(); return; }
@@ -469,23 +523,108 @@
   }
 
   // ── Cap editing ──
-  function editCap() {
-    const v = prompt('Daily methionine limit (mg):', String(dailyCap));
-    if (v === null) return;
-    const num = parseFloat(v);
+  // An inline numeric field instead of a native prompt() — prompt() can't
+  // be given a numeric keyboard, and wrapping this in a <form> with an
+  // explicit preventDefault means hitting Enter on a mobile keyboard
+  // saves the value instead of doing whatever the browser's default
+  // unhandled-Enter behavior would otherwise be.
+  function openCapEdit() {
+    document.getElementById('capEditInput').value = dailyCap;
+    document.getElementById('capEditRow').hidden = true;
+    document.getElementById('capEditFormWrap').hidden = false;
+    document.getElementById('capEditInput').focus();
+  }
+  function closeCapEdit() {
+    document.getElementById('capEditFormWrap').hidden = true;
+    document.getElementById('capEditRow').hidden = false;
+  }
+  function saveCapEdit(e) {
+    if (e) e.preventDefault();
+    const num = parseFloat(document.getElementById('capEditInput').value);
     if (!isNaN(num) && num > 0) { dailyCap = num; saveCap(); renderAll(); }
+    closeCapEdit();
   }
 
-  // ── Quick-add editing ──
+  // ── Quick-add editing: one row per food, edit/remove in place ──
+  function buildEditFoodRow(name) {
+    const row = document.createElement('div');
+    row.className = 'editFoodRow';
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'editFoodInput';
+    input.value = name;
+    const rm = document.createElement('button');
+    rm.type = 'button';
+    rm.className = 'rmBtn';
+    rm.title = 'Remove';
+    rm.textContent = '×';
+    rm.addEventListener('click', () => row.remove());
+    row.appendChild(input);
+    row.appendChild(rm);
+    return row;
+  }
   function openEditQuickAdd() {
-    document.getElementById('editQuickAddText').value = quickAddFoods.join('\n');
+    const list = document.getElementById('editFoodList');
+    list.innerHTML = '';
+    quickAddFoods.forEach(name => list.appendChild(buildEditFoodRow(name)));
     document.getElementById('editOverlay').hidden = false;
   }
   function saveEditQuickAdd() {
-    const lines = document.getElementById('editQuickAddText').value
-      .split('\n').map(l => l.trim()).filter(Boolean);
-    if (lines.length) { quickAddFoods = lines; saveQuickAdd(); renderQuickAdd(); }
+    const names = Array.from(document.querySelectorAll('#editFoodList .editFoodInput'))
+      .map(i => i.value.trim()).filter(Boolean);
+    if (names.length) { quickAddFoods = names; saveQuickAdd(); renderQuickAdd(); }
     document.getElementById('editOverlay').hidden = true;
+  }
+
+  // ── Voice input ──
+  function wireVoice() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const micBtn = document.getElementById('btnMic');
+    if (!micBtn) return;
+    if (!SpeechRecognition) { micBtn.disabled = true; micBtn.title = 'Voice input not supported in this browser'; return; }
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    micBtn.addEventListener('click', () => {
+      recognition.start();
+      micBtn.classList.add('listening');
+    });
+    recognition.onresult = e => {
+      document.getElementById('searchInput').value = e.results[0][0].transcript;
+      runSearch();
+    };
+    recognition.onend = () => micBtn.classList.remove('listening');
+    recognition.onerror = () => micBtn.classList.remove('listening');
+  }
+
+  // ── Barcode scanning ──
+  function wireScan() {
+    const scanBtn = document.getElementById('btnScan');
+    const reader = document.getElementById('scanReader');
+    if (!scanBtn || !reader) return;
+    if (typeof Html5Qrcode === 'undefined') { scanBtn.disabled = true; scanBtn.title = 'Barcode scanning unavailable offline'; return; }
+    scanBtn.addEventListener('click', () => {
+      if (!reader.hidden) {
+        if (html5Qrcode) html5Qrcode.stop().catch(() => {});
+        reader.hidden = true;
+        return;
+      }
+      reader.hidden = false;
+      html5Qrcode = new Html5Qrcode('scanReader');
+      html5Qrcode.start(
+        { facingMode: 'environment' },
+        { fps: 10, qrbox: { width: 250, height: 150 } },
+        decodedText => {
+          html5Qrcode.stop().catch(() => {});
+          reader.hidden = true;
+          document.getElementById('searchInput').value = decodedText;
+          runSearch();
+        },
+        () => {}
+      ).catch(() => {
+        reader.hidden = true;
+        alert('Could not access the camera. Barcode scanning needs camera permission over HTTPS.');
+      });
+    });
   }
 
   function renderAll() {
@@ -498,6 +637,8 @@
     renderAll();
     renderQuickAdd();
     renderMethio();
+    wireVoice();
+    wireScan();
 
     document.getElementById('btnUndo').addEventListener('click', undoLast);
     document.getElementById('btnReadAloud').addEventListener('click', readTotalAloud);
@@ -505,7 +646,9 @@
       document.getElementById('btnEditCap').hidden = true;
       document.getElementById('capLockedNote').hidden = false;
     } else {
-      document.getElementById('btnEditCap').addEventListener('click', editCap);
+      document.getElementById('btnEditCap').addEventListener('click', openCapEdit);
+      document.getElementById('capEditForm').addEventListener('submit', saveCapEdit);
+      document.getElementById('btnCapCancel').addEventListener('click', closeCapEdit);
     }
 
     if (CONFIG.variantLabel) {
@@ -516,15 +659,27 @@
     document.getElementById('btnToggleSearch').addEventListener('click', () => {
       const area = document.getElementById('searchArea');
       area.hidden = !area.hidden;
+      if (!area.hidden) document.getElementById('searchInput').focus();
     });
-    document.getElementById('btnSearch').addEventListener('click', runSearch);
-    document.getElementById('searchInput').addEventListener('keydown', e => {
-      if (e.key === 'Enter') runSearch();
+    document.getElementById('searchForm').addEventListener('submit', e => {
+      e.preventDefault();
+      runSearch();
     });
 
     document.getElementById('btnMethioYes').addEventListener('click', () => setMethio(true));
     document.getElementById('btnMethioNo').addEventListener('click', () => setMethio(false));
-    document.getElementById('btnMethioSave').addEventListener('click', saveMethioDetails);
+    document.getElementById('btnMethioEdit').addEventListener('click', () => {
+      document.getElementById('methioDetails').hidden = false;
+    });
+    document.getElementById('methioDetails').addEventListener('submit', saveMethioDetails);
+    ['methioTime', 'methioAmount', 'methioNotes'].forEach(id => {
+      document.getElementById(id).addEventListener('focus', () => {
+        setTimeout(() => {
+          const btn = document.getElementById('btnMethioSave');
+          if (btn) btn.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        }, 300);
+      });
+    });
 
     document.getElementById('btnFeedback').addEventListener('click', sendFeedback);
     document.getElementById('btnShare').addEventListener('click', shareSummary);
@@ -536,6 +691,12 @@
     document.getElementById('btnCopy').addEventListener('click', copySummary);
 
     document.getElementById('btnEditQuickAdd').addEventListener('click', openEditQuickAdd);
+    document.getElementById('btnAddFoodRow').addEventListener('click', () => {
+      const list = document.getElementById('editFoodList');
+      const row = buildEditFoodRow('');
+      list.appendChild(row);
+      row.querySelector('input').focus();
+    });
     document.getElementById('btnCancelEdit').addEventListener('click', () => { document.getElementById('editOverlay').hidden = true; });
     document.getElementById('btnSaveEdit').addEventListener('click', saveEditQuickAdd);
     document.getElementById('editOverlay').addEventListener('click', e => {
@@ -554,10 +715,6 @@
       document.getElementById('editOverlay').hidden = true;
       document.getElementById('tutorialOverlay').hidden = true;
     });
-
-    let alreadySeenTutorial = false;
-    try { alreadySeenTutorial = !!localStorage.getItem(KEY_PREFIX + 'feisttech_met_tutorial_seen'); } catch (e) {}
-    if (!alreadySeenTutorial) openTutorial();
   }
 
   init();
