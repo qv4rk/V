@@ -657,18 +657,59 @@
 		const cfg = { mirrors: CONFIG.mirrors, gridMode: CONFIG.gridMode, patternIndex: CONFIG.patternIndex, paletteIndex: CONFIG.paletteIndex, thickness: CONFIG.thickness, stampSize: CONFIG.stampSize, param1: CONFIG.param1, param2: CONFIG.param2 };
 		history.push({ colorIndex, cfg, x, y });
 		historyPointCount++;
+		trimHistory();
+	}
+	// A specific finger lifting -- distinct from the `null` full-break
+	// above, which only fires once EVERY finger is up. Needed so replay
+	// can reconstruct exactly which touches were still held at any given
+	// moment (see activeTouchesAtHistoryIndex below); without it, ghost
+	// replay has no way to know a mesh should still be connecting fingers
+	// B and C after finger A lifted.
+	function endStroke(colorIndex) {
+		activePointerCount = Math.max(0, activePointerCount - 1);
+		history.push({ end: colorIndex });
+		if (activePointerCount === 0) history.push(null);
+	}
+	// A point counts toward the cap; end-markers and null breaks are
+	// free (shifting them off doesn't reduce historyPointCount).
+	function trimHistory() {
 		while (historyPointCount > CONFIG.maxHistory && history.length > 0) {
-			if (history.shift()) historyPointCount--;
+			const removed = history.shift();
+			if (removed && removed.x !== undefined) historyPointCount--;
 		}
 	}
-	function endStroke(colorIndex) { activePointerCount = Math.max(0, activePointerCount - 1); }
+	// True chronological order of who's actually still held down at a
+	// given point in the stream -- a forward scan from the last full
+	// break, adding a touch to `order` the first time it's seen and
+	// removing it (without reordering survivors) on its end-marker.
+	// Exactly reconstructs what `ongoingTouches` would have held live.
+	function activeTouchesAtHistoryIndex(idx) {
+		let start = idx;
+		while (start > 0 && history[start - 1] !== null) start--;
+		const order = [];
+		const pos = new Map();
+		for (let i = start; i <= idx; i++) {
+			const e = history[i];
+			if (!e) continue;
+			if (e.end !== undefined) {
+				const pi = order.indexOf(e.end);
+				if (pi >= 0) order.splice(pi, 1);
+				pos.delete(e.end);
+				continue;
+			}
+			if (!pos.has(e.colorIndex)) order.push(e.colorIndex);
+			pos.set(e.colorIndex, { x: e.x, y: e.y });
+		}
+		return order.map(ci => ({ colorIndex: ci, x: pos.get(ci).x, y: pos.get(ci).y }));
+	}
 
 	/* ================= CORE RENDER PASS =================
 	   True reflective kaleidoscope math (rotate per wedge, alternate
 	   wedges get a Y-flip for a genuine mirror rather than pure rotation)
 	   -- the technique all three of the other apps used independently;
 	   this is the cleanest version of it, applied once per grid center. */
-	function renderPass(targetCtx, cx, cy, uv, prevUV, colorIndex, pal, shadowPal, cfg) {
+	function renderPass(targetCtx, cx, cy, uv, prevUV, colorIndex, pal, shadowPal, cfg, allTouches) {
+		if (!allTouches) allTouches = ongoingTouches; // live default; replay/export pass their own reconstruction
 		const pat = PATTERNS[cfg.patternIndex];
 		const mirrors = Math.max(1, cfg.mirrors);
 		const loops = Math.ceil(mirrors);
@@ -687,7 +728,7 @@
 			pat.draw(
 				targetCtx, uv.x - cx, uv.y - cy, cfg.stampSize, pal, cfg,
 				prevUV ? { x: prevUV.x - cx, y: prevUV.y - cy } : null,
-				colorIndex, ongoingTouches, shadowPal
+				colorIndex, allTouches, shadowPal
 			);
 			targetCtx.restore();
 		}
@@ -708,15 +749,15 @@
 	// pair of fingers and therefore always the same color for the whole
 	// gesture -- that stability, replayed across many mirror wedges, is
 	// what produces the dense woven-ribbon look rather than a random tangle.
-	function drawShadowMesh(targetCtx, cx, cy, pal) {
-		const n = ongoingTouches.length;
+	function drawShadowMesh(targetCtx, cx, cy, pal, touches) {
+		const n = touches.length;
 		if (n < 2) return;
 		const pairs = n === 2 ? 1 : n; // 2 touches: one line, not a doubled-up "cycle"
 		targetCtx.save();
 		targetCtx.lineWidth = Math.max(0.5, CONFIG.thickness * 0.4);
 		for (let j = 0; j < pairs; j++) {
-			const a = ongoingTouches[j];
-			const b = ongoingTouches[(j + 1) % n];
+			const a = touches[j];
+			const b = touches[(j + 1) % n];
 			targetCtx.strokeStyle = pal[j % pal.length];
 			targetCtx.beginPath();
 			targetCtx.moveTo(a.x - cx, a.y - cy);
@@ -740,7 +781,7 @@
 		const centers = getCenters();
 		centers.forEach(c => {
 			renderPass(ctx, c.x, c.y, uv, prevUV, colorIndex, pal, shadowPal, CONFIG);
-			if (CONFIG.shadowMesh) drawShadowMesh(ctx, c.x, c.y, pal);
+			if (CONFIG.shadowMesh) drawShadowMesh(ctx, c.x, c.y, pal, ongoingTouches);
 		});
 		if (isAuto) lastAutoUV = uv; else lastUV = uv;
 	}
@@ -825,20 +866,43 @@
 	   between whichever touches were actually active at that moment,
 	   exactly like live drawing. A null entry (stroke break) resets
 	   continuity so unrelated gestures don't connect to each other. */
+	// Finds the nearest drawable neighbor in the given direction, starting
+	// one step away from idx -- skipping over end-markers (they're not a
+	// position, but shouldn't break line continuity either) and stopping
+	// at a null full-break (no prev across an unrelated gesture).
+	function findPrevDrawable(idx, dir) {
+		let j = idx - dir;
+		while (j >= 0 && j < history.length) {
+			const e = history[j];
+			if (e === null) return null;
+			if (e.x !== undefined) return e;
+			j -= dir;
+		}
+		return null;
+	}
 	let ghostFlatIdx = 0, ghostDir = 1;
 	function stepGhostReplay() {
 		if (history.length < 2) return;
 		for (let step = 0; step < 3; step++) {
 			const entry = history[ghostFlatIdx];
-			if (entry) {
+			if (entry && entry.x !== undefined) {
 				const { pal, shadowPal } = (() => {
 					const name = paletteNames[entry.cfg.paletteIndex] || paletteNames[0];
 					const p = colorPalettes[name];
 					const sName = name.includes("Shadow") ? name : name + " Shadow";
 					return { pal: p, shadowPal: colorPalettes[sName] || p };
 				})();
-				const prevEntry = history[ghostFlatIdx - ghostDir] || null;
-				getCenters().forEach(c => renderPass(ctx, c.x, c.y, entry, prevEntry, entry.colorIndex, pal, shadowPal, entry.cfg));
+				const prevEntry = findPrevDrawable(ghostFlatIdx, ghostDir);
+				// Reconstructs exactly which touches were still held at this
+				// point in the recording -- same state live drawing would
+				// have had in ongoingTouches -- so the mesh (and any pattern
+				// that reacts to "other" touches, like Golden Spiral or
+				// Pyrotaxis) behaves identically on replay as it did live.
+				const active = activeTouchesAtHistoryIndex(ghostFlatIdx);
+				getCenters().forEach(c => {
+					renderPass(ctx, c.x, c.y, entry, prevEntry, entry.colorIndex, pal, shadowPal, entry.cfg, active);
+					if (CONFIG.shadowMesh) drawShadowMesh(ctx, c.x, c.y, pal, active);
+				});
 			}
 			ghostFlatIdx += ghostDir;
 			if (ghostFlatIdx >= history.length - 1) { ghostFlatIdx = history.length - 1; ghostDir = -1; }
@@ -924,7 +988,7 @@
 	// offscreen canvas rather than upscaling the raster, same lossless
 	// approach the other three apps used for their PNG export.
 	function exportHighRes(multiplier) {
-		if (!history.some(Boolean)) { hud('EXPORT', 'nothing drawn yet'); return; }
+		if (!history.some(e => e && e.x !== undefined)) { hud('EXPORT', 'nothing drawn yet'); return; }
 		const baseW = W, baseH = H;
 		const off = document.createElement('canvas');
 		off.width = baseW * multiplier; off.height = baseH * multiplier;
@@ -940,18 +1004,38 @@
 				default: return [{ x: baseW / 2, y: baseH / 2 }];
 			}
 		}
-		// One forward pass through the true chronological stream -- a
-		// null entry (stroke break) resets continuity so unrelated
-		// gestures/layers don't connect to each other.
+		// One forward pass through the true chronological stream. A null
+		// entry (full break) resets both line continuity and the active-
+		// touch set; an end-marker removes just that one touch from the
+		// active set (without breaking continuity -- lifting one finger
+		// shouldn't disconnect the others). activeOrder/activePos rebuild
+		// the same "who's currently held" state ongoingTouches would have
+		// had live, incrementally, so the mesh and any touch-reactive
+		// pattern (Golden Spiral, Pyrotaxis) render identically to live.
 		let prevEntry = null;
+		let activeOrder = [];
+		const activePos = new Map();
 		history.forEach(entry => {
-			if (!entry) { prevEntry = null; return; }
+			if (entry === null) { prevEntry = null; activeOrder = []; activePos.clear(); return; }
+			if (entry.end !== undefined) {
+				const pi = activeOrder.indexOf(entry.end);
+				if (pi >= 0) activeOrder.splice(pi, 1);
+				activePos.delete(entry.end);
+				return;
+			}
+			if (!activePos.has(entry.colorIndex)) activeOrder.push(entry.colorIndex);
+			activePos.set(entry.colorIndex, { x: entry.x, y: entry.y });
+			const active = activeOrder.map(ci => ({ colorIndex: ci, x: activePos.get(ci).x, y: activePos.get(ci).y }));
+
 			const name = paletteNames[entry.cfg.paletteIndex] || paletteNames[0];
 			const pal = colorPalettes[name];
 			const sName = name.includes("Shadow") ? name : name + " Shadow";
 			const shadowPal = colorPalettes[sName] || pal;
 			const centers = centersFor(entry.cfg.gridMode);
-			centers.forEach(c => renderPass(octx, c.x, c.y, entry, prevEntry, entry.colorIndex, pal, shadowPal, entry.cfg));
+			centers.forEach(c => {
+				renderPass(octx, c.x, c.y, entry, prevEntry, entry.colorIndex, pal, shadowPal, entry.cfg, active);
+				if (CONFIG.shadowMesh) drawShadowMesh(octx, c.x, c.y, pal, active);
+			});
 			prevEntry = entry;
 		});
 
@@ -966,14 +1050,14 @@
 	// the live config, so a session can be reloaded and either inspected,
 	// continued, or re-rendered later.
 	document.getElementById('exportJsonBtn').addEventListener('click', () => {
-		if (!history.some(Boolean)) { hud('EXPORT', 'nothing drawn yet'); return; }
+		if (!history.some(e => e && e.x !== undefined)) { hud('EXPORT', 'nothing drawn yet'); return; }
 		const data = { meta: { date: new Date().toISOString(), config: CONFIG }, history };
 		const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
 		const url = URL.createObjectURL(blob);
 		const a = document.createElement('a');
 		a.download = `omniscope_session_${Date.now()}.json`; a.href = url; a.click();
 		URL.revokeObjectURL(url);
-		hud('EXPORTED', `${history.filter(Boolean).length} points`);
+		hud('EXPORTED', `${history.filter(e => e && e.x !== undefined).length} points`);
 	});
 	// Reflects CONFIG's current values back onto the visible sliders/
 	// selects. Needed after JSON import, which writes straight into
@@ -1017,23 +1101,28 @@
 				if (Array.isArray(data.history)) {
 					data.history.forEach(entry => {
 						history.push(entry);
-						if (entry) { historyPointCount++; importedCount++; }
+						if (entry && entry.x !== undefined) { historyPointCount++; importedCount++; }
 					});
 				} else if (Array.isArray(data.strokeHistory)) {
 					// Legacy format (grouped per-stroke instead of one true
 					// chronological stream) -- still importable, just without
 					// true cross-finger interleaving within each old stroke,
 					// since that ordering was never recorded to begin with.
+					// Each old stroke gets its own end-marker so mesh/touch-
+					// reactive patterns at least see it as a self-contained
+					// single-touch gesture rather than an orphaned one.
 					data.strokeHistory.forEach(s => {
 						if (history.length > 0) history.push(null);
 						s.points.forEach(pt => {
 							history.push({ colorIndex: s.colorIndex, cfg: s.cfg, x: pt.x, y: pt.y });
 							historyPointCount++; importedCount++;
 						});
+						history.push({ end: s.colorIndex });
 					});
 				}
 				while (historyPointCount > CONFIG.maxHistory && history.length > 0) {
-					if (history.shift()) historyPointCount--;
+					const removed = history.shift();
+					if (removed && removed.x !== undefined) historyPointCount--;
 				}
 				if (data.meta && data.meta.config) {
 					['mirrors', 'gridMode', 'patternIndex', 'paletteIndex', 'thickness', 'stampSize', 'param1', 'param2', 'fadeRate', 'rotation', 'ghostReplay'].forEach(k => {
