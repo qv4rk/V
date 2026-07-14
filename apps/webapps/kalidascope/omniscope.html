@@ -696,21 +696,31 @@
 		targetCtx.shadowOffsetX = 0; targetCtx.shadowOffsetY = 0;
 	}
 
-	// Optional overlay (ported from vectorfontskalidascope.html's "Shadow
-	// Mesh"): connects every simultaneously active touch to the most
-	// recently moved one with a difference-blended line, once per center.
-	function drawShadowMesh(targetCtx, cx, cy) {
-		if (ongoingTouches.length < 2) return;
-		const primary = ongoingTouches[ongoingTouches.length - 1];
+	// Connects the currently active touches in a stable cycle -- finger 1
+	// to 2, 2 to 3, ..., last back to first -- one line per pair, same
+	// technique as fontforge5.html / klidascopetopgunforge.html's "glitch
+	// mesh" ("wall J gets color J"). The touch/OS layer always knows the
+	// true order fingers landed in (ongoingTouches is push-on-touchstart,
+	// splice-on-touchend, so it's naturally oldest-first and lifting one
+	// finger never reorders the others -- a lifted-then-replanted finger
+	// simply rejoins at the end, exactly like a real device's touch IDs).
+	// So as long as the same fingers stay down, wall J is always the same
+	// pair of fingers and therefore always the same color for the whole
+	// gesture -- that stability, replayed across many mirror wedges, is
+	// what produces the dense woven-ribbon look rather than a random tangle.
+	function drawShadowMesh(targetCtx, cx, cy, pal) {
+		const n = ongoingTouches.length;
+		if (n < 2) return;
+		const pairs = n === 2 ? 1 : n; // 2 touches: one line, not a doubled-up "cycle"
 		targetCtx.save();
-		targetCtx.globalCompositeOperation = 'difference';
-		targetCtx.strokeStyle = '#ffffff';
-		targetCtx.lineWidth = 1;
-		for (const t of ongoingTouches) {
-			if (t === primary) continue;
+		targetCtx.lineWidth = Math.max(0.5, CONFIG.thickness * 0.4);
+		for (let j = 0; j < pairs; j++) {
+			const a = ongoingTouches[j];
+			const b = ongoingTouches[(j + 1) % n];
+			targetCtx.strokeStyle = pal[j % pal.length];
 			targetCtx.beginPath();
-			targetCtx.moveTo(primary.x - cx, primary.y - cy);
-			targetCtx.lineTo(t.x - cx, t.y - cy);
+			targetCtx.moveTo(a.x - cx, a.y - cy);
+			targetCtx.lineTo(b.x - cx, b.y - cy);
 			targetCtx.stroke();
 		}
 		targetCtx.restore();
@@ -730,7 +740,7 @@
 		const centers = getCenters();
 		centers.forEach(c => {
 			renderPass(ctx, c.x, c.y, uv, prevUV, colorIndex, pal, shadowPal, CONFIG);
-			if (CONFIG.shadowMesh) drawShadowMesh(ctx, c.x, c.y);
+			if (CONFIG.shadowMesh) drawShadowMesh(ctx, c.x, c.y, pal);
 		});
 		if (isAuto) lastAutoUV = uv; else lastUV = uv;
 	}
