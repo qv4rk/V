@@ -1041,28 +1041,29 @@
 		a.download = 'omniscope.png'; a.href = canvas.toDataURL('image/png'); a.click();
 	});
 
-	// High-res re-render export -- replays the FULL history onto a scaled
-	// offscreen canvas rather than upscaling the raster, same lossless
-	// approach the other three apps used for their PNG export.
-	function exportHighRes(multiplier) {
-		if (!history.some(e => e && e.x !== undefined)) { hud('EXPORT', 'nothing drawn yet'); return; }
+	function centersForGrid(baseW, baseH, gridMode) {
+		switch (gridMode) {
+			case 1: return [{ x: baseW * 0.25, y: baseH / 2 }, { x: baseW * 0.75, y: baseH / 2 }];
+			case 2: return [{ x: baseW * 0.25, y: baseH * 0.25 }, { x: baseW * 0.75, y: baseH * 0.25 }, { x: baseW * 0.25, y: baseH * 0.75 }, { x: baseW * 0.75, y: baseH * 0.75 }];
+			case 3: { const c = []; for (let gy = 0; gy < 3; gy++) for (let gx = 0; gx < 3; gx++) c.push({ x: baseW * (gx + 0.5) / 3, y: baseH * (gy + 0.5) / 3 }); return c; }
+			default: return [{ x: baseW / 2, y: baseH / 2 }];
+		}
+	}
+	// Replays history (up to and including endIdx) onto a fresh scaled
+	// offscreen canvas -- shared by the high-res re-render export (endIdx =
+	// end of history) and the flipbook export (endIdx = a series of
+	// progressively later cut points), so both always match what live
+	// rendering would have produced. No background fill: canvas 2D
+	// contexts start fully transparent, and these exports are meant to be
+	// print-ready (t-shirts, hats: real alpha, not "looks black on a dark
+	// screen").
+	function renderHistoryFrame(multiplier, endIdx) {
 		const baseW = W, baseH = H;
-		// No background fill -- canvas 2D contexts start fully transparent,
-		// and this export is meant to be print-ready (t-shirts, hats: the
-		// printer needs real alpha, not "looks black on a black screen").
 		const off = document.createElement('canvas');
-		off.width = baseW * multiplier; off.height = baseH * multiplier;
+		off.width = Math.round(baseW * multiplier); off.height = Math.round(baseH * multiplier);
 		const octx = off.getContext('2d');
 		octx.scale(multiplier, multiplier);
 
-		function centersFor(gridMode) {
-			switch (gridMode) {
-				case 1: return [{ x: baseW * 0.25, y: baseH / 2 }, { x: baseW * 0.75, y: baseH / 2 }];
-				case 2: return [{ x: baseW * 0.25, y: baseH * 0.25 }, { x: baseW * 0.75, y: baseH * 0.25 }, { x: baseW * 0.25, y: baseH * 0.75 }, { x: baseW * 0.75, y: baseH * 0.75 }];
-				case 3: { const c = []; for (let gy = 0; gy < 3; gy++) for (let gx = 0; gx < 3; gx++) c.push({ x: baseW * (gx + 0.5) / 3, y: baseH * (gy + 0.5) / 3 }); return c; }
-				default: return [{ x: baseW / 2, y: baseH / 2 }];
-			}
-		}
 		// One forward pass through the true chronological stream, with
 		// INDEPENDENT running state per layer -- a `brk` on layer 0 resets
 		// only layer 0's continuity and active-touch set, never layer 1's,
@@ -1079,15 +1080,16 @@
 			if (!layerState.has(layer)) layerState.set(layer, { prevEntry: null, activeOrder: [], activePos: new Map() });
 			return layerState.get(layer);
 		}
-		history.forEach(entry => {
-			if (!entry) return;
+		for (let idx = 0; idx <= endIdx && idx < history.length; idx++) {
+			const entry = history[idx];
+			if (!entry) continue;
 			const st = stateFor(entry.layer);
-			if (entry.brk) { st.prevEntry = null; st.activeOrder = []; st.activePos.clear(); return; }
+			if (entry.brk) { st.prevEntry = null; st.activeOrder = []; st.activePos.clear(); continue; }
 			if (entry.end !== undefined) {
 				const pi = st.activeOrder.indexOf(entry.end);
 				if (pi >= 0) st.activeOrder.splice(pi, 1);
 				st.activePos.delete(entry.end);
-				return;
+				continue;
 			}
 			if (!st.activePos.has(entry.colorIndex)) st.activeOrder.push(entry.colorIndex);
 			st.activePos.set(entry.colorIndex, { x: entry.x, y: entry.y });
@@ -1097,14 +1099,24 @@
 			const pal = colorPalettes[name];
 			const sName = name.includes("Shadow") ? name : name + " Shadow";
 			const shadowPal = colorPalettes[sName] || pal;
-			const centers = centersFor(entry.cfg.gridMode);
+			const centers = centersForGrid(baseW, baseH, entry.cfg.gridMode);
 			centers.forEach(c => {
 				renderPass(octx, c.x, c.y, entry, st.prevEntry, entry.colorIndex, pal, shadowPal, entry.cfg, active);
 				if (CONFIG.shadowMesh) drawShadowMesh(octx, c.x, c.y, pal, active);
 			});
 			st.prevEntry = entry;
-		});
+		}
+		return off;
+	}
 
+	// High-res re-render export -- replays the FULL history onto a scaled
+	// offscreen canvas rather than upscaling the raster, same lossless
+	// approach the other three apps used for their PNG export. This IS
+	// the "final frame" / final image: the complete composited drawing,
+	// transparent background, ready to hand to a t-shirt or hat printer.
+	function exportHighRes(multiplier) {
+		if (!history.some(e => e && e.x !== undefined)) { hud('EXPORT', 'nothing drawn yet'); return; }
+		const off = renderHistoryFrame(multiplier, history.length - 1);
 		const a = document.createElement('a');
 		a.download = `omniscope_${multiplier}x.png`; a.href = off.toDataURL('image/png'); a.click();
 		hud('EXPORTED', `${multiplier}× re-render`);
