@@ -715,6 +715,11 @@
 	   being tacked on sequentially after it. Unlocked layers are
 	   unaffected; they replay exactly as before (index-stepped ping-pong). */
 	let layerLock = {};
+	// How close (in loop-clock ms) a stored point has to be to "now" to
+	// count as your past self's finger being there right now. Shared by
+	// the live-draw merge (liveTouchesForLayer) and the replay pass
+	// (renderLockedLayers) so both agree on what "at the same time" means.
+	const MESH_WINDOW_MS = 60;
 
 	function lockLayerFromLastSession(layer) {
 		let minTs = Infinity, maxTs = -Infinity;
@@ -919,13 +924,41 @@
 		return { pal, shadowPal };
 	}
 
+	// While you're actively drawing on a LOCKED layer, your own past
+	// recorded self is replaying live on it via the loop clock (that's
+	// renderLockedLayers) -- but until now that replay was a separate,
+	// disconnected render pass. This is the live-draw counterpart: at the
+	// instant you draw a point, look up wherever your past self's finger
+	// currently sits in the very same cycle and hand it back as one more
+	// entry in the touch list, right alongside your real one. It's not a
+	// synthetic/offset companion (that's fontforge's virtual-finger
+	// formation, a different thing) -- it's your own real recorded points,
+	// just read back at "now" instead of at their original wall-clock time.
+	// Because it's the SAME list `renderPass`/`drawShadowMesh` already mesh
+	// together every frame, your current stroke and your past self connect
+	// exactly the way two real simultaneous fingers would, live, while
+	// you're drawing -- not just after the fact on replay. Ordered by
+	// colorIndex ascending, same rule as everywhere else: whichever finger
+	// actually came first (even sessions apart) stays first.
+	function liveTouchesForLayer(layer) {
+		if (!layerLock[layer]) return ongoingTouches;
+		const targetPos = getLoopClockPos(layer, performance.now());
+		if (targetPos === null) return ongoingTouches;
+		const liveIds = new Set(ongoingTouches.map(t => t.colorIndex));
+		const pastSelf = activeTouchesAtLoopPosition(layer, targetPos, MESH_WINDOW_MS)
+			.filter(t => !liveIds.has(t.colorIndex));
+		if (pastSelf.length === 0) return ongoingTouches;
+		return [...ongoingTouches, ...pastSelf].sort((a, b) => a.colorIndex - b.colorIndex);
+	}
+
 	function drawOnTexture(uv, isAuto, colorIndex) {
 		let prevUV = isAuto ? lastAutoUV : (lastUVByLayer[currentLayer] || null);
 		const { pal, shadowPal } = currentPalettes();
 		const centers = getCenters();
+		const allTouches = liveTouchesForLayer(currentLayer);
 		centers.forEach(c => {
-			renderPass(ctx, c.x, c.y, uv, prevUV, colorIndex, pal, shadowPal, CONFIG);
-			if (CONFIG.shadowMesh) drawShadowMesh(ctx, c.x, c.y, pal, ongoingTouches);
+			renderPass(ctx, c.x, c.y, uv, prevUV, colorIndex, pal, shadowPal, CONFIG, allTouches);
+			if (CONFIG.shadowMesh) drawShadowMesh(ctx, c.x, c.y, pal, allTouches);
 		});
 		if (isAuto) lastAutoUV = uv; else lastUVByLayer[currentLayer] = uv;
 	}
@@ -1083,7 +1116,6 @@
 	// original-session fingers land at the same loop-clock position.
 	function renderLockedLayers() {
 		const now = performance.now();
-		const WINDOW_MS = 60;
 		for (const layerKey in layerLock) {
 			const layer = Number(layerKey);
 			const clockNow = getLoopClockPos(layer, now);
@@ -1092,7 +1124,7 @@
 				const entry = history[idx];
 				if (!entry || entry.layer !== layer || entry.x === undefined) continue;
 				const pos = getLoopClockPos(layer, entry.ts);
-				if (pos === null || Math.abs(pos - clockNow) > WINDOW_MS) continue;
+				if (pos === null || Math.abs(pos - clockNow) > MESH_WINDOW_MS) continue;
 				const { pal, shadowPal } = (() => {
 					const name = paletteNames[entry.cfg.paletteIndex] || paletteNames[0];
 					const p = colorPalettes[name];
@@ -1100,7 +1132,7 @@
 					return { pal: p, shadowPal: colorPalettes[sName] || p };
 				})();
 				const prevEntry = findPrevDrawable(idx, 1, layer);
-				const active = activeTouchesAtLoopPosition(layer, pos, WINDOW_MS);
+				const active = activeTouchesAtLoopPosition(layer, pos, MESH_WINDOW_MS);
 				getCenters().forEach(c => {
 					renderPass(ctx, c.x, c.y, entry, prevEntry, entry.colorIndex, pal, shadowPal, entry.cfg, active);
 					if (CONFIG.shadowMesh) drawShadowMesh(ctx, c.x, c.y, pal, active);
