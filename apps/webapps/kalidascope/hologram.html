@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Hologram Omniscope</title>
+<style>
+	html, body { margin:0; padding:0; overflow:hidden; background:#050507; height:100%; touch-action:none; }
+	canvas { display:block; }
+	#hud {
+		position:fixed; top:10px; left:10px; z-index:10;
+		font-family:'Space Mono', monospace; font-size:11px; color:#8fd; opacity:0.8;
+		background:rgba(0,0,0,0.4); padding:8px 12px; border-radius:6px; line-height:1.6;
+		pointer-events:none;
+	}
+	#controls {
+		position:fixed; bottom:14px; left:50%; transform:translateX(-50%); z-index:10;
+		display:flex; gap:10px; align-items:center;
+		font-family:'Space Mono', monospace; font-size:11px; color:#cde;
+		background:rgba(10,10,14,0.7); padding:10px 16px; border-radius:10px;
+		border:1px solid rgba(140,220,255,0.2);
+	}
+	#controls label { display:flex; flex-direction:column; gap:3px; align-items:center; }
+	#controls input[type=range] { width:120px; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="hud">
+	SIERPINSKI TETRAHEDRON<br>
+	drag: rotate &middot; wheel/pinch: zoom
+</div>
+<div id="controls">
+	<label>Depth <span id="depthVal">3</span>
+		<input type="range" id="depth" min="0" max="6" step="1" value="3">
+	</label>
+	<label>Auto-spin
+		<input type="checkbox" id="autoSpin" checked>
+	</label>
+</div>
+
+<script>
+'use strict';
+
+/* ============================================================
+   GEOMETRY — the recursive rule itself.
+   Given a tetrahedron's 4 vertices, replace it with 4 smaller
+   tetrahedra: each keeps one original corner plus the 3 edge
+   midpoints nearest it. The 5th possible piece (an octahedron
+   in the middle) is deliberately never created -- that omission
+   is the entire fractal. Pure function, no rendering knowledge,
+   independently testable.
+   ============================================================ */
+function midpoint(p, q) {
+	return { x: (p.x + q.x) / 2, y: (p.y + q.y) / 2, z: (p.z + q.z) / 2 };
+}
+
+function subdivideTetrahedron(vertices, depth) {
+	if (depth <= 0) return [vertices];
+	const [A, B, C, D] = vertices;
+	const AB = midpoint(A, B), AC = midpoint(A, C), AD = midpoint(A, D);
+	const BC = midpoint(B, C), BD = midpoint(B, D), CD = midpoint(C, D);
+	const children = [
+		[A, AB, AC, AD],
+		[B, AB, BC, BD],
+		[C, AC, BC, CD],
+		[D, AD, BD, CD]
+	];
+	let out = [];
+	for (const child of children) out = out.concat(subdivideTetrahedron(child, depth - 1));
+	return out;
+}
+
+// 4 triangular faces of one tetrahedron, each face tagged with
+// which "child slot" (0-3) it belongs to for stable coloring.
+function tetraFaces(v) {
+	const [A, B, C, D] = v;
+	return [[A, B, C], [A, B, D], [A, C, D], [B, C, D]];
+}
+
+// Regular tetrahedron via 4 alternating vertices of a cube --
+// all 6 edges equal by construction, centered at the origin.
+function baseTetrahedron(size) {
+	const s = size;
+	return [
+		{ x:  s, y:  s, z:  s },
+		{ x:  s, y: -s, z: -s },
+		{ x: -s, y:  s, z: -s },
+		{ x: -s, y: -s, z:  s }
+	];
+}
+
+/* ============================================================
+   3D MATH — real rotation matrices + real perspective
+   projection, same approach validated in the Holographic
+   Kaleidoscope reference this session. No WebGL, no library.
+   ============================================================ */
+function rotate3D(x, y, z, pitch, yaw) {
+	let y1 = y * Math.cos(pitch) - z * Math.sin(pitch);
+	let z1 = y * Math.sin(pitch) + z * Math.cos(pitch);
+	let x2 = x * Math.cos(yaw) - z1 * Math.sin(yaw);
+	let z2 = x * Math.sin(yaw) + z1 * Math.cos(yaw);
+	return { x: x2, y: y1, z: z2 };
+}
+
+function project3D(x, y, z, cx, cy, focal, camDist) {
+	const scale = focal / (focal + z + camDist);
+	return { x: cx + x * scale, y: cy + y * scale, scale };
+}
+
+/* ============================================================
+   RENDER
+   ============================================================ */
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+function resize() { canvas.width = innerWidth; canvas.height = innerHeight; }
+resize();
+window.addEventListener('resize', resize);
+
+const state = {
+	depth: 3,
+	rotX: 25,
+	rotY: -30,
+	zoom: 1,
+	autoSpin: true,
+	dragging: false,
+	lastX: 0, lastY: 0
+};
+
+let leafTetrahedra = subdivideTetrahedron(baseTetrahedron(1), state.depth);
+
+const PALETTE = ['#ff5ec8', '#5ecdff', '#9dff5e', '#ffd35e'];
+
+function render() {
+	const w = canvas.width, h = canvas.height;
+	ctx.clearRect(0, 0, w, h);
+
+	const cx = w / 2, cy = h / 2;
+	const pitch = state.rotX * Math.PI / 180;
+	const yaw = state.rotY * Math.PI / 180;
+	const focal = 800;
+	const camDist = 900 / state.zoom;
+	const sceneScale = Math.min(w, h) * 0.32;
+
+	// Gather every triangular face across every leaf tetrahedron,
+	// projected, tagged with average depth for painter's-algorithm
+	// sorting (simple back-to-front fill, good enough at this
+	// polygon count without a full z-buffer).
+	const drawFaces = [];
+	leafTetrahedra.forEach((tet, tetIdx) => {
+		const faces = tetraFaces(tet);
+		faces.forEach((face, faceIdx) => {
+			const projected = face.map(v => {
+				const scaled = { x: v.x * sceneScale, y: v.y * sceneScale, z: v.z * sceneScale };
+				const rotated = rotate3D(scaled.x, scaled.y, scaled.z, pitch, yaw);
+				return project3D(rotated.x, rotated.y, rotated.z, cx, cy, focal, camDist);
+			});
+			const avgZ = face.reduce((sum, v) => sum + v.z, 0) / 3;
+			drawFaces.push({ pts: projected, avgZ, color: PALETTE[faceIdx % PALETTE.length] });
+		});
+	});
+	drawFaces.sort((a, b) => a.avgZ - b.avgZ);
+
+	drawFaces.forEach(f => {
+		ctx.beginPath();
+		ctx.moveTo(f.pts[0].x, f.pts[0].y);
+		ctx.lineTo(f.pts[1].x, f.pts[1].y);
+		ctx.lineTo(f.pts[2].x, f.pts[2].y);
+		ctx.closePath();
+		ctx.fillStyle = f.color;
+		ctx.globalAlpha = 0.55;
+		ctx.fill();
+		ctx.globalAlpha = 1;
+		ctx.strokeStyle = f.color;
+		ctx.lineWidth = 0.6;
+		ctx.stroke();
+	});
+}
+
+function animate() {
+	if (state.autoSpin && !state.dragging) state.rotY += 0.25;
+	render();
+	requestAnimationFrame(animate);
+}
+animate();
+
+/* ============================================================
+   INPUT
+   ============================================================ */
+canvas.addEventListener('mousedown', e => { state.dragging = true; state.lastX = e.clientX; state.lastY = e.clientY; });
+window.addEventListener('mousemove', e => {
+	if (!state.dragging) return;
+	state.rotY += (e.clientX - state.lastX) * 0.5;
+	state.rotX += (e.clientY - state.lastY) * 0.5;
+	state.lastX = e.clientX; state.lastY = e.clientY;
+});
+window.addEventListener('mouseup', () => state.dragging = false);
+
+canvas.addEventListener('wheel', e => {
+	e.preventDefault();
+	state.zoom = Math.max(0.3, Math.min(4, state.zoom - e.deltaY * 0.001));
+}, { passive: false });
+
+canvas.addEventListener('touchstart', e => {
+	if (e.touches.length === 1) {
+		state.dragging = true;
+		state.lastX = e.touches[0].clientX;
+		state.lastY = e.touches[0].clientY;
+	}
+}, { passive: true });
+canvas.addEventListener('touchmove', e => {
+	if (e.touches.length === 1 && state.dragging) {
+		const t = e.touches[0];
+		state.rotY += (t.clientX - state.lastX) * 0.5;
+		state.rotX += (t.clientY - state.lastY) * 0.5;
+		state.lastX = t.clientX; state.lastY = t.clientY;
+	}
+}, { passive: true });
+canvas.addEventListener('touchend', () => state.dragging = false);
+
+document.getElementById('depth').addEventListener('input', e => {
+	state.depth = parseInt(e.target.value, 10);
+	document.getElementById('depthVal').textContent = state.depth;
+	leafTetrahedra = subdivideTetrahedron(baseTetrahedron(1), state.depth);
+});
+document.getElementById('autoSpin').addEventListener('change', e => { state.autoSpin = e.target.checked; });
+</script>
+</body>
+</html>
