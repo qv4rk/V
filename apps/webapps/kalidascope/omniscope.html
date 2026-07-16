@@ -811,6 +811,42 @@
 		return order.map(ci => ({ colorIndex: ci, x: pos.get(ci).x, y: pos.get(ci).y }));
 	}
 
+	// Cross-session version of activeTouchesAtHistoryIndex, for locked
+	// layers only: instead of scanning one recording session's own array
+	// segment, this asks "which touches -- from ANY session ever recorded
+	// on this layer -- were down at this position in the shared loop
+	// clock?" A finger added later, in a separate session, lands at
+	// whatever loop-position its own timestamps translate to; if that
+	// overlaps a position from the original locking session, both count
+	// as simultaneously held -- which is what makes a finger added weeks
+	// later render as though it were on-screen at the same time as the
+	// original fingers, instead of just time-synced alongside them.
+	// Matches per-point within `windowMs` of `targetPos` (same technique
+	// renderLockedLayers already uses to decide what's "now"), rather than
+	// reconstructing each touch's continuous active interval -- a stroke's
+	// real-time span can cross a triangle-wave peak/trough and stop being
+	// contiguous in loop-position terms, so per-point matching is the
+	// tractable version of this.
+	// Ordered by colorIndex ascending, which is true chronological touch
+	// order even across separate sessions (touchColorCounter only ever
+	// increments) -- so an added finger takes its place as the correct
+	// "next" finger in the mesh cycle, not bolted onto the end of it.
+	function activeTouchesAtLoopPosition(layer, targetPos, windowMs) {
+		const best = new Map(); // colorIndex -> { x, y, dist }
+		for (let i = 0; i < history.length; i++) {
+			const e = history[i];
+			if (!e || e.layer !== layer || e.x === undefined) continue;
+			const pos = getLoopClockPos(layer, e.ts);
+			if (pos === null) continue;
+			const dist = Math.abs(pos - targetPos);
+			if (dist > windowMs) continue;
+			const prev = best.get(e.colorIndex);
+			if (!prev || dist < prev.dist) best.set(e.colorIndex, { x: e.x, y: e.y, dist });
+		}
+		return Array.from(best.keys()).sort((a, b) => a - b)
+			.map(ci => ({ colorIndex: ci, x: best.get(ci).x, y: best.get(ci).y }));
+	}
+
 	/* ================= CORE RENDER PASS =================
 	   True reflective kaleidoscope math (rotate per wedge, alternate
 	   wedges get a Y-flip for a genuine mirror rather than pure rotation)
@@ -1039,10 +1075,12 @@
 	// clock position is close to that point's own recorded position in
 	// the cycle -- so a stroke added minutes after the layer locked still
 	// plays back "in line" with the original session, not sequentially
-	// after it. Prev-lookup and mesh reconstruction stay scoped to each
-	// point's own originally-recorded stroke (array-adjacency within a
-	// `brk`-bounded segment), so this doesn't attempt to mesh-connect
-	// touches from two different, separately-recorded sessions.
+	// after it. Prev-lookup stays scoped to each point's own originally-
+	// recorded stroke (array-adjacency within a `brk`-bounded segment) --
+	// but the active-touch/mesh reconstruction below is cross-session
+	// (see activeTouchesAtLoopPosition): a finger added in a separate,
+	// later session is treated as simultaneously held with whichever
+	// original-session fingers land at the same loop-clock position.
 	function renderLockedLayers() {
 		const now = performance.now();
 		const WINDOW_MS = 60;
@@ -1062,7 +1100,7 @@
 					return { pal: p, shadowPal: colorPalettes[sName] || p };
 				})();
 				const prevEntry = findPrevDrawable(idx, 1, layer);
-				const active = activeTouchesAtHistoryIndex(idx, layer);
+				const active = activeTouchesAtLoopPosition(layer, pos, WINDOW_MS);
 				getCenters().forEach(c => {
 					renderPass(ctx, c.x, c.y, entry, prevEntry, entry.colorIndex, pal, shadowPal, entry.cfg, active);
 					if (CONFIG.shadowMesh) drawShadowMesh(ctx, c.x, c.y, pal, active);
