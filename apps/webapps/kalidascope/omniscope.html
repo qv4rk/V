@@ -715,11 +715,6 @@
 	   being tacked on sequentially after it. Unlocked layers are
 	   unaffected; they replay exactly as before (index-stepped ping-pong). */
 	let layerLock = {};
-	// How close (in loop-clock ms) a stored point has to be to "now" to
-	// count as your past self's finger being there right now. Shared by
-	// the live-draw merge (liveTouchesForLayer) and the replay pass
-	// (renderLockedLayers) so both agree on what "at the same time" means.
-	const MESH_WINDOW_MS = 60;
 
 	function lockLayerFromLastSession(layer) {
 		let minTs = Infinity, maxTs = -Infinity;
@@ -816,42 +811,6 @@
 		return order.map(ci => ({ colorIndex: ci, x: pos.get(ci).x, y: pos.get(ci).y }));
 	}
 
-	// Cross-session version of activeTouchesAtHistoryIndex, for locked
-	// layers only: instead of scanning one recording session's own array
-	// segment, this asks "which touches -- from ANY session ever recorded
-	// on this layer -- were down at this position in the shared loop
-	// clock?" A finger added later, in a separate session, lands at
-	// whatever loop-position its own timestamps translate to; if that
-	// overlaps a position from the original locking session, both count
-	// as simultaneously held -- which is what makes a finger added weeks
-	// later render as though it were on-screen at the same time as the
-	// original fingers, instead of just time-synced alongside them.
-	// Matches per-point within `windowMs` of `targetPos` (same technique
-	// renderLockedLayers already uses to decide what's "now"), rather than
-	// reconstructing each touch's continuous active interval -- a stroke's
-	// real-time span can cross a triangle-wave peak/trough and stop being
-	// contiguous in loop-position terms, so per-point matching is the
-	// tractable version of this.
-	// Ordered by colorIndex ascending, which is true chronological touch
-	// order even across separate sessions (touchColorCounter only ever
-	// increments) -- so an added finger takes its place as the correct
-	// "next" finger in the mesh cycle, not bolted onto the end of it.
-	function activeTouchesAtLoopPosition(layer, targetPos, windowMs) {
-		const best = new Map(); // colorIndex -> { x, y, dist }
-		for (let i = 0; i < history.length; i++) {
-			const e = history[i];
-			if (!e || e.layer !== layer || e.x === undefined) continue;
-			const pos = getLoopClockPos(layer, e.ts);
-			if (pos === null) continue;
-			const dist = Math.abs(pos - targetPos);
-			if (dist > windowMs) continue;
-			const prev = best.get(e.colorIndex);
-			if (!prev || dist < prev.dist) best.set(e.colorIndex, { x: e.x, y: e.y, dist });
-		}
-		return Array.from(best.keys()).sort((a, b) => a - b)
-			.map(ci => ({ colorIndex: ci, x: best.get(ci).x, y: best.get(ci).y }));
-	}
-
 	/* ================= CORE RENDER PASS =================
 	   True reflective kaleidoscope math (rotate per wedge, alternate
 	   wedges get a Y-flip for a genuine mirror rather than pure rotation)
@@ -924,41 +883,13 @@
 		return { pal, shadowPal };
 	}
 
-	// While you're actively drawing on a LOCKED layer, your own past
-	// recorded self is replaying live on it via the loop clock (that's
-	// renderLockedLayers) -- but until now that replay was a separate,
-	// disconnected render pass. This is the live-draw counterpart: at the
-	// instant you draw a point, look up wherever your past self's finger
-	// currently sits in the very same cycle and hand it back as one more
-	// entry in the touch list, right alongside your real one. It's not a
-	// synthetic/offset companion (that's fontforge's virtual-finger
-	// formation, a different thing) -- it's your own real recorded points,
-	// just read back at "now" instead of at their original wall-clock time.
-	// Because it's the SAME list `renderPass`/`drawShadowMesh` already mesh
-	// together every frame, your current stroke and your past self connect
-	// exactly the way two real simultaneous fingers would, live, while
-	// you're drawing -- not just after the fact on replay. Ordered by
-	// colorIndex ascending, same rule as everywhere else: whichever finger
-	// actually came first (even sessions apart) stays first.
-	function liveTouchesForLayer(layer) {
-		if (!layerLock[layer]) return ongoingTouches;
-		const targetPos = getLoopClockPos(layer, performance.now());
-		if (targetPos === null) return ongoingTouches;
-		const liveIds = new Set(ongoingTouches.map(t => t.colorIndex));
-		const pastSelf = activeTouchesAtLoopPosition(layer, targetPos, MESH_WINDOW_MS)
-			.filter(t => !liveIds.has(t.colorIndex));
-		if (pastSelf.length === 0) return ongoingTouches;
-		return [...ongoingTouches, ...pastSelf].sort((a, b) => a.colorIndex - b.colorIndex);
-	}
-
 	function drawOnTexture(uv, isAuto, colorIndex) {
 		let prevUV = isAuto ? lastAutoUV : (lastUVByLayer[currentLayer] || null);
 		const { pal, shadowPal } = currentPalettes();
 		const centers = getCenters();
-		const allTouches = liveTouchesForLayer(currentLayer);
 		centers.forEach(c => {
-			renderPass(ctx, c.x, c.y, uv, prevUV, colorIndex, pal, shadowPal, CONFIG, allTouches);
-			if (CONFIG.shadowMesh) drawShadowMesh(ctx, c.x, c.y, pal, allTouches);
+			renderPass(ctx, c.x, c.y, uv, prevUV, colorIndex, pal, shadowPal, CONFIG);
+			if (CONFIG.shadowMesh) drawShadowMesh(ctx, c.x, c.y, pal, ongoingTouches);
 		});
 		if (isAuto) lastAutoUV = uv; else lastUVByLayer[currentLayer] = uv;
 	}
@@ -1108,14 +1039,13 @@
 	// clock position is close to that point's own recorded position in
 	// the cycle -- so a stroke added minutes after the layer locked still
 	// plays back "in line" with the original session, not sequentially
-	// after it. Prev-lookup stays scoped to each point's own originally-
-	// recorded stroke (array-adjacency within a `brk`-bounded segment) --
-	// but the active-touch/mesh reconstruction below is cross-session
-	// (see activeTouchesAtLoopPosition): a finger added in a separate,
-	// later session is treated as simultaneously held with whichever
-	// original-session fingers land at the same loop-clock position.
+	// after it. Prev-lookup and mesh reconstruction stay scoped to each
+	// point's own originally-recorded stroke (array-adjacency within a
+	// `brk`-bounded segment), so this doesn't attempt to mesh-connect
+	// touches from two different, separately-recorded sessions.
 	function renderLockedLayers() {
 		const now = performance.now();
+		const WINDOW_MS = 60;
 		for (const layerKey in layerLock) {
 			const layer = Number(layerKey);
 			const clockNow = getLoopClockPos(layer, now);
@@ -1124,7 +1054,7 @@
 				const entry = history[idx];
 				if (!entry || entry.layer !== layer || entry.x === undefined) continue;
 				const pos = getLoopClockPos(layer, entry.ts);
-				if (pos === null || Math.abs(pos - clockNow) > MESH_WINDOW_MS) continue;
+				if (pos === null || Math.abs(pos - clockNow) > WINDOW_MS) continue;
 				const { pal, shadowPal } = (() => {
 					const name = paletteNames[entry.cfg.paletteIndex] || paletteNames[0];
 					const p = colorPalettes[name];
@@ -1132,7 +1062,7 @@
 					return { pal: p, shadowPal: colorPalettes[sName] || p };
 				})();
 				const prevEntry = findPrevDrawable(idx, 1, layer);
-				const active = activeTouchesAtLoopPosition(layer, pos, MESH_WINDOW_MS);
+				const active = activeTouchesAtHistoryIndex(idx, layer);
 				getCenters().forEach(c => {
 					renderPass(ctx, c.x, c.y, entry, prevEntry, entry.colorIndex, pal, shadowPal, entry.cfg, active);
 					if (CONFIG.shadowMesh) drawShadowMesh(ctx, c.x, c.y, pal, active);
