@@ -272,6 +272,21 @@
 	   ones those apps mislabeled "Koch Snowflake" / "Voronoi Cells"
 	   (neither is actually a Koch curve or a Voronoi diagram), renamed
 	   here to describe what they actually draw. */
+	// Deterministic 0..1 pseudo-random value from up to 3 numbers -- used
+	// in place of Date.now() for any per-stamp visual variation. A
+	// clock-based phase looked fine live (each call draws a genuinely new
+	// point), but Ghost Replay redraws the SAME historical point many
+	// times a second as it ping-pongs, and a clock-driven angle/phase
+	// made that stamp flash a different orientation on every single
+	// redraw -- a real strobing hazard at high mirror counts. Seeding
+	// from the point's own data instead makes every redraw of a given
+	// point pixel-identical, so replay is stable, not caring how many
+	// times or how fast a point gets redrawn.
+	function stableRand(a, b, c) {
+		const v = Math.sin(a * 12.9898 + b * 78.233 + (c || 0) * 37.719) * 43758.5453;
+		return v - Math.floor(v);
+	}
+
 	const PATTERNS = [
 		{
 			name: "Standard Line", spacing: 0,
@@ -392,10 +407,11 @@
 				ctx.strokeStyle = color; ctx.lineWidth = p.thickness;
 				const dist = Math.hypot(x - prev.x, y - prev.y);
 				const angle = Math.atan2(y - prev.y, x - prev.x);
+				const phase = stableRand(prev.x, prev.y, colorIndex) * 1000;
 				ctx.save(); ctx.translate(prev.x, prev.y); ctx.rotate(angle);
 				ctx.beginPath();
 				for (let i = 0; i < dist; i += 2) {
-					const wy = Math.sin((i + Date.now() * 0.01) * 0.1) * size;
+					const wy = Math.sin((i + phase) * 0.1) * size;
 					if (i === 0) ctx.moveTo(i, wy); else ctx.lineTo(i, wy);
 				}
 				ctx.stroke(); ctx.restore();
@@ -442,15 +458,33 @@
 			}
 		},
 		{
+			// Differential-speed spiral -- angularSpeed(r) = k/r, so points
+			// near the center wind through many turns while the outer edge
+			// stays almost straight, the "watch spring" look. The source
+			// sketch drove this with frameCount (real time) since it redraws
+			// the whole spiral fresh every frame live; Omniscope instead
+			// stamps ONE frozen snapshot of that spiral per touch point, so
+			// "time" here is a phase baked in at stamp time from the point's
+			// own position/color -- deterministic, so every future redraw of
+			// this exact stamp (live, Ghost Replay, export) is pixel-
+			// identical. A clock-driven phase would redraw a DIFFERENT
+			// snapshot every time Ghost Replay revisits this same stored
+			// point (many times a second), which is a real strobing hazard.
 			name: "Rotating Notch", spacing: 0.3,
 			draw: (ctx, x, y, size, pal, p, prev, colorIndex) => {
 				const color = pal[colorIndex % pal.length];
 				ctx.strokeStyle = color; ctx.lineWidth = p.thickness;
-				const time = Date.now() * 0.002;
-				ctx.save(); ctx.translate(x, y); ctx.rotate(time);
+				const phase = (stableRand(x, y, colorIndex) * 2 - 1) * 40;
+				const count = Math.round(20 + p.param1 * 60);
+				const radiusStep = (size * 0.5 * (0.2 + p.param2 * 0.8)) / count;
+				ctx.save(); ctx.translate(x, y);
 				ctx.beginPath();
-				ctx.moveTo(-size / 2, 0); ctx.lineTo(size / 2, 0);
-				ctx.moveTo(size / 4, -size / 4); ctx.lineTo(size / 2, 0); ctx.lineTo(size / 4, size / 4);
+				for (let i = 0; i < count; i++) {
+					const r = (i + 1) * radiusStep;
+					const angle = phase / r;
+					const px = r * Math.cos(angle), py = r * Math.sin(angle);
+					if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+				}
 				ctx.stroke(); ctx.restore();
 			}
 		},
