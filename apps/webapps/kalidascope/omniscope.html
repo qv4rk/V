@@ -704,6 +704,48 @@
 	let historyPointCount = 0;
 	let activePointerCountByLayer = {};
 
+	/* ================= LAYER CLOCK =================
+	   A layer's FIRST complete session (every pointer down, then every
+	   pointer back up -- one finger or several simultaneously) locks in
+	   that session's real elapsed duration as the layer's permanent
+	   cycle length. Anything drawn on that layer afterward -- a new
+	   finger, a whole new stroke -- gets timestamped, and its position
+	   in the SAME cycle is derived from that timestamp, so during Ghost
+	   Replay it plays back in sync with the original session instead of
+	   being tacked on sequentially after it. Unlocked layers are
+	   unaffected; they replay exactly as before (index-stepped ping-pong). */
+	let layerLock = {};
+
+	function lockLayerFromLastSession(layer) {
+		let minTs = Infinity, maxTs = -Infinity;
+		for (let i = history.length - 1; i >= 0; i--) {
+			const e = history[i];
+			if (!e || e.layer !== layer) continue;
+			if (e.brk) break;
+			if (e.x !== undefined && e.ts !== undefined) {
+				if (e.ts < minTs) minTs = e.ts;
+				if (e.ts > maxTs) maxTs = e.ts;
+			}
+		}
+		if (minTs === Infinity) return;
+		// Floor avoids a degenerate near-zero cycle from a quick tap.
+		const cycleDurationMs = Math.max(300, maxTs - minTs);
+		layerLock[layer] = { firstTs: minTs, cycleDurationMs };
+	}
+
+	// Where in a locked layer's cycle a given real timestamp falls --
+	// a pure triangle wave (0 -> duration -> 0 -> ...), so it's fully
+	// determined by wall-clock time and needs no per-frame bookkeeping.
+	// Returns null for an unlocked layer.
+	function getLoopClockPos(layer, ts) {
+		const lock = layerLock[layer];
+		if (!lock) return null;
+		const period = lock.cycleDurationMs * 2;
+		let elapsed = (ts - lock.firstTs) % period;
+		if (elapsed < 0) elapsed += period;
+		return elapsed <= lock.cycleDurationMs ? elapsed : period - elapsed;
+	}
+
 	function beginStroke(colorIndex) {
 		const cnt = activePointerCountByLayer[currentLayer] || 0;
 		if (cnt === 0 && history.length > 0) history.push({ layer: currentLayer, brk: true });
@@ -711,7 +753,7 @@
 	}
 	function appendToStroke(colorIndex, x, y) {
 		const cfg = { mirrors: CONFIG.mirrors, gridMode: CONFIG.gridMode, patternIndex: CONFIG.patternIndex, paletteIndex: CONFIG.paletteIndex, thickness: CONFIG.thickness, stampSize: CONFIG.stampSize, param1: CONFIG.param1, param2: CONFIG.param2 };
-		history.push({ layer: currentLayer, colorIndex, cfg, x, y });
+		history.push({ layer: currentLayer, colorIndex, cfg, x, y, ts: performance.now() });
 		historyPointCount++;
 		trimHistory();
 	}
@@ -725,7 +767,10 @@
 		const cnt = Math.max(0, (activePointerCountByLayer[currentLayer] || 0) - 1);
 		activePointerCountByLayer[currentLayer] = cnt;
 		history.push({ layer: currentLayer, end: colorIndex });
-		if (cnt === 0) history.push({ layer: currentLayer, brk: true });
+		if (cnt === 0) {
+			if (!layerLock[currentLayer]) lockLayerFromLastSession(currentLayer);
+			history.push({ layer: currentLayer, brk: true });
+		}
 	}
 	// A point counts toward the cap; end-markers and breaks are free
 	// (shifting them off doesn't reduce historyPointCount).
@@ -956,7 +1001,12 @@
 		if (history.length < 2) return;
 		for (let step = 0; step < 3; step++) {
 			const entry = history[ghostFlatIdx];
-			if (entry && entry.x !== undefined) {
+			// Locked layers are rendered by renderLockedLayers() instead,
+			// driven by real elapsed time rather than array position --
+			// skip them here so they don't also get the old sequential
+			// index-stepped treatment (which is exactly what a locked
+			// layer is meant to no longer do).
+			if (entry && entry.x !== undefined && !layerLock[entry.layer]) {
 				const { pal, shadowPal } = (() => {
 					const name = paletteNames[entry.cfg.paletteIndex] || paletteNames[0];
 					const p = colorPalettes[name];
@@ -979,6 +1029,45 @@
 			ghostFlatIdx += ghostDir;
 			if (ghostFlatIdx >= history.length - 1) { ghostFlatIdx = history.length - 1; ghostDir = -1; }
 			else if (ghostFlatIdx <= 0) { ghostFlatIdx = 0; ghostDir = 1; }
+		}
+	}
+
+	// Renders every locked layer by real elapsed time instead of array
+	// position: each locked layer has its own continuously-advancing
+	// triangle-wave "loop clock" (a pure function of wall-clock time, see
+	// getLoopClockPos). A point renders whenever the layer's current
+	// clock position is close to that point's own recorded position in
+	// the cycle -- so a stroke added minutes after the layer locked still
+	// plays back "in line" with the original session, not sequentially
+	// after it. Prev-lookup and mesh reconstruction stay scoped to each
+	// point's own originally-recorded stroke (array-adjacency within a
+	// `brk`-bounded segment), so this doesn't attempt to mesh-connect
+	// touches from two different, separately-recorded sessions.
+	function renderLockedLayers() {
+		const now = performance.now();
+		const WINDOW_MS = 60;
+		for (const layerKey in layerLock) {
+			const layer = Number(layerKey);
+			const clockNow = getLoopClockPos(layer, now);
+			if (clockNow === null) continue;
+			for (let idx = 0; idx < history.length; idx++) {
+				const entry = history[idx];
+				if (!entry || entry.layer !== layer || entry.x === undefined) continue;
+				const pos = getLoopClockPos(layer, entry.ts);
+				if (pos === null || Math.abs(pos - clockNow) > WINDOW_MS) continue;
+				const { pal, shadowPal } = (() => {
+					const name = paletteNames[entry.cfg.paletteIndex] || paletteNames[0];
+					const p = colorPalettes[name];
+					const sName = name.includes("Shadow") ? name : name + " Shadow";
+					return { pal: p, shadowPal: colorPalettes[sName] || p };
+				})();
+				const prevEntry = findPrevDrawable(idx, 1, layer);
+				const active = activeTouchesAtHistoryIndex(idx, layer);
+				getCenters().forEach(c => {
+					renderPass(ctx, c.x, c.y, entry, prevEntry, entry.colorIndex, pal, shadowPal, entry.cfg, active);
+					if (CONFIG.shadowMesh) drawShadowMesh(ctx, c.x, c.y, pal, active);
+				});
+			}
 		}
 	}
 
@@ -1026,7 +1115,7 @@
 		ctx.clearRect(0, 0, canvas.width, canvas.height);
 		history = []; historyPointCount = 0; activePointerCountByLayer = {};
 		lastUVByLayer = {}; currentLayer = 0; maxLayerUsed = 0;
-		ghostFlatIdx = 0; ghostDir = 1;
+		ghostFlatIdx = 0; ghostDir = 1; layerLock = {};
 		syncLayerUI();
 		hud('CLEARED', '');
 	});
@@ -1276,7 +1365,7 @@
 			const uv = { x: (W / 2) + Math.sin(t * 2) * 100, y: (H / 2) + Math.cos(t * 2) * 100 };
 			drawOnTexture(uv, true, 0);
 		}
-		if (CONFIG.ghostReplay) stepGhostReplay();
+		if (CONFIG.ghostReplay) { stepGhostReplay(); renderLockedLayers(); }
 
 		requestAnimationFrame(animate);
 	}
