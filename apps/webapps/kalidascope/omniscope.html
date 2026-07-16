@@ -143,6 +143,14 @@
 				<div class="control">
 					<button id="clearBtn">Clear Canvas</button>
 				</div>
+				<div class="control">
+					<label>Active Layer</label>
+					<div class="row2">
+						<button id="layerDownBtn">◂ Layer</button>
+						<button id="layerUpBtn">Layer ▸</button>
+					</div>
+					<div id="layerIndicator" style="text-align:center;opacity:0.8;font-size:12px;margin-top:4px;">Layer 0 / 0</div>
+				</div>
 			</div>
 		</div>
 
@@ -264,6 +272,21 @@
 	   ones those apps mislabeled "Koch Snowflake" / "Voronoi Cells"
 	   (neither is actually a Koch curve or a Voronoi diagram), renamed
 	   here to describe what they actually draw. */
+	// Deterministic 0..1 pseudo-random value from up to 3 numbers -- used
+	// in place of Date.now() for any per-stamp visual variation. A
+	// clock-based phase looked fine live (each call draws a genuinely new
+	// point), but Ghost Replay redraws the SAME historical point many
+	// times a second as it ping-pongs, and a clock-driven angle/phase
+	// made that stamp flash a different orientation on every single
+	// redraw -- a real strobing hazard at high mirror counts. Seeding
+	// from the point's own data instead makes every redraw of a given
+	// point pixel-identical, so replay is stable, not caring how many
+	// times or how fast a point gets redrawn.
+	function stableRand(a, b, c) {
+		const v = Math.sin(a * 12.9898 + b * 78.233 + (c || 0) * 37.719) * 43758.5453;
+		return v - Math.floor(v);
+	}
+
 	const PATTERNS = [
 		{
 			name: "Standard Line", spacing: 0,
@@ -384,10 +407,11 @@
 				ctx.strokeStyle = color; ctx.lineWidth = p.thickness;
 				const dist = Math.hypot(x - prev.x, y - prev.y);
 				const angle = Math.atan2(y - prev.y, x - prev.x);
+				const phase = stableRand(prev.x, prev.y, colorIndex) * 1000;
 				ctx.save(); ctx.translate(prev.x, prev.y); ctx.rotate(angle);
 				ctx.beginPath();
 				for (let i = 0; i < dist; i += 2) {
-					const wy = Math.sin((i + Date.now() * 0.01) * 0.1) * size;
+					const wy = Math.sin((i + phase) * 0.1) * size;
 					if (i === 0) ctx.moveTo(i, wy); else ctx.lineTo(i, wy);
 				}
 				ctx.stroke(); ctx.restore();
@@ -434,15 +458,33 @@
 			}
 		},
 		{
+			// Differential-speed spiral -- angularSpeed(r) = k/r, so points
+			// near the center wind through many turns while the outer edge
+			// stays almost straight, the "watch spring" look. The source
+			// sketch drove this with frameCount (real time) since it redraws
+			// the whole spiral fresh every frame live; Omniscope instead
+			// stamps ONE frozen snapshot of that spiral per touch point, so
+			// "time" here is a phase baked in at stamp time from the point's
+			// own position/color -- deterministic, so every future redraw of
+			// this exact stamp (live, Ghost Replay, export) is pixel-
+			// identical. A clock-driven phase would redraw a DIFFERENT
+			// snapshot every time Ghost Replay revisits this same stored
+			// point (many times a second), which is a real strobing hazard.
 			name: "Rotating Notch", spacing: 0.3,
 			draw: (ctx, x, y, size, pal, p, prev, colorIndex) => {
 				const color = pal[colorIndex % pal.length];
 				ctx.strokeStyle = color; ctx.lineWidth = p.thickness;
-				const time = Date.now() * 0.002;
-				ctx.save(); ctx.translate(x, y); ctx.rotate(time);
+				const phase = (stableRand(x, y, colorIndex) * 2 - 1) * 40;
+				const count = Math.round(20 + p.param1 * 60);
+				const radiusStep = (size * 0.5 * (0.2 + p.param2 * 0.8)) / count;
+				ctx.save(); ctx.translate(x, y);
 				ctx.beginPath();
-				ctx.moveTo(-size / 2, 0); ctx.lineTo(size / 2, 0);
-				ctx.moveTo(size / 4, -size / 4); ctx.lineTo(size / 2, 0); ctx.lineTo(size / 4, size / 4);
+				for (let i = 0; i < count; i++) {
+					const r = (i + 1) * radiusStep;
+					const angle = phase / r;
+					const px = r * Math.cos(angle), py = r * Math.sin(angle);
+					if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+				}
 				ctx.stroke(); ctx.restore();
 			}
 		},
@@ -529,6 +571,67 @@
 				ctx.strokeStyle = pal[(colorIndex + 1) % pal.length];
 				ctx.lineWidth = p.thickness * 0.5; ctx.stroke();
 			}
+		},
+		{
+			// Heading-oriented vehicle silhouette: body + hood + trunk +
+			// two spiral-tread tires, all rotated to face the direction of
+			// travel (computed from prev->current), so it reads correctly
+			// whether driving, turning, or reversing. Kept general-purpose
+			// (param1/param2 control body proportions) rather than a
+			// single hardcoded shape.
+			name: "Perspective Car", spacing: 1.4,
+			draw: (ctx, x, y, size, pal, p, prev, colorIndex) => {
+				if (!prev) return;
+				const color = pal[colorIndex % pal.length];
+				const heading = Math.atan2(y - prev.y, x - prev.x);
+				const bodyLen = size * (1.2 + p.param1 * 1.2);
+				const bodyWid = size * (0.45 + p.param2 * 0.35);
+				const hoodLen = bodyLen * 0.22, trunkLen = bodyLen * 0.18;
+				ctx.save();
+				ctx.translate(x, y);
+				ctx.rotate(heading);
+				ctx.strokeStyle = color;
+				ctx.lineWidth = p.thickness;
+				ctx.strokeRect(-bodyLen / 2, -bodyWid / 2, bodyLen, bodyWid);
+				ctx.strokeRect(bodyLen / 2, -bodyWid * 0.32, hoodLen, bodyWid * 0.64);
+				ctx.strokeRect(-bodyLen / 2 - trunkLen, -bodyWid * 0.28, trunkLen, bodyWid * 0.56);
+				[[-bodyLen * 0.26, bodyWid * 0.5], [bodyLen * 0.26, bodyWid * 0.5]].forEach(([tx, ty]) => {
+					const tr = size * 0.16;
+					ctx.beginPath(); ctx.arc(tx, ty, tr, 0, Math.PI * 2); ctx.stroke();
+					ctx.beginPath();
+					for (let a = 0; a < Math.PI * 4; a += 0.3) {
+						const r = (tr / (Math.PI * 4)) * a;
+						const px = tx + r * Math.cos(a), py = ty + r * Math.sin(a);
+						if (a === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+					}
+					ctx.stroke();
+				});
+				ctx.restore();
+			}
+		},
+		{
+			// Overlapping scalloped arcs -- shingle/scale texture, useful
+			// for terrain, roofs, or reptilian surfaces. A terrain stroke
+			// with many stamped points builds up a continuous scaled
+			// ground plane.
+			name: "Scale Terrain", spacing: 0.5,
+			draw: (ctx, x, y, size, pal, p, prev, colorIndex) => {
+				const color = pal[colorIndex % pal.length];
+				ctx.strokeStyle = color; ctx.lineWidth = p.thickness;
+				const rows = 2 + Math.round(p.param1 * 2);
+				const cols = 4 + Math.round(p.param2 * 3);
+				const scaleR = size * 0.16;
+				for (let r = 0; r < rows; r++) {
+					const rowOffset = (r % 2) ? scaleR : 0;
+					for (let c = 0; c < cols; c++) {
+						const sx = x + (c - cols / 2) * scaleR * 1.7 + rowOffset;
+						const sy = y + r * scaleR * 1.1;
+						ctx.beginPath();
+						ctx.arc(sx, sy, scaleR, Math.PI * 0.12, Math.PI * 0.88);
+						ctx.stroke();
+					}
+				}
+			}
 		}
 	];
 
@@ -559,46 +662,117 @@
 	   stroke. None of the other three source apps actually had this --
 	   they all cycle color by draw order or frame count instead, which
 	   loses per-finger identity the moment two touches interleave. */
-	let lastUV = null;
+	let lastUVByLayer = {};
 	let lastAutoUV = null;
 	let ongoingTouches = [];
 	let touchColorCounter = 10;
 
-	/* ================= STROKE HISTORY =================
+	/* ================= LAYERS =================
+	   Each layer has its own fully independent continuity/mesh timeline
+	   -- drawing on layer 1 never connects to, meshes with, or erases
+	   layer 0, even though both render onto the same canvas at once.
+	   That's the whole point: load a friend's recording, watch it ghost-
+	   replay, and draw your own remix alongside it without touching
+	   theirs. Every history entry below carries a `layer` tag; switching
+	   the active layer only changes which layer NEW input is tagged
+	   with -- it never hides or deletes any layer's existing content. */
+	let currentLayer = 0;
+	let maxLayerUsed = 0;
+
+	/* ================= HISTORY =================
 	   Backs ghost replay, high-res re-render export, and JSON telemetry
-	   export/import all from one place, rather than three separate
-	   systems like the source apps had. Capped at CONFIG.maxHistory total
-	   points (oldest strokes dropped first) so a long session doesn't
-	   grow unbounded. */
-	let strokeHistory = [];
-	let currentStrokes = {}; // colorIndex -> stroke object, while pointer is down
+	   export/import all from one place. This is a SINGLE flat, truly
+	   chronological stream of draw events -- not grouped by finger/stroke.
+
+	   Grouping by finger was the bug: real simultaneous touches never
+	   arrive bucketed like that, every sample lands in one timeline in
+	   the order it actually happened, so "connect to whatever was drawn
+	   immediately before" naturally jumps between fingers constantly
+	   (that's the whole crisscross mechanic). Storing each finger's
+	   points in its own array and replaying them one stroke at a time
+	   threw that interleaving away -- cross-finger connections only
+	   happened at the two or three seams between strokes instead of
+	   continuously, which is why an imported multi-finger piece came out
+	   as separate untangled lines instead of a wire-mesh.
+
+	   A `brk` entry is a stroke-break marker (every pointer on THAT layer
+	   lifted) -- without it a brand new, unrelated gesture on the same
+	   layer would still connect back to wherever the last one ended.
+	   Capped at CONFIG.maxHistory real points (oldest dropped first,
+	   breaks/end-markers free). */
+	let history = [];
 	let historyPointCount = 0;
+	let activePointerCountByLayer = {};
 
 	function beginStroke(colorIndex) {
-		const strokeCfg = { mirrors: CONFIG.mirrors, gridMode: CONFIG.gridMode, patternIndex: CONFIG.patternIndex, paletteIndex: CONFIG.paletteIndex, thickness: CONFIG.thickness, stampSize: CONFIG.stampSize, param1: CONFIG.param1, param2: CONFIG.param2 };
-		const stroke = { colorIndex, cfg: strokeCfg, points: [] };
-		strokeHistory.push(stroke);
-		currentStrokes[colorIndex] = stroke;
-		return stroke;
+		const cnt = activePointerCountByLayer[currentLayer] || 0;
+		if (cnt === 0 && history.length > 0) history.push({ layer: currentLayer, brk: true });
+		activePointerCountByLayer[currentLayer] = cnt + 1;
 	}
 	function appendToStroke(colorIndex, x, y) {
-		const s = currentStrokes[colorIndex];
-		if (!s) return;
-		s.points.push({ x, y });
+		const cfg = { mirrors: CONFIG.mirrors, gridMode: CONFIG.gridMode, patternIndex: CONFIG.patternIndex, paletteIndex: CONFIG.paletteIndex, thickness: CONFIG.thickness, stampSize: CONFIG.stampSize, param1: CONFIG.param1, param2: CONFIG.param2 };
+		history.push({ layer: currentLayer, colorIndex, cfg, x, y });
 		historyPointCount++;
-		while (historyPointCount > CONFIG.maxHistory && strokeHistory.length > 1) {
-			historyPointCount -= strokeHistory[0].points.length;
-			strokeHistory.shift();
+		trimHistory();
+	}
+	// A specific finger lifting -- distinct from the `brk` full-break
+	// above, which only fires once EVERY finger on this layer is up.
+	// Needed so replay can reconstruct exactly which touches were still
+	// held at any given moment (see activeTouchesAtHistoryIndex below);
+	// without it, ghost replay has no way to know a mesh should still be
+	// connecting fingers B and C after finger A lifted.
+	function endStroke(colorIndex) {
+		const cnt = Math.max(0, (activePointerCountByLayer[currentLayer] || 0) - 1);
+		activePointerCountByLayer[currentLayer] = cnt;
+		history.push({ layer: currentLayer, end: colorIndex });
+		if (cnt === 0) history.push({ layer: currentLayer, brk: true });
+	}
+	// A point counts toward the cap; end-markers and breaks are free
+	// (shifting them off doesn't reduce historyPointCount).
+	function trimHistory() {
+		while (historyPointCount > CONFIG.maxHistory && history.length > 0) {
+			const removed = history.shift();
+			if (removed && removed.x !== undefined) historyPointCount--;
 		}
 	}
-	function endStroke(colorIndex) { delete currentStrokes[colorIndex]; }
+	// True chronological order of who's actually still held down at a
+	// given point in the stream, ON THAT ENTRY'S LAYER ONLY -- other
+	// layers' entries are transparent (skipped, not treated as breaks).
+	// A forward scan from the last same-layer break, adding a touch to
+	// `order` the first time it's seen and removing it (without
+	// reordering survivors) on its end-marker. Exactly reconstructs what
+	// `ongoingTouches` would have held live on that layer.
+	function activeTouchesAtHistoryIndex(idx, layer) {
+		let start = idx;
+		while (start > 0) {
+			const e = history[start - 1];
+			if (e && e.layer === layer && e.brk) break;
+			start--;
+		}
+		const order = [];
+		const pos = new Map();
+		for (let i = start; i <= idx; i++) {
+			const e = history[i];
+			if (!e || e.layer !== layer || e.brk) continue;
+			if (e.end !== undefined) {
+				const pi = order.indexOf(e.end);
+				if (pi >= 0) order.splice(pi, 1);
+				pos.delete(e.end);
+				continue;
+			}
+			if (!pos.has(e.colorIndex)) order.push(e.colorIndex);
+			pos.set(e.colorIndex, { x: e.x, y: e.y });
+		}
+		return order.map(ci => ({ colorIndex: ci, x: pos.get(ci).x, y: pos.get(ci).y }));
+	}
 
 	/* ================= CORE RENDER PASS =================
 	   True reflective kaleidoscope math (rotate per wedge, alternate
 	   wedges get a Y-flip for a genuine mirror rather than pure rotation)
 	   -- the technique all three of the other apps used independently;
 	   this is the cleanest version of it, applied once per grid center. */
-	function renderPass(targetCtx, cx, cy, uv, prevUV, colorIndex, pal, shadowPal, cfg) {
+	function renderPass(targetCtx, cx, cy, uv, prevUV, colorIndex, pal, shadowPal, cfg, allTouches) {
+		if (!allTouches) allTouches = ongoingTouches; // live default; replay/export pass their own reconstruction
 		const pat = PATTERNS[cfg.patternIndex];
 		const mirrors = Math.max(1, cfg.mirrors);
 		const loops = Math.ceil(mirrors);
@@ -617,7 +791,7 @@
 			pat.draw(
 				targetCtx, uv.x - cx, uv.y - cy, cfg.stampSize, pal, cfg,
 				prevUV ? { x: prevUV.x - cx, y: prevUV.y - cy } : null,
-				colorIndex, ongoingTouches, shadowPal
+				colorIndex, allTouches, shadowPal
 			);
 			targetCtx.restore();
 		}
@@ -626,21 +800,31 @@
 		targetCtx.shadowOffsetX = 0; targetCtx.shadowOffsetY = 0;
 	}
 
-	// Optional overlay (ported from vectorfontskalidascope.html's "Shadow
-	// Mesh"): connects every simultaneously active touch to the most
-	// recently moved one with a difference-blended line, once per center.
-	function drawShadowMesh(targetCtx, cx, cy) {
-		if (ongoingTouches.length < 2) return;
-		const primary = ongoingTouches[ongoingTouches.length - 1];
+	// Connects the currently active touches in a stable cycle -- finger 1
+	// to 2, 2 to 3, ..., last back to first -- one line per pair, same
+	// technique as fontforge5.html / klidascopetopgunforge.html's "glitch
+	// mesh" ("wall J gets color J"). The touch/OS layer always knows the
+	// true order fingers landed in (ongoingTouches is push-on-touchstart,
+	// splice-on-touchend, so it's naturally oldest-first and lifting one
+	// finger never reorders the others -- a lifted-then-replanted finger
+	// simply rejoins at the end, exactly like a real device's touch IDs).
+	// So as long as the same fingers stay down, wall J is always the same
+	// pair of fingers and therefore always the same color for the whole
+	// gesture -- that stability, replayed across many mirror wedges, is
+	// what produces the dense woven-ribbon look rather than a random tangle.
+	function drawShadowMesh(targetCtx, cx, cy, pal, touches) {
+		const n = touches.length;
+		if (n < 2) return;
+		const pairs = n === 2 ? 1 : n; // 2 touches: one line, not a doubled-up "cycle"
 		targetCtx.save();
-		targetCtx.globalCompositeOperation = 'difference';
-		targetCtx.strokeStyle = '#ffffff';
-		targetCtx.lineWidth = 1;
-		for (const t of ongoingTouches) {
-			if (t === primary) continue;
+		targetCtx.lineWidth = Math.max(0.5, CONFIG.thickness * 0.4);
+		for (let j = 0; j < pairs; j++) {
+			const a = touches[j];
+			const b = touches[(j + 1) % n];
+			targetCtx.strokeStyle = pal[j % pal.length];
 			targetCtx.beginPath();
-			targetCtx.moveTo(primary.x - cx, primary.y - cy);
-			targetCtx.lineTo(t.x - cx, t.y - cy);
+			targetCtx.moveTo(a.x - cx, a.y - cy);
+			targetCtx.lineTo(b.x - cx, b.y - cy);
 			targetCtx.stroke();
 		}
 		targetCtx.restore();
@@ -655,14 +839,14 @@
 	}
 
 	function drawOnTexture(uv, isAuto, colorIndex) {
-		let prevUV = isAuto ? lastAutoUV : lastUV;
+		let prevUV = isAuto ? lastAutoUV : (lastUVByLayer[currentLayer] || null);
 		const { pal, shadowPal } = currentPalettes();
 		const centers = getCenters();
 		centers.forEach(c => {
 			renderPass(ctx, c.x, c.y, uv, prevUV, colorIndex, pal, shadowPal, CONFIG);
-			if (CONFIG.shadowMesh) drawShadowMesh(ctx, c.x, c.y);
+			if (CONFIG.shadowMesh) drawShadowMesh(ctx, c.x, c.y, pal, ongoingTouches);
 		});
-		if (isAuto) lastAutoUV = uv; else lastUV = uv;
+		if (isAuto) lastAutoUV = uv; else lastUVByLayer[currentLayer] = uv;
 	}
 
 	/* ================= INPUT ================= */
@@ -681,16 +865,18 @@
 	}
 
 	canvas.addEventListener('mousedown', e => {
-		lastUV = toCanvasXY(e.clientX, e.clientY);
-		beginStroke(0); appendToStroke(0, lastUV.x, lastUV.y);
-		drawOnTexture(lastUV, false, 0);
+		const uv = toCanvasXY(e.clientX, e.clientY);
+		lastUVByLayer[currentLayer] = uv;
+		beginStroke(0); appendToStroke(0, uv.x, uv.y);
+		drawOnTexture(uv, false, 0);
 	});
 	canvas.addEventListener('mousemove', e => {
 		if (e.buttons !== 1) return;
 		const pat = PATTERNS[CONFIG.patternIndex];
 		const spacingThresh = (pat.spacing || 0) * CONFIG.stampSize;
 		const uv = toCanvasXY(e.clientX, e.clientY);
-		if (spacingThresh > 0 && lastUV && Math.hypot(uv.x - lastUV.x, uv.y - lastUV.y) < spacingThresh) return;
+		const last = lastUVByLayer[currentLayer];
+		if (spacingThresh > 0 && last && Math.hypot(uv.x - last.x, uv.y - last.y) < spacingThresh) return;
 		appendToStroke(0, uv.x, uv.y);
 		drawOnTexture(uv, false, 0);
 	});
@@ -703,7 +889,7 @@
 			const colorIndex = touchColorCounter++;
 			const uv = toCanvasXY(t.clientX, t.clientY);
 			ongoingTouches.push({ identifier: t.identifier, colorIndex, x: uv.x, y: uv.y });
-			lastUV = uv;
+			lastUVByLayer[currentLayer] = uv;
 			beginStroke(colorIndex); appendToStroke(colorIndex, uv.x, uv.y);
 			drawOnTexture(uv, false, colorIndex);
 		}
@@ -735,31 +921,63 @@
 	canvas.addEventListener('touchcancel', endTouch);
 
 	/* ================= GHOST REPLAY =================
-	   Ping-pongs back and forth through strokeHistory's flattened points,
-	   redrawing each with the config it was originally drawn under --
-	   same idea as the ghost/loop systems in the other three apps, just
-	   backed by the one shared strokeHistory array instead of a second
-	   parallel data structure. */
-	let ghostFlatIdx = 0, ghostDir = 1;
-	function flattenHistory() {
-		const flat = [];
-		strokeHistory.forEach(s => s.points.forEach((pt, i) => flat.push({ pt, prev: i > 0 ? s.points[i - 1] : null, colorIndex: s.colorIndex, cfg: s.cfg })));
-		return flat;
+	   Ping-pongs back and forth through the flat `history` stream,
+	   redrawing each point with the config it was originally drawn
+	   under. A point's "prev" is the nearest neighbor ON THE SAME LAYER
+	   (in whichever direction the ping-pong is currently heading) --
+	   since `history` is one true chronological timeline across every
+	   finger on that layer, not grouped by finger, that adjacency IS the
+	   crisscrossing mechanic: consecutive samples jump between whichever
+	   touches were actually active at that moment, exactly like live
+	   drawing. Other layers' entries are transparent (skipped, not
+	   treated as breaks) -- that's what keeps layers from bleeding into
+	   each other while still all replaying/rendering together. A `brk`
+	   entry resets continuity so unrelated gestures on the same layer
+	   don't connect to each other. */
+	// Finds the nearest drawable neighbor ON THE SAME LAYER in the given
+	// direction, starting one step away from idx -- skipping over other
+	// layers' entries and end-markers (not a position, doesn't break
+	// continuity either), stopping at a same-layer `brk` (no prev across
+	// an unrelated gesture).
+	function findPrevDrawable(idx, dir, layer) {
+		let j = idx - dir;
+		while (j >= 0 && j < history.length) {
+			const e = history[j];
+			if (e && e.layer === layer) {
+				if (e.brk) return null;
+				if (e.x !== undefined) return e;
+			}
+			j -= dir;
+		}
+		return null;
 	}
+	let ghostFlatIdx = 0, ghostDir = 1;
 	function stepGhostReplay() {
-		const flat = flattenHistory();
-		if (flat.length < 2) return;
+		if (history.length < 2) return;
 		for (let step = 0; step < 3; step++) {
-			const entry = flat[ghostFlatIdx];
-			const { pal, shadowPal } = (() => {
-				const name = paletteNames[entry.cfg.paletteIndex] || paletteNames[0];
-				const p = colorPalettes[name];
-				const sName = name.includes("Shadow") ? name : name + " Shadow";
-				return { pal: p, shadowPal: colorPalettes[sName] || p };
-			})();
-			getCenters().forEach(c => renderPass(ctx, c.x, c.y, entry.pt, entry.prev, entry.colorIndex, pal, shadowPal, entry.cfg));
+			const entry = history[ghostFlatIdx];
+			if (entry && entry.x !== undefined) {
+				const { pal, shadowPal } = (() => {
+					const name = paletteNames[entry.cfg.paletteIndex] || paletteNames[0];
+					const p = colorPalettes[name];
+					const sName = name.includes("Shadow") ? name : name + " Shadow";
+					return { pal: p, shadowPal: colorPalettes[sName] || p };
+				})();
+				const prevEntry = findPrevDrawable(ghostFlatIdx, ghostDir, entry.layer);
+				// Reconstructs exactly which touches were still held at this
+				// point in the recording, on this layer -- same state live
+				// drawing would have had in ongoingTouches -- so the mesh
+				// (and any pattern that reacts to "other" touches, like
+				// Golden Spiral or Pyrotaxis) behaves identically on replay
+				// as it did live.
+				const active = activeTouchesAtHistoryIndex(ghostFlatIdx, entry.layer);
+				getCenters().forEach(c => {
+					renderPass(ctx, c.x, c.y, entry, prevEntry, entry.colorIndex, pal, shadowPal, entry.cfg, active);
+					if (CONFIG.shadowMesh) drawShadowMesh(ctx, c.x, c.y, pal, active);
+				});
+			}
 			ghostFlatIdx += ghostDir;
-			if (ghostFlatIdx >= flat.length - 1) { ghostFlatIdx = flat.length - 1; ghostDir = -1; }
+			if (ghostFlatIdx >= history.length - 1) { ghostFlatIdx = history.length - 1; ghostDir = -1; }
 			else if (ghostFlatIdx <= 0) { ghostFlatIdx = 0; ghostDir = 1; }
 		}
 	}
@@ -806,10 +1024,29 @@
 
 	document.getElementById('clearBtn').addEventListener('click', () => {
 		ctx.clearRect(0, 0, canvas.width, canvas.height);
-		strokeHistory = []; currentStrokes = {}; historyPointCount = 0;
+		history = []; historyPointCount = 0; activePointerCountByLayer = {};
+		lastUVByLayer = {}; currentLayer = 0; maxLayerUsed = 0;
 		ghostFlatIdx = 0; ghostDir = 1;
+		syncLayerUI();
 		hud('CLEARED', '');
 	});
+
+	function syncLayerUI() {
+		const el = document.getElementById('layerIndicator');
+		if (el) el.textContent = `Layer ${currentLayer} / ${maxLayerUsed}`;
+	}
+	document.getElementById('layerUpBtn').addEventListener('click', () => {
+		if (currentLayer < maxLayerUsed) currentLayer++;
+		else { maxLayerUsed++; currentLayer = maxLayerUsed; }
+		syncLayerUI();
+		hud('LAYER', String(currentLayer));
+	});
+	document.getElementById('layerDownBtn').addEventListener('click', () => {
+		if (currentLayer > 0) currentLayer--;
+		syncLayerUI();
+		hud('LAYER', String(currentLayer));
+	});
+	syncLayerUI();
 
 	// Zen mode
 	document.getElementById('zenBtn').addEventListener('click', () => {
@@ -838,38 +1075,82 @@
 		a.download = 'omniscope.png'; a.href = canvas.toDataURL('image/png'); a.click();
 	});
 
-	// High-res re-render export -- replays the FULL strokeHistory onto a
-	// scaled offscreen canvas rather than upscaling the raster, same
-	// lossless approach the other three apps used for their PNG export.
-	function exportHighRes(multiplier) {
-		if (strokeHistory.length === 0) { hud('EXPORT', 'nothing drawn yet'); return; }
+	function centersForGrid(baseW, baseH, gridMode) {
+		switch (gridMode) {
+			case 1: return [{ x: baseW * 0.25, y: baseH / 2 }, { x: baseW * 0.75, y: baseH / 2 }];
+			case 2: return [{ x: baseW * 0.25, y: baseH * 0.25 }, { x: baseW * 0.75, y: baseH * 0.25 }, { x: baseW * 0.25, y: baseH * 0.75 }, { x: baseW * 0.75, y: baseH * 0.75 }];
+			case 3: { const c = []; for (let gy = 0; gy < 3; gy++) for (let gx = 0; gx < 3; gx++) c.push({ x: baseW * (gx + 0.5) / 3, y: baseH * (gy + 0.5) / 3 }); return c; }
+			default: return [{ x: baseW / 2, y: baseH / 2 }];
+		}
+	}
+	// Replays history (up to and including endIdx) onto a fresh scaled
+	// offscreen canvas -- shared by the high-res re-render export (endIdx =
+	// end of history) and the flipbook export (endIdx = a series of
+	// progressively later cut points), so both always match what live
+	// rendering would have produced. No background fill: canvas 2D
+	// contexts start fully transparent, and these exports are meant to be
+	// print-ready (t-shirts, hats: real alpha, not "looks black on a dark
+	// screen").
+	function renderHistoryFrame(multiplier, endIdx) {
 		const baseW = W, baseH = H;
 		const off = document.createElement('canvas');
-		off.width = baseW * multiplier; off.height = baseH * multiplier;
+		off.width = Math.round(baseW * multiplier); off.height = Math.round(baseH * multiplier);
 		const octx = off.getContext('2d');
-		octx.fillStyle = '#0a0a0a'; octx.fillRect(0, 0, off.width, off.height);
 		octx.scale(multiplier, multiplier);
 
-		function centersFor(gridMode) {
-			switch (gridMode) {
-				case 1: return [{ x: baseW * 0.25, y: baseH / 2 }, { x: baseW * 0.75, y: baseH / 2 }];
-				case 2: return [{ x: baseW * 0.25, y: baseH * 0.25 }, { x: baseW * 0.75, y: baseH * 0.25 }, { x: baseW * 0.25, y: baseH * 0.75 }, { x: baseW * 0.75, y: baseH * 0.75 }];
-				case 3: { const c = []; for (let gy = 0; gy < 3; gy++) for (let gx = 0; gx < 3; gx++) c.push({ x: baseW * (gx + 0.5) / 3, y: baseH * (gy + 0.5) / 3 }); return c; }
-				default: return [{ x: baseW / 2, y: baseH / 2 }];
-			}
+		// One forward pass through the true chronological stream, with
+		// INDEPENDENT running state per layer -- a `brk` on layer 0 resets
+		// only layer 0's continuity and active-touch set, never layer 1's,
+		// even though both layers' entries are interleaved in the same
+		// array in true chronological order. An end-marker removes just
+		// that one touch from its layer's active set (lifting one finger
+		// shouldn't disconnect the others on the same layer). Each layer's
+		// activeOrder/activePos rebuild the same "who's currently held"
+		// state ongoingTouches would have had live, so the mesh and any
+		// touch-reactive pattern (Golden Spiral, Pyrotaxis) render
+		// identically to live, per layer.
+		const layerState = new Map();
+		function stateFor(layer) {
+			if (!layerState.has(layer)) layerState.set(layer, { prevEntry: null, activeOrder: [], activePos: new Map() });
+			return layerState.get(layer);
 		}
-		strokeHistory.forEach(s => {
-			const name = paletteNames[s.cfg.paletteIndex] || paletteNames[0];
+		for (let idx = 0; idx <= endIdx && idx < history.length; idx++) {
+			const entry = history[idx];
+			if (!entry) continue;
+			const st = stateFor(entry.layer);
+			if (entry.brk) { st.prevEntry = null; st.activeOrder = []; st.activePos.clear(); continue; }
+			if (entry.end !== undefined) {
+				const pi = st.activeOrder.indexOf(entry.end);
+				if (pi >= 0) st.activeOrder.splice(pi, 1);
+				st.activePos.delete(entry.end);
+				continue;
+			}
+			if (!st.activePos.has(entry.colorIndex)) st.activeOrder.push(entry.colorIndex);
+			st.activePos.set(entry.colorIndex, { x: entry.x, y: entry.y });
+			const active = st.activeOrder.map(ci => ({ colorIndex: ci, x: st.activePos.get(ci).x, y: st.activePos.get(ci).y }));
+
+			const name = paletteNames[entry.cfg.paletteIndex] || paletteNames[0];
 			const pal = colorPalettes[name];
 			const sName = name.includes("Shadow") ? name : name + " Shadow";
 			const shadowPal = colorPalettes[sName] || pal;
-			const centers = centersFor(s.cfg.gridMode);
-			s.points.forEach((pt, i) => {
-				const prev = i > 0 ? s.points[i - 1] : null;
-				centers.forEach(c => renderPass(octx, c.x, c.y, pt, prev, s.colorIndex, pal, shadowPal, s.cfg));
+			const centers = centersForGrid(baseW, baseH, entry.cfg.gridMode);
+			centers.forEach(c => {
+				renderPass(octx, c.x, c.y, entry, st.prevEntry, entry.colorIndex, pal, shadowPal, entry.cfg, active);
+				if (CONFIG.shadowMesh) drawShadowMesh(octx, c.x, c.y, pal, active);
 			});
-		});
+			st.prevEntry = entry;
+		}
+		return off;
+	}
 
+	// High-res re-render export -- replays the FULL history onto a scaled
+	// offscreen canvas rather than upscaling the raster, same lossless
+	// approach the other three apps used for their PNG export. This IS
+	// the "final frame" / final image: the complete composited drawing,
+	// transparent background, ready to hand to a t-shirt or hat printer.
+	function exportHighRes(multiplier) {
+		if (!history.some(e => e && e.x !== undefined)) { hud('EXPORT', 'nothing drawn yet'); return; }
+		const off = renderHistoryFrame(multiplier, history.length - 1);
 		const a = document.createElement('a');
 		a.download = `omniscope_${multiplier}x.png`; a.href = off.toDataURL('image/png'); a.click();
 		hud('EXPORTED', `${multiplier}× re-render`);
@@ -877,18 +1158,18 @@
 	document.getElementById('export2xBtn').addEventListener('click', () => exportHighRes(2));
 	document.getElementById('export4xBtn').addEventListener('click', () => exportHighRes(4));
 
-	// JSON telemetry export/import -- the full stroke history plus the
-	// config it was drawn under, so a session can be reloaded and either
-	// inspected, continued, or re-rendered later.
+	// JSON telemetry export/import -- the full chronological history plus
+	// the live config, so a session can be reloaded and either inspected,
+	// continued, or re-rendered later.
 	document.getElementById('exportJsonBtn').addEventListener('click', () => {
-		if (strokeHistory.length === 0) { hud('EXPORT', 'nothing drawn yet'); return; }
-		const data = { meta: { date: new Date().toISOString(), config: CONFIG }, strokeHistory };
+		if (!history.some(e => e && e.x !== undefined)) { hud('EXPORT', 'nothing drawn yet'); return; }
+		const data = { meta: { date: new Date().toISOString(), config: CONFIG }, history };
 		const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
 		const url = URL.createObjectURL(blob);
 		const a = document.createElement('a');
 		a.download = `omniscope_session_${Date.now()}.json`; a.href = url; a.click();
 		URL.revokeObjectURL(url);
-		hud('EXPORTED', `${strokeHistory.length} strokes`);
+		hud('EXPORTED', `${history.filter(e => e && e.x !== undefined).length} points`);
 	});
 	// Reflects CONFIG's current values back onto the visible sliders/
 	// selects. Needed after JSON import, which writes straight into
@@ -927,9 +1208,45 @@
 		reader.onload = evt => {
 			try {
 				const data = JSON.parse(evt.target.result);
-				if (Array.isArray(data.strokeHistory)) {
-					data.strokeHistory.forEach(s => { strokeHistory.push(s); historyPointCount += s.points.length; });
-					while (historyPointCount > CONFIG.maxHistory && strokeHistory.length > 1) { historyPointCount -= strokeHistory[0].points.length; strokeHistory.shift(); }
+				let importedCount = 0;
+				// Every import lands on its own fresh layer -- a recording is a
+				// layer in itself, independent from whatever's on-canvas now
+				// and from any other imported/live layer, so nothing gets
+				// overwritten and existing tracks keep replaying untouched.
+				const newLayer = maxLayerUsed + 1;
+				maxLayerUsed = newLayer;
+				if (Array.isArray(data.history)) {
+					let needBreak = false;
+					data.history.forEach(entry => {
+						if (!entry || entry.brk) { needBreak = true; return; }
+						if (needBreak) { history.push({ layer: newLayer, brk: true }); needBreak = false; }
+						if (entry.end !== undefined) {
+							history.push({ layer: newLayer, end: entry.end });
+						} else if (entry.x !== undefined) {
+							history.push({ layer: newLayer, colorIndex: entry.colorIndex, cfg: entry.cfg, x: entry.x, y: entry.y });
+							historyPointCount++; importedCount++;
+						}
+					});
+				} else if (Array.isArray(data.strokeHistory)) {
+					// Legacy format (grouped per-stroke instead of one true
+					// chronological stream) -- still importable, just without
+					// true cross-finger interleaving within each old stroke,
+					// since that ordering was never recorded to begin with.
+					// Each old stroke gets its own end-marker so mesh/touch-
+					// reactive patterns at least see it as a self-contained
+					// single-touch gesture rather than an orphaned one.
+					data.strokeHistory.forEach(s => {
+						history.push({ layer: newLayer, brk: true });
+						s.points.forEach(pt => {
+							history.push({ layer: newLayer, colorIndex: s.colorIndex, cfg: s.cfg, x: pt.x, y: pt.y });
+							historyPointCount++; importedCount++;
+						});
+						history.push({ layer: newLayer, end: s.colorIndex });
+					});
+				}
+				while (historyPointCount > CONFIG.maxHistory && history.length > 0) {
+					const removed = history.shift();
+					if (removed && removed.x !== undefined) historyPointCount--;
 				}
 				if (data.meta && data.meta.config) {
 					['mirrors', 'gridMode', 'patternIndex', 'paletteIndex', 'thickness', 'stampSize', 'param1', 'param2', 'fadeRate', 'rotation', 'ghostReplay'].forEach(k => {
@@ -937,7 +1254,9 @@
 					});
 					syncUIFromConfig();
 				}
-				hud('IMPORTED', `${(data.strokeHistory || []).length} strokes`);
+				currentLayer = newLayer;
+				syncLayerUI();
+				hud('IMPORTED', `${importedCount} pts -> layer ${newLayer}`);
 			} catch (err) { hud('IMPORT FAILED', String(err.message || err)); }
 		};
 		reader.readAsText(file);
