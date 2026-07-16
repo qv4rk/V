@@ -862,6 +862,7 @@
 		if (n < 2) return;
 		const pairs = n === 2 ? 1 : n; // 2 touches: one line, not a doubled-up "cycle"
 		targetCtx.save();
+		targetCtx.translate(cx, cy); // match renderPass -- endpoints below are center-relative
 		targetCtx.lineWidth = Math.max(0.5, CONFIG.thickness * 0.4);
 		for (let j = 0; j < pairs; j++) {
 			const a = touches[j];
