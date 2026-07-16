@@ -316,13 +316,20 @@ animate();
    INPUT -- mouse (desktop) and multi-touch (mobile).
    Fractal mode: unchanged, single-drag orbits camera.
    Assemble mode: tap selects a piece. With a piece selected,
-   touch uses finger COUNT to disambiguate -- 3 fingers rotate the
-   selected piece freely, 2 fingers scale it -- so no mode toggle
-   is needed: selection itself gates whether multi-finger input
-   manipulates a piece or nothing happens. Desktop equivalent:
-   drag rotates the selected piece, wheel scales it.
+   1-finger drag MOVES it (repositions on the table -- this is
+   the whole point, so pieces can actually be brought toward each
+   other), 2 fingers scale it, 3 fingers rotate it freely -- finger
+   count alone disambiguates, no mode toggle needed. Desktop
+   equivalent: plain drag moves the selected piece, shift+drag
+   rotates it, wheel scales it.
    ============================================================ */
 function inAssembleWithSelection() { return state.mode === 'assemble' && state.selectedPiece !== null; }
+
+function movePieceByScreenDelta(piece, dx, dy) {
+	const { sceneScale } = cameraParams();
+	piece.tx += dx / sceneScale;
+	piece.ty += dy / sceneScale;
+}
 
 let mouseDownPos = null, mouseMoved = false;
 canvas.addEventListener('mousedown', e => {
@@ -336,8 +343,12 @@ window.addEventListener('mousemove', e => {
 	if (Math.hypot(e.clientX - mouseDownPos.x, e.clientY - mouseDownPos.y) > 4) mouseMoved = true;
 	if (inAssembleWithSelection()) {
 		const piece = netPieces[state.selectedPiece];
-		piece.pieceRotY += (e.clientX - state.lastX) * 0.5;
-		piece.pieceRotX += (e.clientY - state.lastY) * 0.5;
+		if (e.shiftKey) {
+			piece.pieceRotY += (e.clientX - state.lastX) * 0.5;
+			piece.pieceRotX += (e.clientY - state.lastY) * 0.5;
+		} else {
+			movePieceByScreenDelta(piece, e.clientX - state.lastX, e.clientY - state.lastY);
+		}
 		state.lastX = e.clientX; state.lastY = e.clientY;
 	} else if (state.dragging) {
 		state.rotY += (e.clientX - state.lastX) * 0.5;
@@ -373,7 +384,8 @@ function startGestureIfNeeded() {
 	if (!inAssembleWithSelection()) { gesture = null; return; }
 	const pts = touchesArray();
 	const piece = netPieces[state.selectedPiece];
-	if (pts.length === 2) gesture = { type: 'scale', count: 2, startDist: pairDist(pts), startScale: piece.scale };
+	if (pts.length === 1) gesture = { type: 'move', count: 1, lastX: pts[0].x, lastY: pts[0].y };
+	else if (pts.length === 2) gesture = { type: 'scale', count: 2, startDist: pairDist(pts), startScale: piece.scale };
 	else if (pts.length === 3) gesture = { type: 'rotate', count: 3, startCentroid: centroidOfPoints(pts), startRotX: piece.pieceRotX, startRotY: piece.pieceRotY };
 	else gesture = null;
 }
@@ -383,8 +395,9 @@ canvas.addEventListener('touchstart', e => {
 	const pts = touchesArray();
 	if (pts.length === 1) {
 		tapCandidate = { x: pts[0].x, y: pts[0].y, moved: false };
-		state.dragging = !inAssembleWithSelection();
 		state.lastX = pts[0].x; state.lastY = pts[0].y;
+		if (inAssembleWithSelection()) { state.dragging = false; startGestureIfNeeded(); }
+		else state.dragging = true;
 	} else {
 		state.dragging = false;
 		tapCandidate = null;
@@ -400,7 +413,10 @@ canvas.addEventListener('touchmove', e => {
 	}
 	if (gesture && pts.length === gesture.count) {
 		const piece = netPieces[state.selectedPiece];
-		if (gesture.type === 'scale') {
+		if (gesture.type === 'move') {
+			movePieceByScreenDelta(piece, pts[0].x - gesture.lastX, pts[0].y - gesture.lastY);
+			gesture.lastX = pts[0].x; gesture.lastY = pts[0].y;
+		} else if (gesture.type === 'scale') {
 			piece.scale = Math.max(0.3, Math.min(3, gesture.startScale * (pairDist(pts) / gesture.startDist)));
 		} else if (gesture.type === 'rotate') {
 			const c = centroidOfPoints(pts);
@@ -443,7 +459,7 @@ document.getElementById('modeBtn').addEventListener('click', () => {
 		btn.textContent = 'Switch to Fractal Mode';
 		btn.classList.add('active');
 		hudTitle.textContent = 'ASSEMBLE MODE — 4 FLAT FACES';
-		hudHint.textContent = 'tap: select · 3-finger/drag: rotate piece · 2-finger/wheel: scale piece';
+		hudHint.textContent = 'tap: select · 1-finger/drag: move · 2-finger/wheel: scale · 3-finger/shift+drag: rotate';
 		depthLabel.style.display = 'none';
 		state.autoSpin = false;
 		document.getElementById('autoSpin').checked = false;
