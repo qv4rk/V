@@ -129,7 +129,21 @@ const state = {
 
 let leafTetrahedra = subdivideTetrahedron(baseTetrahedron(1), state.depth);
 
-const PALETTE = ['#ff5ec8', '#5ecdff', '#9dff5e', '#ffd35e'];
+// Each leaf tetrahedron (the "unit") gets its own distinct color --
+// not the 4 faces within it. Hue spread evenly around the color
+// wheel by index, so every one of the (up to 4^6=4096) units is
+// visually distinguishable, and since children are generated in
+// spatial order, nearby units tend to land near each other in hue too.
+function colorForUnit(index, total) {
+	const hue = (index / total) * 360;
+	return `hsl(${hue}, 85%, 62%)`;
+}
+
+// The 6 edges of one tetrahedron (wireframe, not filled faces).
+function tetraEdges(v) {
+	const [A, B, C, D] = v;
+	return [[A, B], [A, C], [A, D], [B, C], [B, D], [C, D]];
+}
 
 function render() {
 	const w = canvas.width, h = canvas.height;
@@ -142,38 +156,23 @@ function render() {
 	const camDist = 900 / state.zoom;
 	const sceneScale = Math.min(w, h) * 0.32;
 
-	// Gather every triangular face across every leaf tetrahedron,
-	// projected, tagged with average depth for painter's-algorithm
-	// sorting (simple back-to-front fill, good enough at this
-	// polygon count without a full z-buffer).
-	const drawFaces = [];
+	const total = leafTetrahedra.length;
 	leafTetrahedra.forEach((tet, tetIdx) => {
-		const faces = tetraFaces(tet);
-		faces.forEach((face, faceIdx) => {
-			const projected = face.map(v => {
+		const color = colorForUnit(tetIdx, total);
+		const edges = tetraEdges(tet);
+		ctx.strokeStyle = color;
+		ctx.lineWidth = 1.1;
+		edges.forEach(([p, q]) => {
+			const proj = [p, q].map(v => {
 				const scaled = { x: v.x * sceneScale, y: v.y * sceneScale, z: v.z * sceneScale };
 				const rotated = rotate3D(scaled.x, scaled.y, scaled.z, pitch, yaw);
 				return project3D(rotated.x, rotated.y, rotated.z, cx, cy, focal, camDist);
 			});
-			const avgZ = face.reduce((sum, v) => sum + v.z, 0) / 3;
-			drawFaces.push({ pts: projected, avgZ, color: PALETTE[faceIdx % PALETTE.length] });
+			ctx.beginPath();
+			ctx.moveTo(proj[0].x, proj[0].y);
+			ctx.lineTo(proj[1].x, proj[1].y);
+			ctx.stroke();
 		});
-	});
-	drawFaces.sort((a, b) => a.avgZ - b.avgZ);
-
-	drawFaces.forEach(f => {
-		ctx.beginPath();
-		ctx.moveTo(f.pts[0].x, f.pts[0].y);
-		ctx.lineTo(f.pts[1].x, f.pts[1].y);
-		ctx.lineTo(f.pts[2].x, f.pts[2].y);
-		ctx.closePath();
-		ctx.fillStyle = f.color;
-		ctx.globalAlpha = 0.55;
-		ctx.fill();
-		ctx.globalAlpha = 1;
-		ctx.strokeStyle = f.color;
-		ctx.lineWidth = 0.6;
-		ctx.stroke();
 	});
 }
 
