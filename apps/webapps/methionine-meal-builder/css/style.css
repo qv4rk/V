@@ -45,9 +45,6 @@ h1 {
 
 main { max-width: 1100px; margin: 0 auto; padding: 1.5rem 1.2rem 4rem; }
 
-.grid-2 { display: grid; grid-template-columns: 1.3fr 1fr; gap: 1.4rem; align-items: start; }
-@media (max-width: 860px) { .grid-2 { grid-template-columns: 1fr; } }
-
 .panel {
   background: var(--bg);
   border: 1px solid var(--panel-edge);
@@ -144,6 +141,9 @@ button:disabled { opacity: 0.45; cursor: default; }
 .metUnknown { color: var(--danger); font-style: italic; }
 .gramsInput { width: 70px; }
 .addRow { display: flex; align-items: center; gap: 0.4rem; }
+.sourceLink { font-size: 0.62rem; color: var(--accent); text-decoration: none; white-space: nowrap; }
+.sourceLink:hover { text-decoration: underline; }
+.showMoreBtn { width: 100%; font-size: 0.7rem; }
 
 /* Daily log */
 .logTable { width: 100%; border-collapse: collapse; font-size: 0.76rem; margin-top: 0.6rem; }
@@ -152,6 +152,8 @@ button:disabled { opacity: 0.45; cursor: default; }
 .logTable tfoot td { border-bottom: none; border-top: 1px solid var(--panel-edge); font-weight: 600; }
 .rmBtn { background: none; border: none; color: var(--danger); cursor: pointer; font-size: 0.85rem; padding: 0 4px; }
 
+.totalsPanel { border-color: color-mix(in srgb, var(--accent-3) 45%, var(--panel-edge)); }
+.totalsPanel .metBudget { margin-top: 0; }
 .metBudget { margin-top: 0.9rem; }
 .metBudget-row { display: flex; align-items: center; gap: 0.6rem; font-size: 0.72rem; margin-bottom: 0.35rem; }
 .metBudget-row input { width: 80px; }
@@ -159,6 +161,13 @@ button:disabled { opacity: 0.45; cursor: default; }
 .metBar-fill { height: 100%; background: var(--accent-3); transition: width 0.25s ease; }
 .metBar-fill.over { background: var(--danger); }
 .metBar-label { font-size: 0.65rem; color: var(--ink-dim); margin-top: 0.3rem; }
+
+/* Protein floor bar: unlike the methionine ceiling bar, this one starts
+   amber (below the safety floor) and only turns green once the floor is
+   met — a breach of the methionine cap is bad, but "under" here is bad
+   and "over" is fine, the inverse relationship. */
+.proBar-fill { background: var(--warm); }
+.proBar-fill.met { background: var(--accent-3); }
 
 /* Recipes */
 .recipeList { display: flex; flex-direction: column; gap: 0.4rem; margin-top: 0.6rem; }
@@ -206,6 +215,24 @@ button:disabled { opacity: 0.45; cursor: default; }
 }
 .modal .closeModal { margin-top: 1rem; }
 
+/* Recipes drawer */
+.drawerOverlay {
+  position: fixed; inset: 0; z-index: 90;
+  background: rgba(0,0,0,0.5);
+}
+.drawerOverlay[hidden] { display: none; }
+.drawer {
+  position: absolute; top: 0; right: 0; bottom: 0;
+  width: 380px; max-width: 88vw;
+  background: var(--bg);
+  border-left: 1px solid var(--panel-edge);
+  padding: 1.2rem 1.3rem 1.5rem;
+  overflow-y: auto;
+  box-shadow: -8px 0 24px rgba(0,0,0,0.25);
+}
+.drawer-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.6rem; }
+.drawer-header h2 { font-family: var(--font-display, 'Cinzel', sans-serif); font-size: 1.05rem; margin: 0; color: var(--ink); }
+
 .hint { font-size: 0.62rem; color: var(--ink-dim); margin-top: 0.4rem; opacity: 0.85; }
 
 /* Log / Shopping List tabs */
@@ -250,6 +277,6 @@ button:disabled { opacity: 0.45; cursor: default; }
 
 @media print {
   body { background: white; color: black; }
-  header, .grid-2, .tabs, #tab-shopping .addRow, .hint { display: none !important; }
+  header, .totalsPanel, .tabs, #tab-shopping .addRow, .hint { display: none !important; }
   .panel { border: none; }
 }

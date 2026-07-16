@@ -4,6 +4,7 @@
   const LOG_KEY = 'feisttech_met_daily_log';
   const SHOPPING_KEY = 'feisttech_met_shopping_list';
   const CAP_KEY = 'feisttech_met_daily_cap';
+  const PROTEIN_FLOOR_KEY = 'feisttech_met_protein_floor';
   const RECIPES_KEY = 'feisttech_met_recipes';
 
   const COMMON_FOODS = [
@@ -13,6 +14,7 @@
 
   let lists = { log: [], shopping: [] };
   let dailyCap = 150;
+  let proteinFloor = 50;
   let activeTab = 'log';
   let html5Qrcode = null;
 
@@ -21,12 +23,17 @@
     try { lists.shopping = JSON.parse(localStorage.getItem(SHOPPING_KEY) || '[]'); } catch (e) { lists.shopping = []; }
     const cap = parseFloat(localStorage.getItem(CAP_KEY));
     if (!isNaN(cap) && cap > 0) dailyCap = cap;
+    const floor = parseFloat(localStorage.getItem(PROTEIN_FLOOR_KEY));
+    if (!isNaN(floor) && floor >= 0) proteinFloor = floor;
   }
   function saveList(target) {
     try { localStorage.setItem(target === 'log' ? LOG_KEY : SHOPPING_KEY, JSON.stringify(lists[target])); } catch (e) {}
   }
   function saveCap() {
     try { localStorage.setItem(CAP_KEY, String(dailyCap)); } catch (e) {}
+  }
+  function saveProteinFloor() {
+    try { localStorage.setItem(PROTEIN_FLOOR_KEY, String(proteinFloor)); } catch (e) {}
   }
   function getCustomRecipes() {
     try { return JSON.parse(localStorage.getItem(RECIPES_KEY) || '[]'); } catch (e) { return []; }
@@ -79,18 +86,52 @@
   }
 
   // ── Search ──
-  async function runSearch() {
+  // USDA's search endpoint indexes gtinUpc in whichever format that
+  // product's source data used — 12-digit UPC-A or 13-digit EAN with a
+  // leading 0 — so a scanned code that comes back empty is retried in
+  // the other format before giving up, instead of just reporting "no
+  // results" for a product that's actually in the database.
+  async function searchBarcodeVariants(code) {
+    const digits = code.replace(/\D/g, '');
+    const candidates = [digits];
+    if (digits.length === 12) candidates.push('0' + digits);
+    if (digits.length === 13 && digits[0] === '0') candidates.push(digits.slice(1));
+    for (const candidate of candidates) {
+      if (!candidate) continue;
+      const results = await window.USDA.searchFoods(candidate, 15);
+      if (results.length) return results;
+    }
+    return [];
+  }
+
+  async function runSearch(fromBarcode) {
     const raw = document.getElementById('searchInput').value.trim();
     const status = document.getElementById('searchStatus');
     const list = document.getElementById('resultsList');
     if (!raw) { status.textContent = 'Type a food to search.'; return; }
-    const { query, targetWeight } = parseInputString(raw);
     status.textContent = 'Searching USDA FoodData Central…';
     list.innerHTML = '';
     try {
-      const results = await window.USDA.searchFoods(query, 15);
-      status.textContent = results.length ? `${results.length} result${results.length === 1 ? '' : 's'}` : 'No results.';
-      renderResults(results, targetWeight);
+      if (fromBarcode) {
+        let results = await searchBarcodeVariants(raw);
+        let usedFallback = false;
+        if (!results.length && window.OpenFoodFacts) {
+          status.textContent = 'Not in USDA — checking Open Food Facts…';
+          try {
+            const offFood = await window.OpenFoodFacts.lookupBarcode(raw);
+            if (offFood) { results = [offFood]; usedFallback = true; }
+          } catch (e) {}
+        }
+        status.textContent = results.length
+          ? `${results.length} result${results.length === 1 ? '' : 's'}${usedFallback ? ' (from Open Food Facts — methionine will be estimated, not measured)' : ''}`
+          : `Barcode ${raw} isn't in USDA or Open Food Facts — try searching by name instead.`;
+        renderResults(results, null, true);
+      } else {
+        const { query, targetWeight } = parseInputString(raw);
+        const results = await window.USDA.searchFoods(query, 15);
+        status.textContent = results.length ? `${results.length} result${results.length === 1 ? '' : 's'}` : 'No results.';
+        renderResults(results, targetWeight, false);
+      }
     } catch (e) {
       status.textContent = 'Search failed: ' + e.message;
     }
@@ -101,60 +142,155 @@
     return checked ? checked.value : 'log';
   }
 
-  function renderResults(results, targetWeight) {
+  // Lab-measured (Foundation/SR Legacy) and survey entries come first;
+  // name-brand products vary by manufacturer and are often estimated, not
+  // measured, so they're ranked last and grouped behind a toggle instead
+  // of interleaved with the generic results people actually search for.
+  function sourceRank(food) {
+    if (food.dataType === 'Foundation') return 0;
+    if (food.dataType === 'SR Legacy') return 1;
+    if (food.dataType === 'Survey (FNDDS)') return 2;
+    return 3; // Branded
+  }
+
+  // The same food is often returned more than once (different fdcId per
+  // USDA dataset revision) — collapse exact-description duplicates and
+  // keep the highest-ranked (most likely lab-measured) copy.
+  function dedupeAndRank(results) {
+    const seen = new Set();
+    const deduped = [];
+    results.forEach(food => {
+      const key = (food.description || '').trim().toLowerCase() + '|' + (food.dataType || '') + '|' + (food.brandOwner || '');
+      if (seen.has(key)) return;
+      seen.add(key);
+      deduped.push(food);
+    });
+    deduped.sort((a, b) => sourceRank(a) - sourceRank(b));
+    return deduped;
+  }
+
+  const INITIAL_RESULTS = 5;
+
+  function renderResults(results, targetWeight, fromBarcode) {
     const list = document.getElementById('resultsList');
     list.innerHTML = '';
-    results.forEach((food, idx) => {
-      const n = food.nutrients;
-      const hasMet = n.methionine !== null && n.methionine !== undefined;
-      const estMet = hasMet ? null : estimateMethionine(n.protein, food.description);
-      const isWholeFood = food.dataType === 'Foundation' || food.dataType === 'SR Legacy';
-      const defaultGrams = targetWeight ? Math.round(targetWeight) : 100;
-      const row = document.createElement('div');
-      row.className = 'resultItem';
-      row.innerHTML = `
-        <span class="resultName">${food.description}${food.brandOwner ? ' <span class="resultMeta">(' + food.brandOwner + ')</span>' : ''}</span>
-        <span class="dtBadge ${isWholeFood ? 'good' : ''}">${food.dataType || 'unknown'}</span>
-        <span class="nutrientRow">
-          per 100g — <strong>${fmt(n.energy)}</strong> cal ·
-          fat <strong>${fmt(n.fat)}</strong>g ·
-          carbs <strong>${fmt(n.carbs)}</strong>g ·
-          methionine ${
-            hasMet ? '<strong>' + fmt(n.methionine) + '</strong> mg'
-              : (estMet !== null ? '<span class="metEstimated">~' + fmt(estMet) + ' mg (estimated)</span>' : '<span class="metUnknown">not available</span>')
-          }
-        </span>
-        <span class="addRow">
-          <input type="number" class="gramsInput" value="${defaultGrams}" min="1" step="1"> g
-          <button type="button" class="addBtn" data-idx="${idx}">+ Add</button>
-        </span>
-      `;
-      row.querySelector('.addBtn').addEventListener('click', () => {
-        const grams = parseFloat(row.querySelector('.gramsInput').value) || 100;
-        addToList(getAddTarget(), food, grams);
-      });
-      list.appendChild(row);
+    const ranked = dedupeAndRank(results);
+
+    // A scanned barcode already identifies one specific commercial
+    // product — there's no generic-vs-name-brand ambiguity to collapse
+    // behind a toggle, so show every match directly instead of making
+    // a successful scan require an extra tap to actually see it.
+    if (fromBarcode) {
+      ranked.forEach(food => list.appendChild(buildResultRow(food, targetWeight)));
+      return;
+    }
+
+    const generic = ranked.filter(f => f.dataType !== 'Branded');
+    const branded = ranked.filter(f => f.dataType === 'Branded');
+
+    generic.slice(0, INITIAL_RESULTS).forEach(food => list.appendChild(buildResultRow(food, targetWeight)));
+    const genericMore = generic.slice(INITIAL_RESULTS);
+    if (genericMore.length) {
+      list.appendChild(buildShowMoreRow(`Show ${genericMore.length} more result${genericMore.length === 1 ? '' : 's'}`, genericMore, targetWeight));
+    }
+    if (branded.length) {
+      list.appendChild(buildShowMoreRow(`Show ${branded.length} name-brand result${branded.length === 1 ? '' : 's'} (varies by manufacturer)`, branded, targetWeight));
+    }
+  }
+
+  function buildShowMoreRow(label, foods, targetWeight) {
+    const wrap = document.createElement('div');
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'secondary showMoreBtn';
+    btn.textContent = label;
+    btn.addEventListener('click', () => {
+      foods.forEach(food => wrap.parentNode.insertBefore(buildResultRow(food, targetWeight), wrap));
+      wrap.remove();
     });
+    wrap.appendChild(btn);
+    return wrap;
+  }
+
+  function buildResultRow(food, targetWeight) {
+    const n = food.nutrients;
+    const hasMet = n.methionine !== null && n.methionine !== undefined;
+    const estMet = hasMet ? null : estimateMethionine(n.protein, food.description);
+    const isWholeFood = food.dataType === 'Foundation' || food.dataType === 'SR Legacy';
+    const defaultGrams = targetWeight ? Math.round(targetWeight) : 100;
+    const sourceUrl = food.sourceUrl || `https://fdc.nal.usda.gov/food-details/${food.fdcId}/nutrients`;
+    const row = document.createElement('div');
+    row.className = 'resultItem';
+    row.innerHTML = `
+      <span class="resultName">${food.description}${food.brandOwner ? ' <span class="resultMeta">(' + food.brandOwner + ')</span>' : ''}</span>
+      <span class="dtBadge ${isWholeFood ? 'good' : ''}">${food.dataType || 'unknown'}</span>
+      <a class="sourceLink" href="${sourceUrl}" target="_blank" rel="noopener">Source ↗</a>
+      <span class="nutrientRow">
+        per 100g — <strong>${fmt(n.energy)}</strong> cal ·
+        protein <strong>${fmt(n.protein)}</strong>g ·
+        fat <strong>${fmt(n.fat)}</strong>g ·
+        carbs <strong>${fmt(n.carbs)}</strong>g ·
+        methionine ${
+          hasMet ? '<strong>' + fmt(n.methionine) + '</strong> mg'
+            : (estMet !== null ? '<span class="metEstimated">~' + fmt(estMet) + ' mg (estimated)</span>' : '<span class="metUnknown">not available</span>')
+        }
+      </span>
+      <span class="addRow">
+        <input type="number" class="gramsInput" value="${defaultGrams}" min="1" step="1"> g
+        <button type="button" class="addBtn">+ Add</button>
+      </span>
+    `;
+    row.querySelector('.addBtn').addEventListener('click', () => {
+      const grams = parseFloat(row.querySelector('.gramsInput').value) || 100;
+      addToList(getAddTarget(), food, grams);
+    });
+    return row;
+  }
+
+  function mergeFullNutrients(a, b) {
+    const map = {};
+    (a || []).forEach(fn => { map[fn.name] = { name: fn.name, unit: fn.unit, value: fn.value }; });
+    (b || []).forEach(fn => {
+      if (map[fn.name]) map[fn.name].value += fn.value;
+      else map[fn.name] = { name: fn.name, unit: fn.unit, value: fn.value };
+    });
+    return Object.values(map);
   }
 
   // ── Lists (Today's Log + Shopping List) ──
+  // Adding the same food again merges into its existing row (grams and
+  // every nutrient add up) instead of creating a second line.
   function addToList(target, food, grams) {
     const scale = grams / 100;
     const n = food.nutrients;
     const hasMet = n.methionine !== null && n.methionine !== undefined;
     const metEstimated = !hasMet;
     const met = hasMet ? n.methionine * scale : (estimateMethionine(n.protein, food.description) !== null ? estimateMethionine(n.protein, food.description) * scale : null);
-    lists[target].push({
-      id: newId('item'),
-      name: food.description,
-      grams,
-      cal: n.energy !== null ? n.energy * scale : null,
-      fat: n.fat !== null ? n.fat * scale : null,
-      carbs: n.carbs !== null ? n.carbs * scale : null,
-      met,
-      metEstimated,
-      fullNutrients: (food.fullNutrients || []).map(fn => ({ name: fn.name, unit: fn.unit, value: fn.value * scale }))
-    });
+    const newFullNutrients = (food.fullNutrients || []).map(fn => ({ name: fn.name, unit: fn.unit, value: fn.value * scale }));
+
+    const existing = lists[target].find(i => i.name === food.description && i.metEstimated === metEstimated);
+    if (existing) {
+      existing.grams = (existing.grams || 0) + grams;
+      existing.cal = (existing.cal || 0) + (n.energy !== null ? n.energy * scale : 0);
+      existing.protein = (existing.protein || 0) + (n.protein !== null ? n.protein * scale : 0);
+      existing.fat = (existing.fat || 0) + (n.fat !== null ? n.fat * scale : 0);
+      existing.carbs = (existing.carbs || 0) + (n.carbs !== null ? n.carbs * scale : 0);
+      existing.met = (existing.met === null && met === null) ? null : (existing.met || 0) + (met || 0);
+      existing.fullNutrients = mergeFullNutrients(existing.fullNutrients, newFullNutrients);
+    } else {
+      lists[target].push({
+        id: newId('item'),
+        name: food.description,
+        grams,
+        cal: n.energy !== null ? n.energy * scale : null,
+        protein: n.protein !== null ? n.protein * scale : null,
+        fat: n.fat !== null ? n.fat * scale : null,
+        carbs: n.carbs !== null ? n.carbs * scale : null,
+        met,
+        metEstimated,
+        fullNutrients: newFullNutrients
+      });
+    }
     saveList(target);
     renderList(target);
   }
@@ -168,22 +304,27 @@
   function renderList(target) {
     const bodyId = target === 'log' ? 'logBody' : 'shoppingBody';
     const totalCalId = target === 'log' ? 'logTotalCal' : 'shoppingTotalCal';
+    const totalProId = target === 'log' ? 'logTotalPro' : 'shoppingTotalPro';
     const totalMetId = target === 'log' ? 'logTotalMet' : 'shoppingTotalMet';
     const body = document.getElementById(bodyId);
     body.innerHTML = '';
-    let totalCal = 0, totalMet = 0, hasUnknownMet = false, hasEstimated = false;
+    let totalCal = 0, totalPro = 0, totalMet = 0, hasUnknownMet = false, hasEstimated = false, hasUnknownPro = false;
     lists[target].forEach(item => {
       totalCal += item.cal || 0;
+      if (item.protein !== null && item.protein !== undefined) totalPro += item.protein;
+      else hasUnknownPro = true;
       if (item.met !== null) { totalMet += item.met; if (item.metEstimated) hasEstimated = true; }
       else hasUnknownMet = true;
       const tr = document.createElement('tr');
       const metCell = item.met === null
         ? '<span class="metUnknown">?</span>'
         : (item.metEstimated ? '<span class="metEstimated">~' + fmt(item.met) + '</span>' : fmt(item.met));
+      const proCell = (item.protein === null || item.protein === undefined) ? '<span class="metUnknown">?</span>' : fmt(item.protein);
       tr.innerHTML = `
         <td>${item.name}</td>
         <td>${item.grams !== null ? fmt(item.grams) : '—'}</td>
         <td>${fmt(item.cal)}</td>
+        <td>${proCell}</td>
         <td>${metCell}</td>
         <td><button class="rmBtn" title="Remove">×</button></td>
       `;
@@ -191,6 +332,7 @@
       body.appendChild(tr);
     });
     document.getElementById(totalCalId).textContent = fmt(totalCal);
+    document.getElementById(totalProId).textContent = fmt(totalPro) + (hasUnknownPro ? '+' : '');
     document.getElementById(totalMetId).textContent = fmt(totalMet) + (hasUnknownMet ? '+' : '') + (hasEstimated ? '*' : '');
 
     if (target === 'log') {
@@ -202,6 +344,14 @@
       if (hasEstimated) label += ' (* includes estimated values)';
       if (hasUnknownMet) label += ' (some items have no methionine data)';
       document.getElementById('metBarLabel').textContent = label;
+
+      const proPct = proteinFloor > 0 ? Math.min(100, (totalPro / proteinFloor) * 100) : 100;
+      const proFill = document.getElementById('proBarFill');
+      proFill.style.width = proPct + '%';
+      proFill.classList.toggle('met', totalPro >= proteinFloor);
+      let proLabel = `${fmt(totalPro)} / ${fmt(proteinFloor)} g`;
+      if (hasUnknownPro) proLabel += ' (some items have no protein data)';
+      document.getElementById('proBarLabel').textContent = proLabel;
     }
   }
 
@@ -280,9 +430,18 @@
     }
   }
 
+  // Seed-recipe ingredient arrays only carry verified [name, grams, cal,
+  // fat, carbs, met] data — no protein figure was collected for them, so
+  // rather than reporting a fabricated 0g we surface the total as unknown
+  // ('—') the moment any ingredient is missing a real protein value.
   function computeItemTotals(items) {
-    const t = { cal: 0, fat: 0, carbs: 0, met: 0 };
-    (items || []).forEach(i => { t.cal += i[2] || 0; t.fat += i[3] || 0; t.carbs += i[4] || 0; t.met += i[5] || 0; });
+    const t = { cal: 0, fat: 0, carbs: 0, met: 0, pro: 0 };
+    let missingPro = false;
+    (items || []).forEach(i => {
+      t.cal += i[2] || 0; t.fat += i[3] || 0; t.carbs += i[4] || 0; t.met += i[5] || 0;
+      if (i[6] === undefined || i[6] === null) missingPro = true; else t.pro += i[6];
+    });
+    if (missingPro) t.pro = null;
     return t;
   }
 
@@ -291,7 +450,7 @@
     row.className = 'recipeItem';
     row.innerHTML = `
       <span class="name">${name}<br><span class="meta">${ingredientNames.join(', ')}</span></span>
-      <span class="meta">${fmt(totals.cal)} cal · ${fmt(totals.met)} mg met</span>
+      <span class="meta">${fmt(totals.cal)} cal · ${fmt(totals.pro)} g pro · ${fmt(totals.met)} mg met</span>
     `;
     const loadBtn = document.createElement('button');
     loadBtn.type = 'button';
@@ -304,13 +463,14 @@
   function loadSeedRecipe(recipe) {
     if (recipe.items) {
       recipe.items.forEach(i => {
-        lists.log.push({ id: newId('item'), name: i[0], grams: i[1], cal: i[2], fat: i[3], carbs: i[4], met: i[5], metEstimated: false, fullNutrients: [] });
+        lists.log.push({ id: newId('item'), name: i[0], grams: i[1], cal: i[2], fat: i[3], carbs: i[4], met: i[5], protein: i[6] !== undefined ? i[6] : null, metEstimated: false, fullNutrients: [] });
       });
     } else if (recipe.totals) {
       lists.log.push({
         id: newId('item'),
         name: recipe.name + ' (' + recipe.ingredients.join(' + ') + ')',
         grams: null, cal: recipe.totals.cal, fat: recipe.totals.fat, carbs: recipe.totals.carbs, met: recipe.totals.met,
+        protein: recipe.totals.pro !== undefined ? recipe.totals.pro : null,
         metEstimated: false, fullNutrients: []
       });
     }
@@ -320,7 +480,7 @@
 
   function loadCustomRecipe(recipe) {
     recipe.items.forEach(i => {
-      lists.log.push({ id: newId('item'), name: i.name, grams: i.grams, cal: i.cal, fat: i.fat, carbs: i.carbs, met: i.met, metEstimated: !!i.metEstimated, fullNutrients: [] });
+      lists.log.push({ id: newId('item'), name: i.name, grams: i.grams, cal: i.cal, fat: i.fat, carbs: i.carbs, met: i.met, protein: i.protein !== undefined ? i.protein : null, metEstimated: !!i.metEstimated, fullNutrients: [] });
     });
     saveList('log');
     renderList('log');
@@ -330,13 +490,18 @@
     if (lists.log.length === 0) { alert('Add at least one item to today\'s log before saving it as a recipe.'); return; }
     const name = prompt('Name this recipe:', '');
     if (!name || !name.trim()) return;
-    const totals = { cal: 0, fat: 0, carbs: 0, met: 0 };
-    lists.log.forEach(i => { totals.cal += i.cal || 0; totals.fat += i.fat || 0; totals.carbs += i.carbs || 0; totals.met += i.met || 0; });
+    const totals = { cal: 0, fat: 0, carbs: 0, met: 0, pro: 0 };
+    let missingPro = false;
+    lists.log.forEach(i => {
+      totals.cal += i.cal || 0; totals.fat += i.fat || 0; totals.carbs += i.carbs || 0; totals.met += i.met || 0;
+      if (i.protein === null || i.protein === undefined) missingPro = true; else totals.pro += i.protein;
+    });
+    if (missingPro) totals.pro = null;
     const recipe = {
       id: 'recipe_' + Date.now().toString(36),
       name: name.trim(),
       createdAt: Date.now(),
-      items: lists.log.map(i => ({ name: i.name, grams: i.grams, cal: i.cal, fat: i.fat, carbs: i.carbs, met: i.met, metEstimated: i.metEstimated })),
+      items: lists.log.map(i => ({ name: i.name, grams: i.grams, cal: i.cal, fat: i.fat, carbs: i.carbs, met: i.met, protein: i.protein, metEstimated: i.metEstimated })),
       totals
     };
     const recipes = getCustomRecipes();
@@ -397,7 +562,7 @@
           html5Qrcode.stop().catch(() => {});
           reader.hidden = true;
           document.getElementById('searchInput').value = decodedText;
-          runSearch();
+          runSearch(true);
         },
         () => {}
       ).catch(() => {
@@ -445,13 +610,18 @@
     wireScan();
 
     document.getElementById('dailyCapInput').value = dailyCap;
-    document.getElementById('btnSearch').addEventListener('click', runSearch);
+    document.getElementById('dailyProteinFloorInput').value = proteinFloor;
+    document.getElementById('btnSearch').addEventListener('click', () => runSearch());
     document.getElementById('searchInput').addEventListener('keydown', e => {
       if (e.key === 'Enter') runSearch();
     });
     document.getElementById('dailyCapInput').addEventListener('input', e => {
       const v = parseFloat(e.target.value);
       if (!isNaN(v) && v > 0) { dailyCap = v; saveCap(); renderList('log'); }
+    });
+    document.getElementById('dailyProteinFloorInput').addEventListener('input', e => {
+      const v = parseFloat(e.target.value);
+      if (!isNaN(v) && v >= 0) { proteinFloor = v; saveProteinFloor(); renderList('log'); }
     });
     document.getElementById('btnSaveRecipe').addEventListener('click', saveCurrentLogAsRecipe);
     document.getElementById('btnClearLog').addEventListener('click', () => {
@@ -472,6 +642,7 @@
 
     wireModal('btnHelp', 'helpOverlay', 'btnCloseHelp');
     wireModal('btnAbout', 'aboutOverlay', 'btnCloseAbout');
+    wireModal('btnRecipes', 'recipeDrawerOverlay', 'btnCloseRecipes');
     document.getElementById('btnCloseProfile').addEventListener('click', () => { document.getElementById('profileOverlay').hidden = true; });
     document.getElementById('profileOverlay').addEventListener('click', e => {
       if (e.target === document.getElementById('profileOverlay')) e.target.hidden = true;
@@ -481,6 +652,7 @@
       document.getElementById('helpOverlay').hidden = true;
       document.getElementById('aboutOverlay').hidden = true;
       document.getElementById('profileOverlay').hidden = true;
+      document.getElementById('recipeDrawerOverlay').hidden = true;
     });
 
     if (window.FeistTheme) FeistTheme.mount('#themeSwitcherMount');
