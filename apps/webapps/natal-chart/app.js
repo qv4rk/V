@@ -391,8 +391,35 @@
   }
 
   /* ── SVG chart wheel: Ascendant locked to the left horizon,
-     real Placidus house cusps, planets on the mid ring ── */
-  function buildWheelSVG(chart) {
+     real Placidus house cusps, planets on the mid ring ──
+     Palette is pulled out so the exact same geometry can be reused for
+     the on-screen dark wheel, the deluxe report (same dark/gold look,
+     just a different page around it) and the ink-friendly printer
+     report (light background, dark strokes) without duplicating the
+     trig. ── */
+  const WHEEL_PALETTES = {
+    dark: {
+      outerFill: '#0f172a', outerStroke: '#334155',
+      innerFill: '#020617', innerStroke: '#475569',
+      wedgeA: '#1e2937', wedgeB: '#111827', wedgeStroke: '#334155',
+      zodiacText: '#94a3b8',
+      houseAxis: '#94a3b8', houseMinor: '#475569',
+      asc: '#22c55e', mc: '#38bdf8',
+      planetFill: '#0f172a', planetStroke: '#64748b', planetText: '#e0f2fe'
+    },
+    print: {
+      outerFill: '#ffffff', outerStroke: '#333333',
+      innerFill: '#ffffff', innerStroke: '#999999',
+      wedgeA: '#f2f2f2', wedgeB: '#ffffff', wedgeStroke: '#cccccc',
+      zodiacText: '#222222',
+      houseAxis: '#222222', houseMinor: '#aaaaaa',
+      asc: '#15803d', mc: '#0369a1',
+      planetFill: '#ffffff', planetStroke: '#555555', planetText: '#111111'
+    }
+  };
+
+  function buildWheelSVG(chart, paletteKey) {
+    const pal = WHEEL_PALETTES[paletteKey] || WHEEL_PALETTES.dark;
     const size = 620, cx = size / 2, cy = size / 2;
     const outerR = 290, innerR = 200;
     const asc = chart.angles.asc, mc = chart.angles.mc, houses = chart.angles.houses;
@@ -401,39 +428,39 @@
     const pt = (r, angleDeg) => [cx + r * Math.cos(angleDeg * d2r), cy + r * Math.sin(angleDeg * d2r)];
 
     let svg = `<svg viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">\n`;
-    svg += `<circle cx="${cx}" cy="${cy}" r="${outerR}" fill="#0f172a" stroke="#334155" stroke-width="2"/>\n`;
-    svg += `<circle cx="${cx}" cy="${cy}" r="${innerR}" fill="#020617" stroke="#475569" stroke-width="1"/>\n`;
+    svg += `<circle cx="${cx}" cy="${cy}" r="${outerR}" fill="${pal.outerFill}" stroke="${pal.outerStroke}" stroke-width="2"/>\n`;
+    svg += `<circle cx="${cx}" cy="${cy}" r="${innerR}" fill="${pal.innerFill}" stroke="${pal.innerStroke}" stroke-width="1"/>\n`;
 
     for (let i = 0; i < 12; i++) {
       const a1 = rot(i * 30), a2 = rot((i + 1) * 30);
       const [x1, y1] = pt(outerR, a1), [x2, y2] = pt(outerR, a2);
-      const color = i % 2 === 0 ? '#1e2937' : '#111827';
-      svg += `<path d="M ${cx} ${cy} L ${x1} ${y1} A ${outerR} ${outerR} 0 0 0 ${x2} ${y2} Z" fill="${color}" stroke="#334155" stroke-width="1"/>\n`;
+      const color = i % 2 === 0 ? pal.wedgeA : pal.wedgeB;
+      svg += `<path d="M ${cx} ${cy} L ${x1} ${y1} A ${outerR} ${outerR} 0 0 0 ${x2} ${y2} Z" fill="${color}" stroke="${pal.wedgeStroke}" stroke-width="1"/>\n`;
       const [tx, ty] = pt(outerR - 20, a1 - 15);
-      svg += `<text x="${tx}" y="${ty + 4}" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="monospace">${ZODIAC[i]}</text>\n`;
+      svg += `<text x="${tx}" y="${ty + 4}" text-anchor="middle" fill="${pal.zodiacText}" font-size="11" font-family="monospace">${ZODIAC[i]}</text>\n`;
     }
 
     houses.forEach((h, i) => {
       const angle = rot(h);
       const [x1, y1] = pt(innerR, angle), [x2, y2] = pt(outerR - 40, angle);
       const isAxis = [0,3,6,9].includes(i);
-      svg += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${isAxis ? '#94a3b8' : '#475569'}" stroke-width="${isAxis ? 2 : 1}"/>\n`;
+      svg += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${isAxis ? pal.houseAxis : pal.houseMinor}" stroke-width="${isAxis ? 2 : 1}"/>\n`;
     });
 
-    svg += `<line x1="${cx - outerR - 15}" y1="${cy}" x2="${cx - innerR}" y2="${cy}" stroke="#22c55e" stroke-width="3"/>\n`;
-    svg += `<text x="${cx - outerR - 45}" y="${cy + 5}" fill="#22c55e" font-size="14" font-weight="bold">Asc</text>\n`;
+    svg += `<line x1="${cx - outerR - 15}" y1="${cy}" x2="${cx - innerR}" y2="${cy}" stroke="${pal.asc}" stroke-width="3"/>\n`;
+    svg += `<text x="${cx - outerR - 45}" y="${cy + 5}" fill="${pal.asc}" font-size="14" font-weight="bold">Asc</text>\n`;
 
     const mcAngle = rot(mc);
     const [mx1, my1] = pt(innerR, mcAngle), [mx2, my2] = pt(outerR + 15, mcAngle);
-    svg += `<line x1="${mx1}" y1="${my1}" x2="${mx2}" y2="${my2}" stroke="#38bdf8" stroke-width="3"/>\n`;
-    svg += `<text x="${mx2}" y="${my2}" fill="#38bdf8" font-size="14" font-weight="bold">MC</text>\n`;
+    svg += `<line x1="${mx1}" y1="${my1}" x2="${mx2}" y2="${my2}" stroke="${pal.mc}" stroke-width="3"/>\n`;
+    svg += `<text x="${mx2}" y="${my2}" fill="${pal.mc}" font-size="14" font-weight="bold">MC</text>\n`;
 
     chart.planets.forEach(p => {
       const angle = rot(p.lon);
       const [px, py] = pt(145, angle);
       const fontSize = p.symbol.length > 1 ? 10 : 16;
-      svg += `<circle cx="${px}" cy="${py}" r="14" fill="#0f172a" stroke="#64748b" stroke-width="1.5"/>\n`;
-      svg += `<text x="${px}" y="${py + 4}" text-anchor="middle" fill="#e0f2fe" font-size="${fontSize}" font-weight="bold">${p.symbol}</text>\n`;
+      svg += `<circle cx="${px}" cy="${py}" r="14" fill="${pal.planetFill}" stroke="${pal.planetStroke}" stroke-width="1.5"/>\n`;
+      svg += `<text x="${px}" y="${py + 4}" text-anchor="middle" fill="${pal.planetText}" font-size="${fontSize}" font-weight="bold">${p.symbol}</text>\n`;
     });
 
     svg += '</svg>';
@@ -568,7 +595,7 @@
   function jdOf(date) { return date.getTime() / 86400000 + 2440587.5; }
 
   function renderChart(chart, date) {
-    $('#wheel').innerHTML = buildWheelSVG(chart);
+    $('#wheel').innerHTML = buildWheelSVG(chart, 'dark');
 
     const posRows = chart.planets.map(p => `
       <div class="row">
@@ -649,6 +676,7 @@
   }
 
   let lastParams = null;
+  let lastChart = null;
   let currentSkyMode = 'whole';
 
   function compute() {
@@ -658,6 +686,7 @@
     renderChart(chart, params.date);
     syncURL(params);
     lastParams = params;
+    lastChart = chart;
     updateSky(chart, params.date);
     if (currentSkyMode === 'literal') setSkyMode('literal', params.lat, params.lon, params.date);
   }
@@ -692,6 +721,190 @@
         });
       }
     });
+  }
+
+  /* ── One-page report export ──
+     Two variants sharing one layout/data pass: "print" is a Letter-size,
+     white-background, minimal-ink sheet (the sky snapshot's colors are
+     inverted -- black background -> white, light stars -> dark flecks --
+     so it doesn't dump a solid black rectangle of ink onto the page);
+     "deluxe" is an A4 sheet keeping the app's native dark/gold palette
+     with a gold trim border, meant to be printed at a print shop and
+     framed. Both open in a new tab as a fully standalone HTML document
+     (own <style>, no dependency on this page's CSS) and immediately
+     invoke the browser's print dialog, whose own "Save as PDF" is the
+     export path -- no PDF-generation library needed. ── */
+  const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+  }
+
+  function compactLat(deg) {
+    const dir = deg < 0 ? 'S' : 'N';
+    const val = Math.abs(deg), d = Math.floor(val), m = Math.round((val % 1) * 60);
+    return `${d}°${String(m).padStart(2,'0')}'${dir}`;
+  }
+  function compactLon(deg) {
+    const dir = deg < 0 ? 'W' : 'E';
+    const val = Math.abs(deg), d = Math.floor(val), m = Math.round((val % 1) * 60);
+    return `${d}°${String(m).padStart(2,'0')}'${dir}`;
+  }
+
+  function formatBirthLine() {
+    const y = $('#f-year').value, mo = parseInt($('#f-month').value, 10) || 1, d = $('#f-day').value;
+    const hh = String($('#f-hour').value || 0).padStart(2, '0'), mi = String($('#f-minute').value || 0).padStart(2, '0');
+    const utc = parseFloat($('#f-utc').value) || 0;
+    const utcStr = 'UTC' + (utc >= 0 ? '+' : '') + utc;
+    const city = $('#f-city').value.trim();
+    const coords = `${compactLat(lastParams.lat)}, ${compactLon(lastParams.lon)}`;
+    return `${MONTH_NAMES[mo - 1]} ${d}, ${y} · ${hh}:${mi} ${utcStr} · ${city ? city + ' · ' : ''}${coords}`;
+  }
+
+  // The whole sky-view widget is a single <canvas> (verified against
+  // d3-celestial's actual render target, not assumed) -- one
+  // toDataURL() away from a snapshot, no SVG/canvas compositing needed.
+  // Inverting for print is a straight RGB invert on an offscreen copy:
+  // black background -> white, light-colored stars/text -> dark flecks,
+  // exactly the "don't eat someone's ink cartridge" ask.
+  function captureSkySnapshot(invert) {
+    const src = document.querySelector('#celestial-map canvas');
+    if (!src || !src.width) return null;
+    if (!invert) return src.toDataURL('image/png');
+    const off = document.createElement('canvas');
+    off.width = src.width; off.height = src.height;
+    const octx = off.getContext('2d');
+    octx.filter = 'invert(1)';
+    octx.drawImage(src, 0, 0);
+    return off.toDataURL('image/png');
+  }
+
+  const REPORT_CSS_BASE = `
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Courier New',monospace; -webkit-print-color-adjust:exact; print-color-adjust:exact;}
+    .sheet{position:relative; width:100%; padding:4mm 5mm; max-width:216mm; margin:0 auto;}
+    header{border-bottom:0.4mm solid currentColor; padding-bottom:1.5mm; margin-bottom:2mm;}
+    h1{font-size:16pt; letter-spacing:1px; margin-bottom:.8mm;}
+    .subtitle{font-size:8pt; opacity:.75; letter-spacing:.3px;}
+    .main-grid{display:grid; grid-template-columns:60mm 1fr; gap:5mm; align-items:start;}
+    .wheel-wrap svg{width:100%; height:auto; display:block;}
+    table{width:100%; border-collapse:collapse; font-size:7.5pt; margin-bottom:2mm;}
+    table td{padding:.4mm 2mm; border-bottom:0.2mm solid currentColor; opacity:.95; line-height:1.2;}
+    table tr:last-child td{border-bottom:none;}
+    td.glyph{width:6mm; text-align:center; font-size:9pt;}
+    .rx{font-weight:bold;}
+    .section-title{text-transform:uppercase; letter-spacing:1.5px; font-size:7pt; margin:1.5mm 0 .8mm; opacity:.7;}
+    .aspect-grid{display:flex; flex-wrap:wrap; gap:1mm 5mm; font-size:6.8pt; margin-bottom:1mm; line-height:1.4;}
+    .sky-wrap{text-align:center; margin-top:1mm;}
+    .sky-wrap img{max-width:100%; max-height:36mm; border-radius:2mm;}
+    .sky-cap{font-size:6.2pt; opacity:.65; margin-top:.8mm;}
+    footer{margin-top:1.5mm; font-size:5.8pt; opacity:.55; text-align:center;}
+    @media screen { body{ background:#444; padding:10mm 0; } .sheet{ box-shadow:0 4px 24px rgba(0,0,0,.4);} }
+  `;
+  const REPORT_CSS_PRINT = `
+    @page { size: letter; margin: 9mm 11mm; }
+    body.report.print{ background:#fff; color:#111; }
+    body.report.print .sheet{ background:#fff; }
+    body.report.print table td{ border-bottom-color:#ddd; }
+    body.report.print .section-title{ border-bottom:0.2mm solid #ccc; padding-bottom:.8mm; }
+    body.report.print .sky-wrap img{ border:0.3mm solid #ccc; }
+  `;
+  const REPORT_CSS_DELUXE = `
+    @page { size: A4; margin: 7mm; }
+    body.report.deluxe{ background:#050308; color:#e8dcc0; }
+    body.report.deluxe .sheet{ background:#050308; }
+    body.report.deluxe h1{ color:#e8c96d; }
+    body.report.deluxe .section-title{ color:#c9a84c; border-bottom:0.2mm solid #6b5a28; padding-bottom:.8mm; }
+    body.report.deluxe table td{ border-bottom-color:#332a12; }
+    body.report.deluxe .sky-wrap img{ border:0.3mm solid #6b5a28; }
+    body.report.deluxe .sheet.gold-frame{ border:2mm solid #c9a84c; padding:8mm 7mm; }
+    body.report.deluxe .gold-frame::after{ content:''; position:absolute; inset:3mm; border:0.5mm solid #8a7333; pointer-events:none; }
+    body.report.deluxe .corner{ position:absolute; width:5mm; height:5mm; background:#c9a84c; transform:rotate(45deg); }
+    body.report.deluxe .corner.tl{ top:-2.5mm; left:-2.5mm; }
+    body.report.deluxe .corner.tr{ top:-2.5mm; right:-2.5mm; }
+    body.report.deluxe .corner.bl{ bottom:-2.5mm; left:-2.5mm; }
+    body.report.deluxe .corner.br{ bottom:-2.5mm; right:-2.5mm; }
+  `;
+
+  function buildReportHTML(variant) {
+    if (!lastChart || !lastParams) return null;
+    const chart = lastChart;
+    const isDeluxe = variant === 'deluxe';
+    const wheelSVG = buildWheelSVG(chart, isDeluxe ? 'dark' : 'print');
+    const skyImg = captureSkySnapshot(!isDeluxe);
+    const name = $('#f-name').value.trim() || 'Natal Chart';
+    const birthLine = formatBirthLine();
+
+    const posRows = chart.planets.map(p => `
+      <tr><td class="glyph">${p.symbol}</td><td>${p.name}</td>
+      <td>${formatLongitude(p.lon)}${p.retro ? ' <span class="rx">Rx</span>' : ''}</td>
+      <td>H${p.house}</td></tr>`).join('');
+
+    const houseNames = ['I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII'];
+    const houseRows = chart.angles.houses.map((h, i) => `<tr><td>${houseNames[i]}</td><td>${formatLongitude(h)}</td></tr>`).join('')
+      + `<tr><td>Asc</td><td>${formatLongitude(chart.angles.asc)}</td></tr>`
+      + `<tr><td>MC</td><td>${formatLongitude(chart.angles.mc)}</td></tr>`;
+
+    const aspectChips = chart.aspects.length
+      ? chart.aspects.map(a => `<span class="aspect-chip">${a.a.symbol}${a.aspect.symbol}${a.b.symbol} <b>${a.a.name}</b> ${a.aspect.name} <b>${a.b.name}</b> (${a.orb.toFixed(1)}°)</span>`).join('')
+      : '<span class="aspect-chip">No major aspects within orb.</span>';
+
+    const skyModeLabel = currentSkyMode === 'literal'
+      ? 'The literal sky over the birth location at the moment of birth.'
+      : 'Whole sky, ecliptic-centered — every chart point plotted against the real stars.';
+    const generatedStr = new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+
+    return `<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>${escapeHtml(name)} — Natal Chart Report</title>
+<style>${REPORT_CSS_BASE}${isDeluxe ? REPORT_CSS_DELUXE : REPORT_CSS_PRINT}</style>
+</head>
+<body class="report ${variant}">
+  <div class="sheet${isDeluxe ? ' gold-frame' : ''}">
+    ${isDeluxe ? '<div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>' : ''}
+    <header>
+      <h1>${escapeHtml(name)}</h1>
+      <div class="subtitle">${escapeHtml(birthLine)}</div>
+    </header>
+    <div class="main-grid">
+      <div class="wheel-wrap">${wheelSVG}</div>
+      <div class="tables-wrap">
+        <div class="section-title">Planetary Positions</div>
+        <table class="positions"><tbody>${posRows}</tbody></table>
+        <div class="section-title">Houses &amp; Angles</div>
+        <table class="houses"><tbody>${houseRows}</tbody></table>
+      </div>
+    </div>
+    <div class="section-title">Major Aspects</div>
+    <div class="aspect-grid">${aspectChips}</div>
+    <div class="sky-wrap">
+      ${skyImg ? `<img src="${skyImg}" alt="Sky view">` : ''}
+      <div class="sky-cap">${escapeHtml(skyModeLabel)}</div>
+    </div>
+    <footer>Generated ${generatedStr} · Manifold Atlas Natal Chart · in-browser ephemeris, Placidus houses, ecliptic of date</footer>
+  </div>
+</body></html>`;
+  }
+
+  // window.open() has to happen synchronously inside the click handler
+  // (before any await) to count as a trusted user gesture -- otherwise
+  // popup blockers eat it. Everything buildReportHTML does is already
+  // synchronous (toDataURL, string building), so there's no async gap
+  // to worry about here regardless, but the open-first order is kept
+  // anyway since it's the robust pattern.
+  function openReport(variant) {
+    if (!lastChart) { alert('Cast a chart first.'); return; }
+    const w = window.open('', '_blank');
+    if (!w) { alert('Please allow pop-ups to open the report.'); return; }
+    const html = buildReportHTML(variant);
+    w.document.open();
+    w.document.write(html);
+    w.document.close();
+    w.addEventListener('load', () => { w.focus(); w.print(); });
+  }
+
+  function wireReportExport() {
+    $('#report-print-btn').addEventListener('click', () => openReport('print'));
+    $('#report-deluxe-btn').addEventListener('click', () => openReport('deluxe'));
   }
 
   /* ── City search: fills lat/lon from a bundled ~24k-city list
@@ -790,6 +1003,7 @@
     wireCitySearch();
     wireSkyToggle();
     wireShare();
+    wireReportExport();
     $('#chart-form').addEventListener('submit', e => {
       e.preventDefault();
       const btn = $('#chart-form button[type="submit"]');
