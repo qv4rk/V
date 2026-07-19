@@ -148,7 +148,8 @@
 					<button id="zenBtn">Zen Mode</button>
 					<button id="fsBtn">Fullscreen</button>
 				</div>
-				<div class="control">
+				<div class="row2">
+					<button id="undoBtn">Undo</button>
 					<button id="clearBtn">Clear Canvas</button>
 				</div>
 				<div class="control">
@@ -1337,24 +1338,20 @@
 	// contexts start fully transparent, and these exports are meant to be
 	// print-ready (t-shirts, hats: real alpha, not "looks black on a dark
 	// screen").
-	function renderHistoryFrame(multiplier, endIdx) {
+	// One forward pass through the true chronological stream onto
+	// whatever ctx is handed in (an offscreen re-render canvas, or the
+	// live `ctx` for a post-undo redraw) -- INDEPENDENT running state per
+	// layer, a `brk` on layer 0 resets only layer 0's continuity and
+	// active-touch set, never layer 1's, even though both layers' entries
+	// are interleaved in the same array in true chronological order. An
+	// end-marker removes just that one touch from its layer's active set
+	// (lifting one finger shouldn't disconnect the others on the same
+	// layer). Each layer's activeOrder/activePos rebuild the same "who's
+	// currently held" state ongoingTouches would have had live, so the
+	// mesh and any touch-reactive pattern (Golden Spiral, Pyrotaxis)
+	// render identically to live, per layer.
+	function replayHistoryOnto(targetCtx, endIdx) {
 		const baseW = W, baseH = H;
-		const off = document.createElement('canvas');
-		off.width = Math.round(baseW * multiplier); off.height = Math.round(baseH * multiplier);
-		const octx = off.getContext('2d');
-		octx.scale(multiplier, multiplier);
-
-		// One forward pass through the true chronological stream, with
-		// INDEPENDENT running state per layer -- a `brk` on layer 0 resets
-		// only layer 0's continuity and active-touch set, never layer 1's,
-		// even though both layers' entries are interleaved in the same
-		// array in true chronological order. An end-marker removes just
-		// that one touch from its layer's active set (lifting one finger
-		// shouldn't disconnect the others on the same layer). Each layer's
-		// activeOrder/activePos rebuild the same "who's currently held"
-		// state ongoingTouches would have had live, so the mesh and any
-		// touch-reactive pattern (Golden Spiral, Pyrotaxis) render
-		// identically to live, per layer.
 		const layerState = new Map();
 		function stateFor(layer) {
 			if (!layerState.has(layer)) layerState.set(layer, { prevEntry: null, activeOrder: [], activePos: new Map() });
@@ -1381,13 +1378,101 @@
 			const shadowPal = colorPalettes[sName] || pal;
 			const centers = centersForGrid(baseW, baseH, entry.cfg.gridMode);
 			centers.forEach(c => {
-				renderPass(octx, c.x, c.y, entry, st.prevEntry, entry.colorIndex, pal, shadowPal, entry.cfg, active);
-				if (CONFIG.shadowMesh) drawShadowMesh(octx, c.x, c.y, pal, active);
+				renderPass(targetCtx, c.x, c.y, entry, st.prevEntry, entry.colorIndex, pal, shadowPal, entry.cfg, active);
+				if (CONFIG.shadowMesh) drawShadowMesh(targetCtx, c.x, c.y, pal, active);
 			});
 			st.prevEntry = entry;
 		}
+	}
+
+	function renderHistoryFrame(multiplier, endIdx) {
+		const off = document.createElement('canvas');
+		off.width = Math.round(W * multiplier); off.height = Math.round(H * multiplier);
+		const octx = off.getContext('2d');
+		octx.scale(multiplier, multiplier);
+		replayHistoryOnto(octx, endIdx);
 		return off;
 	}
+
+	// Undo: strips the most recently completed stroke (everything back to
+	// the previous full-lift `brk` marker) on whichever layer was drawn on
+	// last, then wipes and fully replays what's left -- canvas drawing is
+	// destructive, so "erase just one stroke" has no cheaper correct
+	// answer than clear + replay. Refuses while a finger's still down
+	// (ongoingTouches non-empty): the in-progress gesture has no closing
+	// `brk` yet, so there's no well-defined "last complete stroke" to cut.
+	function undoLastStroke() {
+		if (ongoingTouches.length > 0) { hud('UNDO', 'lift your finger first'); return; }
+		// Anchor on the last drawable point rather than counting `brk`
+		// markers -- two `brk`s in a row is the NORMAL boundary between
+		// any two strokes (the closing brk of stroke N sits right next to
+		// the opening brk of stroke N+1), so counting "2 brks back" can't
+		// tell a real stroke boundary apart from a brk that has nothing
+		// after it. Anchoring on content instead is unambiguous: walk
+		// backward from the last point to the nearest earlier same-layer
+		// brk (openIdx, exclusive -- untouched, it's the PREVIOUS stroke's
+		// own close) and forward to this stroke's own closing brk
+		// (closeIdx, inclusive) and remove everything in between.
+		let lastPtIdx = -1, layer = null;
+		for (let i = history.length - 1; i >= 0; i--) {
+			const e = history[i];
+			if (e && e.x !== undefined) { lastPtIdx = i; layer = e.layer; break; }
+		}
+		if (lastPtIdx === -1) { hud('UNDO', 'nothing to undo'); return; }
+
+		let openIdx = -1;
+		for (let i = lastPtIdx - 1; i >= 0; i--) {
+			const e = history[i];
+			if (e && e.layer === layer && e.brk) { openIdx = i; break; }
+		}
+		let closeIdx = lastPtIdx;
+		for (let i = lastPtIdx + 1; i < history.length; i++) {
+			const e = history[i];
+			if (e && e.layer === layer) {
+				closeIdx = i;
+				if (e.brk) break;
+			}
+		}
+
+		const removedTs = new Set();
+		let removedPoints = 0;
+		const kept = [];
+		for (let i = 0; i < history.length; i++) {
+			const e = history[i];
+			if (e && e.layer === layer && i > openIdx && i <= closeIdx) {
+				if (e.x !== undefined) { removedPoints++; removedTs.add(e.ts); }
+				continue;
+			}
+			kept.push(e);
+		}
+		history = kept;
+		historyPointCount -= removedPoints;
+
+		if (layerPoints[layer]) layerPoints[layer] = layerPoints[layer].filter(p => !removedTs.has(p.ts));
+		if (!layerPoints[layer] || layerPoints[layer].length === 0) {
+			delete layerPoints[layer]; delete layerSessionCounter[layer];
+		}
+		// The undone stroke may have been the session this layer's replay
+		// clock was locked from -- clear the lock so it re-derives (or
+		// stays unlocked) from whatever's left, instead of replaying a
+		// cycle length measured against a session that no longer exists.
+		delete layerLock[layer];
+
+		if (history.length < 2) { ghostFlatIdx = 0; ghostDir = 1; }
+		else ghostFlatIdx = Math.max(0, Math.min(ghostFlatIdx, history.length - 1));
+		pastSelfCache = { layer: null, ts: -Infinity, result: [] };
+
+		ctx.clearRect(0, 0, canvas.width, canvas.height);
+		if (history.length > 0) replayHistoryOnto(ctx, history.length - 1);
+		hud('UNDO', `-${removedPoints} pts`);
+	}
+	document.getElementById('undoBtn').addEventListener('click', undoLastStroke);
+	document.addEventListener('keydown', e => {
+		if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'z') {
+			e.preventDefault();
+			undoLastStroke();
+		}
+	});
 
 	// High-res re-render export -- replays the FULL history onto a scaled
 	// offscreen canvas rather than upscaling the raster, same lossless
