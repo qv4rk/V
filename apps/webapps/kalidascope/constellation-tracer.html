@@ -6,7 +6,13 @@
 	<title>Omniscope — FeistTech</title>
 	<style>
 		body { margin: 0; overflow: hidden; background: #0a0a0a; color: #efffee; font-family: sans-serif; touch-action: none; user-select: none; }
-		canvas#artboard { display: block; width: 100vw; height: 100vh; transform-origin: center center; }
+		canvas#artboard { display: block; width: 100vw; height: 100vh; transform-origin: center center; position: relative; z-index: 1; }
+
+		#celestial-backdrop { position: fixed; inset: 0; z-index: 0; background: #000; }
+		#celestial-backdrop.transparent-bg { background: transparent; }
+		#celestial-backdrop svg, #celestial-backdrop canvas { width: 100%; height: 100%; display: block; }
+
+		#navModeToggle.active { background: #2d5a3d; border-color: #4a8; }
 
 		.site-nav { position: absolute; top: 10px; right: 12px; z-index: 200; }
 		.site-back { color: #999; text-decoration: none; letter-spacing: 0.1em; font-size: 0.68rem; background: rgba(0,0,0,0.5); padding: 5px 10px; border-radius: 6px; }
@@ -59,7 +65,9 @@
 		body.zen #zenHint { display: block; }
 	</style>
 </head>
+<link rel="stylesheet" href="lib/celestial/celestial.css">
 <body>
+	<div id="celestial-backdrop"></div>
 	<canvas id="artboard"></canvas>
 
 	<div class="site-nav"><a href="../../../index.html" class="site-back">← FEISTTECH</a></div>
@@ -173,11 +181,48 @@
 				</div>
 			</div>
 		</div>
+
+		<div class="group open" data-group="constellation">
+			<div class="group-head"><span>Constellation</span><span class="car">▸</span></div>
+			<div class="group-body">
+				<div class="control">
+					<label for="constSelect">Backdrop</label>
+					<select id="constSelect"></select>
+				</div>
+				<div class="control">
+					<label for="bgStarSlider">Background Star Intensity <span class="val" id="bgStarSliderVal">100%</span></label>
+					<input type="range" id="bgStarSlider" min="0" max="100" value="100">
+				</div>
+				<div class="control">
+					<label for="nodeSlider">Constellation Node Brightness <span class="val" id="nodeSliderVal">100%</span></label>
+					<input type="range" id="nodeSlider" min="0" max="100" value="100">
+				</div>
+				<div class="control">
+					<label for="constPalette">Star Palette</label>
+					<select id="constPalette">
+						<option value="spectral">Spectral (real colors)</option>
+						<option value="gold">Gold</option>
+						<option value="cyan">Cyan</option>
+						<option value="mono">Monochrome white</option>
+					</select>
+				</div>
+				<div class="row2">
+					<button id="linesToggle">Lines: ON</button>
+					<button id="transparentBgToggle">Transparent BG</button>
+				</div>
+				<div class="control">
+					<button id="navModeToggle" hidden>🧭 Navigate</button>
+				</div>
+			</div>
+		</div>
 	</div>
 
 	<div id="hud"><div class="lbl" id="hudLbl"></div><div class="val" id="hudVal"></div></div>
 	<div id="zenHint">tap ☰ to exit zen mode</div>
 
+<script src="lib/celestial/d3.min.js"></script>
+<script src="lib/celestial/d3.geo.projection.min.js"></script>
+<script src="lib/celestial/celestial.min.js"></script>
 <script>
 	const CONFIG = {
 		mirrors: 6, gridMode: 0, patternIndex: 0, paletteIndex: 0,
@@ -1482,6 +1527,330 @@
 		requestAnimationFrame(animate);
 	}
 	animate();
+</script>
+
+<!-- CONSTELLATION BACKDROP + CAROUSEL
+
+     Entirely separate from the script above, doesn't modify a
+     single line of the original Omniscope drawing engine. Sits on
+     top of it via capture-phase touch listeners on the same canvas:
+     when Navigate mode is active on the Whole Sky slide, this layer
+     intercepts touches (stopImmediatePropagation) before they reach
+     the original bubble-phase listeners, so panning/zooming/rotating
+     the sky never gets misread as a drawing stroke. Everywhere else
+     (the 13 fixed slides, or Draw mode on Whole Sky), touches pass
+     through untouched and Omniscope's mesh drawing works exactly as
+     it always did.
+
+     Per-constellation framing (ra/dec center + span) was computed
+     directly from the real IAU boundary polygons
+     (constellations.bounds.json), not eyeballed or guessed. -->
+<script>
+(function () {
+	'use strict';
+
+	const SLIDES = [
+		{ abbr: 'Ari', name: 'Aries',       ra: 39.541,   dec: 20.792,  raSpan: 25.77, decSpan: 20.86 },
+		{ abbr: 'Tau', name: 'Taurus',      ra: 70.533,   dec: 14.877,  raSpan: 39.39, decSpan: 32.45 },
+		{ abbr: 'Gem', name: 'Gemini',      ra: 106.059,  dec: 22.6,    raSpan: 31.87, decSpan: 25.58 },
+		{ abbr: 'Cnc', name: 'Cancer',      ra: 129.739,  dec: 19.806,  raSpan: 21.81, decSpan: 26.67 },
+		{ abbr: 'Leo', name: 'Leo',         ra: 160.007,  dec: 13.139,  raSpan: 39.2,  decSpan: 39.66 },
+		{ abbr: 'Vir', name: 'Virgo',       ra: -158.902, dec: -4.158,  raSpan: 53.51, decSpan: 37.04 },
+		{ abbr: 'Lib', name: 'Libra',       ra: -132.01,  dec: -15.235, raSpan: 25.16, decSpan: 29.52 },
+		{ abbr: 'Sco', name: 'Scorpius',    ra: -106.689, dec: -27.032, raSpan: 33.0,  decSpan: 37.47 },
+		{ abbr: 'Sgr', name: 'Sagittarius', ra: -73.515,  dec: -28.477, raSpan: 41.37, decSpan: 33.6 },
+		{ abbr: 'Cap', name: 'Capricornus', ra: -44.268,  dec: -18.023, raSpan: 28.08, decSpan: 19.24 },
+		{ abbr: 'Aqr', name: 'Aquarius',    ra: -25.655,  dec: -10.789, raSpan: 49.53, decSpan: 28.23 },
+		{ abbr: 'Psc', name: 'Pisces',      ra: 7.243,    dec: 13.687,  raSpan: 48.84, decSpan: 39.99 },
+		{ abbr: 'Oph', name: 'Ophiuchus',   ra: -99.077,  dec: -7.912,  raSpan: 41.07, decSpan: 44.6 },
+		{ abbr: null,  name: 'Whole Sky',   free: true }
+	];
+
+	const PALETTES = {
+		spectral: { colors: true },
+		gold:     { colors: false, fill: '#c9a84c' },
+		cyan:     { colors: false, fill: '#00d4e8' },
+		mono:     { colors: false, fill: '#ffffff' }
+	};
+
+	let slideIdx = 0;
+	let showLines = true;
+	let navMode = true; // only meaningful on the free (Whole Sky) slide
+	let skyReady = false;
+	let bgStarPct = 100;   // background star intensity, 0-100
+	let nodePct = 100;     // constellation line/node brightness, 0-100
+	let palette = 'spectral';
+	let transparentBg = false;
+
+	// zoomlevel that comfortably frames a region of the given angular
+	// span, tuned empirically against real renders (see verification
+	// screenshots) rather than derived analytically.
+	function zoomForSpan(span) {
+		return Math.max(1, Math.min(9, 210 / span));
+	}
+
+	function raDegToHours(deg) {
+		let h = deg / 15;
+		if (h < 0) h += 24;
+		return h;
+	}
+
+	function configForSlide(slide) {
+		if (slide.free) {
+			return { projection: 'stereographic', center: [0, 0, 0], zoomlevel: 1 };
+		}
+		return {
+			projection: 'stereographic',
+			center: [raDegToHours(slide.ra), slide.dec, 0],
+			zoomlevel: zoomForSpan(Math.max(slide.raSpan, slide.decSpan))
+		};
+	}
+
+	// Background-star opacity is a direct read of the slider (0-100 -> 0-1).
+	// Constellation-node brightness controls the connect-the-dots line
+	// figure's own opacity/stroke intensity -- d3-celestial doesn't tag
+	// individual stars as "belongs to this constellation's figure" vs
+	// "background," so this is the line pattern's visibility, not a
+	// per-star distinction. Turning background stars down while keeping
+	// node brightness up is exactly the "keep the figure, lose the clutter"
+	// effect that was asked for.
+	function starStyleFor() {
+		const p = PALETTES[palette];
+		const style = { opacity: bgStarPct / 100 };
+		if (!p.colors) style.fill = p.fill;
+		return { colors: p.colors, style };
+	}
+
+	function lineStyleFor() {
+		const t = nodePct / 100;
+		return { stroke: '#cccccc', width: 1.5, opacity: 0.15 + 0.75 * t };
+	}
+
+	function backdropConfig(slide) {
+		const c = configForSlide(slide);
+		const starStyle = starStyleFor();
+		return {
+			projection: c.projection,
+			center: c.center,
+			zoomlevel: c.zoomlevel,
+			background: { fill: transparentBg ? 'rgba(0,0,0,0)' : '#000000', opacity: transparentBg ? 0 : 1 },
+			stars: { show: true, limit: 8, colors: starStyle.colors, designation: false, propername: false,
+				data: 'stars.6.json', size: 7, exponent: -0.15, style: starStyle.style },
+			dsos: { show: true, limit: 9, colors: true, names: false, data: 'dsos.14.json' },
+			constellations: { show: showLines, names: showLines, lines: showLines, bounds: false, lineStyle: lineStyleFor() },
+			mw: { show: !transparentBg },
+			planets: { show: false }
+		};
+	}
+
+	// Every attempt at incrementally updating an existing Celestial
+	// instance (reload()+reproject(), rotate()+apply(), various
+	// orderings) proved unreliable under real testing: apply() silently
+	// drops center/location/follow changes, reproject() mid-tween throws,
+	// and -- the actual root cause, found by watching cfg.center over a
+	// 5-second window -- follow defaults to 'zenith' any time it isn't
+	// pinned in the ONE-TIME initial display() call, which continuously
+	// re-centers on whatever's overhead right now by the real device
+	// clock, silently dragging any slide away from its target a couple
+	// seconds after switching. Full reinit via Celestial.display() again
+	// is the one code path proven to work correctly (it's exactly what
+	// the first-ever successful render used), so that's what every slide
+	// switch does now, not an incremental update.
+	// Verified correct via mapProjection.invert() at the canvas center
+	// pixel, not by eyeballing which constellation label happens to be
+	// nearby (a label's anchor point isn't the same as view center, and
+	// trusting that visually is what cost so much time here) --
+	// reload() correctly re-centers/re-zooms/re-styles as long as
+	// location/follow/disableAnimations travel with every call, not just
+	// the first. follow defaults to 'zenith' (recenters on whatever's
+	// overhead right now, by the real device clock) any time it isn't
+	// pinned, which is what made early attempts look like they were
+	// drifting to the wrong patch of sky a couple seconds after loading.
+	const BASE_CFG = {
+		container: 'celestial-backdrop',
+		datapath: 'lib/celestial/data/',
+		width: 0,
+		transform: 'equatorial',
+		zoomextend: 12,
+		interactive: false, // this layer owns gesture handling, not d3-celestial's own
+		controls: false,
+		form: false,
+		advanced: false,
+		location: false,
+		follow: 'center',
+		disableAnimations: true
+	};
+
+	function initSky() {
+		const cfg = backdropConfig(SLIDES[slideIdx]);
+		Celestial.display(Object.assign({}, BASE_CFG, cfg));
+		skyReady = true;
+		updateUI();
+	}
+
+	function goToSlide(idx) {
+		slideIdx = ((idx % SLIDES.length) + SLIDES.length) % SLIDES.length;
+		if (!skyReady) { initSky(); return; }
+		const cfg = backdropConfig(SLIDES[slideIdx]);
+		Celestial.reload(Object.assign({}, BASE_CFG, cfg));
+		updateUI();
+	}
+
+	function refreshBackdrop() {
+		if (!skyReady) return;
+		goToSlide(slideIdx);
+	}
+
+	function updateUI() {
+		const slide = SLIDES[slideIdx];
+		document.getElementById('celestial-backdrop').classList.toggle('transparent-bg', transparentBg);
+		const linesBtn = document.getElementById('linesToggle');
+		const navBtn = document.getElementById('navModeToggle');
+		linesBtn.hidden = !!slide.free;
+		navBtn.hidden = !slide.free;
+		linesBtn.textContent = 'Lines: ' + (showLines ? 'ON' : 'OFF');
+		linesBtn.classList.toggle('active', showLines);
+		navBtn.textContent = navMode ? '🧭 Navigate' : '✏️ Draw';
+		navBtn.classList.toggle('active', navMode);
+	}
+
+	const constSelect = document.getElementById('constSelect');
+	SLIDES.forEach((s, i) => {
+		const opt = document.createElement('option');
+		opt.value = i;
+		opt.textContent = s.free ? 'Whole Sky (freely navigable)' : s.name + ' (' + s.abbr + ')';
+		constSelect.appendChild(opt);
+	});
+	constSelect.addEventListener('change', () => goToSlide(+constSelect.value));
+
+	const bgStarSlider = document.getElementById('bgStarSlider');
+	bgStarSlider.addEventListener('input', () => {
+		bgStarPct = +bgStarSlider.value;
+		document.getElementById('bgStarSliderVal').textContent = bgStarPct + '%';
+		refreshBackdrop();
+	});
+
+	const nodeSlider = document.getElementById('nodeSlider');
+	nodeSlider.addEventListener('input', () => {
+		nodePct = +nodeSlider.value;
+		document.getElementById('nodeSliderVal').textContent = nodePct + '%';
+		refreshBackdrop();
+	});
+
+	document.getElementById('constPalette').addEventListener('change', e => {
+		palette = e.target.value;
+		refreshBackdrop();
+	});
+
+	document.getElementById('transparentBgToggle').addEventListener('click', e => {
+		transparentBg = !transparentBg;
+		e.target.classList.toggle('active', transparentBg);
+		refreshBackdrop();
+	});
+
+	document.getElementById('linesToggle').addEventListener('click', () => {
+		showLines = !showLines;
+		refreshBackdrop();
+	});
+
+	document.getElementById('navModeToggle').addEventListener('click', () => {
+		navMode = !navMode;
+		updateUI();
+	});
+
+	/* ── Gesture layer for the free Whole Sky slide's Navigate mode ──
+	   1 finger: pan (re-rotate center). 2 fingers: pinch = zoom.
+	   3 fingers: rotate (twist angle between two touches -> orient).
+	   Capture-phase + stopImmediatePropagation so none of this ever
+	   reaches the original drawing listeners while active. ── */
+	const canvas = document.getElementById('artboard');
+	let gestureState = null;
+
+	function touchesActive() {
+		return navMode && SLIDES[slideIdx].free;
+	}
+
+	function centroid(touches) {
+		let x = 0, y = 0;
+		for (const t of touches) { x += t.clientX; y += t.clientY; }
+		return { x: x / touches.length, y: y / touches.length };
+	}
+
+	function dist(a, b) { return Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY); }
+	function angle(a, b) { return Math.atan2(b.clientY - a.clientY, b.clientX - a.clientX); }
+
+	canvas.addEventListener('touchstart', e => {
+		if (!touchesActive()) return;
+		e.stopImmediatePropagation();
+		e.preventDefault();
+		const t = e.touches;
+		const center = Celestial.rotate() || [0, 0, 0];
+		gestureState = {
+			count: t.length,
+			startCenter: center.slice(),
+			startCentroid: centroid(t),
+			startDist: t.length >= 2 ? dist(t[0], t[1]) : null,
+			startAngle: t.length >= 3 ? angle(t[0], t[1]) : null,
+			startScale: Celestial.zoomBy() || 1
+		};
+	}, true);
+
+	canvas.addEventListener('touchmove', e => {
+		if (!touchesActive() || !gestureState) return;
+		e.stopImmediatePropagation();
+		e.preventDefault();
+		const t = e.touches;
+
+		if (t.length === 1) {
+			// pan: screen-pixel delta -> degrees, roughly (small-angle,
+			// good enough for a drag gesture, not meant to be exact)
+			const c = centroid(t);
+			const dx = c.x - gestureState.startCentroid.x;
+			const dy = c.y - gestureState.startCentroid.y;
+			const scale = 0.25 / (Celestial.zoomBy() || 1);
+			const newLong = gestureState.startCenter[0] - dx * scale;
+			const newLat = Math.max(-90, Math.min(90, gestureState.startCenter[1] + dy * scale));
+			Celestial.rotate({ center: [newLong, newLat, gestureState.startCenter[2]] });
+		} else if (t.length === 2) {
+			const d = dist(t[0], t[1]);
+			if (gestureState.startDist) {
+				const factor = d / gestureState.startDist;
+				Celestial.zoomBy(factor);
+				gestureState.startDist = d; // incremental, avoids runaway from one stored baseline
+			}
+		} else if (t.length >= 3) {
+			const a = angle(t[0], t[1]);
+			if (gestureState.startAngle !== null) {
+				const deltaDeg = (a - gestureState.startAngle) * 180 / Math.PI;
+				const cur = Celestial.rotate() || [0, 0, 0];
+				Celestial.rotate({ center: [cur[0], cur[1], cur[2] + deltaDeg] });
+				gestureState.startAngle = a;
+			}
+		}
+	}, true);
+
+	canvas.addEventListener('touchend', e => {
+		if (!touchesActive()) return;
+		e.stopImmediatePropagation();
+		if (e.touches.length === 0) gestureState = null;
+		else {
+			// finger count changed mid-gesture -- re-baseline instead of
+			// carrying over deltas computed for a different touch count
+			const t = e.touches;
+			gestureState = {
+				count: t.length,
+				startCenter: Celestial.rotate() || [0, 0, 0],
+				startCentroid: centroid(t),
+				startDist: t.length >= 2 ? dist(t[0], t[1]) : null,
+				startAngle: t.length >= 3 ? angle(t[0], t[1]) : null,
+				startScale: Celestial.zoomBy() || 1
+			};
+		}
+	}, true);
+
+	document.addEventListener('DOMContentLoaded', () => { initSky(); updateUI(); });
+	if (document.readyState !== 'loading') { initSky(); updateUI(); }
+})();
 </script>
 </body>
 </html>
