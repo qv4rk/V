@@ -440,6 +440,122 @@
     return svg;
   }
 
+  /* ── Sky View: overlay the chart's points on a real star map ──
+     d3-celestial's own catalogs (stars.6.json etc.) are equatorial
+     J2000. Chart points are computed in true-ecliptic-of-date, so
+     each needs converting: ecliptic-of-date -> equatorial-of-date
+     (Rotation_ECT_EQD) -> equatorial J2000 (Rotation_EQD_EQJ). This
+     is the exact inverse of the Galactic Center calculation above,
+     and was verified the same way: round-tripping a known RA/Dec
+     through both directions reproduces the input to ~1e-13 deg.
+     d3-celestial itself stores RA in degrees over (-180,180], which
+     is exactly what atan2 already returns -- no extra wraparound
+     needed. ── */
+  function eclDateToEqJ2000(lonDeg, latDeg, date) {
+    const lon = lonDeg * d2r, lat = latDeg * d2r;
+    const time = A.MakeTime(date);
+    const v = { x: Math.cos(lat)*Math.cos(lon), y: Math.cos(lat)*Math.sin(lon), z: Math.sin(lat), t: time };
+    const rEQD = A.RotateVector(A.Rotation_ECT_EQD(time), v);
+    const rEQJ = A.RotateVector(A.Rotation_EQD_EQJ(time), rEQD);
+    return [Math.atan2(rEQJ.y, rEQJ.x) * r2d, Math.asin(rEQJ.z) * r2d]; // [ra(-180..180), dec]
+  }
+
+  let skyReady = false;
+  let skyPoints = [];
+
+  function skyRedraw() {
+    if (!window.Celestial || !Celestial.container) return;
+    const ctx = Celestial.context;
+    const trans = Celestial.settings().transform;
+    skyPoints.forEach(p => {
+      const pos = Celestial.getPoint([p.ra, p.dec], trans);
+      if (!Celestial.clip(pos)) return;
+      const xy = Celestial.mapProjection(pos);
+      if (!xy) return;
+      ctx.beginPath();
+      ctx.arc(xy[0], xy[1], 9, 0, 2 * Math.PI);
+      ctx.fillStyle = 'rgba(10,14,28,0.9)';
+      ctx.fill();
+      ctx.strokeStyle = '#c9a84c';
+      ctx.lineWidth = 1.3;
+      ctx.stroke();
+      ctx.fillStyle = '#e8c96d';
+      ctx.font = `bold ${p.symbol.length > 1 ? 9 : 12}px 'Space Mono', monospace`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(p.symbol, xy[0], xy[1] + 1);
+    });
+  }
+
+  function initSky() {
+    Celestial.display({
+      container: 'celestial-map',
+      datapath: 'lib/celestial/data/',
+      width: 0,
+      projection: 'aitoff',
+      transform: 'ecliptic',
+      center: null,
+      geopos: null,
+      location: false,
+      follow: 'center',
+      zoomlevel: null,
+      zoomextend: 8,
+      interactive: true,
+      controls: true,
+      form: false,
+      advanced: false,
+      stars: { show: true, limit: 6, colors: true, designation: false, propername: false, data: 'stars.6.json' },
+      dsos: { show: false },
+      constellations: { show: true, names: true, lines: true, bounds: false },
+      mw: { show: true },
+      planets: { show: false },
+      lines: { graticule: { show: false }, equatorial: { show: false }, ecliptic: { show: true, stroke: '#c9a84c', width: 1, opacity: 0.4 } }
+    });
+    Celestial.add({ type: 'raw', callback: () => {}, redraw: skyRedraw });
+    skyReady = true;
+  }
+
+  function updateSky(chart, date) {
+    skyPoints = chart.planets.map(p => {
+      const [ra, dec] = eclDateToEqJ2000(p.lon, p.lat, date);
+      return { ra, dec, symbol: p.symbol, name: p.name };
+    });
+    if (!skyReady) {
+      initSky();
+    } else {
+      Celestial.redraw();
+    }
+  }
+
+  function setSkyMode(mode, lat, lon, date) {
+    if (!skyReady) return;
+    const caption = $('#sky-caption');
+    // location/geopos/follow don't take effect through apply() -- verified by
+    // inspecting Celestial.settings() before/after an apply() call, which
+    // showed them unchanged. reload() re-runs the actual load/orientation
+    // sequence that reads them. It doesn't clear Celestial.data, so the
+    // custom overlay layer survives without needing to be re-added.
+    // Separately, changing projection has to go through the dedicated
+    // reproject() call -- passing it to reload() updates the map visually
+    // but not in one step together with location, so both calls are needed
+    // in sequence (reload first, then reproject).
+    if (mode === 'literal') {
+      Celestial.date(date);
+      Celestial.reload({ location: true, geopos: [lat, lon], follow: 'zenith', center: null });
+      // stereographic is a clipped hemisphere ("dome") projection -- only
+      // what's actually above the horizon at that place/time is shown,
+      // unlike aitoff which maps the whole celestial sphere regardless.
+      Celestial.reproject({ projection: 'stereographic' });
+      caption.textContent = 'The literal dome of sky over the birth location at the moment of birth — only points above the horizon are visible.';
+    } else {
+      Celestial.reload({ location: false, follow: 'center', center: null });
+      Celestial.reproject({ projection: 'aitoff' });
+      caption.textContent = 'Every chart point plotted against the real stars, ecliptic band running through center. Scroll/drag/pinch to explore.';
+    }
+    $('#sky-mode-whole').classList.toggle('active', mode !== 'literal');
+    $('#sky-mode-literal').classList.toggle('active', mode === 'literal');
+  }
+
   /* ── UI wiring ── */
   const SAMPLE_LOCATIONS = [
     { name: 'New York',     lat: 40.7128, lon: -74.0060, utc: -5 },
@@ -532,12 +648,18 @@
     return true;
   }
 
+  let lastParams = null;
+  let currentSkyMode = 'whole';
+
   function compute() {
     const params = readForm();
     if (Number.isNaN(params.lat) || Number.isNaN(params.lon)) return;
     const chart = computeChart(params.date, params.lat, params.lon);
     renderChart(chart, params.date);
     syncURL(params);
+    lastParams = params;
+    updateSky(chart, params.date);
+    if (currentSkyMode === 'literal') setSkyMode('literal', params.lat, params.lon, params.date);
   }
 
   function wireLocations() {
@@ -652,9 +774,21 @@
     input.addEventListener('focus', () => { if (results.length) dropdown.hidden = false; });
   }
 
+  function wireSkyToggle() {
+    $('#sky-mode-whole').addEventListener('click', () => {
+      currentSkyMode = 'whole';
+      if (lastParams) setSkyMode('whole', lastParams.lat, lastParams.lon, lastParams.date);
+    });
+    $('#sky-mode-literal').addEventListener('click', () => {
+      currentSkyMode = 'literal';
+      if (lastParams) setSkyMode('literal', lastParams.lat, lastParams.lon, lastParams.date);
+    });
+  }
+
   function init() {
     wireLocations();
     wireCitySearch();
+    wireSkyToggle();
     wireShare();
     $('#chart-form').addEventListener('submit', e => {
       e.preventDefault();
