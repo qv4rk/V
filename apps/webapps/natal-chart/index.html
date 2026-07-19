@@ -146,9 +146,10 @@ button.secondary:hover { border-color:var(--cyan); color:var(--cyan); }
       <p class="note">
         Local time + UTC offset, no timezone/DST lookup — enter the offset that was in effect at birth.
         Positions come from an in-browser ephemeris (astronomy-engine), accurate to a few arcseconds.
-        Placidus houses are computed from scratch and checked against Swiss Ephemeris. Chiron isn't
-        included — it needs its own perturbed-orbit data file, which is exactly why the original
-        pyswisseph script needed a local ephemeris path.
+        Placidus houses are computed from scratch and checked against Swiss Ephemeris. Chiron is
+        computed by numerically integrating a JPL-verified orbit (epoch JD 2461200.5) under
+        Sun + Jupiter + Saturn + Uranus + Neptune gravity — accuracy is best near that epoch and
+        degrades gradually further out; non-gravitational (outgassing) effects aren't modeled.
       </p>
     </div>
 
