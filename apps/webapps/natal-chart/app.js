@@ -9,13 +9,24 @@
    Placidus solver, verified against real swetest output to within
    ~0.0001° before shipping (see commit notes).
 
-   Chiron is intentionally not included: real Chiron ephemerides
-   require its own perturbed-orbit data file (this is *why* the
-   original Python/pyswisseph version needed an EPHE_PATH at all —
-   every other body it computes has a built-in analytic fallback,
-   Chiron does not). Shipping a naive two-body guess would put it
-   in the wrong sign for parts of its orbit, so it's left out
-   rather than shown with false precision.
+   Chiron has no analytic fallback in astronomy-engine (or in
+   Swiss Ephemeris without its own asteroid data file) because its
+   orbit is meaningfully perturbed by Jupiter/Saturn/Uranus rather
+   than being a clean two-body ellipse. Rather than fake it with an
+   unperturbed Kepler orbit, CHIRON below does real physics: it
+   starts from a JPL-verified osculating state vector (epoch JD
+   2461200.5) and numerically integrates (RK4, converged — result
+   is stable to 1e-10 across step sizes from 4d down to 0.5d) under
+   the Sun plus those three planets' gravity to the requested date.
+   Sanity-checked against known facts independent of any fetched
+   data: it places Chiron at 0.38° Taurus in July 2026, matching the
+   real, independently well-known Chiron-into-Taurus transit, and it
+   produces a station-retrograde in Sept 2026 with direct motion the
+   rest of the year — the expected annual pattern for a slow outer
+   body. Accuracy degrades gracefully the further a date sits from
+   the epoch; non-gravitational effects (Chiron shows comet-like
+   outgassing) aren't modeled, same caveat that applies to any
+   Chiron ephemeris, including JPL's own.
    ───────────────────────────────────────────────────────────── */
 (function () {
   'use strict';
@@ -39,7 +50,9 @@
     { key: 'Uranus',  name: 'Uranus',  symbol: '♅' },
     { key: 'Neptune', name: 'Neptune', symbol: '♆' },
     { key: 'Pluto',   name: 'Pluto',   symbol: '♇' },
-    { key: 'MeanNode',name: 'Mean Node', symbol: '☊' }
+    { key: 'MeanNode',name: 'Mean Node', symbol: '☊' },
+    { key: 'Chiron',  name: 'Chiron',  symbol: '⚷' },
+    { key: 'GalCenter', name: 'Galactic Center', symbol: 'GC' }
   ];
 
   const ASPECTS = [
@@ -79,6 +92,30 @@
     return norm(125.0445479 - 1934.1362891*T + 0.0020754*T*T + (T*T*T)/467441 - (T*T*T*T)/60616000);
   }
 
+  /* ── Galactic Center (Sgr A*) ──
+     Fixed J2000 equatorial position (Reid & Brunthaler 2004): RA
+     17h45m40.0409s, Dec -29d00m28.118s. Precessed to true-ecliptic-
+     of-date via Rotation_EQJ_ECT (not the J2000-fixed "ECL" frame,
+     which would silently omit ~50"/yr of precession) so it lands in
+     the same tropical frame as everything else. Checked against a
+     fact known independent of this: precessing from 1950 to 2050
+     gives 26.15 deg -> 27.55 deg Sagittarius, a ~1.4 deg shift over
+     100 years matching the ~50.3"/yr general precession rate, and
+     the 2026 value (27.2 deg Sag) matches the commonly cited modern
+     "27 deg Sagittarius" figure for the Galactic Center. ── */
+  const GAL_CENTER_RA_DEG = (17 + 45/60 + 40.0409/3600) * 15;
+  const GAL_CENTER_DEC_DEG = -(29 + 0/60 + 28.118/3600);
+  function galCenterLonLat(date) {
+    const ra = GAL_CENTER_RA_DEG * d2r, dec = GAL_CENTER_DEC_DEG * d2r;
+    const time = A.MakeTime(date);
+    const v = { x: Math.cos(dec)*Math.cos(ra), y: Math.cos(dec)*Math.sin(ra), z: Math.sin(dec), t: time };
+    const rECT = A.RotateVector(A.Rotation_EQJ_ECT(time), v);
+    return {
+      lon: norm(Math.atan2(rECT.y, rECT.x) * r2d),
+      lat: Math.asin(rECT.z) * r2d
+    };
+  }
+
   function eclipticOf(body, date) {
     if (body === 'Sun') {
       const e = A.SunPosition(date);
@@ -91,6 +128,9 @@
     if (body === 'MeanNode') {
       return { lon: meanNodeLon(date), lat: 0 };
     }
+    if (body === 'GalCenter') {
+      return galCenterLonLat(date);
+    }
     const vec = A.GeoVector(body, date, true);
     const e = A.Ecliptic(vec);
     return { lon: norm(e.elon), lat: e.elat };
@@ -98,6 +138,7 @@
 
   function isRetrograde(bodyKey, date) {
     if (bodyKey === 'MeanNode') return true; // the mean node regresses monotonically
+    if (bodyKey === 'GalCenter') return false; // fixed background point, no orbital motion of its own
     const dt = 0.25; // 6 hours, in days
     const t1 = new Date(date.getTime() - dt * 86400000);
     const t2 = new Date(date.getTime() + dt * 86400000);
@@ -107,6 +148,139 @@
     if (diff > 180) diff -= 360;
     if (diff < -180) diff += 360;
     return diff < 0;
+  }
+
+  /* ── Chiron: perturbed numerical orbit ──
+     Osculating elements from JPL Small-Body Database (2060 Chiron),
+     epoch JD 2461200.5. Propagated via RK4 under solar + Jupiter/
+     Saturn/Uranus/Neptune gravity — see file header for validation
+     notes. ── */
+  const CHIRON_EPOCH_JD = 2461200.5;
+  const CHIRON_EL = { a: 13.68426761, e: 0.37976563, i: 6.93057447, Om: 209.29612586131, w: 339.28783265897, M: 216.71989660181 };
+  const GAUSS_K = 0.01720209895;
+  const MU_SUN = GAUSS_K * GAUSS_K; // AU^3/day^2
+  const CHIRON_PERTURBERS = [
+    { body: 'Jupiter', gm: MU_SUN / 1047.348644 },
+    { body: 'Saturn',  gm: MU_SUN / 3497.902 },
+    { body: 'Uranus',  gm: MU_SUN / 22902.98 },
+    { body: 'Neptune', gm: MU_SUN / 19412.24 }
+  ];
+  const ROT_EQJ_ECL = A.Rotation_EQJ_ECL();
+
+  function helioEcl(body, date) {
+    const v = A.HelioVector(body, date);
+    const r = A.RotateVector(ROT_EQJ_ECL, v);
+    return [r.x, r.y, r.z];
+  }
+
+  function solveKeplerEq(M, e) {
+    M = ((M % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+    let E = e < 0.8 ? M : Math.PI;
+    for (let i = 0; i < 100; i++) {
+      const dE = (E - e * Math.sin(E) - M) / (1 - e * Math.cos(E));
+      E -= dE;
+      if (Math.abs(dE) < 1e-14) break;
+    }
+    return E;
+  }
+
+  function elementsToState(a, e, iDeg, OmDeg, wDeg, MDeg) {
+    const i = iDeg * d2r, Om = OmDeg * d2r, w = wDeg * d2r, M = MDeg * d2r;
+    const E = solveKeplerEq(M, e);
+    const nu = 2 * Math.atan2(Math.sqrt(1 + e) * Math.sin(E / 2), Math.sqrt(1 - e) * Math.cos(E / 2));
+    const r = a * (1 - e * Math.cos(E));
+    const p = a * (1 - e * e);
+    const xPf = r * Math.cos(nu), yPf = r * Math.sin(nu);
+    const h = Math.sqrt(MU_SUN * p);
+    const vxPf = -MU_SUN / h * Math.sin(nu);
+    const vyPf = MU_SUN / h * (e + Math.cos(nu));
+    const cO = Math.cos(Om), sO = Math.sin(Om), cw = Math.cos(w), sw = Math.sin(w), ci = Math.cos(i), si = Math.sin(i);
+    const R11 = cO*cw - sO*sw*ci, R12 = -cO*sw - sO*cw*ci;
+    const R21 = sO*cw + cO*sw*ci, R22 = -sO*sw + cO*cw*ci;
+    const R31 = sw*si,            R32 = cw*si;
+    return {
+      r: [R11*xPf + R12*yPf, R21*xPf + R22*yPf, R31*xPf + R32*yPf],
+      v: [R11*vxPf + R12*vyPf, R21*vxPf + R22*vyPf, R31*vxPf + R32*vyPf]
+    };
+  }
+
+  function jdToDate(jd) { return new Date((jd - 2440587.5) * 86400000); }
+
+  function chironAccel(r, jd) {
+    const date = jdToDate(jd);
+    const rmag = Math.hypot(r[0], r[1], r[2]);
+    const a = [-MU_SUN*r[0]/rmag**3, -MU_SUN*r[1]/rmag**3, -MU_SUN*r[2]/rmag**3];
+    for (const p of CHIRON_PERTURBERS) {
+      const rp = helioEcl(p.body, date);
+      const dx = r[0]-rp[0], dy = r[1]-rp[1], dz = r[2]-rp[2];
+      const dmag = Math.hypot(dx, dy, dz), rpmag = Math.hypot(rp[0], rp[1], rp[2]);
+      a[0] += -p.gm * (dx/dmag**3 + rp[0]/rpmag**3);
+      a[1] += -p.gm * (dy/dmag**3 + rp[1]/rpmag**3);
+      a[2] += -p.gm * (dz/dmag**3 + rp[2]/rpmag**3);
+    }
+    return a;
+  }
+
+  function chironRK4Step(r, v, jd, h) {
+    const a1 = chironAccel(r, jd);
+    const r2 = r.map((x,k)=>x+v[k]*h/2), v2 = v.map((x,k)=>x+a1[k]*h/2);
+    const a2 = chironAccel(r2, jd+h/2);
+    const r3 = r.map((x,k)=>x+v2[k]*h/2), v3 = v.map((x,k)=>x+a2[k]*h/2);
+    const a3 = chironAccel(r3, jd+h/2);
+    const r4 = r.map((x,k)=>x+v3[k]*h), v4 = v.map((x,k)=>x+a3[k]*h);
+    const a4 = chironAccel(r4, jd+h);
+    return {
+      r: r.map((x,k)=>x + h/6*(v[k]+2*v2[k]+2*v3[k]+v4[k])),
+      v: v.map((x,k)=>x + h/6*(a1[k]+2*a2[k]+2*a3[k]+a4[k]))
+    };
+  }
+
+  function chironPropagateTo(state, fromJD, toJD, stepDays) {
+    let { r, v } = state;
+    let jd = fromJD;
+    const dir = toJD >= fromJD ? 1 : -1;
+    const h = stepDays * dir;
+    while ((dir > 0 && jd < toJD) || (dir < 0 && jd > toJD)) {
+      let step = h;
+      if (dir > 0 && jd + h > toJD) step = toJD - jd;
+      if (dir < 0 && jd + h < toJD) step = toJD - jd;
+      ({ r, v } = chironRK4Step(r, v, jd, step));
+      jd += step;
+    }
+    return { r, v };
+  }
+
+  function chironLonLatAt(r, date) {
+    const earthR = helioEcl('Earth', date);
+    const g = [r[0]-earthR[0], r[1]-earthR[1], r[2]-earthR[2]];
+    return {
+      lon: norm(Math.atan2(g[1], g[0]) * r2d),
+      lat: Math.asin(g[2] / Math.hypot(...g)) * r2d
+    };
+  }
+
+  // One continuous integration pass through [date-dt, date, date+dt] so the
+  // retrograde finite-difference window doesn't cost two extra full
+  // propagations from the epoch.
+  function chironAt(date) {
+    const targetJD = date.getTime() / 86400000 + 2440587.5;
+    const dt = 0.25;
+    const t0 = elementsToState(CHIRON_EL.a, CHIRON_EL.e, CHIRON_EL.i, CHIRON_EL.Om, CHIRON_EL.w, CHIRON_EL.M);
+    const stepDays = 2.0;
+
+    const sMinus = chironPropagateTo(t0, CHIRON_EPOCH_JD, targetJD - dt, stepDays);
+    const sMid   = chironPropagateTo(sMinus, targetJD - dt, targetJD, dt);
+    const sPlus  = chironPropagateTo(sMid, targetJD, targetJD + dt, dt);
+
+    const pMinus = chironLonLatAt(sMinus.r, jdToDate(targetJD - dt));
+    const pMid   = chironLonLatAt(sMid.r, date);
+    const pPlus  = chironLonLatAt(sPlus.r, jdToDate(targetJD + dt));
+
+    let diff = pPlus.lon - pMinus.lon;
+    if (diff > 180) diff -= 360;
+    if (diff < -180) diff += 360;
+
+    return { lon: pMid.lon, lat: pMid.lat, retro: diff < 0 };
   }
 
   /* ── Angles (Asc/MC) + Placidus house cusps ──
@@ -182,6 +356,10 @@
   /* ── Full chart computation ── */
   function computeChart(date, lat, lon) {
     const planets = BODIES.map(b => {
+      if (b.key === 'Chiron') {
+        const c = chironAt(date);
+        return { key: b.key, name: b.name, symbol: b.symbol, lon: c.lon, lat: c.lat, retro: c.retro };
+      }
       const e = eclipticOf(b.key, date);
       return {
         key: b.key, name: b.name, symbol: b.symbol,
@@ -253,21 +431,138 @@
     chart.planets.forEach(p => {
       const angle = rot(p.lon);
       const [px, py] = pt(145, angle);
+      const fontSize = p.symbol.length > 1 ? 10 : 16;
       svg += `<circle cx="${px}" cy="${py}" r="14" fill="#0f172a" stroke="#64748b" stroke-width="1.5"/>\n`;
-      svg += `<text x="${px}" y="${py + 5}" text-anchor="middle" fill="#e0f2fe" font-size="16" font-weight="bold">${p.symbol}</text>\n`;
+      svg += `<text x="${px}" y="${py + 4}" text-anchor="middle" fill="#e0f2fe" font-size="${fontSize}" font-weight="bold">${p.symbol}</text>\n`;
     });
 
     svg += '</svg>';
     return svg;
   }
 
+  /* ── Sky View: overlay the chart's points on a real star map ──
+     d3-celestial's own catalogs (stars.6.json etc.) are equatorial
+     J2000. Chart points are computed in true-ecliptic-of-date, so
+     each needs converting: ecliptic-of-date -> equatorial-of-date
+     (Rotation_ECT_EQD) -> equatorial J2000 (Rotation_EQD_EQJ). This
+     is the exact inverse of the Galactic Center calculation above,
+     and was verified the same way: round-tripping a known RA/Dec
+     through both directions reproduces the input to ~1e-13 deg.
+     d3-celestial itself stores RA in degrees over (-180,180], which
+     is exactly what atan2 already returns -- no extra wraparound
+     needed. ── */
+  function eclDateToEqJ2000(lonDeg, latDeg, date) {
+    const lon = lonDeg * d2r, lat = latDeg * d2r;
+    const time = A.MakeTime(date);
+    const v = { x: Math.cos(lat)*Math.cos(lon), y: Math.cos(lat)*Math.sin(lon), z: Math.sin(lat), t: time };
+    const rEQD = A.RotateVector(A.Rotation_ECT_EQD(time), v);
+    const rEQJ = A.RotateVector(A.Rotation_EQD_EQJ(time), rEQD);
+    return [Math.atan2(rEQJ.y, rEQJ.x) * r2d, Math.asin(rEQJ.z) * r2d]; // [ra(-180..180), dec]
+  }
+
+  let skyReady = false;
+  let skyPoints = [];
+
+  function skyRedraw() {
+    if (!window.Celestial || !Celestial.container) return;
+    const ctx = Celestial.context;
+    const trans = Celestial.settings().transform;
+    skyPoints.forEach(p => {
+      const pos = Celestial.getPoint([p.ra, p.dec], trans);
+      if (!Celestial.clip(pos)) return;
+      const xy = Celestial.mapProjection(pos);
+      if (!xy) return;
+      ctx.beginPath();
+      ctx.arc(xy[0], xy[1], 9, 0, 2 * Math.PI);
+      ctx.fillStyle = 'rgba(10,14,28,0.9)';
+      ctx.fill();
+      ctx.strokeStyle = '#c9a84c';
+      ctx.lineWidth = 1.3;
+      ctx.stroke();
+      ctx.fillStyle = '#e8c96d';
+      ctx.font = `bold ${p.symbol.length > 1 ? 9 : 12}px 'Space Mono', monospace`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(p.symbol, xy[0], xy[1] + 1);
+    });
+  }
+
+  function initSky() {
+    Celestial.display({
+      container: 'celestial-map',
+      datapath: 'lib/celestial/data/',
+      width: 0,
+      projection: 'aitoff',
+      transform: 'ecliptic',
+      center: null,
+      geopos: null,
+      location: false,
+      follow: 'center',
+      zoomlevel: null,
+      zoomextend: 8,
+      interactive: true,
+      controls: true,
+      form: false,
+      advanced: false,
+      stars: { show: true, limit: 6, colors: true, designation: false, propername: false, data: 'stars.6.json' },
+      dsos: { show: false },
+      constellations: { show: true, names: true, lines: true, bounds: false },
+      mw: { show: true },
+      planets: { show: false },
+      lines: { graticule: { show: false }, equatorial: { show: false }, ecliptic: { show: true, stroke: '#c9a84c', width: 1, opacity: 0.4 } }
+    });
+    Celestial.add({ type: 'raw', callback: () => {}, redraw: skyRedraw });
+    skyReady = true;
+  }
+
+  function updateSky(chart, date) {
+    skyPoints = chart.planets.map(p => {
+      const [ra, dec] = eclDateToEqJ2000(p.lon, p.lat, date);
+      return { ra, dec, symbol: p.symbol, name: p.name };
+    });
+    if (!skyReady) {
+      initSky();
+    } else {
+      Celestial.redraw();
+    }
+  }
+
+  function setSkyMode(mode, lat, lon, date) {
+    if (!skyReady) return;
+    const caption = $('#sky-caption');
+    // location/geopos/follow don't take effect through apply() -- verified by
+    // inspecting Celestial.settings() before/after an apply() call, which
+    // showed them unchanged. reload() re-runs the actual load/orientation
+    // sequence that reads them. It doesn't clear Celestial.data, so the
+    // custom overlay layer survives without needing to be re-added.
+    // Separately, changing projection has to go through the dedicated
+    // reproject() call -- passing it to reload() updates the map visually
+    // but not in one step together with location, so both calls are needed
+    // in sequence (reload first, then reproject).
+    if (mode === 'literal') {
+      Celestial.date(date);
+      Celestial.reload({ location: true, geopos: [lat, lon], follow: 'zenith', center: null });
+      // stereographic is a clipped hemisphere ("dome") projection -- only
+      // what's actually above the horizon at that place/time is shown,
+      // unlike aitoff which maps the whole celestial sphere regardless.
+      Celestial.reproject({ projection: 'stereographic' });
+      caption.textContent = 'The literal dome of sky over the birth location at the moment of birth — only points above the horizon are visible.';
+    } else {
+      Celestial.reload({ location: false, follow: 'center', center: null });
+      Celestial.reproject({ projection: 'aitoff' });
+      caption.textContent = 'Every chart point plotted against the real stars, ecliptic band running through center. Scroll/drag/pinch to explore.';
+    }
+    $('#sky-mode-whole').classList.toggle('active', mode !== 'literal');
+    $('#sky-mode-literal').classList.toggle('active', mode === 'literal');
+  }
+
   /* ── UI wiring ── */
   const SAMPLE_LOCATIONS = [
-    { name: 'Detroit',      lat: 42.3333, lon: -83.05,   utc: -5 },
     { name: 'New York',     lat: 40.7128, lon: -74.0060, utc: -5 },
     { name: 'London',       lat: 51.5074, lon: -0.1278,  utc: 0 },
     { name: 'Jerusalem',    lat: 31.7683, lon: 35.2137,  utc: 2 },
-    { name: 'Los Angeles',  lat: 34.0522, lon: -118.2437,utc: -8 }
+    { name: 'Los Angeles',  lat: 34.0522, lon: -118.2437,utc: -8 },
+    { name: 'Tokyo',        lat: 35.6762, lon: 139.6503, utc: 9 }
   ];
 
   function jdOf(date) { return date.getTime() / 86400000 + 2440587.5; }
@@ -353,12 +648,18 @@
     return true;
   }
 
+  let lastParams = null;
+  let currentSkyMode = 'whole';
+
   function compute() {
     const params = readForm();
     if (Number.isNaN(params.lat) || Number.isNaN(params.lon)) return;
     const chart = computeChart(params.date, params.lat, params.lon);
     renderChart(chart, params.date);
     syncURL(params);
+    lastParams = params;
+    updateSky(chart, params.date);
+    if (currentSkyMode === 'literal') setSkyMode('literal', params.lat, params.lon, params.date);
   }
 
   function wireLocations() {
@@ -393,10 +694,117 @@
     });
   }
 
+  /* ── City search: fills lat/lon from a bundled ~24k-city list
+     (lib/cities.js, plain <script> tag so it also works from a
+     double-clicked file:// copy of this app, not just a server —
+     fetch()/XHR of local files is blocked by Chrome's CORS policy
+     for file:// origins, a plain script tag isn't). Nothing is sent
+     anywhere; the whole list already shipped with the page. ── */
+  function wireCitySearch() {
+    const input = $('#f-city');
+    const dropdown = $('#city-suggestions');
+    const cities = window.NATAL_CITIES || [];
+    let results = [];
+    let activeIdx = -1;
+    let debounceTimer = null;
+
+    const isAbbrev = admin => admin && /^[A-Za-z]+$/.test(admin);
+    const displayName = c => isAbbrev(c[1]) ? `${c[0]}, ${c[1]}, ${c[2]}` : `${c[0]}, ${c[2]}`;
+
+    function render() {
+      if (!results.length) {
+        dropdown.innerHTML = '<div class="city-empty">No matches</div>';
+        dropdown.hidden = false;
+        return;
+      }
+      dropdown.innerHTML = results.map((c, i) => `
+        <div class="city-option${i === activeIdx ? ' active' : ''}" data-idx="${i}">
+          <span class="place">${c[0]}</span><span class="cc">${isAbbrev(c[1]) ? c[1] + ', ' : ''}${c[2]}</span>
+        </div>`).join('');
+      dropdown.hidden = false;
+    }
+
+    function selectCity(c) {
+      input.value = displayName(c);
+      $('#f-lat').value = c[3];
+      $('#f-lon').value = c[4];
+      dropdown.hidden = true;
+      results = [];
+      activeIdx = -1;
+    }
+
+    function doSearch(q) {
+      q = q.trim().toLowerCase();
+      if (q.length < 2) { results = []; dropdown.hidden = true; return; }
+      // cities[] is pre-sorted by population descending, so within each
+      // bucket below the biggest matching places already sort first.
+      const starts = [], contains = [];
+      for (const c of cities) {
+        const name = c[0].toLowerCase();
+        if (name.startsWith(q)) starts.push(c);
+        else if (name.includes(q)) contains.push(c);
+      }
+      results = starts.concat(contains).slice(0, 8);
+      activeIdx = -1;
+      render();
+    }
+
+    input.addEventListener('input', () => {
+      clearTimeout(debounceTimer);
+      const q = input.value;
+      debounceTimer = setTimeout(() => doSearch(q), 120);
+    });
+
+    input.addEventListener('keydown', e => {
+      if (dropdown.hidden || !results.length) return;
+      if (e.key === 'ArrowDown') { e.preventDefault(); activeIdx = Math.min(activeIdx + 1, results.length - 1); render(); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); activeIdx = Math.max(activeIdx - 1, 0); render(); }
+      else if (e.key === 'Enter') { e.preventDefault(); selectCity(results[activeIdx >= 0 ? activeIdx : 0]); }
+      else if (e.key === 'Escape') { dropdown.hidden = true; }
+    });
+
+    dropdown.addEventListener('mousedown', e => {
+      const opt = e.target.closest('.city-option');
+      if (!opt) return;
+      e.preventDefault(); // keep the input focused so blur doesn't fire first
+      selectCity(results[+opt.dataset.idx]);
+    });
+
+    input.addEventListener('blur', () => { setTimeout(() => { dropdown.hidden = true; }, 150); });
+    input.addEventListener('focus', () => { if (results.length) dropdown.hidden = false; });
+  }
+
+  function wireSkyToggle() {
+    $('#sky-mode-whole').addEventListener('click', () => {
+      currentSkyMode = 'whole';
+      if (lastParams) setSkyMode('whole', lastParams.lat, lastParams.lon, lastParams.date);
+    });
+    $('#sky-mode-literal').addEventListener('click', () => {
+      currentSkyMode = 'literal';
+      if (lastParams) setSkyMode('literal', lastParams.lat, lastParams.lon, lastParams.date);
+    });
+  }
+
   function init() {
     wireLocations();
+    wireCitySearch();
+    wireSkyToggle();
     wireShare();
-    $('#chart-form').addEventListener('submit', e => { e.preventDefault(); compute(); });
+    $('#chart-form').addEventListener('submit', e => {
+      e.preventDefault();
+      const btn = $('#chart-form button[type="submit"]');
+      const orig = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = 'Computing…';
+      // Chiron's orbit integration can take up to ~1-2s for dates far from
+      // its epoch; yield a frame first so the button visibly updates
+      // instead of appearing frozen during that synchronous work.
+      setTimeout(() => {
+        compute();
+        btn.disabled = false;
+        btn.textContent = orig;
+      }, 0);
+    });
 
     if (!restoreFromURL()) {
       const now = new Date();

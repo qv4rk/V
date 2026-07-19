@@ -1,0 +1,1856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+	<title>Omniscope — FeistTech</title>
+	<style>
+		body { margin: 0; overflow: hidden; background: #0a0a0a; color: #efffee; font-family: sans-serif; touch-action: none; user-select: none; }
+		canvas#artboard { display: block; width: 100vw; height: 100vh; transform-origin: center center; position: relative; z-index: 1; }
+
+		#celestial-backdrop { position: fixed; inset: 0; z-index: 0; background: #000; }
+		#celestial-backdrop.transparent-bg { background: transparent; }
+		#celestial-backdrop svg, #celestial-backdrop canvas { width: 100%; height: 100%; display: block; }
+
+		#navModeToggle.active { background: #2d5a3d; border-color: #4a8; }
+
+		.site-nav { position: absolute; top: 10px; right: 12px; z-index: 200; }
+		.site-back { color: #999; text-decoration: none; letter-spacing: 0.1em; font-size: 0.68rem; background: rgba(0,0,0,0.5); padding: 5px 10px; border-radius: 6px; }
+		.site-back:hover { color: #efffee; }
+
+		#panelToggle {
+			position: absolute; top: 10px; left: 10px; z-index: 210;
+			background: rgba(0,0,0,0.6); color: #fff; border: 1px solid #444; border-radius: 8px;
+			width: 38px; height: 38px; font-size: 18px; cursor: pointer;
+		}
+		#ui {
+			position: absolute; top: 58px; left: 10px; width: 230px; max-height: calc(100vh - 70px);
+			background: rgba(0,0,0,0.62); backdrop-filter: blur(4px); padding: 12px; border-radius: 10px;
+			z-index: 200; overflow-y: auto; transition: transform 0.2s, opacity 0.2s;
+			border: 1px solid rgba(255,255,255,0.08);
+		}
+		#ui.hidden { transform: translateX(-260px); opacity: 0; pointer-events: none; }
+		body.zen #ui, body.zen #panelToggle, body.zen .site-nav { display: none; }
+
+		.group { margin-bottom: 4px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+		.group-head {
+			display: flex; justify-content: space-between; align-items: center; cursor: pointer;
+			font-size: 11px; letter-spacing: 0.08em; color: #9fd; padding: 8px 2px; text-transform: uppercase;
+		}
+		.group-body { display: none; padding-bottom: 8px; }
+		.group.open .group-body { display: block; }
+		.group.open .group-head .car { transform: rotate(90deg); }
+		.car { transition: transform 0.15s; display: inline-block; }
+
+		.control { margin: 6px 0; }
+		label { display: block; font-size: 11px; margin-bottom: 3px; color: #ccc; }
+		label span.val { color: #7fd; float: right; }
+		input[type=range] { width: 100%; }
+		select { width: 100%; background: #1a1a1a; color: #fff; border: 1px solid #444; padding: 3px; }
+		button { margin-top: 5px; width: 100%; cursor: pointer; background: #222; color: #efffee; border: 1px solid #444; padding: 6px; border-radius: 4px; font-size: 11px; }
+		button:hover { background: #3a3a3a; }
+		button.active { background: #2d5a3d; border-color: #4a8; }
+		.row2 { display: flex; gap: 6px; }
+		.row2 button { flex: 1; }
+
+		#hud {
+			position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+			text-align: center; pointer-events: none; z-index: 190; opacity: 0; transition: opacity 0.25s;
+		}
+		#hud.on { opacity: 1; }
+		#hud .lbl { font-size: 11px; letter-spacing: 0.15em; color: #9fd; }
+		#hud .val { font-size: 28px; font-weight: bold; color: #fff; text-shadow: 0 0 12px rgba(255,255,255,0.5); }
+
+		#zenHint { position: absolute; bottom: 14px; right: 14px; font-size: 10px; color: rgba(255,255,255,0.35); z-index: 200; display: none; }
+		body.zen #zenHint { display: block; }
+	</style>
+</head>
+<link rel="stylesheet" href="lib/celestial/celestial.css">
+<body>
+	<div id="celestial-backdrop"></div>
+	<canvas id="artboard"></canvas>
+
+	<div class="site-nav"><a href="../../../index.html" class="site-back">← FEISTTECH</a></div>
+
+	<button id="panelToggle" title="Show/hide controls">☰</button>
+
+	<div id="ui">
+		<div class="group open" data-group="core">
+			<div class="group-head"><span>Core</span><span class="car">▸</span></div>
+			<div class="group-body">
+				<div class="control">
+					<label for="mirrors">Mirrors <span class="val" id="mirrorsVal">6</span></label>
+					<input type="range" id="mirrors" min="1" max="24" step="0.5" value="6">
+				</div>
+				<div class="control">
+					<label for="gridMode">Kaleidoscope Grid</label>
+					<select id="gridMode">
+						<option value="0">Single center</option>
+						<option value="1">2 centers</option>
+						<option value="2">4 centers</option>
+						<option value="3">9 centers</option>
+					</select>
+				</div>
+				<div class="control">
+					<label for="stampSize">Stamp Size <span class="val" id="stampSizeVal">50</span></label>
+					<input type="range" id="stampSize" min="5" max="300" value="50">
+				</div>
+				<div class="control">
+					<label for="thickness">Thickness <span class="val" id="thicknessVal">2</span></label>
+					<input type="range" id="thickness" min="0.1" max="20" step="0.1" value="2">
+				</div>
+				<div class="control">
+					<label for="pattern">Pattern</label>
+					<select id="pattern"></select>
+				</div>
+				<div class="control">
+					<label for="palette">Palette</label>
+					<select id="palette"></select>
+				</div>
+				<div class="control">
+					<label for="param1">Pattern Param 1 <span class="val" id="param1Val">0.3</span></label>
+					<input type="range" id="param1" min="0" max="1" step="0.01" value="0.3">
+				</div>
+				<div class="control">
+					<label for="param2">Pattern Param 2 <span class="val" id="param2Val">0.3</span></label>
+					<input type="range" id="param2" min="0" max="1" step="0.01" value="0.3">
+				</div>
+			</div>
+		</div>
+
+		<div class="group" data-group="motion">
+			<div class="group-head"><span>Motion &amp; FX</span><span class="car">▸</span></div>
+			<div class="group-body">
+				<div class="control">
+					<label for="fadeRate">Fade Rate <span class="val" id="fadeRateVal">0 (permanent)</span></label>
+					<input type="range" id="fadeRate" min="0" max="0.2" step="0.002" value="0">
+				</div>
+				<div class="control">
+					<label for="rotation">Canvas Rotation <span class="val" id="rotationVal">0°</span></label>
+					<input type="range" id="rotation" min="0" max="360" value="0">
+				</div>
+				<div class="control">
+					<button id="autoToggle">Auto Orbit: OFF</button>
+				</div>
+				<div class="control">
+					<button id="ghostToggle">Ghost Replay: OFF</button>
+				</div>
+				<div class="control">
+					<button id="meshToggle">Shadow Mesh: OFF</button>
+				</div>
+			</div>
+		</div>
+
+		<div class="group" data-group="session">
+			<div class="group-head"><span>Session</span><span class="car">▸</span></div>
+			<div class="group-body">
+				<div class="row2">
+					<button id="zenBtn">Zen Mode</button>
+					<button id="fsBtn">Fullscreen</button>
+				</div>
+				<div class="control">
+					<button id="clearBtn">Clear Canvas</button>
+				</div>
+				<div class="control">
+					<label>Active Layer</label>
+					<div class="row2">
+						<button id="layerDownBtn">◂ Layer</button>
+						<button id="layerUpBtn">Layer ▸</button>
+					</div>
+					<div id="layerIndicator" style="text-align:center;opacity:0.8;font-size:12px;margin-top:4px;">Layer 0 / 0</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="group" data-group="export">
+			<div class="group-head"><span>Export / Import</span><span class="car">▸</span></div>
+			<div class="group-body">
+				<div class="control">
+					<button id="exportBtn">Export PNG</button>
+				</div>
+				<div class="row2">
+					<button id="export2xBtn">Re-render 2×</button>
+					<button id="export4xBtn">Re-render 4×</button>
+				</div>
+				<div class="control">
+					<button id="exportJsonBtn">Export Session JSON</button>
+				</div>
+				<div class="control">
+					<button id="importJsonBtn">Import Session JSON</button>
+					<input type="file" id="importInput" accept=".json" style="display:none;">
+				</div>
+			</div>
+		</div>
+
+		<div class="group open" data-group="constellation">
+			<div class="group-head"><span>Constellation</span><span class="car">▸</span></div>
+			<div class="group-body">
+				<div class="control">
+					<label for="constSelect">Backdrop</label>
+					<select id="constSelect"></select>
+				</div>
+				<div class="control">
+					<label for="bgStarSlider">Background Star Intensity <span class="val" id="bgStarSliderVal">100%</span></label>
+					<input type="range" id="bgStarSlider" min="0" max="100" value="100">
+				</div>
+				<div class="control">
+					<label for="nodeSlider">Constellation Node Brightness <span class="val" id="nodeSliderVal">100%</span></label>
+					<input type="range" id="nodeSlider" min="0" max="100" value="100">
+				</div>
+				<div class="control">
+					<label for="constPalette">Star Palette</label>
+					<select id="constPalette">
+						<option value="spectral">Spectral (real colors)</option>
+						<option value="gold">Gold</option>
+						<option value="cyan">Cyan</option>
+						<option value="mono">Monochrome white</option>
+					</select>
+				</div>
+				<div class="row2">
+					<button id="linesToggle">Lines: ON</button>
+					<button id="transparentBgToggle">Transparent BG</button>
+				</div>
+				<div class="control">
+					<button id="navModeToggle" hidden>🧭 Navigate</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div id="hud"><div class="lbl" id="hudLbl"></div><div class="val" id="hudVal"></div></div>
+	<div id="zenHint">tap ☰ to exit zen mode</div>
+
+<script src="lib/celestial/d3.min.js"></script>
+<script src="lib/celestial/d3.geo.projection.min.js"></script>
+<script src="lib/celestial/celestial.min.js"></script>
+<script>
+	const CONFIG = {
+		mirrors: 6, gridMode: 0, patternIndex: 0, paletteIndex: 0,
+		thickness: 2, stampSize: 50, fadeRate: 0, rotation: 0,
+		param1: 0.3, param2: 0.3,
+		isAuto: false, ghostReplay: false, shadowMesh: false, zenMode: false,
+		maxHistory: 4000
+	};
+
+	const canvas = document.getElementById('artboard');
+	const ctx = canvas.getContext('2d');
+	let W = 0, H = 0, dpr = 1;
+
+	function resizeCanvas() {
+		dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+		W = window.innerWidth; H = window.innerHeight;
+		canvas.width = W * dpr; canvas.height = H * dpr;
+		ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+	}
+	window.addEventListener('resize', resizeCanvas);
+	resizeCanvas();
+
+	/* ================= HUD ================= */
+	let hudTimer = null;
+	function hud(lbl, val) {
+		document.getElementById('hudLbl').textContent = lbl;
+		document.getElementById('hudVal').textContent = val;
+		const el = document.getElementById('hud');
+		el.classList.add('on');
+		clearTimeout(hudTimer);
+		hudTimer = setTimeout(() => el.classList.remove('on'), 1400);
+	}
+
+	/* ================= PALETTES =================
+	   18 base palettes carried over verbatim from the original Symmetry
+	   Painting app, plus 4 more pulled from the other three kaleidoscope
+	   apps (Rainbow, Golden Sacred, Ghost, Neon Storm) that weren't
+	   already covered. Every hex-based palette gets an auto-generated
+	   darker "Shadow" twin, same as the source app; rgba-based palettes
+	   (Ghost) are skipped since shadeHex only understands #rrggbb. */
+	const colorPalettes = {
+		"Cyberpunk": ["#00FFFF", "#FF00FF", "#00FF00", "#FFFF00", "#FF0000", "#7D00FF"],
+		"Galactic Dust": ["#4B0082", "#8A2BE2", "#9370DB", "#C71585", "#DA70D6", "#E6E6FA", "#F0F8FF"],
+		"Neon Blue": ["#00FFFF", "#0088FF", "#FFFFFF", "#0000AA"],
+		"Cosmic": ["#000033", "#4B0082", "#8A2BE2", "#FFD700", "#F0E68C", "#FFFFFF"],
+		"Forest": ["#2F4F2F", "#556B2F", "#8B4513", "#006400", "#228B22", "#6B8E23", "#90BE6D"],
+		"Ocean": ["#00C9FF", "#92FE9D", "#1D2B64", "#AFEEEE", "#1E90FF", "#4682B4", "#000080", "#0000CD", "#20B2AA", "#008B8B"],
+		"Sunset": ["#FFC371", "#FF5F6D", "#FF8C00", "#DA70D6", "#8A2BE2", "#F2C94C", "#ff5e5e", "#ff9a5e", "#ffd65e", "#fff35e"],
+		"Earth Tones": ["#8B4513", "#A0522D", "#B8860B", "#D2B48C", "#F5DEB3", "#8B0000"],
+		"Sakura": ["#FFC0CB", "#FFB6C1", "#FF69B4", "#DB7093", "#F5DEB3", "#FFFFFF"],
+		"Retro Summer": ["#FFD700", "#FF8C00", "#FF4500", "#E9967A", "#87CEEB", "#ADD8E6", "#00BFFF"],
+		"Axial DNA": ["#FF00FF", "#00FFFF", "#FFFF00", "#FF0000", "#00FF00", "#0000FF", "#FF77FF"],
+		"Fire & Ice": ["#FF4500", "#FF6347", "#DC143C", "#1E90FF", "#00BFFF", "#87CEEB"],
+		"Grayscale": ["#FFFFFF", "#D3D3D3", "#A9A9A9", "#808080", "#696969", "#000000"],
+		"Autumn": ["#A0522D", "#D2691E", "#FF4500", "#8B0000", "#FFD700", "#DAA520"],
+		"Tundra": ["#F0FFFF", "#ADD8E6", "#B0C4DE", "#778899", "#FFFFFF", "#E6E6FA"],
+		"Volcano": ["#FF4500", "#FF0000", "#8B0000", "#2F4F4F", "#696969", "#FFFF00"],
+		"Neon Funk": ["#FF00FF", "#00FFFF", "#FFFF00", "#FF007F", "#7F00FF", "#00FF7F"],
+		"Pastel": ["#FFB6C1", "#ADD8E6", "#90EE90", "#F0E68C", "#E6E6FA", "#FFDAB9"],
+		"Rainbow": ["#FF0000", "#FF7F00", "#FFFF00", "#00FF00", "#0000FF", "#4B0082", "#8B00FF"],
+		"Golden Sacred": ["#FFD700", "#DAA520", "#B8860B", "#FFF8DC", "#F0E68C", "#8B7500"],
+		"Neon Storm": ["#FF00AA", "#00FFAA", "#AA00FF", "#FFAA00", "#00AAFF", "#FFFFFF"],
+		"Ghost": ["rgba(255,255,255,0.85)", "rgba(200,220,255,0.6)", "rgba(150,180,255,0.4)", "rgba(255,255,255,0.3)", "rgba(180,200,255,0.5)"]
+	};
+
+	function shadeHex(color, percent) {
+		let f = parseInt(color.slice(1), 16),
+			t = percent < 0 ? 0 : 255,
+			p = percent < 0 ? percent * -1 : percent,
+			R = f >> 16,
+			G = f >> 8 & 0x00FF,
+			B = f & 0x0000FF;
+		return "#" + (0x1000000 + (Math.round((t - R) * p) + R) * 0x10000 + (Math.round((t - G) * p) + G) * 0x100 + (Math.round((t - B) * p) + B)).toString(16).slice(1);
+	}
+
+	const baseNames = Object.keys(colorPalettes);
+	baseNames.forEach(name => {
+		if (colorPalettes[name].every(c => c[0] === '#')) {
+			colorPalettes[name + " Shadow"] = colorPalettes[name].map(c => shadeHex(c, -0.45));
+		}
+	});
+	const paletteNames = Object.keys(colorPalettes);
+
+	/* ================= PATTERNS =================
+	   Unified draw signature across all 14 patterns:
+	     draw(ctx, x, y, size, pal, cfg, prev, colorIndex, allTouches, shadowPal)
+	   x/y are already relative to the active kaleidoscope center. cfg is
+	   the live CONFIG object (thickness/param1/param2 etc). Ten patterns
+	   are the original Symmetry Painting set; four more (Toroid Flux,
+	   Sierpinski, Spike Star, Polygon Cells) are ported from the other
+	   three kaleidoscope apps -- Spike Star and Polygon Cells are the
+	   ones those apps mislabeled "Koch Snowflake" / "Voronoi Cells"
+	   (neither is actually a Koch curve or a Voronoi diagram), renamed
+	   here to describe what they actually draw. */
+	// Deterministic 0..1 pseudo-random value from up to 3 numbers -- used
+	// in place of Date.now() for any per-stamp visual variation. A
+	// clock-based phase looked fine live (each call draws a genuinely new
+	// point), but Ghost Replay redraws the SAME historical point many
+	// times a second as it ping-pongs, and a clock-driven angle/phase
+	// made that stamp flash a different orientation on every single
+	// redraw -- a real strobing hazard at high mirror counts. Seeding
+	// from the point's own data instead makes every redraw of a given
+	// point pixel-identical, so replay is stable, not caring how many
+	// times or how fast a point gets redrawn.
+	function stableRand(a, b, c) {
+		const v = Math.sin(a * 12.9898 + b * 78.233 + (c || 0) * 37.719) * 43758.5453;
+		return v - Math.floor(v);
+	}
+
+	const PATTERNS = [
+		{
+			name: "Standard Line", spacing: 0,
+			draw: (ctx, x, y, size, pal, p, prev, colorIndex) => {
+				const color = pal[colorIndex % pal.length];
+				ctx.strokeStyle = color; ctx.lineWidth = p.thickness;
+				if (!prev) {
+					ctx.fillStyle = color;
+					ctx.beginPath(); ctx.arc(x, y, p.thickness / 2, 0, Math.PI * 2); ctx.fill();
+					return;
+				}
+				ctx.beginPath(); ctx.moveTo(prev.x, prev.y); ctx.lineTo(x, y); ctx.stroke();
+			}
+		},
+		{
+			name: "Golden Spiral", spacing: 0,
+			draw: (ctx, x, y, size, pal, p, prev, colorIndex, allTouches) => {
+				const others = (allTouches || []).filter(t => t.colorIndex !== colorIndex);
+				let distortion = 0;
+				if (others.length > 0) {
+					const avgX = others.reduce((acc, t) => acc + t.x, 0) / others.length;
+					const avgY = others.reduce((acc, t) => acc + t.y, 0) / others.length;
+					const dist = Math.hypot(x - (avgX - (canvas.width / (2 * dpr))), y - (avgY - (canvas.height / (2 * dpr))));
+					distortion = dist * 0.002;
+				}
+				const color = pal[colorIndex % pal.length];
+				const a = 0.5, b = 0.1 + distortion;
+				const turns = 1 + p.param1 * 5;
+				const scale = size * 0.1;
+				ctx.beginPath();
+				for (let i = 0; i < 360 * turns; i += 5) {
+					const angleRad = i * (Math.PI / 180);
+					const radius = scale * a * Math.exp(b * angleRad);
+					const px = x + radius * Math.cos(angleRad), py = y + radius * Math.sin(angleRad);
+					if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+				}
+				ctx.strokeStyle = color; ctx.lineWidth = p.thickness; ctx.stroke();
+			}
+		},
+		{
+			name: "Flower of Life", spacing: 0.6,
+			draw: (ctx, x, y, size, pal, p, prev, colorIndex) => {
+				const radius = size * 0.5, sides = 9;
+				ctx.lineWidth = p.thickness;
+				for (let i = 0; i < sides; i++) {
+					const angle = (Math.PI * 2 / sides) * i;
+					ctx.strokeStyle = pal[(colorIndex + i) % pal.length];
+					ctx.beginPath();
+					ctx.arc(x + Math.cos(angle) * radius, y + Math.sin(angle) * radius, radius, 0, Math.PI * 2);
+					ctx.stroke();
+				}
+				ctx.strokeStyle = pal[(colorIndex + sides) % pal.length];
+				ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI * 2); ctx.stroke();
+			}
+		},
+		{
+			name: "Phyllotaxis Web", spacing: 0.4,
+			draw: (ctx, x, y, size, pal, p, prev, colorIndex) => {
+				const color = pal[colorIndex % pal.length];
+				ctx.fillStyle = color;
+				const c = size * 0.05;
+				for (let i = 0; i < size * 2; i++) {
+					const a = i * 137.5 * (Math.PI / 180);
+					const r = c * Math.sqrt(i);
+					const px = x + r * Math.cos(a), py = y + r * Math.sin(a);
+					ctx.beginPath(); ctx.arc(px, py, p.thickness, 0, Math.PI * 2); ctx.fill();
+				}
+			}
+		},
+		{
+			name: "Pyrotaxis", spacing: 0.4,
+			draw: (ctx, x, y, size, pal, p, prev, colorIndex, allTouches, shadowPal) => {
+				const color = pal[colorIndex % pal.length];
+				const c = size * 0.05;
+				const cx = ctx.canvas.width / (2 * dpr), cy = ctx.canvas.height / (2 * dpr);
+				// Capped regardless of how big allTouches gets -- this loop is
+				// already O(size*2) per point, and multiplying that against an
+				// uncapped touch count is what crashed a phone once. 3 keeps
+				// its original small-real-touch-count look intact.
+				const others = (allTouches || []).filter(t => t.colorIndex !== colorIndex).slice(0, 3);
+				for (let i = 0; i < size * 2; i++) {
+					const a = i * 137.5 * (Math.PI / 180);
+					const r = c * Math.sqrt(i);
+					const px = x + r * Math.cos(a), py = y + r * Math.sin(a);
+					ctx.fillStyle = color;
+					ctx.beginPath(); ctx.arc(px, py, p.thickness, 0, Math.PI * 2); ctx.fill();
+					if (others.length > 0) {
+						ctx.strokeStyle = (shadowPal || pal)[colorIndex % (shadowPal || pal).length];
+						ctx.lineWidth = Math.max(0.5, p.thickness * 0.5);
+						ctx.setLineDash([p.thickness * 2, p.thickness * 2]);
+						ctx.beginPath();
+						for (const ot of others) {
+							const ox = (ot.x - cx) + r * Math.cos(a), oy = (ot.y - cy) + r * Math.sin(a);
+							ctx.moveTo(px, py); ctx.lineTo(ox, oy);
+						}
+						ctx.stroke(); ctx.setLineDash([]);
+					}
+				}
+			}
+		},
+		{
+			name: "Lynchpin Star", spacing: 0.5,
+			draw: (ctx, x, y, size, pal, p, prev, colorIndex) => {
+				const color = pal[colorIndex % pal.length];
+				ctx.strokeStyle = color; ctx.lineWidth = p.thickness;
+				const points = 5, outer = size, inner = size * 0.382;
+				ctx.beginPath();
+				for (let i = 0; i < points * 2; i++) {
+					const radius = i % 2 === 0 ? outer : inner;
+					const angle = (i * Math.PI) / points;
+					const px = x + radius * Math.cos(angle), py = y + radius * Math.sin(angle);
+					if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+				}
+				ctx.closePath(); ctx.stroke();
+			}
+		},
+		{
+			name: "Sine Wave", spacing: 0,
+			draw: (ctx, x, y, size, pal, p, prev, colorIndex) => {
+				if (!prev) return;
+				const color = pal[colorIndex % pal.length];
+				ctx.strokeStyle = color; ctx.lineWidth = p.thickness;
+				const dist = Math.hypot(x - prev.x, y - prev.y);
+				const angle = Math.atan2(y - prev.y, x - prev.x);
+				const phase = stableRand(prev.x, prev.y, colorIndex) * 1000;
+				ctx.save(); ctx.translate(prev.x, prev.y); ctx.rotate(angle);
+				ctx.beginPath();
+				for (let i = 0; i < dist; i += 2) {
+					const wy = Math.sin((i + phase) * 0.1) * size;
+					if (i === 0) ctx.moveTo(i, wy); else ctx.lineTo(i, wy);
+				}
+				ctx.stroke(); ctx.restore();
+			}
+		},
+		{
+			name: "Axial DNA Helix", spacing: 0,
+			draw: (ctx, x, y, size, pal, p, prev, colorIndex) => {
+				if (!prev) return;
+				const col1 = pal[colorIndex % pal.length], col2 = pal[(colorIndex + 1) % pal.length];
+				const dist = Math.hypot(x - prev.x, y - prev.y);
+				const angle = Math.atan2(y - prev.y, x - prev.x);
+				ctx.save(); ctx.translate(prev.x, prev.y); ctx.rotate(angle); ctx.lineWidth = p.thickness;
+				ctx.beginPath(); ctx.strokeStyle = col1;
+				for (let i = 0; i < dist; i += 2) {
+					const wy = Math.sin(i * 0.05) * size;
+					if (i === 0) ctx.moveTo(i, wy); else ctx.lineTo(i, wy);
+				}
+				ctx.stroke();
+				ctx.beginPath(); ctx.strokeStyle = col2;
+				for (let i = 0; i < dist; i += 2) {
+					const wy = Math.sin(i * 0.05 + Math.PI) * size;
+					if (i === 0) ctx.moveTo(i, wy); else ctx.lineTo(i, wy);
+				}
+				ctx.stroke(); ctx.restore();
+			}
+		},
+		{
+			name: "Lorenz Attractor (2D)", spacing: 0,
+			draw: (ctx, x, y, size, pal, p, prev, colorIndex) => {
+				const color = pal[colorIndex % pal.length];
+				ctx.strokeStyle = color; ctx.lineWidth = p.thickness;
+				let lx = 0.1, ly = 0, lz = 0;
+				const dt = 0.01, scale = size * 0.5;
+				const steps = 60 + Math.round(p.param2 * 100);
+				ctx.beginPath();
+				for (let i = 0; i < steps; i++) {
+					const dx = 10 * (ly - lx), dy = lx * (28 - lz) - ly, dz = lx * ly - (8 / 3) * lz;
+					lx += dx * dt; ly += dy * dt; lz += dz * dt;
+					const px = x + lx * scale, py = y + ly * scale;
+					if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+				}
+				ctx.stroke();
+			}
+		},
+		{
+			// Differential-speed spiral -- angularSpeed(r) = k/r, so points
+			// near the center wind through many turns while the outer edge
+			// stays almost straight, the "watch spring" look. The source
+			// sketch drove this with frameCount (real time) since it redraws
+			// the whole spiral fresh every frame live; Omniscope instead
+			// stamps ONE frozen snapshot of that spiral per touch point, so
+			// "time" here is a phase baked in at stamp time from the point's
+			// own position/color -- deterministic, so every future redraw of
+			// this exact stamp (live, Ghost Replay, export) is pixel-
+			// identical. A clock-driven phase would redraw a DIFFERENT
+			// snapshot every time Ghost Replay revisits this same stored
+			// point (many times a second), which is a real strobing hazard.
+			name: "Rotating Notch", spacing: 0.3,
+			draw: (ctx, x, y, size, pal, p, prev, colorIndex) => {
+				const color = pal[colorIndex % pal.length];
+				ctx.strokeStyle = color; ctx.lineWidth = p.thickness;
+				const phase = (stableRand(x, y, colorIndex) * 2 - 1) * 40;
+				const count = Math.round(20 + p.param1 * 60);
+				const radiusStep = (size * 0.5 * (0.2 + p.param2 * 0.8)) / count;
+				ctx.save(); ctx.translate(x, y);
+				ctx.beginPath();
+				for (let i = 0; i < count; i++) {
+					const r = (i + 1) * radiusStep;
+					const angle = phase / r;
+					const px = r * Math.cos(angle), py = r * Math.sin(angle);
+					if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+				}
+				ctx.stroke(); ctx.restore();
+			}
+		},
+		{
+			// Ported from vectorfontskalidascope.html's "Toroid Flux" pattern.
+			name: "Toroid Flux (S-Curve)", spacing: 0,
+			draw: (ctx, x, y, size, pal, p, prev, colorIndex) => {
+				if (!prev) return;
+				const color = pal[colorIndex % pal.length];
+				ctx.strokeStyle = color; ctx.lineWidth = p.thickness;
+				const midX = (prev.x + x) / 2, midY = (prev.y + y) / 2;
+				const dx = x - prev.x, dy = y - prev.y;
+				const nx = -dy, ny = dx;
+				const bow = size * 0.15;
+				const len = Math.hypot(nx, ny) || 1;
+				const cx1 = midX + (nx / len) * bow, cy1 = midY + (ny / len) * bow;
+				ctx.beginPath(); ctx.moveTo(prev.x, prev.y);
+				ctx.quadraticCurveTo(cx1, cy1, x, y);
+				ctx.stroke();
+			}
+		},
+		{
+			// Ported from klidascopetopgunforge.html / vectorfontskalidascope.html.
+			// Depth driven by param1 so it stays cheap by default.
+			name: "Sierpinski Triangle", spacing: 0.6,
+			draw: (ctx, x, y, size, pal, p, prev, colorIndex) => {
+				const depth = 1 + Math.round(p.param1 * 4);
+				const color = pal[colorIndex % pal.length];
+				ctx.strokeStyle = color; ctx.lineWidth = Math.max(0.5, p.thickness * 0.6);
+				const h = size * 0.86603;
+				const a = { x: x, y: y - h * 0.66 };
+				const b = { x: x - size / 2, y: y + h * 0.33 };
+				const c = { x: x + size / 2, y: y + h * 0.33 };
+				(function drw(a, b, c, lv) {
+					if (lv <= 0) {
+						ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.lineTo(c.x, c.y); ctx.closePath(); ctx.stroke();
+						return;
+					}
+					const ab = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+					const bc = { x: (b.x + c.x) / 2, y: (b.y + c.y) / 2 };
+					const ca = { x: (c.x + a.x) / 2, y: (c.y + a.y) / 2 };
+					drw(a, ab, ca, lv - 1); drw(ab, b, bc, lv - 1); drw(ca, bc, c, lv - 1);
+				})(a, b, c, depth);
+			}
+		},
+		{
+			// Ported from vectorfontskalidascope.html, where it was mislabeled
+			// "Koch Snowflake" -- it's actually an n-pointed star (not a
+			// recursive Koch curve). Renamed to describe what it draws;
+			// point count / spike depth are param-driven, distinguishing it
+			// from the fixed 5-point Lynchpin Star above.
+			name: "Spike Star", spacing: 0.4,
+			draw: (ctx, x, y, size, pal, p, prev, colorIndex) => {
+				const color = pal[colorIndex % pal.length];
+				ctx.strokeStyle = color; ctx.lineWidth = p.thickness;
+				const points = 3 + Math.round(p.param1 * 12);
+				const innerRatio = 0.2 + p.param2 * 0.6;
+				ctx.beginPath();
+				for (let i = 0; i < points * 2; i++) {
+					const radius = i % 2 === 0 ? size : size * innerRatio;
+					const angle = (i * Math.PI) / points;
+					const px = x + radius * Math.cos(angle), py = y + radius * Math.sin(angle);
+					if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+				}
+				ctx.closePath(); ctx.stroke();
+			}
+		},
+		{
+			// Ported from vectorfontskalidascope.html, mislabeled "Voronoi
+			// Cells" there -- it's a regular polygon, not a Voronoi
+			// tessellation. Renamed to match what it actually draws.
+			name: "Polygon Cells", spacing: 0.5,
+			draw: (ctx, x, y, size, pal, p, prev, colorIndex) => {
+				const sides = 5 + Math.round(p.param1 * 2);
+				const color = pal[colorIndex % pal.length];
+				ctx.fillStyle = color; ctx.globalAlpha = 0.55;
+				ctx.beginPath();
+				for (let i = 0; i < sides; i++) {
+					const angle = (Math.PI * 2 / sides) * i;
+					const px = x + Math.cos(angle) * size * 0.5, py = y + Math.sin(angle) * size * 0.5;
+					if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+				}
+				ctx.closePath(); ctx.fill(); ctx.globalAlpha = 1;
+				ctx.strokeStyle = pal[(colorIndex + 1) % pal.length];
+				ctx.lineWidth = p.thickness * 0.5; ctx.stroke();
+			}
+		},
+		{
+			// Heading-oriented vehicle silhouette: body + hood + trunk +
+			// two spiral-tread tires, all rotated to face the direction of
+			// travel (computed from prev->current), so it reads correctly
+			// whether driving, turning, or reversing. Kept general-purpose
+			// (param1/param2 control body proportions) rather than a
+			// single hardcoded shape.
+			name: "Perspective Car", spacing: 1.4,
+			draw: (ctx, x, y, size, pal, p, prev, colorIndex) => {
+				if (!prev) return;
+				const color = pal[colorIndex % pal.length];
+				const heading = Math.atan2(y - prev.y, x - prev.x);
+				const bodyLen = size * (1.2 + p.param1 * 1.2);
+				const bodyWid = size * (0.45 + p.param2 * 0.35);
+				const hoodLen = bodyLen * 0.22, trunkLen = bodyLen * 0.18;
+				ctx.save();
+				ctx.translate(x, y);
+				ctx.rotate(heading);
+				ctx.strokeStyle = color;
+				ctx.lineWidth = p.thickness;
+				ctx.strokeRect(-bodyLen / 2, -bodyWid / 2, bodyLen, bodyWid);
+				ctx.strokeRect(bodyLen / 2, -bodyWid * 0.32, hoodLen, bodyWid * 0.64);
+				ctx.strokeRect(-bodyLen / 2 - trunkLen, -bodyWid * 0.28, trunkLen, bodyWid * 0.56);
+				[[-bodyLen * 0.26, bodyWid * 0.5], [bodyLen * 0.26, bodyWid * 0.5]].forEach(([tx, ty]) => {
+					const tr = size * 0.16;
+					ctx.beginPath(); ctx.arc(tx, ty, tr, 0, Math.PI * 2); ctx.stroke();
+					ctx.beginPath();
+					for (let a = 0; a < Math.PI * 4; a += 0.3) {
+						const r = (tr / (Math.PI * 4)) * a;
+						const px = tx + r * Math.cos(a), py = ty + r * Math.sin(a);
+						if (a === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+					}
+					ctx.stroke();
+				});
+				ctx.restore();
+			}
+		},
+		{
+			// Overlapping scalloped arcs -- shingle/scale texture, useful
+			// for terrain, roofs, or reptilian surfaces. A terrain stroke
+			// with many stamped points builds up a continuous scaled
+			// ground plane.
+			name: "Scale Terrain", spacing: 0.5,
+			draw: (ctx, x, y, size, pal, p, prev, colorIndex) => {
+				const color = pal[colorIndex % pal.length];
+				ctx.strokeStyle = color; ctx.lineWidth = p.thickness;
+				const rows = 2 + Math.round(p.param1 * 2);
+				const cols = 4 + Math.round(p.param2 * 3);
+				const scaleR = size * 0.16;
+				for (let r = 0; r < rows; r++) {
+					const rowOffset = (r % 2) ? scaleR : 0;
+					for (let c = 0; c < cols; c++) {
+						const sx = x + (c - cols / 2) * scaleR * 1.7 + rowOffset;
+						const sy = y + r * scaleR * 1.1;
+						ctx.beginPath();
+						ctx.arc(sx, sy, scaleR, Math.PI * 0.12, Math.PI * 0.88);
+						ctx.stroke();
+					}
+				}
+			}
+		}
+	];
+
+	/* ================= MULTI-CENTER GRID =================
+	   Ported from fontforge5.html / klidascopetopgunforge.html's
+	   "gridMode" concept: the same live gesture is mirrored through
+	   1, 2, 4, or 9 independent kaleidoscope centers simultaneously. */
+	function getCenters() {
+		const w = canvas.width / dpr, h = canvas.height / dpr;
+		switch (CONFIG.gridMode) {
+			case 1: return [{ x: w * 0.25, y: h / 2 }, { x: w * 0.75, y: h / 2 }];
+			case 2: return [{ x: w * 0.25, y: h * 0.25 }, { x: w * 0.75, y: h * 0.25 }, { x: w * 0.25, y: h * 0.75 }, { x: w * 0.75, y: h * 0.75 }];
+			case 3: {
+				const c = [];
+				for (let gy = 0; gy < 3; gy++) for (let gx = 0; gx < 3; gx++) c.push({ x: w * (gx + 0.5) / 3, y: h * (gy + 0.5) / 3 });
+				return c;
+			}
+			default: return [{ x: w / 2, y: h / 2 }];
+		}
+	}
+
+	/* ================= TOUCH / COLOR IDENTITY =================
+	   This is the one piece explicitly carried over unchanged from
+	   edgescopepatternspall3.html: every simultaneous touch gets its own
+	   persistent color for the life of that touch (touchColorCounter is
+	   assigned once per identifier at touchstart, never reassigned), and
+	   a single mouse drag behaves as one continuous "last known position"
+	   stroke. None of the other three source apps actually had this --
+	   they all cycle color by draw order or frame count instead, which
+	   loses per-finger identity the moment two touches interleave. */
+	let lastUVByLayer = {};
+	let lastAutoUV = null;
+	let ongoingTouches = [];
+	let touchColorCounter = 10;
+
+	/* ================= LAYERS =================
+	   Each layer has its own fully independent continuity/mesh timeline
+	   -- drawing on layer 1 never connects to, meshes with, or erases
+	   layer 0, even though both render onto the same canvas at once.
+	   That's the whole point: load a friend's recording, watch it ghost-
+	   replay, and draw your own remix alongside it without touching
+	   theirs. Every history entry below carries a `layer` tag; switching
+	   the active layer only changes which layer NEW input is tagged
+	   with -- it never hides or deletes any layer's existing content. */
+	let currentLayer = 0;
+	let maxLayerUsed = 0;
+
+	/* ================= HISTORY =================
+	   Backs ghost replay, high-res re-render export, and JSON telemetry
+	   export/import all from one place. This is a SINGLE flat, truly
+	   chronological stream of draw events -- not grouped by finger/stroke.
+
+	   Grouping by finger was the bug: real simultaneous touches never
+	   arrive bucketed like that, every sample lands in one timeline in
+	   the order it actually happened, so "connect to whatever was drawn
+	   immediately before" naturally jumps between fingers constantly
+	   (that's the whole crisscross mechanic). Storing each finger's
+	   points in its own array and replaying them one stroke at a time
+	   threw that interleaving away -- cross-finger connections only
+	   happened at the two or three seams between strokes instead of
+	   continuously, which is why an imported multi-finger piece came out
+	   as separate untangled lines instead of a wire-mesh.
+
+	   A `brk` entry is a stroke-break marker (every pointer on THAT layer
+	   lifted) -- without it a brand new, unrelated gesture on the same
+	   layer would still connect back to wherever the last one ended.
+	   Capped at CONFIG.maxHistory real points (oldest dropped first,
+	   breaks/end-markers free). */
+	let history = [];
+	let historyPointCount = 0;
+	let activePointerCountByLayer = {};
+	// Per-layer index of drawable points only (colorIndex, x, y, ts, cfg,
+	// session), append-only and capped independently of the global history
+	// cap. The cross-touch mesh reconstruction below scans THIS instead of
+	// the full multi-layer `history` array -- a full-history rescan on
+	// every draw event was the actual cost that made an earlier version of
+	// this feature crawl (and, combined with a pattern that multiplies per
+	// touch, crash a phone). `session` increments every time this layer
+	// gets a full break (see endStroke) so prev-point lookups can still
+	// refuse to connect across an unrelated later gesture, same as
+	// findPrevDrawable's brk-boundary rule, without needing `history` itself.
+	let layerPoints = {};
+	let layerSessionCounter = {};
+	const LAYER_POINTS_CAP = 2000;
+	// How close (in loop-clock ms) a stored point has to be to "now" to
+	// count as still being there right now.
+	const MESH_WINDOW_MS = 60;
+	// However many fingers, real or merged-in from your own past self,
+	// stay meshed at once -- generous headroom past "trick it into
+	// thinking I have 12 fingers," still bounded so the mesh (and any
+	// pattern reacting to it) can't grow without limit.
+	const MESH_TOUCH_CAP = 24;
+
+	/* ================= LAYER CLOCK =================
+	   A layer's FIRST complete session (every pointer down, then every
+	   pointer back up -- one finger or several simultaneously) locks in
+	   that session's real elapsed duration as the layer's permanent
+	   cycle length. Anything drawn on that layer afterward -- a new
+	   finger, a whole new stroke -- gets timestamped, and its position
+	   in the SAME cycle is derived from that timestamp, so during Ghost
+	   Replay it plays back in sync with the original session instead of
+	   being tacked on sequentially after it. Unlocked layers are
+	   unaffected; they replay exactly as before (index-stepped ping-pong). */
+	let layerLock = {};
+
+	function lockLayerFromLastSession(layer) {
+		let minTs = Infinity, maxTs = -Infinity;
+		for (let i = history.length - 1; i >= 0; i--) {
+			const e = history[i];
+			if (!e || e.layer !== layer) continue;
+			if (e.brk) break;
+			if (e.x !== undefined && e.ts !== undefined) {
+				if (e.ts < minTs) minTs = e.ts;
+				if (e.ts > maxTs) maxTs = e.ts;
+			}
+		}
+		if (minTs === Infinity) return;
+		// Floor avoids a degenerate near-zero cycle from a quick tap.
+		const cycleDurationMs = Math.max(300, maxTs - minTs);
+		layerLock[layer] = { firstTs: minTs, cycleDurationMs };
+	}
+
+	// Where in a locked layer's cycle a given real timestamp falls --
+	// a pure triangle wave (0 -> duration -> 0 -> ...), so it's fully
+	// determined by wall-clock time and needs no per-frame bookkeeping.
+	// Returns null for an unlocked layer.
+	function getLoopClockPos(layer, ts) {
+		const lock = layerLock[layer];
+		if (!lock) return null;
+		const period = lock.cycleDurationMs * 2;
+		let elapsed = (ts - lock.firstTs) % period;
+		if (elapsed < 0) elapsed += period;
+		return elapsed <= lock.cycleDurationMs ? elapsed : period - elapsed;
+	}
+
+	function beginStroke(colorIndex) {
+		const cnt = activePointerCountByLayer[currentLayer] || 0;
+		if (cnt === 0 && history.length > 0) history.push({ layer: currentLayer, brk: true });
+		activePointerCountByLayer[currentLayer] = cnt + 1;
+	}
+	function appendToStroke(colorIndex, x, y) {
+		const cfg = { mirrors: CONFIG.mirrors, gridMode: CONFIG.gridMode, patternIndex: CONFIG.patternIndex, paletteIndex: CONFIG.paletteIndex, thickness: CONFIG.thickness, stampSize: CONFIG.stampSize, param1: CONFIG.param1, param2: CONFIG.param2 };
+		const ts = performance.now();
+		history.push({ layer: currentLayer, colorIndex, cfg, x, y, ts });
+		historyPointCount++;
+		trimHistory();
+		const lp = (layerPoints[currentLayer] = layerPoints[currentLayer] || []);
+		lp.push({ colorIndex, x, y, ts, cfg, session: layerSessionCounter[currentLayer] || 0 });
+		if (lp.length > LAYER_POINTS_CAP) lp.shift();
+	}
+	// A specific finger lifting -- distinct from the `brk` full-break
+	// above, which only fires once EVERY finger on this layer is up.
+	// Needed so replay can reconstruct exactly which touches were still
+	// held at any given moment (see activeTouchesAtHistoryIndex below);
+	// without it, ghost replay has no way to know a mesh should still be
+	// connecting fingers B and C after finger A lifted.
+	function endStroke(colorIndex) {
+		const cnt = Math.max(0, (activePointerCountByLayer[currentLayer] || 0) - 1);
+		activePointerCountByLayer[currentLayer] = cnt;
+		history.push({ layer: currentLayer, end: colorIndex });
+		if (cnt === 0) {
+			if (!layerLock[currentLayer]) lockLayerFromLastSession(currentLayer);
+			history.push({ layer: currentLayer, brk: true });
+			layerSessionCounter[currentLayer] = (layerSessionCounter[currentLayer] || 0) + 1;
+		}
+	}
+	// A point counts toward the cap; end-markers and breaks are free
+	// (shifting them off doesn't reduce historyPointCount).
+	function trimHistory() {
+		while (historyPointCount > CONFIG.maxHistory && history.length > 0) {
+			const removed = history.shift();
+			if (removed && removed.x !== undefined) historyPointCount--;
+		}
+	}
+	// True chronological order of who's actually still held down at a
+	// given point in the stream, ON THAT ENTRY'S LAYER ONLY -- other
+	// layers' entries are transparent (skipped, not treated as breaks).
+	// A forward scan from the last same-layer break, adding a touch to
+	// `order` the first time it's seen and removing it (without
+	// reordering survivors) on its end-marker. Exactly reconstructs what
+	// `ongoingTouches` would have held live on that layer.
+	function activeTouchesAtHistoryIndex(idx, layer) {
+		let start = idx;
+		while (start > 0) {
+			const e = history[start - 1];
+			if (e && e.layer === layer && e.brk) break;
+			start--;
+		}
+		const order = [];
+		const pos = new Map();
+		for (let i = start; i <= idx; i++) {
+			const e = history[i];
+			if (!e || e.layer !== layer || e.brk) continue;
+			if (e.end !== undefined) {
+				const pi = order.indexOf(e.end);
+				if (pi >= 0) order.splice(pi, 1);
+				pos.delete(e.end);
+				continue;
+			}
+			if (!pos.has(e.colorIndex)) order.push(e.colorIndex);
+			pos.set(e.colorIndex, { x: e.x, y: e.y });
+		}
+		return order.map(ci => ({ colorIndex: ci, x: pos.get(ci).x, y: pos.get(ci).y }));
+	}
+
+	// Cross-session version of activeTouchesAtHistoryIndex, for locked
+	// layers only: which touches -- from ANY session ever recorded on this
+	// layer, not just the current one -- were down at this position in the
+	// shared loop clock? A finger added later, in a separate session,
+	// lands at whatever loop-position its own timestamps translate to; if
+	// that overlaps a position from the original locking session, both
+	// count as simultaneously held. Scans only layerPoints[layer] (this
+	// layer's own point index, capped at LAYER_POINTS_CAP) rather than the
+	// full multi-layer `history`, so cost is bounded by how much THIS
+	// layer has drawn, not the whole app. Matches per-point within
+	// `windowMs` of `targetPos`, closest match wins per colorIndex.
+	// Ordered by colorIndex ascending -- true chronological touch order
+	// even across sessions (touchColorCounter only ever increments).
+	function activeTouchesAtLoopPosition(layer, targetPos, windowMs) {
+		const pts = layerPoints[layer];
+		if (!pts) return [];
+		const best = new Map(); // colorIndex -> { x, y, dist }
+		for (let i = 0; i < pts.length; i++) {
+			const e = pts[i];
+			const pos = getLoopClockPos(layer, e.ts);
+			if (pos === null) continue;
+			const dist = Math.abs(pos - targetPos);
+			if (dist > windowMs) continue;
+			const prev = best.get(e.colorIndex);
+			if (!prev || dist < prev.dist) best.set(e.colorIndex, { x: e.x, y: e.y, dist });
+		}
+		return Array.from(best.keys()).sort((a, b) => a - b)
+			.map(ci => ({ colorIndex: ci, x: best.get(ci).x, y: best.get(ci).y }));
+	}
+
+	// Live-drawing counterpart: while you're actively drawing on a LOCKED
+	// layer, merges your current real touch(es) with wherever your past
+	// self's finger(s) sit right now in the same cycle, so the mesh line
+	// below connects your live stroke to your own earlier session as you
+	// draw -- not just on later replay. The expensive lookup
+	// (activeTouchesAtLoopPosition) is throttled to once per
+	// MESH_THROTTLE_MS regardless of how many draw events fire in that
+	// window; your own live touch position is never throttled or stale.
+	// Capped at MESH_TOUCH_CAP, always keeping your live touch(es) and
+	// filling the rest with the MOST RECENT past-self fingers (highest
+	// colorIndex) so a long-lived layer with many past sessions doesn't
+	// let the mesh (or a touch-reactive pattern) grow without bound.
+	let pastSelfCache = { layer: null, ts: -Infinity, result: [] };
+	const MESH_THROTTLE_MS = 40;
+	function liveTouchesForLayer(layer) {
+		if (!layerLock[layer]) return ongoingTouches;
+		const now = performance.now();
+		const targetPos = getLoopClockPos(layer, now);
+		if (targetPos === null) return ongoingTouches;
+		let pastSelf;
+		if (pastSelfCache.layer === layer && now - pastSelfCache.ts < MESH_THROTTLE_MS) {
+			pastSelf = pastSelfCache.result;
+		} else {
+			pastSelf = activeTouchesAtLoopPosition(layer, targetPos, MESH_WINDOW_MS);
+			pastSelfCache = { layer, ts: now, result: pastSelf };
+		}
+		const liveIds = new Set(ongoingTouches.map(t => t.colorIndex));
+		let filteredPast = pastSelf.filter(t => !liveIds.has(t.colorIndex));
+		const budget = Math.max(0, MESH_TOUCH_CAP - ongoingTouches.length);
+		if (filteredPast.length > budget) filteredPast = filteredPast.slice(-budget);
+		return [...ongoingTouches, ...filteredPast].sort((a, b) => a.colorIndex - b.colorIndex);
+	}
+
+	/* ================= CORE RENDER PASS =================
+	   True reflective kaleidoscope math (rotate per wedge, alternate
+	   wedges get a Y-flip for a genuine mirror rather than pure rotation)
+	   -- the technique all three of the other apps used independently;
+	   this is the cleanest version of it, applied once per grid center. */
+	function renderPass(targetCtx, cx, cy, uv, prevUV, colorIndex, pal, shadowPal, cfg, allTouches) {
+		if (!allTouches) allTouches = ongoingTouches; // live default; replay/export pass their own reconstruction
+		const pat = PATTERNS[cfg.patternIndex];
+		const mirrors = Math.max(1, cfg.mirrors);
+		const loops = Math.ceil(mirrors);
+		const step = (Math.PI * 2) / mirrors;
+
+		targetCtx.lineCap = 'round';
+		targetCtx.shadowColor = shadowPal[colorIndex % shadowPal.length];
+		targetCtx.shadowBlur = cfg.thickness * 2;
+		targetCtx.shadowOffsetX = 1; targetCtx.shadowOffsetY = 1;
+
+		for (let i = 0; i < loops; i++) {
+			targetCtx.save();
+			targetCtx.translate(cx, cy);
+			targetCtx.rotate(i * step);
+			if (mirrors >= 2 && i % 2 === 1) targetCtx.scale(1, -1);
+			pat.draw(
+				targetCtx, uv.x - cx, uv.y - cy, cfg.stampSize, pal, cfg,
+				prevUV ? { x: prevUV.x - cx, y: prevUV.y - cy } : null,
+				colorIndex, allTouches, shadowPal
+			);
+			targetCtx.restore();
+		}
+
+		targetCtx.shadowColor = 'transparent'; targetCtx.shadowBlur = 0;
+		targetCtx.shadowOffsetX = 0; targetCtx.shadowOffsetY = 0;
+	}
+
+	// Connects the currently active touches in a stable cycle -- finger 1
+	// to 2, 2 to 3, ..., last back to first -- one line per pair, same
+	// technique as fontforge5.html / klidascopetopgunforge.html's "glitch
+	// mesh" ("wall J gets color J"). The touch/OS layer always knows the
+	// true order fingers landed in (ongoingTouches is push-on-touchstart,
+	// splice-on-touchend, so it's naturally oldest-first and lifting one
+	// finger never reorders the others -- a lifted-then-replanted finger
+	// simply rejoins at the end, exactly like a real device's touch IDs).
+	// So as long as the same fingers stay down, wall J is always the same
+	// pair of fingers and therefore always the same color for the whole
+	// gesture -- that stability, replayed across many mirror wedges, is
+	// what produces the dense woven-ribbon look rather than a random tangle.
+	function drawShadowMesh(targetCtx, cx, cy, pal, touches) {
+		const n = touches.length;
+		if (n < 2) return;
+		const pairs = n === 2 ? 1 : n; // 2 touches: one line, not a doubled-up "cycle"
+		targetCtx.save();
+		targetCtx.translate(cx, cy); // match renderPass -- endpoints below are center-relative
+		targetCtx.lineWidth = Math.max(0.5, CONFIG.thickness * 0.4);
+		for (let j = 0; j < pairs; j++) {
+			const a = touches[j];
+			const b = touches[(j + 1) % n];
+			targetCtx.strokeStyle = pal[j % pal.length];
+			targetCtx.beginPath();
+			targetCtx.moveTo(a.x - cx, a.y - cy);
+			targetCtx.lineTo(b.x - cx, b.y - cy);
+			targetCtx.stroke();
+		}
+		targetCtx.restore();
+	}
+
+	function currentPalettes() {
+		const name = paletteNames[CONFIG.paletteIndex];
+		const pal = colorPalettes[name];
+		const shadowName = name.includes("Shadow") ? name : name + " Shadow";
+		const shadowPal = colorPalettes[shadowName] || pal;
+		return { pal, shadowPal };
+	}
+
+	function drawOnTexture(uv, isAuto, colorIndex) {
+		let prevUV = isAuto ? lastAutoUV : (lastUVByLayer[currentLayer] || null);
+		const { pal, shadowPal } = currentPalettes();
+		const centers = getCenters();
+		// Real touches (unlocked layer) or real touches merged with your
+		// own past self replaying on a locked layer -- either way, this is
+		// the actual mesh feature: whichever touches count as "at the same
+		// time" right now get connected in a cycle, live, as you draw.
+		// Separate from -- and always on regardless of -- the parked
+		// Shadow Mesh toggle below, which still only ever sees real
+		// simultaneous ongoingTouches.
+		const allTouches = liveTouchesForLayer(currentLayer);
+		centers.forEach(c => {
+			renderPass(ctx, c.x, c.y, uv, prevUV, colorIndex, pal, shadowPal, CONFIG, allTouches);
+			if (allTouches.length >= 2) drawShadowMesh(ctx, c.x, c.y, pal, allTouches);
+			if (CONFIG.shadowMesh) drawShadowMesh(ctx, c.x, c.y, pal, ongoingTouches);
+		});
+		if (isAuto) lastAutoUV = uv; else lastUVByLayer[currentLayer] = uv;
+	}
+
+	/* ================= INPUT ================= */
+	function toCanvasXY(clientX, clientY) {
+		// Inverse-rotate so drawing lands correctly when the whole canvas
+		// is CSS-rotated (ported from vectorfontskalidascope.html, minus
+		// its broken two-finger twist gesture -- rotation here is
+		// slider-only).
+		const rect = canvas.getBoundingClientRect();
+		const cx = rect.left + rect.width / 2, cy = rect.top + rect.height / 2;
+		const rad = -CONFIG.rotation * Math.PI / 180;
+		const dx = clientX - cx, dy = clientY - cy;
+		const rx = dx * Math.cos(rad) - dy * Math.sin(rad);
+		const ry = dx * Math.sin(rad) + dy * Math.cos(rad);
+		return { x: rx + W / 2, y: ry + H / 2 };
+	}
+
+	canvas.addEventListener('mousedown', e => {
+		const uv = toCanvasXY(e.clientX, e.clientY);
+		lastUVByLayer[currentLayer] = uv;
+		beginStroke(0); appendToStroke(0, uv.x, uv.y);
+		drawOnTexture(uv, false, 0);
+	});
+	canvas.addEventListener('mousemove', e => {
+		if (e.buttons !== 1) return;
+		const pat = PATTERNS[CONFIG.patternIndex];
+		const spacingThresh = (pat.spacing || 0) * CONFIG.stampSize;
+		const uv = toCanvasXY(e.clientX, e.clientY);
+		const last = lastUVByLayer[currentLayer];
+		if (spacingThresh > 0 && last && Math.hypot(uv.x - last.x, uv.y - last.y) < spacingThresh) return;
+		appendToStroke(0, uv.x, uv.y);
+		drawOnTexture(uv, false, 0);
+	});
+	canvas.addEventListener('mouseup', () => endStroke(0));
+
+	canvas.addEventListener('touchstart', e => {
+		e.preventDefault();
+		for (let i = 0; i < e.changedTouches.length; i++) {
+			const t = e.changedTouches[i];
+			const colorIndex = touchColorCounter++;
+			const uv = toCanvasXY(t.clientX, t.clientY);
+			ongoingTouches.push({ identifier: t.identifier, colorIndex, x: uv.x, y: uv.y });
+			lastUVByLayer[currentLayer] = uv;
+			beginStroke(colorIndex); appendToStroke(colorIndex, uv.x, uv.y);
+			drawOnTexture(uv, false, colorIndex);
+		}
+	}, { passive: false });
+
+	canvas.addEventListener('touchmove', e => {
+		e.preventDefault();
+		const pat = PATTERNS[CONFIG.patternIndex];
+		const spacingThresh = (pat.spacing || 0) * CONFIG.stampSize;
+		for (let i = 0; i < e.changedTouches.length; i++) {
+			const t = e.changedTouches[i];
+			const idx = ongoingTouches.findIndex(x => x.identifier === t.identifier);
+			if (idx < 0) continue;
+			const uv = toCanvasXY(t.clientX, t.clientY);
+			if (spacingThresh > 0 && Math.hypot(uv.x - ongoingTouches[idx].x, uv.y - ongoingTouches[idx].y) < spacingThresh) continue;
+			ongoingTouches[idx].x = uv.x; ongoingTouches[idx].y = uv.y;
+			appendToStroke(ongoingTouches[idx].colorIndex, uv.x, uv.y);
+			drawOnTexture(uv, false, ongoingTouches[idx].colorIndex);
+		}
+	}, { passive: false });
+
+	function endTouch(e) {
+		for (let i = 0; i < e.changedTouches.length; i++) {
+			const idx = ongoingTouches.findIndex(x => x.identifier === e.changedTouches[i].identifier);
+			if (idx >= 0) { endStroke(ongoingTouches[idx].colorIndex); ongoingTouches.splice(idx, 1); }
+		}
+	}
+	canvas.addEventListener('touchend', endTouch);
+	canvas.addEventListener('touchcancel', endTouch);
+
+	/* ================= GHOST REPLAY =================
+	   Ping-pongs back and forth through the flat `history` stream,
+	   redrawing each point with the config it was originally drawn
+	   under. A point's "prev" is the nearest neighbor ON THE SAME LAYER
+	   (in whichever direction the ping-pong is currently heading) --
+	   since `history` is one true chronological timeline across every
+	   finger on that layer, not grouped by finger, that adjacency IS the
+	   crisscrossing mechanic: consecutive samples jump between whichever
+	   touches were actually active at that moment, exactly like live
+	   drawing. Other layers' entries are transparent (skipped, not
+	   treated as breaks) -- that's what keeps layers from bleeding into
+	   each other while still all replaying/rendering together. A `brk`
+	   entry resets continuity so unrelated gestures on the same layer
+	   don't connect to each other. */
+	// Finds the nearest drawable neighbor ON THE SAME LAYER in the given
+	// direction, starting one step away from idx -- skipping over other
+	// layers' entries and end-markers (not a position, doesn't break
+	// continuity either), stopping at a same-layer `brk` (no prev across
+	// an unrelated gesture).
+	function findPrevDrawable(idx, dir, layer) {
+		let j = idx - dir;
+		while (j >= 0 && j < history.length) {
+			const e = history[j];
+			if (e && e.layer === layer) {
+				if (e.brk) return null;
+				if (e.x !== undefined) return e;
+			}
+			j -= dir;
+		}
+		return null;
+	}
+	let ghostFlatIdx = 0, ghostDir = 1;
+	function stepGhostReplay() {
+		if (history.length < 2) return;
+		for (let step = 0; step < 3; step++) {
+			const entry = history[ghostFlatIdx];
+			// Locked layers are rendered by renderLockedLayers() instead,
+			// driven by real elapsed time rather than array position --
+			// skip them here so they don't also get the old sequential
+			// index-stepped treatment (which is exactly what a locked
+			// layer is meant to no longer do).
+			if (entry && entry.x !== undefined && !layerLock[entry.layer]) {
+				const { pal, shadowPal } = (() => {
+					const name = paletteNames[entry.cfg.paletteIndex] || paletteNames[0];
+					const p = colorPalettes[name];
+					const sName = name.includes("Shadow") ? name : name + " Shadow";
+					return { pal: p, shadowPal: colorPalettes[sName] || p };
+				})();
+				const prevEntry = findPrevDrawable(ghostFlatIdx, ghostDir, entry.layer);
+				// Reconstructs exactly which touches were still held at this
+				// point in the recording, on this layer -- same state live
+				// drawing would have had in ongoingTouches -- so the mesh
+				// (and any pattern that reacts to "other" touches, like
+				// Golden Spiral or Pyrotaxis) behaves identically on replay
+				// as it did live.
+				const active = activeTouchesAtHistoryIndex(ghostFlatIdx, entry.layer);
+				getCenters().forEach(c => {
+					renderPass(ctx, c.x, c.y, entry, prevEntry, entry.colorIndex, pal, shadowPal, entry.cfg, active);
+					if (active.length >= 2) drawShadowMesh(ctx, c.x, c.y, pal, active);
+					if (CONFIG.shadowMesh) drawShadowMesh(ctx, c.x, c.y, pal, active);
+				});
+			}
+			ghostFlatIdx += ghostDir;
+			if (ghostFlatIdx >= history.length - 1) { ghostFlatIdx = history.length - 1; ghostDir = -1; }
+			else if (ghostFlatIdx <= 0) { ghostFlatIdx = 0; ghostDir = 1; }
+		}
+	}
+
+	// Renders every locked layer by real elapsed time instead of array
+	// position: each locked layer has its own continuously-advancing
+	// triangle-wave "loop clock" (a pure function of wall-clock time, see
+	// getLoopClockPos). A point renders whenever the layer's current
+	// clock position is close to that point's own recorded position in
+	// the cycle -- so a stroke added minutes after the layer locked still
+	// plays back "in line" with the original session, not sequentially
+	// after it. Scans layerPoints[layer] (this layer's own point index)
+	// instead of the full multi-layer `history`, and computes the active-
+	// touch mesh ONCE per layer per frame (every matched point this frame
+	// shares the same clockNow, so there's no reason to redo it per point)
+	// -- cross-session, via activeTouchesAtLoopPosition, so a finger added
+	// in a separate later session gets meshed with the original session's
+	// fingers whenever their loop-positions line up. Prev-lookup instead
+	// stays scoped to each point's own originally-recorded stroke (same
+	// `session` id, see appendToStroke/endStroke) so an unrelated later
+	// gesture still doesn't get a stray connecting line drawn through it.
+	function renderLockedLayers() {
+		const now = performance.now();
+		for (const layerKey in layerLock) {
+			const layer = Number(layerKey);
+			const clockNow = getLoopClockPos(layer, now);
+			if (clockNow === null) continue;
+			const pts = layerPoints[layer];
+			if (!pts || pts.length === 0) continue;
+			const active = activeTouchesAtLoopPosition(layer, clockNow, MESH_WINDOW_MS);
+			for (let i = 0; i < pts.length; i++) {
+				const entry = pts[i];
+				const pos = getLoopClockPos(layer, entry.ts);
+				if (pos === null || Math.abs(pos - clockNow) > MESH_WINDOW_MS) continue;
+				const { pal, shadowPal } = (() => {
+					const name = paletteNames[entry.cfg.paletteIndex] || paletteNames[0];
+					const p = colorPalettes[name];
+					const sName = name.includes("Shadow") ? name : name + " Shadow";
+					return { pal: p, shadowPal: colorPalettes[sName] || p };
+				})();
+				const prevEntry = (i > 0 && pts[i - 1].session === entry.session) ? pts[i - 1] : null;
+				getCenters().forEach(c => {
+					renderPass(ctx, c.x, c.y, entry, prevEntry, entry.colorIndex, pal, shadowPal, entry.cfg, active);
+					if (active.length >= 2) drawShadowMesh(ctx, c.x, c.y, pal, active);
+					if (CONFIG.shadowMesh) drawShadowMesh(ctx, c.x, c.y, pal, active);
+				});
+			}
+		}
+	}
+
+	/* ================= UI WIRING ================= */
+	const patternSelect = document.getElementById('pattern');
+	PATTERNS.forEach((p, i) => { const o = document.createElement('option'); o.value = i; o.textContent = p.name; patternSelect.appendChild(o); });
+	patternSelect.addEventListener('change', e => { CONFIG.patternIndex = parseInt(e.target.value); hud('PATTERN', PATTERNS[CONFIG.patternIndex].name); });
+
+	const paletteSelect = document.getElementById('palette');
+	paletteNames.forEach((p, i) => { const o = document.createElement('option'); o.value = i; o.textContent = p; paletteSelect.appendChild(o); });
+	paletteSelect.addEventListener('change', e => { CONFIG.paletteIndex = parseInt(e.target.value); hud('PALETTE', paletteNames[CONFIG.paletteIndex]); });
+
+	function bindRange(id, cfgKey, fmt) {
+		const el = document.getElementById(id), out = document.getElementById(id + 'Val');
+		el.addEventListener('input', e => {
+			const v = parseFloat(e.target.value);
+			CONFIG[cfgKey] = v;
+			if (out) out.textContent = fmt ? fmt(v) : v;
+		});
+	}
+	bindRange('mirrors', 'mirrors');
+	bindRange('stampSize', 'stampSize');
+	bindRange('thickness', 'thickness');
+	bindRange('param1', 'param1');
+	bindRange('param2', 'param2');
+	bindRange('fadeRate', 'fadeRate', v => v === 0 ? '0 (permanent)' : v.toFixed(3));
+	bindRange('rotation', 'rotation', v => v + '°');
+
+	document.getElementById('gridMode').addEventListener('change', e => { CONFIG.gridMode = parseInt(e.target.value); hud('GRID', ['1 center', '2 centers', '4 centers', '9 centers'][CONFIG.gridMode]); });
+
+	function toggleBtn(id, cfgKey, label) {
+		const btn = document.getElementById(id);
+		btn.addEventListener('click', () => {
+			CONFIG[cfgKey] = !CONFIG[cfgKey];
+			btn.textContent = `${label}: ${CONFIG[cfgKey] ? 'ON' : 'OFF'}`;
+			btn.classList.toggle('active', CONFIG[cfgKey]);
+			hud(label, CONFIG[cfgKey] ? 'ON' : 'OFF');
+		});
+	}
+	toggleBtn('autoToggle', 'isAuto', 'Auto Orbit');
+	toggleBtn('ghostToggle', 'ghostReplay', 'Ghost Replay');
+	toggleBtn('meshToggle', 'shadowMesh', 'Shadow Mesh');
+
+	document.getElementById('clearBtn').addEventListener('click', () => {
+		ctx.clearRect(0, 0, canvas.width, canvas.height);
+		history = []; historyPointCount = 0; activePointerCountByLayer = {};
+		lastUVByLayer = {}; currentLayer = 0; maxLayerUsed = 0;
+		ghostFlatIdx = 0; ghostDir = 1; layerLock = {};
+		layerPoints = {}; layerSessionCounter = {}; pastSelfCache = { layer: null, ts: -Infinity, result: [] };
+		syncLayerUI();
+		hud('CLEARED', '');
+	});
+
+	function syncLayerUI() {
+		const el = document.getElementById('layerIndicator');
+		if (el) el.textContent = `Layer ${currentLayer} / ${maxLayerUsed}`;
+	}
+	document.getElementById('layerUpBtn').addEventListener('click', () => {
+		if (currentLayer < maxLayerUsed) currentLayer++;
+		else { maxLayerUsed++; currentLayer = maxLayerUsed; }
+		syncLayerUI();
+		hud('LAYER', String(currentLayer));
+	});
+	document.getElementById('layerDownBtn').addEventListener('click', () => {
+		if (currentLayer > 0) currentLayer--;
+		syncLayerUI();
+		hud('LAYER', String(currentLayer));
+	});
+	syncLayerUI();
+
+	// Zen mode
+	document.getElementById('zenBtn').addEventListener('click', () => {
+		CONFIG.zenMode = !CONFIG.zenMode;
+		document.body.classList.toggle('zen', CONFIG.zenMode);
+	});
+	document.getElementById('panelToggle').addEventListener('click', () => {
+		if (CONFIG.zenMode) { CONFIG.zenMode = false; document.body.classList.remove('zen'); return; }
+		document.getElementById('ui').classList.toggle('hidden');
+	});
+
+	// Fullscreen
+	document.getElementById('fsBtn').addEventListener('click', () => {
+		if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {});
+		else document.exitFullscreen();
+	});
+
+	// Collapsible groups
+	document.querySelectorAll('.group-head').forEach(h => {
+		h.addEventListener('click', () => h.parentElement.classList.toggle('open'));
+	});
+
+	// Standard PNG (current view, as-is)
+	document.getElementById('exportBtn').addEventListener('click', () => {
+		const a = document.createElement('a');
+		a.download = 'omniscope.png'; a.href = canvas.toDataURL('image/png'); a.click();
+	});
+
+	function centersForGrid(baseW, baseH, gridMode) {
+		switch (gridMode) {
+			case 1: return [{ x: baseW * 0.25, y: baseH / 2 }, { x: baseW * 0.75, y: baseH / 2 }];
+			case 2: return [{ x: baseW * 0.25, y: baseH * 0.25 }, { x: baseW * 0.75, y: baseH * 0.25 }, { x: baseW * 0.25, y: baseH * 0.75 }, { x: baseW * 0.75, y: baseH * 0.75 }];
+			case 3: { const c = []; for (let gy = 0; gy < 3; gy++) for (let gx = 0; gx < 3; gx++) c.push({ x: baseW * (gx + 0.5) / 3, y: baseH * (gy + 0.5) / 3 }); return c; }
+			default: return [{ x: baseW / 2, y: baseH / 2 }];
+		}
+	}
+	// Replays history (up to and including endIdx) onto a fresh scaled
+	// offscreen canvas -- shared by the high-res re-render export (endIdx =
+	// end of history) and the flipbook export (endIdx = a series of
+	// progressively later cut points), so both always match what live
+	// rendering would have produced. No background fill: canvas 2D
+	// contexts start fully transparent, and these exports are meant to be
+	// print-ready (t-shirts, hats: real alpha, not "looks black on a dark
+	// screen").
+	function renderHistoryFrame(multiplier, endIdx) {
+		const baseW = W, baseH = H;
+		const off = document.createElement('canvas');
+		off.width = Math.round(baseW * multiplier); off.height = Math.round(baseH * multiplier);
+		const octx = off.getContext('2d');
+		octx.scale(multiplier, multiplier);
+
+		// One forward pass through the true chronological stream, with
+		// INDEPENDENT running state per layer -- a `brk` on layer 0 resets
+		// only layer 0's continuity and active-touch set, never layer 1's,
+		// even though both layers' entries are interleaved in the same
+		// array in true chronological order. An end-marker removes just
+		// that one touch from its layer's active set (lifting one finger
+		// shouldn't disconnect the others on the same layer). Each layer's
+		// activeOrder/activePos rebuild the same "who's currently held"
+		// state ongoingTouches would have had live, so the mesh and any
+		// touch-reactive pattern (Golden Spiral, Pyrotaxis) render
+		// identically to live, per layer.
+		const layerState = new Map();
+		function stateFor(layer) {
+			if (!layerState.has(layer)) layerState.set(layer, { prevEntry: null, activeOrder: [], activePos: new Map() });
+			return layerState.get(layer);
+		}
+		for (let idx = 0; idx <= endIdx && idx < history.length; idx++) {
+			const entry = history[idx];
+			if (!entry) continue;
+			const st = stateFor(entry.layer);
+			if (entry.brk) { st.prevEntry = null; st.activeOrder = []; st.activePos.clear(); continue; }
+			if (entry.end !== undefined) {
+				const pi = st.activeOrder.indexOf(entry.end);
+				if (pi >= 0) st.activeOrder.splice(pi, 1);
+				st.activePos.delete(entry.end);
+				continue;
+			}
+			if (!st.activePos.has(entry.colorIndex)) st.activeOrder.push(entry.colorIndex);
+			st.activePos.set(entry.colorIndex, { x: entry.x, y: entry.y });
+			const active = st.activeOrder.map(ci => ({ colorIndex: ci, x: st.activePos.get(ci).x, y: st.activePos.get(ci).y }));
+
+			const name = paletteNames[entry.cfg.paletteIndex] || paletteNames[0];
+			const pal = colorPalettes[name];
+			const sName = name.includes("Shadow") ? name : name + " Shadow";
+			const shadowPal = colorPalettes[sName] || pal;
+			const centers = centersForGrid(baseW, baseH, entry.cfg.gridMode);
+			centers.forEach(c => {
+				renderPass(octx, c.x, c.y, entry, st.prevEntry, entry.colorIndex, pal, shadowPal, entry.cfg, active);
+				if (CONFIG.shadowMesh) drawShadowMesh(octx, c.x, c.y, pal, active);
+			});
+			st.prevEntry = entry;
+		}
+		return off;
+	}
+
+	// High-res re-render export -- replays the FULL history onto a scaled
+	// offscreen canvas rather than upscaling the raster, same lossless
+	// approach the other three apps used for their PNG export. This IS
+	// the "final frame" / final image: the complete composited drawing,
+	// transparent background, ready to hand to a t-shirt or hat printer.
+	function exportHighRes(multiplier) {
+		if (!history.some(e => e && e.x !== undefined)) { hud('EXPORT', 'nothing drawn yet'); return; }
+		const off = renderHistoryFrame(multiplier, history.length - 1);
+		const a = document.createElement('a');
+		a.download = `omniscope_${multiplier}x.png`; a.href = off.toDataURL('image/png'); a.click();
+		hud('EXPORTED', `${multiplier}× re-render`);
+	}
+	document.getElementById('export2xBtn').addEventListener('click', () => exportHighRes(2));
+	document.getElementById('export4xBtn').addEventListener('click', () => exportHighRes(4));
+
+	// JSON telemetry export/import -- the full chronological history plus
+	// the live config, so a session can be reloaded and either inspected,
+	// continued, or re-rendered later.
+	document.getElementById('exportJsonBtn').addEventListener('click', () => {
+		if (!history.some(e => e && e.x !== undefined)) { hud('EXPORT', 'nothing drawn yet'); return; }
+		const data = { meta: { date: new Date().toISOString(), config: CONFIG }, history };
+		const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+		const url = URL.createObjectURL(blob);
+		const a = document.createElement('a');
+		a.download = `omniscope_session_${Date.now()}.json`; a.href = url; a.click();
+		URL.revokeObjectURL(url);
+		hud('EXPORTED', `${history.filter(e => e && e.x !== undefined).length} points`);
+	});
+	// Reflects CONFIG's current values back onto the visible sliders/
+	// selects. Needed after JSON import, which writes straight into
+	// CONFIG (so drawing/export is correct immediately) but doesn't
+	// otherwise touch the DOM -- without this the panel would keep
+	// showing stale defaults even though the imported settings are
+	// already live.
+	function syncUIFromConfig() {
+		document.getElementById('mirrors').value = CONFIG.mirrors;
+		document.getElementById('mirrorsVal').textContent = CONFIG.mirrors;
+		document.getElementById('gridMode').value = CONFIG.gridMode;
+		document.getElementById('stampSize').value = CONFIG.stampSize;
+		document.getElementById('stampSizeVal').textContent = CONFIG.stampSize;
+		document.getElementById('thickness').value = CONFIG.thickness;
+		document.getElementById('thicknessVal').textContent = CONFIG.thickness;
+		document.getElementById('pattern').value = CONFIG.patternIndex;
+		document.getElementById('palette').value = CONFIG.paletteIndex;
+		document.getElementById('param1').value = CONFIG.param1;
+		document.getElementById('param1Val').textContent = CONFIG.param1;
+		document.getElementById('param2').value = CONFIG.param2;
+		document.getElementById('param2Val').textContent = CONFIG.param2;
+		document.getElementById('fadeRate').value = CONFIG.fadeRate;
+		document.getElementById('fadeRateVal').textContent = CONFIG.fadeRate === 0 ? '0 (permanent)' : CONFIG.fadeRate.toFixed(3);
+		document.getElementById('rotation').value = CONFIG.rotation;
+		document.getElementById('rotationVal').textContent = CONFIG.rotation + '°';
+		const ghostBtn = document.getElementById('ghostToggle');
+		ghostBtn.textContent = `Ghost Replay: ${CONFIG.ghostReplay ? 'ON' : 'OFF'}`;
+		ghostBtn.classList.toggle('active', CONFIG.ghostReplay);
+	}
+
+	document.getElementById('importJsonBtn').addEventListener('click', () => document.getElementById('importInput').click());
+	document.getElementById('importInput').addEventListener('change', e => {
+		const file = e.target.files[0];
+		if (!file) return;
+		const reader = new FileReader();
+		reader.onload = evt => {
+			try {
+				const data = JSON.parse(evt.target.result);
+				let importedCount = 0;
+				// Every import lands on its own fresh layer -- a recording is a
+				// layer in itself, independent from whatever's on-canvas now
+				// and from any other imported/live layer, so nothing gets
+				// overwritten and existing tracks keep replaying untouched.
+				const newLayer = maxLayerUsed + 1;
+				maxLayerUsed = newLayer;
+				if (Array.isArray(data.history)) {
+					let needBreak = false;
+					data.history.forEach(entry => {
+						if (!entry || entry.brk) { needBreak = true; return; }
+						if (needBreak) { history.push({ layer: newLayer, brk: true }); needBreak = false; }
+						if (entry.end !== undefined) {
+							history.push({ layer: newLayer, end: entry.end });
+						} else if (entry.x !== undefined) {
+							history.push({ layer: newLayer, colorIndex: entry.colorIndex, cfg: entry.cfg, x: entry.x, y: entry.y });
+							historyPointCount++; importedCount++;
+						}
+					});
+				} else if (Array.isArray(data.strokeHistory)) {
+					// Legacy format (grouped per-stroke instead of one true
+					// chronological stream) -- still importable, just without
+					// true cross-finger interleaving within each old stroke,
+					// since that ordering was never recorded to begin with.
+					// Each old stroke gets its own end-marker so mesh/touch-
+					// reactive patterns at least see it as a self-contained
+					// single-touch gesture rather than an orphaned one.
+					data.strokeHistory.forEach(s => {
+						history.push({ layer: newLayer, brk: true });
+						s.points.forEach(pt => {
+							history.push({ layer: newLayer, colorIndex: s.colorIndex, cfg: s.cfg, x: pt.x, y: pt.y });
+							historyPointCount++; importedCount++;
+						});
+						history.push({ layer: newLayer, end: s.colorIndex });
+					});
+				}
+				while (historyPointCount > CONFIG.maxHistory && history.length > 0) {
+					const removed = history.shift();
+					if (removed && removed.x !== undefined) historyPointCount--;
+				}
+				if (data.meta && data.meta.config) {
+					['mirrors', 'gridMode', 'patternIndex', 'paletteIndex', 'thickness', 'stampSize', 'param1', 'param2', 'fadeRate', 'rotation', 'ghostReplay'].forEach(k => {
+						if (data.meta.config[k] !== undefined) CONFIG[k] = data.meta.config[k];
+					});
+					syncUIFromConfig();
+				}
+				currentLayer = newLayer;
+				syncLayerUI();
+				hud('IMPORTED', `${importedCount} pts -> layer ${newLayer}`);
+			} catch (err) { hud('IMPORT FAILED', String(err.message || err)); }
+		};
+		reader.readAsText(file);
+		e.target.value = '';
+	});
+
+	/* ================= MAIN LOOP ================= */
+	function animate() {
+		if (CONFIG.fadeRate > 0) {
+			ctx.fillStyle = `rgba(10,10,10,${CONFIG.fadeRate})`;
+			ctx.fillRect(0, 0, canvas.width / dpr, canvas.height / dpr);
+		}
+		canvas.style.transform = `rotate(${CONFIG.rotation}deg)`;
+
+		if (CONFIG.isAuto) {
+			const t = Date.now() * 0.001;
+			const uv = { x: (W / 2) + Math.sin(t * 2) * 100, y: (H / 2) + Math.cos(t * 2) * 100 };
+			drawOnTexture(uv, true, 0);
+		}
+		if (CONFIG.ghostReplay) { stepGhostReplay(); renderLockedLayers(); }
+
+		requestAnimationFrame(animate);
+	}
+	animate();
+</script>
+
+<!-- CONSTELLATION BACKDROP + CAROUSEL
+
+     Entirely separate from the script above, doesn't modify a
+     single line of the original Omniscope drawing engine. Sits on
+     top of it via capture-phase touch listeners on the same canvas:
+     when Navigate mode is active on the Whole Sky slide, this layer
+     intercepts touches (stopImmediatePropagation) before they reach
+     the original bubble-phase listeners, so panning/zooming/rotating
+     the sky never gets misread as a drawing stroke. Everywhere else
+     (the 13 fixed slides, or Draw mode on Whole Sky), touches pass
+     through untouched and Omniscope's mesh drawing works exactly as
+     it always did.
+
+     Per-constellation framing (ra/dec center + span) was computed
+     directly from the real IAU boundary polygons
+     (constellations.bounds.json), not eyeballed or guessed. -->
+<script>
+(function () {
+	'use strict';
+
+	const SLIDES = [
+		{ abbr: 'Ari', name: 'Aries',       ra: 39.541,   dec: 20.792,  raSpan: 25.77, decSpan: 20.86 },
+		{ abbr: 'Tau', name: 'Taurus',      ra: 70.533,   dec: 14.877,  raSpan: 39.39, decSpan: 32.45 },
+		{ abbr: 'Gem', name: 'Gemini',      ra: 106.059,  dec: 22.6,    raSpan: 31.87, decSpan: 25.58 },
+		{ abbr: 'Cnc', name: 'Cancer',      ra: 129.739,  dec: 19.806,  raSpan: 21.81, decSpan: 26.67 },
+		{ abbr: 'Leo', name: 'Leo',         ra: 160.007,  dec: 13.139,  raSpan: 39.2,  decSpan: 39.66 },
+		{ abbr: 'Vir', name: 'Virgo',       ra: -158.902, dec: -4.158,  raSpan: 53.51, decSpan: 37.04 },
+		{ abbr: 'Lib', name: 'Libra',       ra: -132.01,  dec: -15.235, raSpan: 25.16, decSpan: 29.52 },
+		{ abbr: 'Sco', name: 'Scorpius',    ra: -106.689, dec: -27.032, raSpan: 33.0,  decSpan: 37.47 },
+		{ abbr: 'Sgr', name: 'Sagittarius', ra: -73.515,  dec: -28.477, raSpan: 41.37, decSpan: 33.6 },
+		{ abbr: 'Cap', name: 'Capricornus', ra: -44.268,  dec: -18.023, raSpan: 28.08, decSpan: 19.24 },
+		{ abbr: 'Aqr', name: 'Aquarius',    ra: -25.655,  dec: -10.789, raSpan: 49.53, decSpan: 28.23 },
+		{ abbr: 'Psc', name: 'Pisces',      ra: 7.243,    dec: 13.687,  raSpan: 48.84, decSpan: 39.99 },
+		{ abbr: 'Oph', name: 'Ophiuchus',   ra: -99.077,  dec: -7.912,  raSpan: 41.07, decSpan: 44.6 },
+		{ abbr: null,  name: 'Whole Sky',   free: true }
+	];
+
+	const PALETTES = {
+		spectral: { colors: true },
+		gold:     { colors: false, fill: '#c9a84c' },
+		cyan:     { colors: false, fill: '#00d4e8' },
+		mono:     { colors: false, fill: '#ffffff' }
+	};
+
+	let slideIdx = 0;
+	let showLines = true;
+	let navMode = true; // only meaningful on the free (Whole Sky) slide
+	let skyReady = false;
+	let bgStarPct = 100;   // background star intensity, 0-100
+	let nodePct = 100;     // constellation line/node brightness, 0-100
+	let palette = 'spectral';
+	let transparentBg = false;
+
+	// zoomlevel that comfortably frames a region of the given angular
+	// span, tuned empirically against real renders (see verification
+	// screenshots) rather than derived analytically.
+	function zoomForSpan(span) {
+		return Math.max(1, Math.min(9, 210 / span));
+	}
+
+	function raDegToHours(deg) {
+		let h = deg / 15;
+		if (h < 0) h += 24;
+		return h;
+	}
+
+	function configForSlide(slide) {
+		if (slide.free) {
+			return { projection: 'stereographic', center: [0, 0, 0], zoomlevel: 1 };
+		}
+		return {
+			projection: 'stereographic',
+			center: [raDegToHours(slide.ra), slide.dec, 0],
+			zoomlevel: zoomForSpan(Math.max(slide.raSpan, slide.decSpan))
+		};
+	}
+
+	// Background-star opacity is a direct read of the slider (0-100 -> 0-1).
+	// Constellation-node brightness controls the connect-the-dots line
+	// figure's own opacity/stroke intensity -- d3-celestial doesn't tag
+	// individual stars as "belongs to this constellation's figure" vs
+	// "background," so this is the line pattern's visibility, not a
+	// per-star distinction. Turning background stars down while keeping
+	// node brightness up is exactly the "keep the figure, lose the clutter"
+	// effect that was asked for.
+	function starStyleFor() {
+		const p = PALETTES[palette];
+		const style = { opacity: bgStarPct / 100 };
+		if (!p.colors) style.fill = p.fill;
+		return { colors: p.colors, style };
+	}
+
+	function lineStyleFor() {
+		const t = nodePct / 100;
+		return { stroke: '#cccccc', width: 1.5, opacity: 0.15 + 0.75 * t };
+	}
+
+	function backdropConfig(slide) {
+		const c = configForSlide(slide);
+		const starStyle = starStyleFor();
+		return {
+			projection: c.projection,
+			center: c.center,
+			zoomlevel: c.zoomlevel,
+			background: { fill: transparentBg ? 'rgba(0,0,0,0)' : '#000000', opacity: transparentBg ? 0 : 1 },
+			stars: { show: true, limit: 8, colors: starStyle.colors, designation: false, propername: false,
+				data: 'stars.6.json', size: 7, exponent: -0.15, style: starStyle.style },
+			dsos: { show: true, limit: 9, colors: true, names: false, data: 'dsos.14.json' },
+			constellations: { show: showLines, names: showLines, lines: showLines, bounds: false, lineStyle: lineStyleFor() },
+			mw: { show: !transparentBg },
+			planets: { show: false }
+		};
+	}
+
+	// Every attempt at incrementally updating an existing Celestial
+	// instance (reload()+reproject(), rotate()+apply(), various
+	// orderings) proved unreliable under real testing: apply() silently
+	// drops center/location/follow changes, reproject() mid-tween throws,
+	// and -- the actual root cause, found by watching cfg.center over a
+	// 5-second window -- follow defaults to 'zenith' any time it isn't
+	// pinned in the ONE-TIME initial display() call, which continuously
+	// re-centers on whatever's overhead right now by the real device
+	// clock, silently dragging any slide away from its target a couple
+	// seconds after switching. Full reinit via Celestial.display() again
+	// is the one code path proven to work correctly (it's exactly what
+	// the first-ever successful render used), so that's what every slide
+	// switch does now, not an incremental update.
+	// Verified correct via mapProjection.invert() at the canvas center
+	// pixel, not by eyeballing which constellation label happens to be
+	// nearby (a label's anchor point isn't the same as view center, and
+	// trusting that visually is what cost so much time here) --
+	// reload() correctly re-centers/re-zooms/re-styles as long as
+	// location/follow/disableAnimations travel with every call, not just
+	// the first. follow defaults to 'zenith' (recenters on whatever's
+	// overhead right now, by the real device clock) any time it isn't
+	// pinned, which is what made early attempts look like they were
+	// drifting to the wrong patch of sky a couple seconds after loading.
+	const BASE_CFG = {
+		container: 'celestial-backdrop',
+		datapath: 'lib/celestial/data/',
+		width: 0,
+		transform: 'equatorial',
+		zoomextend: 12,
+		interactive: false, // this layer owns gesture handling, not d3-celestial's own
+		controls: false,
+		form: false,
+		advanced: false,
+		location: false,
+		follow: 'center',
+		disableAnimations: true
+	};
+
+	function initSky() {
+		const cfg = backdropConfig(SLIDES[slideIdx]);
+		Celestial.display(Object.assign({}, BASE_CFG, cfg));
+		skyReady = true;
+		updateUI();
+	}
+
+	function goToSlide(idx) {
+		slideIdx = ((idx % SLIDES.length) + SLIDES.length) % SLIDES.length;
+		if (!skyReady) { initSky(); return; }
+		const cfg = backdropConfig(SLIDES[slideIdx]);
+		Celestial.reload(Object.assign({}, BASE_CFG, cfg));
+		updateUI();
+	}
+
+	function refreshBackdrop() {
+		if (!skyReady) return;
+		goToSlide(slideIdx);
+	}
+
+	function updateUI() {
+		const slide = SLIDES[slideIdx];
+		document.getElementById('celestial-backdrop').classList.toggle('transparent-bg', transparentBg);
+		const linesBtn = document.getElementById('linesToggle');
+		const navBtn = document.getElementById('navModeToggle');
+		linesBtn.hidden = !!slide.free;
+		navBtn.hidden = !slide.free;
+		linesBtn.textContent = 'Lines: ' + (showLines ? 'ON' : 'OFF');
+		linesBtn.classList.toggle('active', showLines);
+		navBtn.textContent = navMode ? '🧭 Navigate' : '✏️ Draw';
+		navBtn.classList.toggle('active', navMode);
+	}
+
+	const constSelect = document.getElementById('constSelect');
+	SLIDES.forEach((s, i) => {
+		const opt = document.createElement('option');
+		opt.value = i;
+		opt.textContent = s.free ? 'Whole Sky (freely navigable)' : s.name + ' (' + s.abbr + ')';
+		constSelect.appendChild(opt);
+	});
+	constSelect.addEventListener('change', () => goToSlide(+constSelect.value));
+
+	const bgStarSlider = document.getElementById('bgStarSlider');
+	bgStarSlider.addEventListener('input', () => {
+		bgStarPct = +bgStarSlider.value;
+		document.getElementById('bgStarSliderVal').textContent = bgStarPct + '%';
+		refreshBackdrop();
+	});
+
+	const nodeSlider = document.getElementById('nodeSlider');
+	nodeSlider.addEventListener('input', () => {
+		nodePct = +nodeSlider.value;
+		document.getElementById('nodeSliderVal').textContent = nodePct + '%';
+		refreshBackdrop();
+	});
+
+	document.getElementById('constPalette').addEventListener('change', e => {
+		palette = e.target.value;
+		refreshBackdrop();
+	});
+
+	document.getElementById('transparentBgToggle').addEventListener('click', e => {
+		transparentBg = !transparentBg;
+		e.target.classList.toggle('active', transparentBg);
+		refreshBackdrop();
+	});
+
+	document.getElementById('linesToggle').addEventListener('click', () => {
+		showLines = !showLines;
+		refreshBackdrop();
+	});
+
+	document.getElementById('navModeToggle').addEventListener('click', () => {
+		navMode = !navMode;
+		updateUI();
+	});
+
+	/* ── Gesture layer for the free Whole Sky slide's Navigate mode ──
+	   1 finger: pan (re-rotate center). 2 fingers: pinch = zoom.
+	   3 fingers: rotate (twist angle between two touches -> orient).
+	   Capture-phase + stopImmediatePropagation so none of this ever
+	   reaches the original drawing listeners while active. ── */
+	const canvas = document.getElementById('artboard');
+	let gestureState = null;
+
+	function touchesActive() {
+		return navMode && SLIDES[slideIdx].free;
+	}
+
+	function centroid(touches) {
+		let x = 0, y = 0;
+		for (const t of touches) { x += t.clientX; y += t.clientY; }
+		return { x: x / touches.length, y: y / touches.length };
+	}
+
+	function dist(a, b) { return Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY); }
+	function angle(a, b) { return Math.atan2(b.clientY - a.clientY, b.clientX - a.clientX); }
+
+	canvas.addEventListener('touchstart', e => {
+		if (!touchesActive()) return;
+		e.stopImmediatePropagation();
+		e.preventDefault();
+		const t = e.touches;
+		const center = Celestial.rotate() || [0, 0, 0];
+		gestureState = {
+			count: t.length,
+			startCenter: center.slice(),
+			startCentroid: centroid(t),
+			startDist: t.length >= 2 ? dist(t[0], t[1]) : null,
+			startAngle: t.length >= 3 ? angle(t[0], t[1]) : null,
+			startScale: Celestial.zoomBy() || 1
+		};
+	}, true);
+
+	canvas.addEventListener('touchmove', e => {
+		if (!touchesActive() || !gestureState) return;
+		e.stopImmediatePropagation();
+		e.preventDefault();
+		const t = e.touches;
+
+		if (t.length === 1) {
+			// pan: screen-pixel delta -> degrees, roughly (small-angle,
+			// good enough for a drag gesture, not meant to be exact)
+			const c = centroid(t);
+			const dx = c.x - gestureState.startCentroid.x;
+			const dy = c.y - gestureState.startCentroid.y;
+			const scale = 0.25 / (Celestial.zoomBy() || 1);
+			const newLong = gestureState.startCenter[0] - dx * scale;
+			const newLat = Math.max(-90, Math.min(90, gestureState.startCenter[1] + dy * scale));
+			Celestial.rotate({ center: [newLong, newLat, gestureState.startCenter[2]] });
+		} else if (t.length === 2) {
+			const d = dist(t[0], t[1]);
+			if (gestureState.startDist) {
+				const factor = d / gestureState.startDist;
+				Celestial.zoomBy(factor);
+				gestureState.startDist = d; // incremental, avoids runaway from one stored baseline
+			}
+		} else if (t.length >= 3) {
+			const a = angle(t[0], t[1]);
+			if (gestureState.startAngle !== null) {
+				const deltaDeg = (a - gestureState.startAngle) * 180 / Math.PI;
+				const cur = Celestial.rotate() || [0, 0, 0];
+				Celestial.rotate({ center: [cur[0], cur[1], cur[2] + deltaDeg] });
+				gestureState.startAngle = a;
+			}
+		}
+	}, true);
+
+	canvas.addEventListener('touchend', e => {
+		if (!touchesActive()) return;
+		e.stopImmediatePropagation();
+		if (e.touches.length === 0) gestureState = null;
+		else {
+			// finger count changed mid-gesture -- re-baseline instead of
+			// carrying over deltas computed for a different touch count
+			const t = e.touches;
+			gestureState = {
+				count: t.length,
+				startCenter: Celestial.rotate() || [0, 0, 0],
+				startCentroid: centroid(t),
+				startDist: t.length >= 2 ? dist(t[0], t[1]) : null,
+				startAngle: t.length >= 3 ? angle(t[0], t[1]) : null,
+				startScale: Celestial.zoomBy() || 1
+			};
+		}
+	}, true);
+
+	document.addEventListener('DOMContentLoaded', () => { initSky(); updateUI(); });
+	if (document.readyState !== 'loading') { initSky(); updateUI(); }
+})();
+</script>
+</body>
+</html>

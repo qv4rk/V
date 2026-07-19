@@ -6,6 +6,7 @@
 <title>Natal Chart — Manifold Atlas</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="lib/celestial/celestial.css">
 <style>
 :root {
   --gold:   #c9a84c;
@@ -57,6 +58,20 @@ form#chart-form input:focus { outline:none; border-color:var(--gold); }
 .field-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
 .field-row3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
 
+.city-search { position:relative; }
+.city-dropdown {
+  position:absolute; left:0; right:0; top:calc(100% + 4px); z-index:20;
+  background:#0a0e1c; border:1px solid var(--dim); border-radius:6px;
+  max-height:260px; overflow-y:auto; box-shadow:0 8px 24px rgba(0,0,0,.5);
+}
+.city-option {
+  padding:8px 10px; font-size:.8rem; cursor:pointer; display:flex; justify-content:space-between; gap:8px;
+}
+.city-option .place { color:var(--ink); }
+.city-option .cc { color:#5f6d85; font-size:.7rem; white-space:nowrap; }
+.city-option:hover, .city-option.active { background:#151b2e; }
+.city-empty { padding:8px 10px; font-size:.75rem; color:#5f6d85; }
+
 #locations { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
 .loc-btn {
   background:#0a0e1c; border:1px solid var(--dim); color:#9fb0c9;
@@ -97,6 +112,18 @@ button.secondary:hover { border-color:var(--cyan); color:var(--cyan); }
   font-size:.72rem; color:#6b7690; line-height:1.5; margin-top:6px;
   border-top:1px solid var(--dim); padding-top:12px;
 }
+
+.sky-head { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:14px; }
+.sky-head h2 { margin-bottom:0; }
+.sky-toggle { display:flex; gap:6px; }
+.sky-mode-btn {
+  background:#0a0e1c; border:1px solid var(--dim); color:#9fb0c9; border-radius:20px;
+  padding:5px 14px; font-family:inherit; font-size:.7rem; letter-spacing:.5px; cursor:pointer;
+}
+.sky-mode-btn:hover { border-color:var(--gold); color:var(--gold2); }
+.sky-mode-btn.active { background:var(--gold); border-color:var(--gold); color:#1a1305; font-weight:700; }
+#celestial-map { background:#000; border-radius:8px; overflow:hidden; }
+#celestial-map svg, #celestial-map canvas { width:100%; height:auto; display:block; }
 </style>
 </head>
 <body>
@@ -131,6 +158,12 @@ button.secondary:hover { border-color:var(--cyan); color:var(--cyan); }
           <div><label for="f-utc">UTC offset</label><input id="f-utc" type="number" step="0.5" required></div>
         </div>
 
+        <label for="f-city">City</label>
+        <div class="city-search">
+          <input id="f-city" type="text" placeholder="Start typing a city…" autocomplete="off">
+          <div id="city-suggestions" class="city-dropdown" hidden></div>
+        </div>
+
         <div class="field-row">
           <div><label for="f-lat">Latitude (N+)</label><input id="f-lat" type="number" step="any" required></div>
           <div><label for="f-lon">Longitude (E+)</label><input id="f-lon" type="number" step="any" required></div>
@@ -146,9 +179,12 @@ button.secondary:hover { border-color:var(--cyan); color:var(--cyan); }
       <p class="note">
         Local time + UTC offset, no timezone/DST lookup — enter the offset that was in effect at birth.
         Positions come from an in-browser ephemeris (astronomy-engine), accurate to a few arcseconds.
-        Placidus houses are computed from scratch and checked against Swiss Ephemeris. Chiron isn't
-        included — it needs its own perturbed-orbit data file, which is exactly why the original
-        pyswisseph script needed a local ephemeris path.
+        Placidus houses are computed from scratch and checked against Swiss Ephemeris. Chiron is
+        computed by numerically integrating a JPL-verified orbit (epoch JD 2461200.5) under
+        Sun + Jupiter + Saturn + Uranus + Neptune gravity — accuracy is best near that epoch and
+        degrades gradually further out; non-gravitational (outgassing) effects aren't modeled.
+        City search covers ~24,000 places worldwide (population 15,000+) bundled with the page —
+        nothing is sent anywhere when you type. City data © <a href="https://www.geonames.org/" target="_blank" rel="noopener">GeoNames.org</a>, CC BY 4.0.
       </p>
     </div>
 
@@ -178,9 +214,28 @@ button.secondary:hover { border-color:var(--cyan); color:var(--cyan); }
     <div id="aspects"></div>
   </div>
 
+  <div class="panel">
+    <div class="sky-head">
+      <h2>Sky View</h2>
+      <div class="sky-toggle">
+        <button type="button" id="sky-mode-whole" class="sky-mode-btn active">Whole Sky</button>
+        <button type="button" id="sky-mode-literal" class="sky-mode-btn">Literal View</button>
+      </div>
+    </div>
+    <div id="celestial-map"></div>
+    <p class="wheel-caption" id="sky-caption">Every chart point plotted against the real stars, ecliptic band running through center. Scroll/drag/pinch to explore.</p>
+    <p class="note">
+      Star field, constellations, and Milky Way band © <a href="https://github.com/ofrohn/d3-celestial" target="_blank" rel="noopener">d3-celestial</a>, Olaf Frohn, BSD-3-Clause.
+    </p>
+  </div>
+
 </div>
 
 <script src="lib/astronomy-engine.min.js"></script>
+<script src="lib/cities.js"></script>
+<script src="lib/celestial/d3.min.js"></script>
+<script src="lib/celestial/d3.geo.projection.min.js"></script>
+<script src="lib/celestial/celestial.min.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
