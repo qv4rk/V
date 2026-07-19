@@ -51,7 +51,8 @@
     { key: 'Neptune', name: 'Neptune', symbol: '♆' },
     { key: 'Pluto',   name: 'Pluto',   symbol: '♇' },
     { key: 'MeanNode',name: 'Mean Node', symbol: '☊' },
-    { key: 'Chiron',  name: 'Chiron',  symbol: '⚷' }
+    { key: 'Chiron',  name: 'Chiron',  symbol: '⚷' },
+    { key: 'GalCenter', name: 'Galactic Center', symbol: 'GC' }
   ];
 
   const ASPECTS = [
@@ -91,6 +92,30 @@
     return norm(125.0445479 - 1934.1362891*T + 0.0020754*T*T + (T*T*T)/467441 - (T*T*T*T)/60616000);
   }
 
+  /* ── Galactic Center (Sgr A*) ──
+     Fixed J2000 equatorial position (Reid & Brunthaler 2004): RA
+     17h45m40.0409s, Dec -29d00m28.118s. Precessed to true-ecliptic-
+     of-date via Rotation_EQJ_ECT (not the J2000-fixed "ECL" frame,
+     which would silently omit ~50"/yr of precession) so it lands in
+     the same tropical frame as everything else. Checked against a
+     fact known independent of this: precessing from 1950 to 2050
+     gives 26.15 deg -> 27.55 deg Sagittarius, a ~1.4 deg shift over
+     100 years matching the ~50.3"/yr general precession rate, and
+     the 2026 value (27.2 deg Sag) matches the commonly cited modern
+     "27 deg Sagittarius" figure for the Galactic Center. ── */
+  const GAL_CENTER_RA_DEG = (17 + 45/60 + 40.0409/3600) * 15;
+  const GAL_CENTER_DEC_DEG = -(29 + 0/60 + 28.118/3600);
+  function galCenterLonLat(date) {
+    const ra = GAL_CENTER_RA_DEG * d2r, dec = GAL_CENTER_DEC_DEG * d2r;
+    const time = A.MakeTime(date);
+    const v = { x: Math.cos(dec)*Math.cos(ra), y: Math.cos(dec)*Math.sin(ra), z: Math.sin(dec), t: time };
+    const rECT = A.RotateVector(A.Rotation_EQJ_ECT(time), v);
+    return {
+      lon: norm(Math.atan2(rECT.y, rECT.x) * r2d),
+      lat: Math.asin(rECT.z) * r2d
+    };
+  }
+
   function eclipticOf(body, date) {
     if (body === 'Sun') {
       const e = A.SunPosition(date);
@@ -103,6 +128,9 @@
     if (body === 'MeanNode') {
       return { lon: meanNodeLon(date), lat: 0 };
     }
+    if (body === 'GalCenter') {
+      return galCenterLonLat(date);
+    }
     const vec = A.GeoVector(body, date, true);
     const e = A.Ecliptic(vec);
     return { lon: norm(e.elon), lat: e.elat };
@@ -110,6 +138,7 @@
 
   function isRetrograde(bodyKey, date) {
     if (bodyKey === 'MeanNode') return true; // the mean node regresses monotonically
+    if (bodyKey === 'GalCenter') return false; // fixed background point, no orbital motion of its own
     const dt = 0.25; // 6 hours, in days
     const t1 = new Date(date.getTime() - dt * 86400000);
     const t2 = new Date(date.getTime() + dt * 86400000);
@@ -402,8 +431,9 @@
     chart.planets.forEach(p => {
       const angle = rot(p.lon);
       const [px, py] = pt(145, angle);
+      const fontSize = p.symbol.length > 1 ? 10 : 16;
       svg += `<circle cx="${px}" cy="${py}" r="14" fill="#0f172a" stroke="#64748b" stroke-width="1.5"/>\n`;
-      svg += `<text x="${px}" y="${py + 5}" text-anchor="middle" fill="#e0f2fe" font-size="16" font-weight="bold">${p.symbol}</text>\n`;
+      svg += `<text x="${px}" y="${py + 4}" text-anchor="middle" fill="#e0f2fe" font-size="${fontSize}" font-weight="bold">${p.symbol}</text>\n`;
     });
 
     svg += '</svg>';
