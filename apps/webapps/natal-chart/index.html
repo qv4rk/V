@@ -57,6 +57,20 @@ form#chart-form input:focus { outline:none; border-color:var(--gold); }
 .field-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
 .field-row3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
 
+.city-search { position:relative; }
+.city-dropdown {
+  position:absolute; left:0; right:0; top:calc(100% + 4px); z-index:20;
+  background:#0a0e1c; border:1px solid var(--dim); border-radius:6px;
+  max-height:260px; overflow-y:auto; box-shadow:0 8px 24px rgba(0,0,0,.5);
+}
+.city-option {
+  padding:8px 10px; font-size:.8rem; cursor:pointer; display:flex; justify-content:space-between; gap:8px;
+}
+.city-option .place { color:var(--ink); }
+.city-option .cc { color:#5f6d85; font-size:.7rem; white-space:nowrap; }
+.city-option:hover, .city-option.active { background:#151b2e; }
+.city-empty { padding:8px 10px; font-size:.75rem; color:#5f6d85; }
+
 #locations { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
 .loc-btn {
   background:#0a0e1c; border:1px solid var(--dim); color:#9fb0c9;
@@ -131,6 +145,12 @@ button.secondary:hover { border-color:var(--cyan); color:var(--cyan); }
           <div><label for="f-utc">UTC offset</label><input id="f-utc" type="number" step="0.5" required></div>
         </div>
 
+        <label for="f-city">City</label>
+        <div class="city-search">
+          <input id="f-city" type="text" placeholder="Start typing a city…" autocomplete="off">
+          <div id="city-suggestions" class="city-dropdown" hidden></div>
+        </div>
+
         <div class="field-row">
           <div><label for="f-lat">Latitude (N+)</label><input id="f-lat" type="number" step="any" required></div>
           <div><label for="f-lon">Longitude (E+)</label><input id="f-lon" type="number" step="any" required></div>
@@ -150,6 +170,8 @@ button.secondary:hover { border-color:var(--cyan); color:var(--cyan); }
         computed by numerically integrating a JPL-verified orbit (epoch JD 2461200.5) under
         Sun + Jupiter + Saturn + Uranus + Neptune gravity — accuracy is best near that epoch and
         degrades gradually further out; non-gravitational (outgassing) effects aren't modeled.
+        City search covers ~24,000 places worldwide (population 15,000+) bundled with the page —
+        nothing is sent anywhere when you type. City data © <a href="https://www.geonames.org/" target="_blank" rel="noopener">GeoNames.org</a>, CC BY 4.0.
       </p>
     </div>
 
@@ -182,6 +204,7 @@ button.secondary:hover { border-color:var(--cyan); color:var(--cyan); }
 </div>
 
 <script src="lib/astronomy-engine.min.js"></script>
+<script src="lib/cities.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

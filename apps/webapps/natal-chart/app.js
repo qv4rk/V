@@ -542,8 +542,89 @@
     });
   }
 
+  /* ── City search: fills lat/lon from a bundled ~24k-city list
+     (lib/cities.js, plain <script> tag so it also works from a
+     double-clicked file:// copy of this app, not just a server —
+     fetch()/XHR of local files is blocked by Chrome's CORS policy
+     for file:// origins, a plain script tag isn't). Nothing is sent
+     anywhere; the whole list already shipped with the page. ── */
+  function wireCitySearch() {
+    const input = $('#f-city');
+    const dropdown = $('#city-suggestions');
+    const cities = window.NATAL_CITIES || [];
+    let results = [];
+    let activeIdx = -1;
+    let debounceTimer = null;
+
+    const isAbbrev = admin => admin && /^[A-Za-z]+$/.test(admin);
+    const displayName = c => isAbbrev(c[1]) ? `${c[0]}, ${c[1]}, ${c[2]}` : `${c[0]}, ${c[2]}`;
+
+    function render() {
+      if (!results.length) {
+        dropdown.innerHTML = '<div class="city-empty">No matches</div>';
+        dropdown.hidden = false;
+        return;
+      }
+      dropdown.innerHTML = results.map((c, i) => `
+        <div class="city-option${i === activeIdx ? ' active' : ''}" data-idx="${i}">
+          <span class="place">${c[0]}</span><span class="cc">${isAbbrev(c[1]) ? c[1] + ', ' : ''}${c[2]}</span>
+        </div>`).join('');
+      dropdown.hidden = false;
+    }
+
+    function selectCity(c) {
+      input.value = displayName(c);
+      $('#f-lat').value = c[3];
+      $('#f-lon').value = c[4];
+      dropdown.hidden = true;
+      results = [];
+      activeIdx = -1;
+    }
+
+    function doSearch(q) {
+      q = q.trim().toLowerCase();
+      if (q.length < 2) { results = []; dropdown.hidden = true; return; }
+      // cities[] is pre-sorted by population descending, so within each
+      // bucket below the biggest matching places already sort first.
+      const starts = [], contains = [];
+      for (const c of cities) {
+        const name = c[0].toLowerCase();
+        if (name.startsWith(q)) starts.push(c);
+        else if (name.includes(q)) contains.push(c);
+      }
+      results = starts.concat(contains).slice(0, 8);
+      activeIdx = -1;
+      render();
+    }
+
+    input.addEventListener('input', () => {
+      clearTimeout(debounceTimer);
+      const q = input.value;
+      debounceTimer = setTimeout(() => doSearch(q), 120);
+    });
+
+    input.addEventListener('keydown', e => {
+      if (dropdown.hidden || !results.length) return;
+      if (e.key === 'ArrowDown') { e.preventDefault(); activeIdx = Math.min(activeIdx + 1, results.length - 1); render(); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); activeIdx = Math.max(activeIdx - 1, 0); render(); }
+      else if (e.key === 'Enter') { e.preventDefault(); selectCity(results[activeIdx >= 0 ? activeIdx : 0]); }
+      else if (e.key === 'Escape') { dropdown.hidden = true; }
+    });
+
+    dropdown.addEventListener('mousedown', e => {
+      const opt = e.target.closest('.city-option');
+      if (!opt) return;
+      e.preventDefault(); // keep the input focused so blur doesn't fire first
+      selectCity(results[+opt.dataset.idx]);
+    });
+
+    input.addEventListener('blur', () => { setTimeout(() => { dropdown.hidden = true; }, 150); });
+    input.addEventListener('focus', () => { if (results.length) dropdown.hidden = false; });
+  }
+
   function init() {
     wireLocations();
+    wireCitySearch();
     wireShare();
     $('#chart-form').addEventListener('submit', e => {
       e.preventDefault();
