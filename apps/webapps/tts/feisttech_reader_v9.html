@@ -90,6 +90,16 @@
         .slider-label { color: var(--secondary); font-size: 0.8rem; min-width: 80px; }
         .slider-val { color: var(--primary); font-size: 0.8rem; min-width: 36px; text-align: right; }
         input[type=range] { flex: 1; accent-color: var(--primary); }
+        input[type=number].slider-num { width: 60px; background: #000; color: var(--primary); border: 1px solid var(--border); border-radius: 4px; padding: 4px 6px; font-family: var(--font-body); font-size: 0.8rem; text-align: right; margin-bottom: 0; flex-shrink: 0; }
+        .char-speed-row { margin-top: -6px; padding-left: 0; }
+        .char-speed-row .voice-mapping-label { font-size: 0.7rem; color: #888; }
+        .char-speed-row input[type=range] { height: 3px; }
+        .spd-reset { background: rgba(255,255,255,0.08); border: 1px solid #333; color: #777; padding: 3px 7px; border-radius: 4px; cursor: pointer; font-size: 0.7rem; flex-shrink: 0; }
+        .spd-reset.overridden { color: var(--primary); border-color: var(--primary); background: rgba(0,243,255,0.1); }
+
+        /* BUTTON STATES */
+        .btn.btn-success { background: #00ff41 !important; color: #000 !important; border-color: #00ff41 !important; }
+        .btn:disabled { opacity: 0.6; cursor: wait; }
 
         /* STATUS */
         #ttsStatus { position: fixed; bottom: 20px; right: 20px; background: rgba(0,0,0,0.9); border: 1px solid var(--primary); padding: 1rem; border-radius: 8px; display: none; z-index: 150; backdrop-filter: blur(10px); max-width: 260px; }
@@ -119,6 +129,7 @@
                 Put <code>[SPKR: Name]</code> on its own line before each dialogue line.<br>
                 Narrator reads everything else automatically.<br><br>
                 <strong>🎙 VOICE CARDS:</strong> attach a card so the voice is assigned automatically — <code>[SPKR: Name|CARD]</code> (e.g. <code>[SPKR: Alice|ARIA]</code>). See <a href="edge-voices.json" target="_blank" style="color:var(--primary)">edge-voices.json</a> for the full card list. Only needed the first time a character speaks — after that the mapping sticks. You can still preview/override any voice manually in the VOICES panel.<br><br>
+                <strong>🎚 PER-CHARACTER SPEED:</strong> every character follows the global SPEED slider by default. Open VOICES to give any character their own speed (some voices just talk faster/slower than others) — a ↺ button resets them back to global.<br><br>
                 <strong>⌨️ SHORTCUTS:</strong> <span class="kbd">Space</span> play/pause &nbsp; <span class="kbd">→</span> next &nbsp; <span class="kbd">←</span> prev
             </div>
             <div class="upload-row">
@@ -153,8 +164,8 @@ How are you?"></textarea>
                 <div style="display:flex; gap:0.5rem;">
                     <button class="btn btn-home" onclick="returnHome()">🏠</button>
                     <button class="btn" onclick="togglePanel()">🎙 VOICES</button>
-                    <button class="btn" onclick="saveToDisk()">💾 EXPORT</button>
-                    <button class="btn" onclick="exportAllAudio()">🎵 SAVE AUDIO</button>
+                    <button class="btn" id="exportBtn" onclick="saveToDisk()">💾 EXPORT</button>
+                    <button class="btn" id="saveAudioBtn" onclick="exportAllAudio()">🎵 SAVE AUDIO</button>
                 </div>
                 <select id="chapterSelect" onchange="jumpToChapter(this.value)" style="max-width: 200px; background:rgba(0,0,0,0.5); border:1px solid var(--border);"></select>
                 <div style="display:flex; gap:0.25rem;">
@@ -181,7 +192,7 @@ How are you?"></textarea>
     <div class="slider-row">
         <span class="slider-label">SPEED</span>
         <input type="range" min="0.5" max="3.0" step="0.1" value="1" id="speedSlider" oninput="onSpeedChange(this.value)">
-        <span class="slider-val" id="speedVal">1.0x</span>
+        <input type="number" min="0.5" max="3.0" step="0.05" value="1.0" id="speedNum" class="slider-num" onchange="onSpeedChange(this.value)">
     </div>
     <div class="slider-row">
         <span class="slider-label">VOLUME</span>
@@ -210,6 +221,8 @@ How are you?"></textarea>
     // --- STATE ---
     let voices = [], segments = [], currentSegmentIndex = 0;
     let voiceMapping = { narrator: null };
+    let speedMapping = {}; // per-character speed override; unset = follow settings.speed
+    let bookTitle = null;
     let detectedSpkrs = new Set(['narrator']);
     let settings = { speed: 1.0, volume: 1.0, useBrowserTTS: false, voicesLoaded: false };
     const audioPlayer = document.getElementById('audioPlayer');
@@ -229,6 +242,49 @@ How are you?"></textarea>
         if(!token) return null;
         const t = token.trim();
         return cardMap[t.toUpperCase()] || t; // fall back to a literal ShortName if pasted directly
+    }
+
+    // --- PER-CHARACTER SPEED (falls back to the global slider) ---
+    function getSpeedFor(spkr) {
+        const v = speedMapping[spkr];
+        return (v === undefined || v === null || isNaN(v)) ? settings.speed : v;
+    }
+
+    // --- STRIP MARKDOWN NOISE BEFORE SPEECH (so TTS doesn't say "asterisk"/"underscore") ---
+    function cleanForSpeech(text) {
+        return String(text || '')
+            .replace(/\*\*\*(.+?)\*\*\*/g, '$1')
+            .replace(/\*\*(.+?)\*\*/g, '$1')
+            .replace(/\*(.+?)\*/g, '$1')
+            .replace(/___(.+?)___/g, '$1')
+            .replace(/__(.+?)__/g, '$1')
+            .replace(/\b_(.+?)_\b/g, '$1')
+            .replace(/`{1,3}([^`]*)`{1,3}/g, '$1')
+            .replace(/[*_~`]/g, '')
+            .trim();
+    }
+
+    // --- TITLE DETECTION (for export filenames) ---
+    function deriveHeadingTitle(text) {
+        const firstLine = (String(text||'').split('\n').map(l => l.trim()).find(l => l.length)) || '';
+        const m = firstLine.match(/^#{1,2}\s+(.+)/);
+        return m ? m[1].trim() : null;
+    }
+
+    function deriveTitle(text, filename) {
+        const heading = deriveHeadingTitle(text);
+        if(heading) return heading.slice(0, 80);
+        if(filename) return filename.replace(/\.[^.]+$/, '');
+        const words = String(text||'').trim().replace(/[#*_`]/g, '').split(/\s+/).slice(0, 8).join(' ');
+        return words || 'Untitled';
+    }
+
+    function slugTitle(t) {
+        return (t || 'Untitled').replace(/[^a-z0-9]+/gi, '_').replace(/^_+|_+$/g, '').slice(0, 40) || 'Untitled';
+    }
+
+    function dateStamp() {
+        return new Date().toISOString().slice(0, 10);
     }
 
     // --- BACKGROUND ---
@@ -449,8 +505,8 @@ How are you?"></textarea>
     async function playWithEdgeTTS(seg) {
         const voice = voiceMapping[seg.spkr] || voiceMapping.narrator || voices[0]?.ShortName;
         const tts = new window.EdgeTTS({
-            voice, text: seg.text,
-            rate: (settings.speed - 1.0) * 100 + '%',
+            voice, text: cleanForSpeech(seg.text),
+            rate: (getSpeedFor(seg.spkr) - 1.0) * 100 + '%',
             pitch: '+0Hz',
             volume: `+${Math.round((settings.volume - 1) * 100)}%`
         });
@@ -476,11 +532,11 @@ How are you?"></textarea>
     async function playWithBrowserTTS(seg) {
         return new Promise((resolve, reject) => {
             if(speechSynthesis.speaking || speechSynthesis.pending) speechSynthesis.cancel();
-            const utterance = new SpeechSynthesisUtterance(seg.text);
+            const utterance = new SpeechSynthesisUtterance(cleanForSpeech(seg.text));
             const voiceName = voiceMapping[seg.spkr] || voiceMapping.narrator;
             const selectedVoice = speechSynthesis.getVoices().find(v => v.name === voiceName);
             if(selectedVoice) utterance.voice = selectedVoice;
-            utterance.rate = parseFloat(settings.speed);
+            utterance.rate = getSpeedFor(seg.spkr);
             utterance.volume = parseFloat(settings.volume);
             utterance.onstart = () => {
                 nativeTTSActive = true;
@@ -517,12 +573,12 @@ How are you?"></textarea>
             const u = new SpeechSynthesisUtterance(previewText);
             const v = speechSynthesis.getVoices().find(v => v.name === voiceName);
             if(v) u.voice = v;
-            u.rate = settings.speed; u.volume = settings.volume;
+            u.rate = getSpeedFor(spkr); u.volume = settings.volume;
             speechSynthesis.cancel();
             speechSynthesis.speak(u);
         } else {
             try {
-                const tts = new window.EdgeTTS({ voice: voiceName, text: previewText, rate: (settings.speed-1)*100+'%', pitch:'+0Hz', volume:'+0%' });
+                const tts = new window.EdgeTTS({ voice: voiceName, text: previewText, rate: (getSpeedFor(spkr)-1)*100+'%', pitch:'+0Hz', volume:'+0%' });
                 const result = await tts.synthesize();
                 const blob = new Blob([result.audio], { type:'audio/mp3' });
                 const url = URL.createObjectURL(blob);
@@ -536,8 +592,21 @@ How are you?"></textarea>
 
     // --- CONTROLS ---
     function onSpeedChange(v) {
-        settings.speed = parseFloat(v);
-        document.getElementById('speedVal').innerText = parseFloat(v).toFixed(1) + 'x';
+        let n = parseFloat(v);
+        if(isNaN(n)) n = 1.0;
+        n = Math.min(3.0, Math.max(0.5, n));
+        settings.speed = n;
+        document.getElementById('speedSlider').value = n;
+        document.getElementById('speedNum').value = n.toFixed(2);
+        // Characters without their own override track the global slider live
+        document.querySelectorAll('.char-speed-row').forEach(row => {
+            if(row.dataset.override !== '1') {
+                const s = row.querySelector('.char-speed-slider');
+                const num = row.querySelector('.char-speed-num');
+                if(s) s.value = n;
+                if(num) num.value = n.toFixed(2);
+            }
+        });
         saveState();
     }
 
@@ -599,12 +668,16 @@ How are you?"></textarea>
         const p = localStorage.getItem('feist_progress');
         const sp = localStorage.getItem('feist_spkrs');
         const vm = localStorage.getItem('feist_voiceMapping');
+        const sm = localStorage.getItem('feist_speedMapping');
+        const t = localStorage.getItem('feist_title');
         if(s) settings = {...settings, ...JSON.parse(s)};
         if(sp) detectedSpkrs = new Set(JSON.parse(sp));
         if(vm) voiceMapping = JSON.parse(vm);
+        if(sm) speedMapping = JSON.parse(sm);
+        if(t) bookTitle = t;
         // Restore sliders
         document.getElementById('speedSlider').value = settings.speed;
-        document.getElementById('speedVal').innerText = parseFloat(settings.speed).toFixed(1)+'x';
+        document.getElementById('speedNum').value = parseFloat(settings.speed).toFixed(2);
         document.getElementById('volumeSlider').value = settings.volume || 1;
         document.getElementById('volumeVal').innerText = Math.round((settings.volume||1)*100)+'%';
         initReader(c, true);
@@ -619,6 +692,8 @@ How are you?"></textarea>
         localStorage.setItem('feist_progress', currentSegmentIndex);
         localStorage.setItem('feist_spkrs', JSON.stringify([...detectedSpkrs]));
         localStorage.setItem('feist_voiceMapping', JSON.stringify(voiceMapping));
+        localStorage.setItem('feist_speedMapping', JSON.stringify(speedMapping));
+        localStorage.setItem('feist_title', bookTitle || '');
         try { localStorage.setItem('feist_content', document.getElementById('storyContainer').innerHTML); } catch(e) {}
     }
 
@@ -626,6 +701,7 @@ How are you?"></textarea>
     function loadFromPaste() {
         const text = document.getElementById('pasteArea').value.trim();
         if(!text) { alert('Paste some content first!'); return; }
+        bookTitle = deriveTitle(text, null);
         detectSpkrs(text);
         const parsed = parseTextWithSpkrs(text);
         const html = renderParsedSegments(parsed);
@@ -636,6 +712,7 @@ How are you?"></textarea>
         const r = new FileReader();
         r.onload = e => {
             const text = e.target.result;
+            bookTitle = deriveTitle(text, input.files[0].name);
             detectSpkrs(text);
             const parsed = parseTextWithSpkrs(text);
             const html = renderParsedSegments(parsed);
@@ -655,6 +732,7 @@ How are you?"></textarea>
                 const tc = await page.getTextContent();
                 txt += tc.items.map(it=>it.str).join(' ') + "\n\n";
             }
+            bookTitle = deriveTitle(txt, input.files[0].name);
             detectSpkrs(txt);
             const parsed = parseTextWithSpkrs(txt);
             const html = renderParsedSegments(parsed);
@@ -693,7 +771,10 @@ How are you?"></textarea>
         document.querySelectorAll('.reading').forEach(e => e.classList.remove('reading'));
         if(seg && seg.element) {
             seg.element.classList.add('reading');
-            seg.element.scrollIntoView({ behavior:'smooth', block:'center' });
+            // Don't yank the page while the VOICES panel is open — it jumps the
+            // screen out from under you mid-selection (e.g. picking a voice).
+            const panelOpen = document.getElementById('settingsPanel').classList.contains('open');
+            if(!panelOpen) seg.element.scrollIntoView({ behavior:'smooth', block:'center' });
         }
         updateProgress();
     }
@@ -762,6 +843,63 @@ How are you?"></textarea>
             item.appendChild(label);
             item.appendChild(selectWrap);
             mappingDiv.appendChild(item);
+
+            // Per-character speed override (defaults to following the global slider)
+            const hasOverride = speedMapping[spkr] !== undefined && speedMapping[spkr] !== null;
+            const speedRow = document.createElement('div');
+            speedRow.className = 'voice-mapping-item char-speed-row';
+            speedRow.dataset.override = hasOverride ? '1' : '0';
+
+            const spdLabel = document.createElement('div');
+            spdLabel.className = 'voice-mapping-label';
+            spdLabel.innerText = '↳ speed';
+
+            const spdWrap = document.createElement('div');
+            spdWrap.style.cssText = 'flex:1; display:flex; gap:6px; align-items:center;';
+
+            const startVal = hasOverride ? speedMapping[spkr] : settings.speed;
+            const spdSlider = document.createElement('input');
+            spdSlider.type = 'range'; spdSlider.min = '0.5'; spdSlider.max = '3.0'; spdSlider.step = '0.1';
+            spdSlider.className = 'char-speed-slider';
+            spdSlider.value = startVal;
+
+            const spdNum = document.createElement('input');
+            spdNum.type = 'number'; spdNum.min = '0.5'; spdNum.max = '3.0'; spdNum.step = '0.05';
+            spdNum.className = 'slider-num char-speed-num';
+            spdNum.value = startVal.toFixed(2);
+
+            const spdReset = document.createElement('button');
+            spdReset.className = 'spd-reset' + (hasOverride ? ' overridden' : '');
+            spdReset.innerText = '↺';
+            spdReset.title = 'Follow global speed';
+
+            const applyOverride = (val) => {
+                let n = parseFloat(val);
+                if(isNaN(n)) return;
+                n = Math.min(3.0, Math.max(0.5, n));
+                speedMapping[spkr] = n;
+                speedRow.dataset.override = '1';
+                spdReset.classList.add('overridden');
+                spdSlider.value = n; spdNum.value = n.toFixed(2);
+                saveState();
+            };
+            spdSlider.oninput = (e) => applyOverride(e.target.value);
+            spdNum.onchange = (e) => applyOverride(e.target.value);
+            spdReset.onclick = () => {
+                delete speedMapping[spkr];
+                speedRow.dataset.override = '0';
+                spdReset.classList.remove('overridden');
+                spdSlider.value = settings.speed;
+                spdNum.value = settings.speed.toFixed(2);
+                saveState();
+            };
+
+            spdWrap.appendChild(spdSlider);
+            spdWrap.appendChild(spdNum);
+            spdWrap.appendChild(spdReset);
+            speedRow.appendChild(spdLabel);
+            speedRow.appendChild(spdWrap);
+            mappingDiv.appendChild(speedRow);
         });
 
         container.appendChild(mappingDiv);
@@ -801,6 +939,12 @@ How are you?"></textarea>
     }
 
     function saveToDisk() {
+        const btn = document.getElementById('exportBtn');
+        if(btn.disabled) return; // guards against rapid double-clicks producing duplicate downloads
+        btn.disabled = true;
+        const original = btn.innerText;
+        btn.innerText = '⏳ SAVING...';
+
         const cleanMapping = { narrator: voiceMapping.narrator };
         detectedSpkrs.forEach(s => { if(voiceMapping[s]) cleanMapping[s] = voiceMapping[s]; });
         const stateScript = document.createElement('script');
@@ -809,18 +953,24 @@ How are you?"></textarea>
         const old = document.getElementById('embedded-state');
         if(old) old.remove();
         document.body.appendChild(stateScript);
-        const now = new Date();
-        const ts = now.toISOString().slice(0,16).replace(/[:T]/g,'-');
-        const fn = `FeistTech_${ts}.html`;
+        const fn = `${slugTitle(bookTitle)}_${dateStamp()}.html`;
         const blob = new Blob([document.documentElement.outerHTML], {type:'text/html'});
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a'); a.href=url; a.download=fn; a.click();
         URL.revokeObjectURL(url);
-        showTTSStatus('💾 Saved: '+fn, 2000);
+
+        // Unmistakable confirmation the download actually fired, so there's no
+        // guessing (and no re-clicking) whether it registered.
+        btn.innerText = '✅ SAVED!';
+        btn.classList.add('btn-success');
+        showTTSStatus('💾 Downloaded: '+fn, 3000);
+        setTimeout(() => { btn.innerText = original; btn.classList.remove('btn-success'); btn.disabled = false; }, 2200);
     }
 
     // --- AUDIO EXPORT (one file per line, numbered + labeled, zipped) ---
     async function exportAllAudio() {
+        const btn = document.getElementById('saveAudioBtn');
+        if(btn.disabled) return; // guards against rapid double-clicks producing duplicate downloads
         if(settings.useBrowserTTS) {
             alert('Audio export needs Edge-TTS (Browser TTS can\'t produce a saveable file). Click "⚡ TRY EDGE-TTS" in the VOICES panel, then try again.');
             return;
@@ -828,48 +978,61 @@ How are you?"></textarea>
         if(!segments.length) { alert('Load a manuscript first.'); return; }
         if(!window.JSZip) { alert('ZIP library failed to load — check your connection and reload the page.'); return; }
 
+        btn.disabled = true;
+        const original = btn.innerText;
+
         const zip = new JSZip();
         const total = segments.length;
         const pad = String(total).length;
         const fileNames = [];
         let failures = 0;
 
-        for(let i = 0; i < total; i++) {
-            const seg = segments[i];
-            showTTSStatus(`🎵 Rendering ${i+1} / ${total}...`, 0);
-            const voice = voiceMapping[seg.spkr] || voiceMapping.narrator || voices[0]?.ShortName;
-            const safeSpkr = (seg.spkr || 'narrator').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'narrator';
-            const num = String(i + 1).padStart(pad, '0');
-            const fname = `${num}_${safeSpkr}.mp3`;
-            try {
-                const tts = new window.EdgeTTS({
-                    voice, text: seg.text,
-                    rate: (settings.speed - 1.0) * 100 + '%',
-                    pitch: '+0Hz',
-                    volume: `+${Math.round((settings.volume - 1) * 100)}%`
-                });
-                const result = await tts.synthesize();
-                zip.file(fname, result.audio);
-                fileNames.push(fname);
-            } catch(e) {
-                console.error(`Audio export failed on segment ${num} (${seg.spkr})`, e);
-                failures++;
+        try {
+            for(let i = 0; i < total; i++) {
+                const seg = segments[i];
+                btn.innerText = `⏳ ${i+1}/${total}`;
+                showTTSStatus(`🎵 Rendering ${i+1} / ${total}...`, 0);
+                const voice = voiceMapping[seg.spkr] || voiceMapping.narrator || voices[0]?.ShortName;
+                const safeSpkr = (seg.spkr || 'narrator').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'narrator';
+                const num = String(i + 1).padStart(pad, '0');
+                const fname = `${num}_${safeSpkr}.mp3`;
+                try {
+                    const tts = new window.EdgeTTS({
+                        voice, text: cleanForSpeech(seg.text),
+                        rate: (getSpeedFor(seg.spkr) - 1.0) * 100 + '%',
+                        pitch: '+0Hz',
+                        volume: `+${Math.round((settings.volume - 1) * 100)}%`
+                    });
+                    const result = await tts.synthesize();
+                    zip.file(fname, result.audio);
+                    fileNames.push(fname);
+                } catch(e) {
+                    console.error(`Audio export failed on segment ${num} (${seg.spkr})`, e);
+                    failures++;
+                }
             }
+
+            // ffmpeg concat-demuxer list, in exact reading order, so stitching
+            // is a single command: ffmpeg -f concat -safe 0 -i filelist.txt -c copy full.mp3
+            const concatList = fileNames.map(f => `file '${f}'`).join('\n');
+            zip.file('filelist.txt', concatList);
+
+            btn.innerText = '📦 Zipping...';
+            showTTSStatus('📦 Zipping...', 0);
+            const blob = await zip.generateAsync({ type: 'blob' });
+            const fn = `${slugTitle(bookTitle)}_Audio_${dateStamp()}.zip`;
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a'); a.href = url; a.download = fn; a.click();
+            URL.revokeObjectURL(url);
+
+            // Unmistakable confirmation the download actually fired, so there's no
+            // guessing (and no re-clicking) whether it registered.
+            btn.innerText = '✅ SAVED!';
+            btn.classList.add('btn-success');
+            showTTSStatus(failures ? `⚠ Downloaded ${fn} (${fileNames.length}/${total}, ${failures} failed)` : `✅ Downloaded: ${fn}`, 4000);
+        } finally {
+            setTimeout(() => { btn.innerText = original; btn.classList.remove('btn-success'); btn.disabled = false; }, 2500);
         }
-
-        // ffmpeg concat-demuxer list, in exact reading order, so stitching
-        // is a single command: ffmpeg -f concat -safe 0 -i filelist.txt -c copy full.mp3
-        const concatList = fileNames.map(f => `file '${f}'`).join('\n');
-        zip.file('filelist.txt', concatList);
-
-        showTTSStatus('📦 Zipping...', 0);
-        const blob = await zip.generateAsync({ type: 'blob' });
-        const now = new Date();
-        const ts = now.toISOString().slice(0,16).replace(/[:T]/g,'-');
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a'); a.href = url; a.download = `FeistTech_Audio_${ts}.zip`; a.click();
-        URL.revokeObjectURL(url);
-        showTTSStatus(failures ? `⚠ Exported ${fileNames.length}/${total} (${failures} failed)` : `✅ Exported ${fileNames.length} audio files`, 4000);
     }
 </script>
 
