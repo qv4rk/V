@@ -89,6 +89,15 @@
     return log.reduce((sum, i) => sum + (i.met || 0), 0);
   }
 
+  // Rough guesses stay IN the total rather than being silently excluded
+  // — leaving out an unknown number would make the total look lower
+  // than reality, which is more dangerous for a restriction than an
+  // honestly-flagged overestimate. The flag just makes sure the big
+  // number never looks more certain than it is.
+  function hasEstimatedContribution() {
+    return log.some(i => i.metEstimated && i.met);
+  }
+
   function statusFor(total) {
     if (dailyCap <= 0) return 'safe';
     const pct = total / dailyCap;
@@ -121,6 +130,9 @@
 
     document.getElementById('bigSubline').textContent =
       `${fmt(total)} mg used today · ${fmt(remaining)} mg still safe to eat`;
+
+    const warn = document.getElementById('estimateWarning');
+    if (warn) warn.hidden = !hasEstimatedContribution();
 
     document.getElementById('btnUndo').disabled = log.length === 0;
   }
@@ -324,7 +336,9 @@
         const n = food.nutrients;
         const hasMet = n.methionine !== null && n.methionine !== undefined;
         const estMet = hasMet ? null : estimateMethionine(n.protein, food.description);
-        const metText = hasMet ? fmt(n.methionine) + ' mg' : (estMet !== null ? '~' + fmt(estMet) + ' mg (estimated)' : 'not available');
+        const metText = hasMet
+          ? fmt(n.methionine) + ' mg'
+          : (estMet !== null ? '<span class="metEstimated">⚠️ ~' + fmt(estMet) + ' mg — rough guess, not measured</span>' : 'not available');
         const row = document.createElement('div');
         row.className = 'resultItem';
         row.innerHTML = `
@@ -351,7 +365,7 @@
     log.forEach(item => {
       const row = document.createElement('div');
       row.className = 'itemRow';
-      const metText = item.met === null ? '?' : (item.metEstimated ? '~' + fmt(item.met) : fmt(item.met));
+      const metText = item.met === null ? '?' : (item.metEstimated ? '<span class="metEstimated">⚠️ ~' + fmt(item.met) + '</span>' : fmt(item.met));
       row.innerHTML = `
         <span>
           <span class="iName">${item.name}</span><br>
@@ -445,7 +459,7 @@
     lines.push('');
     if (log.length) {
       log.forEach(item => {
-        const metText = item.met === null ? '?' : (item.metEstimated ? '~' + fmt(item.met) : fmt(item.met));
+        const metText = item.met === null ? '?' : (item.metEstimated ? '~' + fmt(item.met) + ' (unverified guess, not measured)' : fmt(item.met));
         lines.push(`- ${item.name} (${item.grams != null ? fmt(item.grams) + 'g' : 'n/a'}): ${metText} mg`);
       });
     } else {
@@ -645,10 +659,32 @@
         return;
       }
       reader.hidden = false;
-      html5Qrcode = new Html5Qrcode('scanReader');
+      // Retail products are 1D barcodes (UPC/EAN), not QR codes — without
+      // an explicit format list the decoder defaults to a narrower set
+      // and mostly only catches whichever product has the cleanest,
+      // largest barcode. Listing every common retail format, and using a
+      // wide/short scan box that actually matches a UPC/EAN's shape
+      // (default was a near-square box sized for QR codes), makes
+      // ordinary grocery barcodes decode reliably instead of by luck.
+      const scanConfig = (typeof Html5QrcodeSupportedFormats !== 'undefined') ? {
+        formatsToSupport: [
+          Html5QrcodeSupportedFormats.EAN_13,
+          Html5QrcodeSupportedFormats.EAN_8,
+          Html5QrcodeSupportedFormats.UPC_A,
+          Html5QrcodeSupportedFormats.UPC_E,
+          Html5QrcodeSupportedFormats.CODE_128,
+          Html5QrcodeSupportedFormats.CODE_39,
+          Html5QrcodeSupportedFormats.CODABAR,
+          Html5QrcodeSupportedFormats.ITF,
+          Html5QrcodeSupportedFormats.QR_CODE
+        ],
+        useBarCodeDetectorIfSupported: true,
+        verbose: false
+      } : undefined;
+      html5Qrcode = new Html5Qrcode('scanReader', scanConfig);
       html5Qrcode.start(
         { facingMode: 'environment' },
-        { fps: 10, qrbox: { width: 250, height: 150 } },
+        { fps: 10, qrbox: { width: 280, height: 120 } },
         decodedText => {
           html5Qrcode.stop().catch(() => {});
           reader.hidden = true;
@@ -700,6 +736,15 @@
     document.getElementById('searchForm').addEventListener('submit', e => {
       e.preventDefault();
       runSearch();
+    });
+    // Live search-as-you-type: results start populating a moment after
+    // typing stops, instead of requiring an explicit Go tap first.
+    let searchDebounceTimer = null;
+    document.getElementById('searchInput').addEventListener('input', () => {
+      clearTimeout(searchDebounceTimer);
+      const val = document.getElementById('searchInput').value.trim();
+      if (val.length < 2) return;
+      searchDebounceTimer = setTimeout(() => runSearch(), 400);
     });
 
     document.getElementById('btnMethioYes').addEventListener('click', () => setMethio(true));
