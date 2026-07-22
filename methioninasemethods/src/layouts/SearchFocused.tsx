@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Search, ExternalLink, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useAppState } from '../store';
 import { FOODS, QUICK_ADD_FOODS, searchFoods, getFoodById } from '../foods';

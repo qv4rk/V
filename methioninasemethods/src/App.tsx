@@ -14,7 +14,7 @@ import { Settings } from 'lucide-react';
 
 export default function App() {
   const [layout, setLayout] = useState<LayoutMode>('search-focused');
-  const [showSettings, setShowSettings] = useState(false);
+  const [, setShowSettings] = useState(false);
 
   const state = useAppState();
 

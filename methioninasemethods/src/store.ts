@@ -1,6 +1,5 @@
 import { useState, useCallback } from 'react';
 import { LogEntry, AppSettings } from './types';
-import { getFoodById } from './foods';
 
 export function useAppState() {
   const [logs, setLogs] = useState<LogEntry[]>([]);
