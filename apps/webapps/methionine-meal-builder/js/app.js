@@ -123,7 +123,7 @@
           } catch (e) {}
         }
         status.textContent = results.length
-          ? `${results.length} result${results.length === 1 ? '' : 's'}${usedFallback ? ' (from Open Food Facts — methionine will be estimated, not measured)' : ''}`
+          ? `${results.length} result${results.length === 1 ? '' : 's'}${usedFallback ? ' (from Open Food Facts — methionine will be a rough guess, not measured)' : ''}`
           : `Barcode ${raw} isn't in USDA or Open Food Facts — try searching by name instead.`;
         renderResults(results, null, true);
       } else {
@@ -232,7 +232,7 @@
         carbs <strong>${fmt(n.carbs)}</strong>g ·
         methionine ${
           hasMet ? '<strong>' + fmt(n.methionine) + '</strong> mg'
-            : (estMet !== null ? '<span class="metEstimated">~' + fmt(estMet) + ' mg (estimated)</span>' : '<span class="metUnknown">not available</span>')
+            : (estMet !== null ? '<span class="metEstimated">⚠️ ~' + fmt(estMet) + ' mg — rough guess, not measured</span>' : '<span class="metUnknown">not available</span>')
         }
       </span>
       <span class="addRow">
@@ -318,7 +318,7 @@
       const tr = document.createElement('tr');
       const metCell = item.met === null
         ? '<span class="metUnknown">?</span>'
-        : (item.metEstimated ? '<span class="metEstimated">~' + fmt(item.met) + '</span>' : fmt(item.met));
+        : (item.metEstimated ? '<span class="metEstimated" title="Rough guess, not lab-measured">⚠️ ~' + fmt(item.met) + '</span>' : fmt(item.met));
       const proCell = (item.protein === null || item.protein === undefined) ? '<span class="metUnknown">?</span>' : fmt(item.protein);
       tr.innerHTML = `
         <td>${item.name}</td>
@@ -341,9 +341,10 @@
       fill.style.width = pct + '%';
       fill.classList.toggle('over', totalMet > dailyCap);
       let label = `${fmt(totalMet)} / ${fmt(dailyCap)} mg`;
-      if (hasEstimated) label += ' (* includes estimated values)';
+      if (hasEstimated) label += ' ⚠️ includes rough guesses (marked ~) that are not lab-measured';
       if (hasUnknownMet) label += ' (some items have no methionine data)';
       document.getElementById('metBarLabel').textContent = label;
+      document.getElementById('metBarLabel').classList.toggle('warnLabel', hasEstimated);
 
       const proPct = proteinFloor > 0 ? Math.min(100, (totalPro / proteinFloor) * 100) : 100;
       const proFill = document.getElementById('proBarFill');
@@ -554,10 +555,32 @@
         return;
       }
       reader.hidden = false;
-      html5Qrcode = new Html5Qrcode('scanReader');
+      // Retail products are 1D barcodes (UPC/EAN), not QR codes — without
+      // an explicit format list the decoder defaults to a narrower set
+      // and mostly only catches whichever product has the cleanest,
+      // largest barcode. Listing every common retail format, and using a
+      // wide/short scan box that actually matches a UPC/EAN's shape
+      // (default was a near-square box sized for QR codes), makes
+      // ordinary grocery barcodes decode reliably instead of by luck.
+      const scanConfig = (typeof Html5QrcodeSupportedFormats !== 'undefined') ? {
+        formatsToSupport: [
+          Html5QrcodeSupportedFormats.EAN_13,
+          Html5QrcodeSupportedFormats.EAN_8,
+          Html5QrcodeSupportedFormats.UPC_A,
+          Html5QrcodeSupportedFormats.UPC_E,
+          Html5QrcodeSupportedFormats.CODE_128,
+          Html5QrcodeSupportedFormats.CODE_39,
+          Html5QrcodeSupportedFormats.CODABAR,
+          Html5QrcodeSupportedFormats.ITF,
+          Html5QrcodeSupportedFormats.QR_CODE
+        ],
+        useBarCodeDetectorIfSupported: true,
+        verbose: false
+      } : undefined;
+      html5Qrcode = new Html5Qrcode('scanReader', scanConfig);
       html5Qrcode.start(
         { facingMode: 'environment' },
-        { fps: 10, qrbox: { width: 250, height: 150 } },
+        { fps: 10, qrbox: { width: 280, height: 120 } },
         decodedText => {
           html5Qrcode.stop().catch(() => {});
           reader.hidden = true;
@@ -614,6 +637,15 @@
     document.getElementById('btnSearch').addEventListener('click', () => runSearch());
     document.getElementById('searchInput').addEventListener('keydown', e => {
       if (e.key === 'Enter') runSearch();
+    });
+    // Live search-as-you-type: results start populating a moment after
+    // typing stops, instead of requiring an explicit Search tap first.
+    let searchDebounceTimer = null;
+    document.getElementById('searchInput').addEventListener('input', () => {
+      clearTimeout(searchDebounceTimer);
+      const val = document.getElementById('searchInput').value.trim();
+      if (val.length < 2) return;
+      searchDebounceTimer = setTimeout(() => runSearch(), 400);
     });
     document.getElementById('dailyCapInput').addEventListener('input', e => {
       const v = parseFloat(e.target.value);
