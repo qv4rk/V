@@ -213,8 +213,8 @@
     return wrap;
   }
 
-  // Rough food-group -> emoji mapping, used only as a card icon (USDA FDC
-  // has no photography in its API) — purely decorative, never a data value.
+  // Rough food-group -> emoji mapping, used as a fallback badge if a card's
+  // photo fails to load — purely decorative, never a data value.
   const CARD_ICONS = [
     [/chicken|turkey|duck|poultry/i, '🍗'], [/beef|steak|pork|lamb|veal|ham|bacon|sausage/i, '🥩'],
     [/fish|salmon|tuna|shrimp|seafood/i, '🐟'], [/egg/i, '🥚'], [/rice/i, '🍚'],
@@ -227,6 +227,64 @@
   function iconFor(description) {
     const match = CARD_ICONS.find(([re]) => re.test(description || ''));
     return match ? match[1] : '🍽️';
+  }
+
+  // Large, real representative photos for each card — this is the single
+  // most useful element for low-vision/cataract users, who can recognize a
+  // food from a big picture far faster than from small text. These are
+  // generic stock photos of the food GROUP (e.g. any banana), not a claim
+  // about the specific USDA entry, so they carry no factual/nutrition risk
+  // the way a typed-in number would. If a photo fails to load, the onerror
+  // fallback below swaps in a large, high-contrast text-on-color card
+  // instead of a tiny icon, so there is always something large to look at.
+  const CARD_PHOTOS = [
+    [/chicken|turkey|duck|poultry/i, 'https://images.unsplash.com/photo-1604503468506-a8da13d82586?w=600&q=80'],
+    [/beef|steak/i, 'https://images.unsplash.com/photo-1607116667981-27e30c8c8a3f?w=600&q=80'],
+    [/pork|ham|bacon|sausage/i, 'https://images.unsplash.com/photo-1602470520998-f4a52199a3d6?w=600&q=80'],
+    [/salmon/i, 'https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=600&q=80'],
+    [/fish|tuna|shrimp|seafood/i, 'https://images.unsplash.com/photo-1544943910-4c1dc44aab44?w=600&q=80'],
+    [/egg/i, 'https://images.unsplash.com/photo-1582722872450-11adadc1d407?w=600&q=80'],
+    [/rice/i, 'https://images.unsplash.com/photo-1516684669134-de6f7c473a2a?w=600&q=80'],
+    [/pasta|spaghetti|noodle/i, 'https://images.unsplash.com/photo-1551183053-bf91a1d81141?w=600&q=80'],
+    [/broccoli/i, 'https://images.unsplash.com/photo-1459411552884-841db9b3cc2a?w=600&q=80'],
+    [/cauliflower/i, 'https://images.unsplash.com/photo-1568584711075-3d9217eedd3f?w=600&q=80'],
+    [/shiitake|mushroom/i, 'https://images.unsplash.com/photo-1585515320310-259814833e62?w=600&q=80'],
+    [/spinach|kale|greens/i, 'https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=600&q=80'],
+    [/lettuce|salad/i, 'https://images.unsplash.com/photo-1622206151226-18ca2c9ab4a1?w=600&q=80'],
+    [/cabbage/i, 'https://images.unsplash.com/photo-1594282486552-05b4d80fbb9f?w=600&q=80'],
+    [/tomato/i, 'https://images.unsplash.com/photo-1546094096-0df4bcaaa337?w=600&q=80'],
+    [/potato/i, 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=600&q=80'],
+    [/onion/i, 'https://images.unsplash.com/photo-1518977822534-7049a61ee0c2?w=600&q=80'],
+    [/asparagus/i, 'https://images.unsplash.com/photo-1515471209610-dae1c92d8777?w=600&q=80'],
+    [/brussels/i, 'https://images.unsplash.com/photo-1584270354949-c26b0d5b4a0c?w=600&q=80'],
+    [/banana/i, 'https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=600&q=80'],
+    [/apple/i, 'https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=600&q=80'],
+    [/blueberry|blueberries/i, 'https://images.unsplash.com/photo-1498557850523-fd3d118b962e?w=600&q=80'],
+    [/strawberry|strawberries/i, 'https://images.unsplash.com/photo-1518635017498-87f514b751ba?w=600&q=80'],
+    [/berry|berries/i, 'https://images.unsplash.com/photo-1563746098251-d35aef196e83?w=600&q=80'],
+    [/mango/i, 'https://images.unsplash.com/photo-1553279768-865429fa0078?w=600&q=80'],
+    [/orange|citrus/i, 'https://images.unsplash.com/photo-1547514701-42782101795e?w=600&q=80'],
+    [/grapefruit/i, 'https://images.unsplash.com/photo-1615484477778-ca3b77940c25?w=600&q=80'],
+    [/kiwi/i, 'https://images.unsplash.com/photo-1585059895524-72359e06133a?w=600&q=80'],
+    [/pineapple/i, 'https://images.unsplash.com/photo-1550258987-190a2d41a8ba?w=600&q=80'],
+    [/melon|cantaloupe|honeydew|watermelon/i, 'https://images.unsplash.com/photo-1563114773-84221bd62daa?w=600&q=80'],
+    [/yogurt/i, 'https://images.unsplash.com/photo-1488477181946-6428a0291777?w=600&q=80'],
+    [/milk|cheese|dairy/i, 'https://images.unsplash.com/photo-1550583724-b2692b85b150?w=600&q=80'],
+    [/bean|lentil|legume/i, 'https://images.unsplash.com/photo-1515543904379-3d757afe72e4?w=600&q=80'],
+    [/bread|oat|wheat/i, 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=600&q=80'],
+    [/oil/i, 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=600&q=80'],
+    [/nut|almond|walnut/i, 'https://images.unsplash.com/photo-1508061253366-f7da158b6d46?w=600&q=80'],
+    [/pizza/i, 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=600&q=80'],
+    [/soup/i, 'https://images.unsplash.com/photo-1547592166-23ac45744acd?w=600&q=80']
+  ];
+  function photoFor(description) {
+    const match = CARD_PHOTOS.find(([re]) => re.test(description || ''));
+    return match ? match[1] : null;
+  }
+  // High-contrast, large text-on-color fallback — used when there's no
+  // photo match at all, or when the matched photo URL fails to load.
+  function placeholderPhoto(description) {
+    return `https://placehold.co/600x400/1e293b/e5e7eb?font=roboto&text=${encodeURIComponent(iconFor(description) + '  ' + (description || 'Food').slice(0, 28))}`;
   }
 
   function buildResultRow(food, targetWeight) {
@@ -242,9 +300,14 @@
       : (estMet !== null ? '~' + fmt(estMet) + ' mg' : 'not available');
     const metLabel = hasMet ? 'Methionine (lab-measured)' : (estMet !== null ? 'Methionine (rough estimate)' : 'Methionine');
 
+    const photoUrl = photoFor(food.description) || placeholderPhoto(food.description);
+    const fallbackUrl = placeholderPhoto(food.description);
+
     const row = document.createElement('div');
     row.className = 'resultItem';
     row.innerHTML = `
+      <img class="cardImage" src="${photoUrl}" alt="${food.description}" loading="lazy"
+           onerror="this.onerror=null;this.src='${fallbackUrl}';">
       <div class="cardTop">
         <span class="cardIcon">${iconFor(food.description)}</span>
         <div class="cardTitleWrap">

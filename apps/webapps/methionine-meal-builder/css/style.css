@@ -137,6 +137,17 @@ button:disabled { opacity: 0.45; cursor: default; }
   transition: transform 0.15s, border-color 0.15s;
 }
 .resultItem:hover { transform: translateY(-2px); border-color: var(--accent); }
+/* The photo is the primary visual identifier for the card — large and
+   high-contrast so a food is recognizable at a glance, which matters most
+   for low-vision/cataract users who may struggle to read small text or
+   distinguish a small icon. */
+.cardImage {
+  width: 100%;
+  height: 170px;
+  object-fit: cover;
+  display: block;
+  background: var(--bg-deep);
+}
 .cardTop {
   display: flex;
   align-items: center;
