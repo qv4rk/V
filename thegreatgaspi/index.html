@@ -6,6 +6,8 @@
 <title>The Great GASPI</title>
 <meta name="description" content="Global Asymmetric Sovereignty & Power Index — an interactive geospatial platform mapping topographic, hydropolitical, infrastructural, and legal asymmetry across contested territories.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='44' fill='%23050810'/%3E%3Ccircle cx='50' cy='50' r='36' fill='none' stroke='%23c9a84c' stroke-width='2'/%3E%3Cpath d='M50 18 L50 82 M18 50 L82 50' stroke='%2300e5ff' stroke-width='1' opacity='.5'/%3E%3Ccircle cx='50' cy='50' r='6' fill='%23c9a84c'/%3E%3C/svg%3E">
+<link href="https://unpkg.com/maplibre-gl@4/dist/maplibre-gl.css" rel="stylesheet">
+<script src="https://unpkg.com/maplibre-gl@4/dist/maplibre-gl.js"></script>
 <style>
 /* ============ DESIGN TOKENS ============
    Ops-console / geospatial-intelligence identity, deliberately continuing
@@ -40,9 +42,19 @@ body{
 @media (max-width:760px){ .stage{ grid-template-columns:1fr; } .hud{ display:none; } .hud.open{ display:flex; } }
 
 /* ---- Globe canvas column ---- */
-.globe-col{ position:relative; background:radial-gradient(ellipse at 50% 38%, #0a1120 0%, #050810 62%, #030509 100%); }
-canvas{ position:absolute; inset:0; width:100%; height:100%; touch-action:none; cursor:grab; }
-canvas.dragging{ cursor:grabbing; }
+.globe-col{ position:relative; background:#050810; }
+#map{ position:absolute; inset:0; width:100%; height:100%; }
+/* CARTO's free dark-matter style requires attribution to remain visible — restyled to match the console aesthetic rather than hidden. */
+.maplibregl-ctrl-attrib{ background:rgba(5,8,16,.55) !important; color:var(--ink-mute) !important; font-family:var(--font-mono) !important; font-size:.58rem !important; }
+.maplibregl-ctrl-attrib a{ color:var(--ink-dim) !important; }
+.maplibregl-ctrl-bottom-right{ z-index:4; }
+.gaspi-marker{ width:13px; height:13px; border-radius:50%; border:1.5px solid rgba(5,8,16,.7); cursor:pointer; box-shadow:0 0 0 3px rgba(0,0,0,.15); }
+.gaspi-popup .maplibregl-popup-content{
+  background:rgba(8,12,22,.96); border:1px solid var(--gold); border-radius:3px; padding:10px 13px;
+  font-family:var(--font-mono); font-size:.68rem; color:var(--ink); box-shadow:none;
+}
+.gaspi-popup .maplibregl-popup-tip{ border-top-color:var(--gold) !important; border-bottom-color:var(--gold) !important; }
+.gaspi-popup .tt-title{ color:var(--gold-hi); font-size:.72rem; margin-bottom:3px; }
 
 .topbar{
   position:absolute; top:0; left:0; right:0; z-index:5;
@@ -149,13 +161,6 @@ canvas.dragging{ cursor:grabbing; }
   padding:2px 6px; border-radius:2px; margin-top:6px;
 }
 
-.tooltip{
-  position:absolute; z-index:8; pointer-events:none; background:rgba(8,12,22,.94);
-  border:1px solid var(--gold); border-radius:3px; padding:9px 12px; font-family:var(--font-mono);
-  font-size:.66rem; color:var(--ink); max-width:230px; line-height:1.6; opacity:0; transition:opacity .12s;
-}
-.tooltip .tt-title{ color:var(--gold-hi); font-size:.7rem; margin-bottom:3px; }
-
 .back-link{
   position:absolute; z-index:6; top:20px; left:24px; display:none;
 }
@@ -166,14 +171,13 @@ canvas.dragging{ cursor:grabbing; }
 
 <div class="stage">
   <div class="globe-col">
-    <canvas id="globe"></canvas>
+    <div id="map"></div>
     <div class="topbar">
       <div class="wordmark">THE GREAT GASPI<small>Global Asymmetric Sovereignty &amp; Power Index</small></div>
       <div class="hint">drag to rotate · scroll / pinch to zoom<br>click a marker for detail</div>
     </div>
     <div class="mobile-toggle"><button id="hudToggle" type="button">Dossier ▸</button></div>
     <div class="legend" id="legend"></div>
-    <div class="tooltip" id="tooltip"></div>
   </div>
 
   <aside class="hud" id="hud">
@@ -316,191 +320,84 @@ const CATS = [
 ];
 
 /* ======================================================================
-   ORTHOGRAPHIC GLOBE — hand-rolled Canvas 2D renderer. No basemap
-   texture is embedded (avoids asserting coastline precision this build
-   can't back with a citation); orientation instead comes from a
-   graticule, a handful of well-known reference cities, and the two
-   sourced territory datasets above, all plotted at real coordinates.
+   MAP ENGINE — real MapLibre GL JS (loaded via CDN, no build step, no
+   node_modules needed), using CARTO's free dark-matter vector style —
+   the same basemap the original GaspiMapViewer.jsx component used.
+   MapLibre's built-in globe projection gives an actual rotating,
+   pinch-zoomable 3D sphere with real coastlines, and its native touch
+   handling replaces the hand-rolled (and buggy) gesture code from the
+   first build of this page.
 ====================================================================== */
-const canvas = document.getElementById('globe');
-const ctx = canvas.getContext('2d');
-const tooltip = document.getElementById('tooltip');
-let W=0,H=0,DPR=Math.min(window.devicePixelRatio||1,2);
-
-const REFCITIES = [
-  {name:"Jerusalem", lat:31.7683, lng:35.2137},
-  {name:"Tel Aviv", lat:32.0853, lng:34.7818},
-  {name:"Amman", lat:31.9454, lng:35.9284},
-  {name:"Beirut", lat:33.8938, lng:35.5018},
-  {name:"Damascus", lat:33.5138, lng:36.2765},
-  {name:"Cairo", lat:30.0444, lng:31.2357},
-];
-
-let view = { lng:-35.30, lat:-24.0, zoom: 4.2 };
-let drag = null;
-let pinch = null;
 let activeTerritory = "west-bank";
-let hoverPoint = null;
+let markers = [];
 
-function resize(){
-  W = canvas.clientWidth; H = canvas.clientHeight;
-  canvas.width = W*DPR; canvas.height = H*DPR;
-  ctx.setTransform(DPR,0,0,DPR,0,0);
+const map = new maplibregl.Map({
+  container: 'map',
+  style: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
+  center: [DATA[activeTerritory].center.lng, DATA[activeTerritory].center.lat],
+  zoom: 2,
+  pitch: 0,
+  attributionControl: { compact: false },
+});
+
+// Fall back to MapLibre's own demo tiles if the CARTO style ever fails to
+// load, so the map still renders rather than showing a blank panel.
+let usedFallbackStyle = false;
+map.on('error', (e) => {
+  if (!usedFallbackStyle) {
+    usedFallbackStyle = true;
+    map.setStyle('https://demotiles.maplibre.org/style.json');
+  }
+});
+
+map.on('load', () => {
+  if (typeof map.setProjection === 'function') {
+    try { map.setProjection({ type: 'globe' }); } catch (e) { /* falls back to flat mercator, still fully functional */ }
+  }
+  map.flyTo({ center:[DATA[activeTerritory].center.lng, DATA[activeTerritory].center.lat], zoom:8, duration:0 });
+  plotMarkers();
+});
+map.on('style.load', () => { plotMarkers(); });
+
+function clearMarkers(){
+  markers.forEach(m => m.remove());
+  markers = [];
 }
-window.addEventListener('resize', resize);
 
-function project(lat,lng,R){
-  const lam = (lng - view.lng) * Math.PI/180;
-  const phi = lat * Math.PI/180;
-  const phi0 = -view.lat * Math.PI/180;
-  const cosC = Math.sin(phi0)*Math.sin(phi) + Math.cos(phi0)*Math.cos(phi)*Math.cos(lam);
-  const x = R * Math.cos(phi) * Math.sin(lam);
-  const y = R * (Math.cos(phi0)*Math.sin(phi) - Math.sin(phi0)*Math.cos(phi)*Math.cos(lam));
-  return { x, y, visible: cosC > -0.06, cosC };
-}
-
-function draw(){
-  ctx.clearRect(0,0,W,H);
-  const cx = W/2, cy = H/2;
-  const R = Math.min(W,H) * 0.34 * (view.zoom/4.2);
-
-  const glow = ctx.createRadialGradient(cx,cy,R*0.92,cx,cy,R*1.28);
-  glow.addColorStop(0,'rgba(58,217,242,0.16)');
-  glow.addColorStop(1,'rgba(58,217,242,0)');
-  ctx.fillStyle = glow;
-  ctx.beginPath(); ctx.arc(cx,cy,R*1.28,0,Math.PI*2); ctx.fill();
-
-  const sphere = ctx.createRadialGradient(cx-R*0.35,cy-R*0.4,R*0.1,cx,cy,R*1.05);
-  sphere.addColorStop(0,'#16233d');
-  sphere.addColorStop(0.6,'#0c1526');
-  sphere.addColorStop(1,'#060a13');
-  ctx.fillStyle = sphere;
-  ctx.beginPath(); ctx.arc(cx,cy,R,0,Math.PI*2); ctx.fill();
-  ctx.strokeStyle = 'rgba(58,217,242,0.35)'; ctx.lineWidth = 1;
-  ctx.stroke();
-
-  ctx.save();
-  ctx.beginPath(); ctx.arc(cx,cy,R,0,Math.PI*2); ctx.clip();
-  ctx.strokeStyle = 'rgba(154,167,191,0.14)'; ctx.lineWidth = 1;
-  for(let lng=-180; lng<180; lng+=15){
-    ctx.beginPath(); let started=false;
-    for(let lat=-90; lat<=90; lat+=2){
-      const p = project(lat,lng,R);
-      const sx=cx+p.x, sy=cy-p.y;
-      if(p.visible){ if(!started){ctx.moveTo(sx,sy);started=true;} else ctx.lineTo(sx,sy); }
-      else started=false;
-    }
-    ctx.stroke();
-  }
-  for(let lat=-75; lat<=75; lat+=15){
-    ctx.beginPath(); let started=false;
-    for(let lng=-180; lng<=180; lng+=2){
-      const p = project(lat,lng,R);
-      const sx=cx+p.x, sy=cy-p.y;
-      if(p.visible){ if(!started){ctx.moveTo(sx,sy);started=true;} else ctx.lineTo(sx,sy); }
-      else started=false;
-    }
-    ctx.stroke();
-  }
-  ctx.strokeStyle = 'rgba(201,168,76,0.28)'; ctx.lineWidth = 1.3;
-  ctx.beginPath(); let started=false;
-  for(let lng=-180; lng<=180; lng+=2){
-    const p = project(0,lng,R); const sx=cx+p.x, sy=cy-p.y;
-    if(p.visible){ if(!started){ctx.moveTo(sx,sy);started=true;} else ctx.lineTo(sx,sy);} else started=false;
-  }
-  ctx.stroke();
-  ctx.restore();
-
-  REFCITIES.forEach(c=>{
-    const p = project(c.lat,c.lng,R);
-    if(!p.visible) return;
-    const sx=cx+p.x, sy=cy-p.y;
-    ctx.fillStyle='rgba(154,167,191,0.55)';
-    ctx.beginPath(); ctx.arc(sx,sy,1.6,0,Math.PI*2); ctx.fill();
-    ctx.font = "10px " + getComputedStyle(document.body).getPropertyValue('--font-mono');
-    ctx.fillStyle='rgba(154,167,191,0.55)';
-    ctx.fillText(c.name, sx+5, sy+3);
+function addMarkerGroup(list, color){
+  (list||[]).forEach(m=>{
+    const el = document.createElement('div');
+    el.className = 'gaspi-marker';
+    el.style.background = color;
+    const popupHtml = '<div class="tt-title">'+m.name+'</div>'+(m.note||(m.elev?m.elev+'m elevation':''));
+    const popup = new maplibregl.Popup({ offset:12, closeButton:false, className:'gaspi-popup' }).setHTML(popupHtml);
+    const marker = new maplibregl.Marker({ element: el, anchor: 'center' })
+      .setLngLat([m.lng, m.lat])
+      .setPopup(popup)
+      .addTo(map);
+    el.addEventListener('click', ()=>{ map.flyTo({ center:[m.lng,m.lat], zoom:Math.max(map.getZoom(),9), essential:true }); });
+    markers.push(marker);
   });
-
-  hoverPoint = null;
-  const t = DATA[activeTerritory];
-  const drawGroup = (list, color, kind) => {
-    (list||[]).forEach(m=>{
-      const p = project(m.lat, m.lng, R);
-      if(!p.visible) return;
-      const sx=cx+p.x, sy=cy-p.y;
-      const isNear = view.__mouse && Math.hypot(view.__mouse.x-sx, view.__mouse.y-sy) < 9;
-      ctx.beginPath(); ctx.arc(sx,sy, isNear?6:4.2, 0, Math.PI*2);
-      ctx.fillStyle = color; ctx.globalAlpha = 0.92; ctx.fill(); ctx.globalAlpha = 1;
-      ctx.beginPath(); ctx.arc(sx,sy, isNear?9:6.2, 0, Math.PI*2);
-      ctx.strokeStyle = color; ctx.globalAlpha=0.4; ctx.lineWidth=1; ctx.stroke(); ctx.globalAlpha=1;
-      if(isNear){ hoverPoint = {m,sx,sy,kind}; }
-    });
-  };
-  drawGroup(t.peaks, CATS[0].color, 'peaks');
-  drawGroup(t.checkpoints, CATS[1].color, 'checkpoints');
-  drawGroup(t.water, CATS[2].color, 'water');
-  drawGroup(t.barriers, CATS[3].color, 'barriers');
-
-  const cp = project(t.center.lat, t.center.lng, R);
-  if(cp.visible){
-    const sx=cx+cp.x, sy=cy-cp.y;
-    ctx.strokeStyle='rgba(230,200,119,0.55)'; ctx.lineWidth=1.2;
-    ctx.beginPath(); ctx.arc(sx,sy,14,0,Math.PI*2); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(sx-19,sy); ctx.lineTo(sx-14,sy); ctx.moveTo(sx+14,sy); ctx.lineTo(sx+19,sy);
-    ctx.moveTo(sx,sy-19); ctx.lineTo(sx,sy-14); ctx.moveTo(sx,sy+14); ctx.lineTo(sx,sy+19); ctx.stroke();
-  }
-
-  if(hoverPoint){
-    tooltip.style.opacity = 1;
-    tooltip.style.left = (hoverPoint.sx+14)+'px';
-    tooltip.style.top = (hoverPoint.sy+10)+'px';
-    const noteText = hoverPoint.m.note || (hoverPoint.m.elev? (hoverPoint.m.elev+'m elevation'):'');
-    tooltip.innerHTML = '<div class="tt-title">'+hoverPoint.m.name+'</div>'+noteText;
-  } else {
-    tooltip.style.opacity = 0;
-  }
 }
 
-function loop(){ draw(); requestAnimationFrame(loop); }
+function plotMarkers(){
+  clearMarkers();
+  const t = DATA[activeTerritory];
+  addMarkerGroup(t.peaks, CATS[0].color);
+  addMarkerGroup(t.checkpoints, CATS[1].color);
+  addMarkerGroup(t.water, CATS[2].color);
+  addMarkerGroup(t.barriers, CATS[3].color);
+}
 
-function pointerPos(e, rect){ return { x:(e.clientX-rect.left), y:(e.clientY-rect.top) }; }
+function focusTerritory(key){
+  const t = DATA[key];
+  map.flyTo({ center:[t.center.lng, t.center.lat], zoom:8, essential:true });
+  plotMarkers();
+}
 
-canvas.addEventListener('pointerdown', e=>{
-  canvas.setPointerCapture(e.pointerId);
-  canvas.classList.add('dragging');
-  drag = { x:e.clientX, y:e.clientY, lng:view.lng, lat:view.lat };
-});
-canvas.addEventListener('pointermove', e=>{
-  const rect = canvas.getBoundingClientRect();
-  view.__mouse = pointerPos(e, rect);
-  if(drag){
-    const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
-    view.lng = drag.lng - dx*0.35;
-    view.lat = Math.max(-85, Math.min(85, drag.lat + dy*0.35));
-  }
-});
-window.addEventListener('pointerup', e=>{ drag=null; canvas.classList.remove('dragging'); });
-canvas.addEventListener('pointerleave', ()=>{ view.__mouse=null; });
-
-canvas.addEventListener('wheel', e=>{
-  e.preventDefault();
-  view.zoom = Math.max(1.8, Math.min(11, view.zoom - e.deltaY*0.01));
-}, {passive:false});
-
-canvas.addEventListener('touchmove', e=>{
-  if(e.touches.length===2){
-    e.preventDefault();
-    const [a,b] = e.touches;
-    const dist = Math.hypot(a.clientX-b.clientX, a.clientY-b.clientY);
-    if(pinch){
-      const delta = dist - pinch.dist;
-      view.zoom = Math.max(1.8, Math.min(11, view.zoom + delta*0.02));
-    }
-    pinch = { dist };
-  }
-}, {passive:false});
-canvas.addEventListener('touchend', e=>{ if(e.touches.length<2) pinch=null; });
+function focusPoint(lat,lng){
+  map.flyTo({ center:[lng,lat], zoom:Math.max(map.getZoom(),9), essential:true });
+}
 
 function fmtRange(arr, unit){
   if(!Array.isArray(arr)) return arr+(unit||'');
@@ -515,7 +412,7 @@ function buildTabs(){
     const b = document.createElement('button');
     b.className = 'tab' + (key===activeTerritory?' active':'');
     b.textContent = DATA[key].name;
-    b.onclick = ()=>{ activeTerritory = key; view.lng = -DATA[key].center.lng; view.lat = -DATA[key].center.lat+8; renderHud(); buildTabs(); };
+    b.onclick = ()=>{ activeTerritory = key; focusTerritory(key); renderHud(); buildTabs(); };
     tabs.appendChild(b);
   });
 }
@@ -598,9 +495,7 @@ function renderHud(){
 
   document.querySelectorAll('.marker-item').forEach(el=>{
     el.addEventListener('click', ()=>{
-      view.lng = -parseFloat(el.dataset.lng);
-      view.lat = -parseFloat(el.dataset.lat)+3;
-      view.zoom = Math.max(view.zoom, 6.5);
+      focusPoint(parseFloat(el.dataset.lat), parseFloat(el.dataset.lng));
     });
   });
 }
@@ -609,9 +504,7 @@ document.getElementById('hudToggle').addEventListener('click', ()=>{
   document.getElementById('hud').classList.toggle('open');
 });
 
-resize(); buildTabs(); buildLegend(); renderHud();
-view.lng = -DATA[activeTerritory].center.lng; view.lat = -DATA[activeTerritory].center.lat+8;
-loop();
+buildTabs(); buildLegend(); renderHud();
 </script>
 </body>
 </html>
