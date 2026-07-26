@@ -34,5 +34,9 @@
   "bihar-farmers": ["bihar", "patna", "ghazipur"],
   "chinese-workers": ["chinese workers", "coolie", "chinese laborers"],
   "tanka": ["tanka"],
-  "chinese-peasants": ["chinese peasant", "yunnan", "sichuan"]
+  "chinese-peasants": ["chinese peasant", "yunnan", "sichuan"],
+  "musha": ["musha", "masha", "communal village property", "collective landownership"],
+  "tax-farming": ["tax-farming", "tax farming", "multazim", "iltizam"],
+  "hamula-politics": ["hamula", "batn", "lineage"],
+  "rural-notables": ["rural notable", "village notable"]
 }

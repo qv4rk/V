@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Multazim's Register: Tulkarm's Rural Notables and the Land Code, 1858-1938 · Manifold Atlas</title>
+<meta name="description" content="In the Jezreel Valley, absentee title went to Beirut bankers who never saw the land. In the villages around Tulkarm, it went to two local tax-farming families who never left it — and ended up mayors of the town whose fields they now owned on paper.">
+<meta name="robots" content="index, follow">
+<meta property="og:title" content="The Multazim's Register: Tulkarm's Rural Notables and the Land Code, 1858-1938">
+<meta property="og:description" content="In the Jezreel Valley, absentee title went to Beirut bankers who never saw the land. In the villages around Tulkarm, it went to two local tax-farming families who never left it — and ended up mayors of the town whose fields they now owned on paper.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://feisttech.com/articles/n07.html">
+<meta property="article:published_time" content="1858-12-14">
+<link rel="canonical" href="https://feisttech.com/articles/n07.html">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #050810;
+  --bg2: #0a0c14;
+  --primary: #00e5ff;
+  --gold: #c9a84c;
+  --gold-dim: rgba(201,168,76,.3);
+  --ink: #ddd5c0;
+  --ink-dim: #8a7e6a;
+  --ink-mute: #3a3228;
+  --border: rgba(0,229,255,.12);
+  --panel: rgba(5,8,16,.96);
+  --reading-bg: rgba(0,229,255,.07);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 18px;
+  line-height: 1.8;
+  min-height: 100vh;
+}
+
+/* ── Nav ── */
+.site-nav {
+  position: sticky; top: 0; z-index: 50;
+  background: rgba(5,8,16,.97);
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: 10px 18px;
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+}
+.nav-btn {
+  font-family: 'Space Mono', monospace;
+  font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--ink-dim); text-decoration: none;
+  background: transparent; border: 1px solid var(--gold-dim);
+  padding: 6px 12px; border-radius: 2px; cursor: pointer;
+  transition: color .2s, border-color .2s;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.nav-btn:hover { color: var(--gold); border-color: var(--gold); }
+.nav-btn.atlas { border-color: rgba(0,229,255,.25); color: rgba(0,229,255,.7); }
+.nav-btn.atlas:hover { border-color: var(--primary); color: var(--primary); }
+.nav-spacer { flex: 1; min-width: 8px; }
+
+/* ── Language switcher ── */
+.lang-switch {
+  max-width: 720px; margin: 0 auto; padding: 10px 1.5rem 0;
+  font-family: 'Space Mono', monospace;
+  font-size: 9px; letter-spacing: 1px; text-transform: uppercase;
+  color: var(--ink-mute);
+}
+.lang-switch a.lang-link { color: var(--gold); text-decoration: none; }
+.lang-switch a.lang-link:hover { text-decoration: underline; }
+.lang-switch .lang-current { color: var(--ink); }
+
+/* ── Article ── */
+article {
+  max-width: 720px; margin: 0 auto;
+  padding: 3rem 1.5rem 120px;
+}
+.article-meta {
+  font-family: 'Space Mono', monospace;
+  font-size: 8px; letter-spacing: 3px; text-transform: uppercase;
+  color: var(--ink-dim); margin-bottom: 1rem;
+}
+.article-tag {
+  display: inline-block;
+  background: rgba(201,168,76,.08);
+  border: 1px solid var(--gold-dim);
+  color: var(--gold); padding: 2px 8px; border-radius: 2px;
+  font-size: 8px; letter-spacing: 2px; text-transform: uppercase;
+  font-family: 'Space Mono', monospace;
+  margin: 0 4px 4px 0;
+}
+.article-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(1.7rem, 5vw, 2.5rem);
+  font-weight: 600; line-height: 1.25;
+  color: var(--ink); margin: 1rem 0 1.5rem;
+}
+.article-excerpt {
+  font-size: 1.1rem; line-height: 1.65;
+  color: var(--ink-dim); font-style: italic;
+  border-left: 3px solid rgba(201,168,76,.4);
+  padding: 0.5rem 1rem; margin-bottom: 2.5rem;
+}
+/* Content paragraphs — clickable for TTS */
+#article-content p {
+  margin-bottom: 1.4em;
+  padding: 0.35rem 0.6rem;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background .15s;
+  border-left: 3px solid transparent;
+}
+#article-content p:hover { background: rgba(255,255,255,.025); }
+#article-content p.reading {
+  background: var(--reading-bg);
+  border-left-color: var(--primary);
+}
+#article-content h1, #article-content h2, #article-content h3 {
+  font-family: 'Cormorant Garamond', serif;
+  margin: 2.5rem 0 0.75rem; font-weight: 600; line-height: 1.3;
+}
+#article-content h1 { font-size: 1.9rem; }
+#article-content h2 { font-size: 1.5rem; color: var(--gold); }
+#article-content h3 { font-size: 1.2rem; color: var(--ink-dim); }
+#article-content strong { color: var(--ink); }
+#article-content em { font-style: italic; color: var(--ink-dim); }
+#article-content code { font-family: 'Space Mono', monospace; font-size: .82em; background: rgba(255,255,255,.05); padding: 1px 5px; border-radius: 2px; }
+
+/* ── Works Cited (outside main, never TTS-read) ── */
+#works-cited {
+  max-width: 720px; margin: 0 auto 6rem;
+  padding: 2rem 1.5rem;
+  border-top: 1px solid rgba(255,255,255,.06);
+}
+#works-cited h2 {
+  font-family: 'Space Mono', monospace;
+  font-size: 8px; letter-spacing: 3px; text-transform: uppercase;
+  color: var(--ink-mute); margin-bottom: 1.25rem;
+}
+#works-cited ol { padding-left: 1.5rem; }
+#works-cited li { font-size: .82rem; color: var(--ink-dim); line-height: 1.7; margin-bottom: .75rem; }
+
+/* ── TTS Bar ── */
+#tts-bar {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+  background: rgba(5,8,16,.98);
+  border-top: 1px solid var(--border);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  padding: 10px 14px;
+  display: flex; align-items: center; gap: 6px; flex-wrap: nowrap;
+  padding-bottom: max(10px, env(safe-area-inset-bottom, 0px));
+}
+.tts-btn {
+  background: transparent;
+  border: 1px solid var(--gold-dim);
+  color: var(--ink-dim);
+  width: 36px; height: 36px;
+  border-radius: 2px; cursor: pointer; font-size: 13px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: color .2s, border-color .2s, background .2s;
+}
+.tts-btn:hover { color: var(--gold); border-color: var(--gold); }
+.tts-btn.active { background: rgba(201,168,76,.12); color: var(--gold); border-color: var(--gold); }
+#tts-progress {
+  flex: 1; font-family: 'Space Mono', monospace;
+  font-size: 8px; letter-spacing: 1px; color: var(--ink-dim);
+  text-align: center; min-width: 50px;
+}
+#tts-voice, #tts-speed {
+  background: var(--bg2); color: var(--ink-dim);
+  border: 1px solid var(--gold-dim); border-radius: 2px;
+  font-family: 'Space Mono', monospace; font-size: 8px;
+  letter-spacing: 1px; padding: 4px 6px; cursor: pointer;
+}
+#tts-voice { max-width: 130px; flex: 1 1 80px; }
+#tts-speed { width: 68px; flex-shrink: 0; }
+
+/* ── RSVP Overlay ── */
+#rsvp-overlay {
+  display: none;
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(2,4,10,.98);
+  flex-direction: column; align-items: center; justify-content: center;
+  gap: 1.5rem; padding: 2rem;
+}
+#rsvp-word {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(2.5rem, 10vw, 5rem);
+  color: var(--ink); text-align: center; min-height: 1.3em;
+  letter-spacing: -.01em;
+}
+#rsvp-wpm-display {
+  font-family: 'Space Mono', monospace;
+  font-size: 9px; letter-spacing: 3px; color: var(--ink-dim);
+}
+.rsvp-btns { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+
+/* Mobile */
+@media (max-width: 600px) {
+  .site-nav { padding: 8px 12px; }
+  article { padding: 2rem 1rem 110px; }
+  #tts-bar { flex-wrap: wrap; }
+  #tts-voice { display: none; }
+}
+</style>
+</head>
+<body>
+
+<nav class="site-nav">
+  <a href="../index.html" class="nav-btn">← Home</a>
+  <a href="../Manifold%20Atlas.html#node-n07" class="nav-btn atlas">◆ View on Atlas</a>
+  <span class="nav-spacer"></span>
+  <button class="nav-btn" onclick="launchRSVP()">⚡ RSVP</button>
+</nav>
+
+<article>
+  <div class="article-meta">OTTOMAN TANZIMAT / RURAL NOTABLE ASCENDANCY · 14 DEC 1858 · Tulkarm & the Bani Sa'b villages, Ottoman Palestine</div>
+  <span class="article-tag">land-registration</span><span class="article-tag">musha</span><span class="article-tag">tax-farming</span><span class="article-tag">hamula-politics</span><span class="article-tag">rural-notables</span><span class="article-tag">dispossession</span><span class="article-tag">displacement</span><span class="article-tag">bureaucratic-capture</span><span class="article-tag">ottoman-empire</span><span class="article-tag">fellahin</span>
+  <h1 class="article-title">The Multazim's Register: Tulkarm's Rural Notables and the Land Code, 1858-1938</h1>
+  <blockquote class="article-excerpt">In the Jezreel Valley, absentee title went to Beirut bankers who never saw the land. In the villages around Tulkarm, it went to two local tax-farming families who never left it — and ended up mayors of the town whose fields they now owned on paper.</blockquote>
+  <div id="article-content">
+<p>Tulkarm shows up in Ottoman tax registers as early as 1596, a small settlement in the nahiya of Qaqun, in the sanjak of Nablus, sitting where the foothills of Jabal Nablus meet the coastal plain. Nothing about it marked it out as the future seat of two competing landlord dynasties. That took the Land Code — and, more precisely, the Tapu Law of December 14, 1858, which followed the Code by six months and gave the registration process its actual paperwork. The mechanism was the one already described at Constantinople and in the Jezreel Valley: peasants who had lived through Ibrahim Pasha's conscription decrees a generation earlier looked at a government register asking for names next to plots of land and read it as a list of men to draft and debts to collect, not a title deed. What happened next in the villages around Tulkarm — Saffarin, Shufa, Dhinnaba, Kafr al-Labad, Kafr Sur — didn't produce an absentee landlord shipped in from Beirut. It produced two homegrown ones, already living in the district, who had spent the previous decades building exactly the kind of local standing a frightened village would turn to.</p>
+<p>The senior of the two was al-Hajj Muslih Yusif Salih Hannun. By local tradition the Hannuns descended from Transjordanian Huwaytat Arabs who had settled in Saffarin, a village southeast of Tulkarm, sometime before the nineteenth century, as one lineage (batn) within the larger Dar Hasan hamula alongside the Salih, Abu Dhiyab, 'Ali Abu Bakr, and Samara families. Al-Hajj Muslih's own leverage came from Ottoman tax-farming: he held the multazim's contract in the district, collecting the state's revenue on its behalf and keeping the margin, which is a position that builds cash, debtors, and obligation all at once. He married the sister of 'Abdullah Samara of Dhinnaba, head of the allied Samara line and already, by then, the owner of Minat Abu Zabura — the coastal anchorage that had served as the main port for Nablus's merchants since before Napoleon's 1799 campaign passed through the region. The Samaras, in other words, were not new money manufactured by the 1858 Code; they had a port and a merchant network first. In the middle of the nineteenth century the two families' patriarchs left Saffarin together for the town of Tulkarm itself, bringing other Saffarin lineages with them.</p>
+<p>That was the standing the Hannuns and Samaras held when the tapu registrars reached the Bani Sa'b villages. Whole village communities — the same fear of conscription and back-taxes documented for the Jezreel villages, running through the same post-Ibrahim Pasha memory as the Galilee peasants of 1834 — asked the two families to put the musha land under their own names rather than the fellahin's. It was not one transaction, the way the Ottoman state's 1872 sale of the Jezreel Valley to the Sursocks was one transaction; it accumulated village by village, plot by plot, wherever a community already looked to the Hannun or Samara name for protection or credit. By the turn of the twentieth century the Hannuns held estates across Saffarin, Shufa, Dhinnaba, Tulkarm town, Kafr al-Labad, and Kafr Sur, and had fostered close patronage ties with the cultivating clans in each. Later generations of the family carried the same pattern onto new ground entirely, founding the citrus plantation-village of Bayyarat Hannun on the coastal plain near what became Netanya — landholding built from a tax-farmer's register now extending into land nobody's grandfather had ever worked as musha.</p>
+<p>A rival family rose alongside them on the same terms. Al-Hajj Ibrahim Isma'il Idris, active from roughly 1869 to 1914, belonged to the Hawrani 'Abd al-Qadir hamula in the prosperous neighboring village of al-Tayba before he too moved into Tulkarm. His son, 'Abd al-Rahman al-Hajj Ibrahim (1869-1949), became Tulkarm's mayor in 1905 and held the office until 1938 — the same decades in which the Hajj Ibrahims and the Hannuns stood as each other's principal political rivals across the Bani Sa'b subdistrict. The register that had put land titles in these families' names in the late nineteenth century fed directly into who ran the municipality in the twentieth: the same men, or their sons, now presiding over the town whose surrounding fields carried their signatures.</p>
+<p>Farid al-Salim's account of the district states the outcome plainly: land that had for centuries been communal village property became the legal property of people who had never lived on the land, and names like Hajj Ibrahim, Hannun, and Samara ended up owning large areas registered in their own names. That sentence is accurate about the legal effect and needs one correction about the mechanism, because it is where the Tulkarm case actually splits from the Jezreel Valley case a few pages earlier in the same story: the Hannuns and Samaras were not urban effendis arriving from Beirut or Damascus with capital and no connection to the ground. They were already resident in or immediately next to the villages whose musha land they registered, already bound to their neighbors by a tax-farming contract and a marriage alliance, and already running a port before the Code existed to register anything. What Tulkarm demonstrates is a second route to the same outcome — dispossession by local patronage rather than by purchase from a distant landlord — and it is the one route more easily mistaken, by anyone reading only the family names off a modern deed, for the same story as Beirut's absentee bankers in the Jezreel Valley.</p>
+<p>What the record does not preserve is any named mukhtar or council of elders in Saffarin, Shufa, Dhinnaba, Kafr al-Labad, or Kafr Sur who can be shown deciding, in a particular year, to let the Hannun or Samara name go on the register instead of a fellah's own. Marom's reconstruction draws on Tulkarm's Islamic court sijill and family tradition; al-Salim's draws on land and political records. Both preserve the winners of the arrangement in detail — their marriages, their tax contracts, their sons' offices — and leave the villagers who made that bargain, plot by plot, unnamed. The same government list that peasants in the Galilee had already learned, in 1834, to fear as a conscription roll reached Tulkarm a generation later as a property register, and produced the same asymmetry twice: a name that survives in the archive, and a choice that does not.</p>
+  </div>
+</article>
+
+<!-- Works Cited — outside <article>, skipped by TTS engine -->
+<section id="works-cited">
+<h2>Works Cited</h2><ol><li>Roy Marom, &quot;The Palestinian Rural Notables' Class in Ascendency: The Hannun Family of Tulkarm (Palestine),&quot; Journal of Holy Land and Palestine Studies 23.1 (2024): 77-108.</li><li>Farid al-Salim, &quot;Landed Property and Elite Conflict in Ottoman Tulkarm,&quot; Jerusalem Quarterly 47 (Autumn 2011).</li><li>Farid al-Salim, Palestine and the Decline of the Ottoman Empire: Modernization and the Path to Palestinian Statehood, I.B. Tauris, 2015.</li><li>Ruth Kark, &quot;Consequences of the Ottoman Land Law: Agrarian and Privatization Processes in Palestine, 1858-1918,&quot; in Yücel Terzibaşoğlu et al. (eds.), the Tanzimat/Haifa conference volume, Springer, 2017.</li><li>Martha Mundy and Richard Saumarez Smith, Governing Property, Making the Modern State: Law, Administration and Production in Ottoman Syria, I.B. Tauris, 2007.</li></ol>
+</section>
+
+<!-- RSVP Overlay -->
+<div id="rsvp-overlay">
+  <div id="rsvp-word">—</div>
+  <div id="rsvp-wpm-display">300 WPM</div>
+  <div class="rsvp-btns">
+    <button class="nav-btn" onclick="rsvpAdjust(-50)">− Slower</button>
+    <button class="nav-btn" id="rsvp-toggle" onclick="rsvpToggle()">⏸ Pause</button>
+    <button class="nav-btn" onclick="stopRSVP()">✕ Close</button>
+    <button class="nav-btn" onclick="rsvpAdjust(50)">+ Faster</button>
+  </div>
+</div>
+
+<!-- TTS Control Bar -->
+<div id="tts-bar">
+  <button class="tts-btn" onclick="ttsStep(-1)" title="Previous">◀</button>
+  <button class="tts-btn" id="tts-play" onclick="ttsToggle()" title="Play">▶</button>
+  <button class="tts-btn" onclick="ttsStep(1)" title="Next">▶▶</button>
+  <button class="tts-btn" onclick="ttsStop()" title="Stop">■</button>
+  <div id="tts-progress">— / —</div>
+  <select id="tts-voice" onchange="voiceChange()"></select>
+  <select id="tts-speed" onchange="speedChange()">
+    <option value="0.7">0.7×</option>
+    <option value="0.85">0.85×</option>
+    <option value="1.0" selected>1.0×</option>
+    <option value="1.2">1.2×</option>
+    <option value="1.5">1.5×</option>
+    <option value="1.8">1.8×</option>
+  </select>
+</div>
+
+<script>
+// ── TTS (Web Speech API — no CDN) ────────────────────────────────────────────
+const segs = Array.from(document.querySelectorAll('#article-content p'));
+let cur = -1, playing = false, rate = 1.0, voice = null;
+const synth = window.speechSynthesis;
+
+segs.forEach((p, i) => p.addEventListener('click', () => { ttsStop(); _speakFrom(i); }));
+
+function _loadVoices() {
+  if (!synth) return;
+  const vs = synth.getVoices().filter(v => v.lang && v.lang.startsWith('en'));
+  const sel = document.getElementById('tts-voice');
+  sel.innerHTML = '';
+  vs.forEach((v, i) => {
+    const o = document.createElement('option');
+    o.value = i;
+    o.textContent = v.name.slice(0, 22);
+    if (v.default) { o.selected = true; voice = v; }
+    sel.appendChild(o);
+  });
+  if (!voice && vs.length) voice = vs[0];
+}
+if (synth) { synth.onvoiceschanged = _loadVoices; _loadVoices(); }
+
+function voiceChange() {
+  const vs = synth.getVoices().filter(v => v.lang && v.lang.startsWith('en'));
+  voice = vs[+document.getElementById('tts-voice').value] || null;
+}
+function speedChange() { rate = +document.getElementById('tts-speed').value; }
+
+function _speakFrom(idx) {
+  if (!synth || idx < 0 || idx >= segs.length) return;
+  synth.cancel();
+  cur = idx; playing = true;
+  _say(idx);
+}
+
+function _say(idx) {
+  if (!synth || !playing || idx < 0 || idx >= segs.length) return;
+  cur = idx;
+  _highlight(idx);
+  const u = new SpeechSynthesisUtterance(segs[idx].innerText);
+  u.rate = rate;
+  if (voice) u.voice = voice;
+  u.onend = () => { if (playing && idx + 1 < segs.length) _say(idx + 1); else { playing = false; _ui(); } };
+  u.onerror = () => { playing = false; _ui(); };
+  synth.speak(u);
+  _ui();
+}
+
+function ttsToggle() {
+  if (!synth) return;
+  if (playing) { synth.pause(); playing = false; }
+  else if (synth.paused) { synth.resume(); playing = true; }
+  else _speakFrom(cur < 0 ? 0 : cur);
+  _ui();
+}
+
+function ttsStep(dir) {
+  const next = Math.max(0, Math.min(segs.length - 1, (cur < 0 ? 0 : cur) + dir));
+  ttsStop(); _speakFrom(next);
+}
+
+function ttsStop() {
+  if (synth) synth.cancel();
+  playing = false; cur = -1;
+  segs.forEach(s => s.classList.remove('reading'));
+  _ui();
+}
+
+function _highlight(idx) {
+  segs.forEach((s, i) => s.classList.toggle('reading', i === idx));
+  if (segs[idx]) segs[idx].scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function _ui() {
+  document.getElementById('tts-play').textContent = (playing && !synth.paused) ? '⏸' : '▶';
+  document.getElementById('tts-play').classList.toggle('active', playing);
+  document.getElementById('tts-progress').textContent =
+    (cur < 0 ? '—' : cur + 1) + ' / ' + segs.length;
+}
+
+// ── RSVP ─────────────────────────────────────────────────────────────────────
+let rWords = [], rIdx = 0, rTimer = null, rRunning = false, rWpm = 300;
+
+function launchRSVP() {
+  ttsStop();
+  rWords = segs.map(p => p.innerText).join(' ').split(/\s+/).filter(Boolean);
+  rIdx = 0; rRunning = true;
+  document.getElementById('rsvp-overlay').style.display = 'flex';
+  document.getElementById('rsvp-toggle').textContent = '⏸ Pause';
+  _rTick();
+}
+
+function _rTick() {
+  if (!rRunning) return;
+  if (rIdx >= rWords.length) { stopRSVP(); return; }
+  document.getElementById('rsvp-word').textContent = rWords[rIdx++];
+  rTimer = setTimeout(_rTick, 60000 / rWpm);
+}
+
+function rsvpToggle() {
+  rRunning = !rRunning;
+  document.getElementById('rsvp-toggle').textContent = rRunning ? '⏸ Pause' : '▶ Resume';
+  if (rRunning) _rTick();
+}
+
+function stopRSVP() {
+  rRunning = false; clearTimeout(rTimer);
+  document.getElementById('rsvp-overlay').style.display = 'none';
+}
+
+function rsvpAdjust(delta) {
+  rWpm = Math.max(60, Math.min(1200, rWpm + delta));
+  document.getElementById('rsvp-wpm-display').textContent = rWpm + ' WPM';
+}
+
+// Init
+_ui();
+</script>
+</body>
+</html>

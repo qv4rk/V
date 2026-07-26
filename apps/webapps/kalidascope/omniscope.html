@@ -362,7 +362,11 @@
 				const color = pal[colorIndex % pal.length];
 				const c = size * 0.05;
 				const cx = ctx.canvas.width / (2 * dpr), cy = ctx.canvas.height / (2 * dpr);
-				const others = (allTouches || []).filter(t => t.colorIndex !== colorIndex);
+				// Capped regardless of how big allTouches gets -- this loop is
+				// already O(size*2) per point, and multiplying that against an
+				// uncapped touch count is what crashed a phone once. 3 keeps
+				// its original small-real-touch-count look intact.
+				const others = (allTouches || []).filter(t => t.colorIndex !== colorIndex).slice(0, 3);
 				for (let i = 0; i < size * 2; i++) {
 					const a = i * 137.5 * (Math.PI / 180);
 					const r = c * Math.sqrt(i);
@@ -703,6 +707,69 @@
 	let history = [];
 	let historyPointCount = 0;
 	let activePointerCountByLayer = {};
+	// Per-layer index of drawable points only (colorIndex, x, y, ts, cfg,
+	// session), append-only and capped independently of the global history
+	// cap. The cross-touch mesh reconstruction below scans THIS instead of
+	// the full multi-layer `history` array -- a full-history rescan on
+	// every draw event was the actual cost that made an earlier version of
+	// this feature crawl (and, combined with a pattern that multiplies per
+	// touch, crash a phone). `session` increments every time this layer
+	// gets a full break (see endStroke) so prev-point lookups can still
+	// refuse to connect across an unrelated later gesture, same as
+	// findPrevDrawable's brk-boundary rule, without needing `history` itself.
+	let layerPoints = {};
+	let layerSessionCounter = {};
+	const LAYER_POINTS_CAP = 2000;
+	// How close (in loop-clock ms) a stored point has to be to "now" to
+	// count as still being there right now.
+	const MESH_WINDOW_MS = 60;
+	// However many fingers, real or merged-in from your own past self,
+	// stay meshed at once -- generous headroom past "trick it into
+	// thinking I have 12 fingers," still bounded so the mesh (and any
+	// pattern reacting to it) can't grow without limit.
+	const MESH_TOUCH_CAP = 24;
+
+	/* ================= LAYER CLOCK =================
+	   A layer's FIRST complete session (every pointer down, then every
+	   pointer back up -- one finger or several simultaneously) locks in
+	   that session's real elapsed duration as the layer's permanent
+	   cycle length. Anything drawn on that layer afterward -- a new
+	   finger, a whole new stroke -- gets timestamped, and its position
+	   in the SAME cycle is derived from that timestamp, so during Ghost
+	   Replay it plays back in sync with the original session instead of
+	   being tacked on sequentially after it. Unlocked layers are
+	   unaffected; they replay exactly as before (index-stepped ping-pong). */
+	let layerLock = {};
+
+	function lockLayerFromLastSession(layer) {
+		let minTs = Infinity, maxTs = -Infinity;
+		for (let i = history.length - 1; i >= 0; i--) {
+			const e = history[i];
+			if (!e || e.layer !== layer) continue;
+			if (e.brk) break;
+			if (e.x !== undefined && e.ts !== undefined) {
+				if (e.ts < minTs) minTs = e.ts;
+				if (e.ts > maxTs) maxTs = e.ts;
+			}
+		}
+		if (minTs === Infinity) return;
+		// Floor avoids a degenerate near-zero cycle from a quick tap.
+		const cycleDurationMs = Math.max(300, maxTs - minTs);
+		layerLock[layer] = { firstTs: minTs, cycleDurationMs };
+	}
+
+	// Where in a locked layer's cycle a given real timestamp falls --
+	// a pure triangle wave (0 -> duration -> 0 -> ...), so it's fully
+	// determined by wall-clock time and needs no per-frame bookkeeping.
+	// Returns null for an unlocked layer.
+	function getLoopClockPos(layer, ts) {
+		const lock = layerLock[layer];
+		if (!lock) return null;
+		const period = lock.cycleDurationMs * 2;
+		let elapsed = (ts - lock.firstTs) % period;
+		if (elapsed < 0) elapsed += period;
+		return elapsed <= lock.cycleDurationMs ? elapsed : period - elapsed;
+	}
 
 	function beginStroke(colorIndex) {
 		const cnt = activePointerCountByLayer[currentLayer] || 0;
@@ -711,9 +778,13 @@
 	}
 	function appendToStroke(colorIndex, x, y) {
 		const cfg = { mirrors: CONFIG.mirrors, gridMode: CONFIG.gridMode, patternIndex: CONFIG.patternIndex, paletteIndex: CONFIG.paletteIndex, thickness: CONFIG.thickness, stampSize: CONFIG.stampSize, param1: CONFIG.param1, param2: CONFIG.param2 };
-		history.push({ layer: currentLayer, colorIndex, cfg, x, y });
+		const ts = performance.now();
+		history.push({ layer: currentLayer, colorIndex, cfg, x, y, ts });
 		historyPointCount++;
 		trimHistory();
+		const lp = (layerPoints[currentLayer] = layerPoints[currentLayer] || []);
+		lp.push({ colorIndex, x, y, ts, cfg, session: layerSessionCounter[currentLayer] || 0 });
+		if (lp.length > LAYER_POINTS_CAP) lp.shift();
 	}
 	// A specific finger lifting -- distinct from the `brk` full-break
 	// above, which only fires once EVERY finger on this layer is up.
@@ -725,7 +796,11 @@
 		const cnt = Math.max(0, (activePointerCountByLayer[currentLayer] || 0) - 1);
 		activePointerCountByLayer[currentLayer] = cnt;
 		history.push({ layer: currentLayer, end: colorIndex });
-		if (cnt === 0) history.push({ layer: currentLayer, brk: true });
+		if (cnt === 0) {
+			if (!layerLock[currentLayer]) lockLayerFromLastSession(currentLayer);
+			history.push({ layer: currentLayer, brk: true });
+			layerSessionCounter[currentLayer] = (layerSessionCounter[currentLayer] || 0) + 1;
+		}
 	}
 	// A point counts toward the cap; end-markers and breaks are free
 	// (shifting them off doesn't reduce historyPointCount).
@@ -764,6 +839,69 @@
 			pos.set(e.colorIndex, { x: e.x, y: e.y });
 		}
 		return order.map(ci => ({ colorIndex: ci, x: pos.get(ci).x, y: pos.get(ci).y }));
+	}
+
+	// Cross-session version of activeTouchesAtHistoryIndex, for locked
+	// layers only: which touches -- from ANY session ever recorded on this
+	// layer, not just the current one -- were down at this position in the
+	// shared loop clock? A finger added later, in a separate session,
+	// lands at whatever loop-position its own timestamps translate to; if
+	// that overlaps a position from the original locking session, both
+	// count as simultaneously held. Scans only layerPoints[layer] (this
+	// layer's own point index, capped at LAYER_POINTS_CAP) rather than the
+	// full multi-layer `history`, so cost is bounded by how much THIS
+	// layer has drawn, not the whole app. Matches per-point within
+	// `windowMs` of `targetPos`, closest match wins per colorIndex.
+	// Ordered by colorIndex ascending -- true chronological touch order
+	// even across sessions (touchColorCounter only ever increments).
+	function activeTouchesAtLoopPosition(layer, targetPos, windowMs) {
+		const pts = layerPoints[layer];
+		if (!pts) return [];
+		const best = new Map(); // colorIndex -> { x, y, dist }
+		for (let i = 0; i < pts.length; i++) {
+			const e = pts[i];
+			const pos = getLoopClockPos(layer, e.ts);
+			if (pos === null) continue;
+			const dist = Math.abs(pos - targetPos);
+			if (dist > windowMs) continue;
+			const prev = best.get(e.colorIndex);
+			if (!prev || dist < prev.dist) best.set(e.colorIndex, { x: e.x, y: e.y, dist });
+		}
+		return Array.from(best.keys()).sort((a, b) => a - b)
+			.map(ci => ({ colorIndex: ci, x: best.get(ci).x, y: best.get(ci).y }));
+	}
+
+	// Live-drawing counterpart: while you're actively drawing on a LOCKED
+	// layer, merges your current real touch(es) with wherever your past
+	// self's finger(s) sit right now in the same cycle, so the mesh line
+	// below connects your live stroke to your own earlier session as you
+	// draw -- not just on later replay. The expensive lookup
+	// (activeTouchesAtLoopPosition) is throttled to once per
+	// MESH_THROTTLE_MS regardless of how many draw events fire in that
+	// window; your own live touch position is never throttled or stale.
+	// Capped at MESH_TOUCH_CAP, always keeping your live touch(es) and
+	// filling the rest with the MOST RECENT past-self fingers (highest
+	// colorIndex) so a long-lived layer with many past sessions doesn't
+	// let the mesh (or a touch-reactive pattern) grow without bound.
+	let pastSelfCache = { layer: null, ts: -Infinity, result: [] };
+	const MESH_THROTTLE_MS = 40;
+	function liveTouchesForLayer(layer) {
+		if (!layerLock[layer]) return ongoingTouches;
+		const now = performance.now();
+		const targetPos = getLoopClockPos(layer, now);
+		if (targetPos === null) return ongoingTouches;
+		let pastSelf;
+		if (pastSelfCache.layer === layer && now - pastSelfCache.ts < MESH_THROTTLE_MS) {
+			pastSelf = pastSelfCache.result;
+		} else {
+			pastSelf = activeTouchesAtLoopPosition(layer, targetPos, MESH_WINDOW_MS);
+			pastSelfCache = { layer, ts: now, result: pastSelf };
+		}
+		const liveIds = new Set(ongoingTouches.map(t => t.colorIndex));
+		let filteredPast = pastSelf.filter(t => !liveIds.has(t.colorIndex));
+		const budget = Math.max(0, MESH_TOUCH_CAP - ongoingTouches.length);
+		if (filteredPast.length > budget) filteredPast = filteredPast.slice(-budget);
+		return [...ongoingTouches, ...filteredPast].sort((a, b) => a.colorIndex - b.colorIndex);
 	}
 
 	/* ================= CORE RENDER PASS =================
@@ -817,6 +955,7 @@
 		if (n < 2) return;
 		const pairs = n === 2 ? 1 : n; // 2 touches: one line, not a doubled-up "cycle"
 		targetCtx.save();
+		targetCtx.translate(cx, cy); // match renderPass -- endpoints below are center-relative
 		targetCtx.lineWidth = Math.max(0.5, CONFIG.thickness * 0.4);
 		for (let j = 0; j < pairs; j++) {
 			const a = touches[j];
@@ -842,8 +981,17 @@
 		let prevUV = isAuto ? lastAutoUV : (lastUVByLayer[currentLayer] || null);
 		const { pal, shadowPal } = currentPalettes();
 		const centers = getCenters();
+		// Real touches (unlocked layer) or real touches merged with your
+		// own past self replaying on a locked layer -- either way, this is
+		// the actual mesh feature: whichever touches count as "at the same
+		// time" right now get connected in a cycle, live, as you draw.
+		// Separate from -- and always on regardless of -- the parked
+		// Shadow Mesh toggle below, which still only ever sees real
+		// simultaneous ongoingTouches.
+		const allTouches = liveTouchesForLayer(currentLayer);
 		centers.forEach(c => {
-			renderPass(ctx, c.x, c.y, uv, prevUV, colorIndex, pal, shadowPal, CONFIG);
+			renderPass(ctx, c.x, c.y, uv, prevUV, colorIndex, pal, shadowPal, CONFIG, allTouches);
+			if (allTouches.length >= 2) drawShadowMesh(ctx, c.x, c.y, pal, allTouches);
 			if (CONFIG.shadowMesh) drawShadowMesh(ctx, c.x, c.y, pal, ongoingTouches);
 		});
 		if (isAuto) lastAutoUV = uv; else lastUVByLayer[currentLayer] = uv;
@@ -956,7 +1104,12 @@
 		if (history.length < 2) return;
 		for (let step = 0; step < 3; step++) {
 			const entry = history[ghostFlatIdx];
-			if (entry && entry.x !== undefined) {
+			// Locked layers are rendered by renderLockedLayers() instead,
+			// driven by real elapsed time rather than array position --
+			// skip them here so they don't also get the old sequential
+			// index-stepped treatment (which is exactly what a locked
+			// layer is meant to no longer do).
+			if (entry && entry.x !== undefined && !layerLock[entry.layer]) {
 				const { pal, shadowPal } = (() => {
 					const name = paletteNames[entry.cfg.paletteIndex] || paletteNames[0];
 					const p = colorPalettes[name];
@@ -973,12 +1126,59 @@
 				const active = activeTouchesAtHistoryIndex(ghostFlatIdx, entry.layer);
 				getCenters().forEach(c => {
 					renderPass(ctx, c.x, c.y, entry, prevEntry, entry.colorIndex, pal, shadowPal, entry.cfg, active);
+					if (active.length >= 2) drawShadowMesh(ctx, c.x, c.y, pal, active);
 					if (CONFIG.shadowMesh) drawShadowMesh(ctx, c.x, c.y, pal, active);
 				});
 			}
 			ghostFlatIdx += ghostDir;
 			if (ghostFlatIdx >= history.length - 1) { ghostFlatIdx = history.length - 1; ghostDir = -1; }
 			else if (ghostFlatIdx <= 0) { ghostFlatIdx = 0; ghostDir = 1; }
+		}
+	}
+
+	// Renders every locked layer by real elapsed time instead of array
+	// position: each locked layer has its own continuously-advancing
+	// triangle-wave "loop clock" (a pure function of wall-clock time, see
+	// getLoopClockPos). A point renders whenever the layer's current
+	// clock position is close to that point's own recorded position in
+	// the cycle -- so a stroke added minutes after the layer locked still
+	// plays back "in line" with the original session, not sequentially
+	// after it. Scans layerPoints[layer] (this layer's own point index)
+	// instead of the full multi-layer `history`, and computes the active-
+	// touch mesh ONCE per layer per frame (every matched point this frame
+	// shares the same clockNow, so there's no reason to redo it per point)
+	// -- cross-session, via activeTouchesAtLoopPosition, so a finger added
+	// in a separate later session gets meshed with the original session's
+	// fingers whenever their loop-positions line up. Prev-lookup instead
+	// stays scoped to each point's own originally-recorded stroke (same
+	// `session` id, see appendToStroke/endStroke) so an unrelated later
+	// gesture still doesn't get a stray connecting line drawn through it.
+	function renderLockedLayers() {
+		const now = performance.now();
+		for (const layerKey in layerLock) {
+			const layer = Number(layerKey);
+			const clockNow = getLoopClockPos(layer, now);
+			if (clockNow === null) continue;
+			const pts = layerPoints[layer];
+			if (!pts || pts.length === 0) continue;
+			const active = activeTouchesAtLoopPosition(layer, clockNow, MESH_WINDOW_MS);
+			for (let i = 0; i < pts.length; i++) {
+				const entry = pts[i];
+				const pos = getLoopClockPos(layer, entry.ts);
+				if (pos === null || Math.abs(pos - clockNow) > MESH_WINDOW_MS) continue;
+				const { pal, shadowPal } = (() => {
+					const name = paletteNames[entry.cfg.paletteIndex] || paletteNames[0];
+					const p = colorPalettes[name];
+					const sName = name.includes("Shadow") ? name : name + " Shadow";
+					return { pal: p, shadowPal: colorPalettes[sName] || p };
+				})();
+				const prevEntry = (i > 0 && pts[i - 1].session === entry.session) ? pts[i - 1] : null;
+				getCenters().forEach(c => {
+					renderPass(ctx, c.x, c.y, entry, prevEntry, entry.colorIndex, pal, shadowPal, entry.cfg, active);
+					if (active.length >= 2) drawShadowMesh(ctx, c.x, c.y, pal, active);
+					if (CONFIG.shadowMesh) drawShadowMesh(ctx, c.x, c.y, pal, active);
+				});
+			}
 		}
 	}
 
@@ -1026,7 +1226,8 @@
 		ctx.clearRect(0, 0, canvas.width, canvas.height);
 		history = []; historyPointCount = 0; activePointerCountByLayer = {};
 		lastUVByLayer = {}; currentLayer = 0; maxLayerUsed = 0;
-		ghostFlatIdx = 0; ghostDir = 1;
+		ghostFlatIdx = 0; ghostDir = 1; layerLock = {};
+		layerPoints = {}; layerSessionCounter = {}; pastSelfCache = { layer: null, ts: -Infinity, result: [] };
 		syncLayerUI();
 		hud('CLEARED', '');
 	});
@@ -1276,7 +1477,7 @@
 			const uv = { x: (W / 2) + Math.sin(t * 2) * 100, y: (H / 2) + Math.cos(t * 2) * 100 };
 			drawOnTexture(uv, true, 0);
 		}
-		if (CONFIG.ghostReplay) stepGhostReplay();
+		if (CONFIG.ghostReplay) { stepGhostReplay(); renderLockedLayers(); }
 
 		requestAnimationFrame(animate);
 	}

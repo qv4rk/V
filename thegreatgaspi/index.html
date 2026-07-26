@@ -1,0 +1,617 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>The Great GASPI</title>
+<meta name="description" content="Global Asymmetric Sovereignty & Power Index — an interactive geospatial platform mapping topographic, hydropolitical, infrastructural, and legal asymmetry across contested territories.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='44' fill='%23050810'/%3E%3Ccircle cx='50' cy='50' r='36' fill='none' stroke='%23c9a84c' stroke-width='2'/%3E%3Cpath d='M50 18 L50 82 M18 50 L82 50' stroke='%2300e5ff' stroke-width='1' opacity='.5'/%3E%3Ccircle cx='50' cy='50' r='6' fill='%23c9a84c'/%3E%3C/svg%3E">
+<style>
+/* ============ DESIGN TOKENS ============
+   Ops-console / geospatial-intelligence identity, deliberately continuing
+   feisttech.com's existing archive aesthetic (deep near-black ground,
+   gold for sovereignty/control data, cyan for infrastructure/telemetry)
+   rather than introducing a disconnected visual language. Committed
+   single dark theme — this is a satellite/telemetry instrument, not a
+   document that should invert to a light reading mode.
+   Type: a serif display face for the wordmark/territory name (dossier,
+   engraved-document feel), monospace for every coordinate/metric/label
+   (tabular data reads as data), a body serif for citation prose. */
+:root{
+  --bg:#050810; --bg-panel:#0b101c; --bg-tile:#10182a;
+  --line:#1c2740; --line-soft:#141d30;
+  --gold:#c9a84c; --gold-hi:#e6c877;
+  --cyan:#3ad9f2;
+  --water:#5b9fd6;
+  --warn:#dd9a4d;
+  --restrict:#c96650;
+  --ink:#eef1f6; --ink-dim:#9aa7bf; --ink-mute:#5d6b87;
+  --font-display: Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Times New Roman', serif;
+  --font-body: Georgia, 'Palatino Linotype', 'Book Antiqua', serif;
+  --font-mono: ui-monospace, 'SF Mono', 'Cascadia Code', 'Consolas', 'Liberation Mono', monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:var(--bg); color:var(--ink); font-family:var(--font-body);
+  overflow:hidden; -webkit-font-smoothing:antialiased;
+}
+.stage{ position:fixed; inset:0; display:grid; grid-template-columns:1fr min(380px,38vw); }
+@media (max-width:760px){ .stage{ grid-template-columns:1fr; } .hud{ display:none; } .hud.open{ display:flex; } }
+
+/* ---- Globe canvas column ---- */
+.globe-col{ position:relative; background:radial-gradient(ellipse at 50% 38%, #0a1120 0%, #050810 62%, #030509 100%); }
+canvas{ position:absolute; inset:0; width:100%; height:100%; touch-action:none; cursor:grab; }
+canvas.dragging{ cursor:grabbing; }
+
+.topbar{
+  position:absolute; top:0; left:0; right:0; z-index:5;
+  display:flex; align-items:baseline; justify-content:space-between;
+  padding:20px 24px; pointer-events:none;
+}
+.wordmark{ font-family:var(--font-display); font-size:1.05rem; letter-spacing:.14em; color:var(--gold-hi); }
+.wordmark small{ display:block; font-family:var(--font-mono); font-size:.6rem; letter-spacing:.22em; color:var(--ink-mute); margin-top:3px; text-transform:uppercase; }
+.hint{ font-family:var(--font-mono); font-size:.62rem; letter-spacing:.05em; color:var(--ink-mute); text-align:right; line-height:1.6; }
+
+.legend{
+  position:absolute; left:24px; bottom:22px; z-index:5;
+  display:flex; flex-direction:column; gap:6px;
+  font-family:var(--font-mono); font-size:.64rem; letter-spacing:.03em; color:var(--ink-dim);
+  background:rgba(5,8,16,.55); backdrop-filter:blur(6px); padding:12px 14px; border:1px solid var(--line-soft); border-radius:3px;
+}
+.legend-row{ display:flex; align-items:center; gap:8px; }
+.dot{ width:8px; height:8px; border-radius:50%; flex:none; }
+
+.mobile-toggle{ display:none; position:absolute; top:20px; right:20px; z-index:6; }
+@media (max-width:760px){ .mobile-toggle{ display:block; pointer-events:auto; } .topbar{padding-right:70px;} }
+.mobile-toggle button{
+  font-family:var(--font-mono); font-size:.62rem; letter-spacing:.08em; text-transform:uppercase;
+  background:rgba(11,16,28,.85); color:var(--gold-hi); border:1px solid var(--line); border-radius:3px;
+  padding:8px 12px; pointer-events:auto;
+}
+
+/* ---- HUD / dossier column ---- */
+.hud{
+  background:var(--bg-panel); border-left:1px solid var(--line);
+  display:flex; flex-direction:column; min-height:0;
+}
+.hud-head{ padding:20px 20px 14px; border-bottom:1px solid var(--line); }
+.tabs{ display:flex; gap:2px; margin-top:12px; }
+.tab{
+  flex:1; font-family:var(--font-mono); font-size:.66rem; letter-spacing:.08em; text-transform:uppercase;
+  color:var(--ink-mute); background:transparent; border:1px solid var(--line); padding:9px 6px; cursor:pointer;
+  transition:color .15s,border-color .15s,background .15s;
+}
+.tab.active{ color:var(--gold-hi); border-color:var(--gold); background:rgba(201,168,76,.08); }
+.tab:hover:not(.active){ color:var(--ink-dim); border-color:var(--ink-mute); }
+
+.hud-scroll{ flex:1; overflow-y:auto; padding:18px 20px 28px; }
+.hud-scroll::-webkit-scrollbar{ width:7px; }
+.hud-scroll::-webkit-scrollbar-thumb{ background:var(--line); border-radius:4px; }
+
+.territory-name{ font-family:var(--font-display); font-size:1.5rem; color:var(--ink); line-height:1.15; }
+.territory-sub{ font-family:var(--font-mono); font-size:.68rem; letter-spacing:.1em; color:var(--ink-mute); margin-top:6px; text-transform:uppercase; }
+
+.section-label{
+  font-family:var(--font-mono); font-size:.62rem; letter-spacing:.16em; text-transform:uppercase;
+  color:var(--cyan); margin:22px 0 10px;
+}
+.section-label:first-of-type{ margin-top:18px; }
+
+.tile-grid{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.tile{ background:var(--bg-tile); border:1px solid var(--line); border-radius:3px; padding:11px 12px; }
+.tile-val{ font-family:var(--font-mono); font-size:1.15rem; color:var(--gold-hi); font-variant-numeric:tabular-nums; display:block; }
+.tile-val.restrict{ color:var(--restrict); }
+.tile-val.warn{ color:var(--warn); }
+.tile-lab{ font-family:var(--font-mono); font-size:.6rem; color:var(--ink-mute); letter-spacing:.03em; margin-top:4px; display:block; line-height:1.4; }
+.tile-note{ font-family:var(--font-mono); font-size:.56rem; color:var(--ink-mute); margin-top:6px; opacity:.75; line-height:1.5; }
+
+.bar-row{ margin-top:4px; }
+.bar-labels{ display:flex; justify-content:space-between; font-family:var(--font-mono); font-size:.62rem; color:var(--ink-dim); margin-bottom:5px; }
+.bar-track{ height:7px; background:var(--bg-tile); border:1px solid var(--line); border-radius:2px; overflow:hidden; display:flex; }
+.bar-fill{ height:100%; }
+.bar-caption{ font-family:var(--font-mono); font-size:.58rem; color:var(--ink-mute); margin-top:5px; }
+
+.marker-list{ display:flex; flex-direction:column; gap:1px; border:1px solid var(--line); border-radius:3px; overflow:hidden; }
+.marker-item{
+  display:flex; align-items:center; gap:9px; padding:9px 11px; background:var(--bg-tile);
+  cursor:pointer; transition:background .12s; border-bottom:1px solid var(--line-soft);
+}
+.marker-item:last-child{ border-bottom:none; }
+.marker-item:hover{ background:#141f36; }
+.marker-item .dot{ flex:none; }
+.marker-item .m-name{ font-family:var(--font-mono); font-size:.68rem; color:var(--ink); flex:1; line-height:1.4; }
+.marker-item .m-meta{ font-family:var(--font-mono); font-size:.58rem; color:var(--ink-mute); white-space:nowrap; }
+
+.incident{ background:var(--bg-tile); border:1px solid var(--line); border-left:3px solid var(--warn); border-radius:2px; padding:12px 13px; margin-bottom:10px; }
+.incident-head{ display:flex; justify-content:space-between; align-items:baseline; gap:10px; }
+.incident-title{ font-family:var(--font-mono); font-size:.7rem; color:var(--warn); letter-spacing:.02em; text-transform:uppercase; }
+.incident-area{ font-family:var(--font-mono); font-size:.7rem; color:var(--ink-dim); flex:none; }
+.incident-body{ font-family:var(--font-body); font-size:.84rem; line-height:1.55; color:var(--ink-dim); margin-top:8px; }
+.incident-attr{ margin-top:9px; padding-top:9px; border-top:1px solid var(--line-soft); display:flex; flex-direction:column; gap:5px; }
+.attr-row{ font-family:var(--font-mono); font-size:.62rem; line-height:1.6; color:var(--ink-mute); }
+.attr-row b{ color:var(--ink-dim); font-weight:600; }
+
+.legal-row{ padding:10px 0; border-bottom:1px solid var(--line-soft); }
+.legal-row:last-child{ border-bottom:none; }
+.legal-name{ font-family:var(--font-mono); font-size:.68rem; color:var(--gold-hi); }
+.legal-desc{ font-family:var(--font-body); font-size:.8rem; color:var(--ink-dim); margin-top:4px; line-height:1.5; }
+
+.footer-note{
+  margin-top:24px; padding-top:16px; border-top:1px solid var(--line);
+  font-family:var(--font-mono); font-size:.58rem; color:var(--ink-mute); line-height:1.7;
+}
+.footer-note a{ color:var(--cyan); text-decoration:none; }
+
+.data-flag{
+  display:inline-block; font-family:var(--font-mono); font-size:.56rem; letter-spacing:.04em;
+  color:var(--restrict); border:1px solid rgba(201,102,80,.4); background:rgba(201,102,80,.08);
+  padding:2px 6px; border-radius:2px; margin-top:6px;
+}
+
+.tooltip{
+  position:absolute; z-index:8; pointer-events:none; background:rgba(8,12,22,.94);
+  border:1px solid var(--gold); border-radius:3px; padding:9px 12px; font-family:var(--font-mono);
+  font-size:.66rem; color:var(--ink); max-width:230px; line-height:1.6; opacity:0; transition:opacity .12s;
+}
+.tooltip .tt-title{ color:var(--gold-hi); font-size:.7rem; margin-bottom:3px; }
+
+.back-link{
+  position:absolute; z-index:6; top:20px; left:24px; display:none;
+}
+:focus-visible{ outline:2px solid var(--cyan); outline-offset:2px; }
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <div class="globe-col">
+    <canvas id="globe"></canvas>
+    <div class="topbar">
+      <div class="wordmark">THE GREAT GASPI<small>Global Asymmetric Sovereignty &amp; Power Index</small></div>
+      <div class="hint">drag to rotate · scroll / pinch to zoom<br>click a marker for detail</div>
+    </div>
+    <div class="mobile-toggle"><button id="hudToggle" type="button">Dossier ▸</button></div>
+    <div class="legend" id="legend"></div>
+    <div class="tooltip" id="tooltip"></div>
+  </div>
+
+  <aside class="hud" id="hud">
+    <div class="hud-head">
+      <div class="territory-name" id="tName">—</div>
+      <div class="territory-sub" id="tSub">—</div>
+      <div class="tabs" id="tabs"></div>
+    </div>
+    <div class="hud-scroll" id="hudScroll"></div>
+  </aside>
+</div>
+
+<script>
+"use strict";
+
+/* ======================================================================
+   DATA — consolidated from paired native-language "Side A / Side B"
+   deep-research passes (controlling-entity-sourced vs. locally/rights-
+   org-sourced) plus the standardized harvester JSON exports. Where the
+   two sides disagree on a figure, both are preserved rather than
+   silently collapsed to one number — that disagreement is itself part
+   of the record. Every figure below traces to sourced research;
+   nothing here is placeholder or invented.
+====================================================================== */
+const DATA = {
+  "west-bank": {
+    name: "West Bank", sub: "Managed by Israel · Oslo II framework, 1995–present",
+    center: {lat:31.95, lng:35.30},
+    metrics: {
+      area_sqkm: 5655,
+      accessible_pct: 32,
+      population_range: [2881000, 2949246],
+      settler_range: [530000, 700000],
+      density_overall: 522,
+      density_areas_ab: 1337,
+      barrier_km: [700, 712],
+      water_local: [75, 82.4], water_local_min: [20, 26], water_control: [247, 350], who: 100,
+      arable_pct: 7, irrigated_pct: 5.5, food_import_pct: [80,85],
+      airspace_control_pct: 100, electricity_dependency_pct: [90,95], fuel_dependency_pct: 100,
+    },
+    zones: [
+      {name:"Area A — Palestinian civil + security control", pct:19},
+      {name:"Area B — Palestinian civil / Israeli security control", pct:21.5},
+      {name:"Area C — full Israeli civil + security control", pct:59.5},
+    ],
+    peaks: [
+      {name:"Mount Ebal", lat:32.2340, lng:35.2733, elev:940, note:"Highest point, northern West Bank — surveils Nablus & Wadi Dothan"},
+      {name:"Mount Gerizim", lat:32.2008, lng:35.2732, elev:881, note:"Samaritan holy site; overlooks southern Nablus approaches"},
+      {name:"Givat 877 (Beit El / Psagot)", lat:31.9022, lng:35.2311, elev:877, note:"Direct sightline over Al-Bireh, Ramallah, ridge crossings"},
+      {name:"Ma'ale Adumim ridge", lat:31.7913, lng:35.2972, elev:480, note:"Commands the Jerusalem–Jordan corridor and Route 1"},
+    ],
+    checkpoints: [
+      {name:"Qalandia Checkpoint", lat:31.8631, lng:35.2281, note:"Jerusalem entry permit / magnetic card required"},
+      {name:"Huwwara Checkpoint", lat:32.1722, lng:35.2811, note:"Security ID clearance, vehicle permit — south Nablus"},
+      {name:"Za'atara (Tapuach) Checkpoint", lat:32.1006, lng:35.2589, note:"Route 60/505 junction — inter-district control"},
+      {name:"Al-Hamra Checkpoint", lat:32.1864, lng:35.4267, note:"Jordan Valley resident + agricultural access permit"},
+    ],
+    water: [
+      {name:"Ariel Drilling / Mekorot facility", lat:32.1044, lng:35.1744, note:"Western Aquifer extraction point"},
+      {name:"Herodium pumping station", lat:31.6658, lng:35.2453, note:"Central distribution node"},
+      {name:"Ein al-Auja spring", lat:31.9408, lng:35.4503, note:"Dried by adjacent Mekorot deep wells"},
+      {name:"Wadi Qana springs", lat:32.1645, lng:35.1210, note:"Declared nature reserve; settlement sewage inflow"},
+    ],
+    barriers: [
+      {name:"Separation barrier (Qalandia section)", lat:31.8647, lng:35.2261, note:"700–712 km total, ~85–90% inside West Bank, not on the 1949 line"},
+    ],
+    incidents: [
+      {type:"Tree uprooting & land leveling", area:"120 km²", justification:"Security clearances, absent building permits, line-of-sight maintenance",
+       disputed:"Systematic land seizure and economic pressure on rural communities — 800,000+ olive & fruit trees uprooted since 1967"},
+      {type:"Chemical herbicide spraying", area:"15 km²", justification:"Vegetation clearing near perimeter fences for security monitoring",
+       disputed:"Glyphosate-based compounds; crop destruction and soil contamination documented on affected plots"},
+      {type:"Settlement wastewater discharge", area:"25 km² / 35 Mm³ yr⁻¹", justification:"Technical malfunction of regional treatment plants",
+       disputed:"Untreated sewage from Ariel, Itamar, Barkan, Beit El flowing into Wadi Qana and West Bank aquifers, damaging olive groves"},
+    ],
+    legal: [
+      {name:"Military Order 1651 (2009 consolidation)", desc:"Criminal/procedural code — arrest, military-court jurisdiction, detention, search & seizure powers for the region."},
+      {name:"Military Order 418 (1971)", desc:"Transferred Jordanian Law No. 79/1966 planning authority to the Israeli Supreme Planning Council — froze Palestinian structural plans in Area C, created parallel settlement planning committees."},
+      {name:"Military Order 59 (1967)", desc:"Authorizes the Custodian to seize and administer land classified as state property under reinterpreted Ottoman Land Code (1858) categories."},
+    ],
+    sources: ["PCBS","B'Tselem","Israeli Civil Administration","Yesha Council","JCFA","Peace Now"],
+  },
+
+  "gaza-strip": {
+    name: "Gaza Strip", sub: "Israel (perimeter/external control) · PNA (local civil administration) · pre-Oct 2023 baseline",
+    center: {lat:31.42, lng:34.38},
+    metrics: {
+      area_sqkm: 365,
+      accessible_pct: 83,
+      population_range: [2200000, 2226544],
+      density_range: [5800, 6100],
+      ara_pct: [16, 20],
+      barrier_km: [59, 65],
+      water_local: [70, 85], water_external_supplied: [20,45], who: 100,
+      arable_sqkm: 100, ara_arable_overlap_pct: [25,35], food_import_pct: [80,90],
+      power_deficit_pct: [60,75], fuel_dependency_pct: 100,
+    },
+    zones: [
+      {name:"North Gaza Governorate", pct:16.7},
+      {name:"Gaza Governorate", pct:19.2},
+      {name:"Deir al-Balah Governorate", pct:15.3},
+      {name:"Khan Yunis Governorate", pct:29.6},
+      {name:"Rafah Governorate", pct:17.8},
+      {name:"Access Restricted Area (ARA) — overlay, not a discrete unit", pct:16.0},
+    ],
+    peaks: [],
+    checkpoints: [
+      {name:"Beit Hanoun (Erez) Crossing", lat:31.5581, lng:34.5471, note:"Passenger / delegation movement, northern crossing"},
+      {name:"Kerem Shalom Crossing", lat:31.2214, lng:34.2803, note:"Sole commercial goods/fuel entry — dual-use items list screening"},
+      {name:"Rafah Land Crossing", lat:31.2483, lng:34.2581, note:"Egyptian-controlled, civilian/humanitarian transit"},
+    ],
+    water: [
+      {name:"Central seawater desalination plant", lat:31.418, lng:34.331, note:"Operated by Coastal Municipalities Water Utility"},
+      {name:"Sheikh Ajlin treatment plant (Gaza City)", lat:31.4812, lng:34.4150, note:"Central-north wastewater treatment"},
+      {name:"Khan Yunis treatment plant", lat:31.3325, lng:34.2981, note:"Southern wastewater treatment"},
+      {name:"Nahal Oz supply line", lat:31.4762, lng:34.5013, note:"Mekorot line, ~10–12 Mm³/yr to Gaza City & north"},
+    ],
+    barriers: [
+      {name:"Gaza perimeter barrier", lat:31.5622, lng:34.5211, note:"59–65 km — subterranean wall + 6m smart fence + maritime sonar barrier + Sentry Tech towers, completed 2021"},
+    ],
+    incidents: [
+      {type:"Aerial herbicide spraying", area:"13–25 km²", justification:"IDF: vegetation clearing for operational line-of-sight and perimeter security monitoring",
+       disputed:"PCHR / Al-Mezan / Adalah / Gisha / Forensic Architecture: onshore-wind drift carries glyphosate, diuron & oxyfluorfen up to ~1,200 m into inhabited farmland — spinach, corn, wheat, citrus, olives destroyed; recurring ~2×/yr since 2014"},
+      {type:"Untreated wastewater discharge", area:"100,000–120,000 m³ / day", justification:"Fuel & electricity shortages disabling treatment plants",
+       disputed:"CMWU/PWA: continuous discharge into the Mediterranean, driven by blockade-constrained infrastructure rather than a contested policy choice"},
+    ],
+    legal: [
+      {name:"Security Cabinet declaration (19 Sept 2007)", desc:"Declared Gaza \"hostile territory,\" the legal basis for the naval blockade order and restrictions on goods, fuel and movement."},
+      {name:"HCJ 9132/07 — Al-Bassiouni v. Prime Minister (30 Jan 2008)", desc:"Israel's Supreme Court held Israel lacks \"effective control\" for full belligerent-occupation duties post-2005, but retains a humanitarian-minimum obligation to essential civilian supplies."},
+      {name:"Defense Export Control Order (2008) — Dual-Use Items List", desc:"Restricts pipes, pumps, sanitation equipment, fiber-optics, 3G/4G hardware, and construction materials as \"dual-use,\" per Military Order 92 (1967) transfer of water-authority powers."},
+    ],
+    sources: ["PCHR","Al-Mezan","Gisha","Adalah","B'Tselem","Forensic Architecture","CMWU","PWA","UN-Habitat"],
+  },
+};
+
+const CATS = [
+  {key:"peaks", label:"High ground", color:"#c9a84c"},
+  {key:"checkpoints", label:"Checkpoints / mobility", color:"#3ad9f2"},
+  {key:"water", label:"Water infrastructure", color:"#5b9fd6"},
+  {key:"barriers", label:"Physical barriers", color:"#c96650"},
+];
+
+/* ======================================================================
+   ORTHOGRAPHIC GLOBE — hand-rolled Canvas 2D renderer. No basemap
+   texture is embedded (avoids asserting coastline precision this build
+   can't back with a citation); orientation instead comes from a
+   graticule, a handful of well-known reference cities, and the two
+   sourced territory datasets above, all plotted at real coordinates.
+====================================================================== */
+const canvas = document.getElementById('globe');
+const ctx = canvas.getContext('2d');
+const tooltip = document.getElementById('tooltip');
+let W=0,H=0,DPR=Math.min(window.devicePixelRatio||1,2);
+
+const REFCITIES = [
+  {name:"Jerusalem", lat:31.7683, lng:35.2137},
+  {name:"Tel Aviv", lat:32.0853, lng:34.7818},
+  {name:"Amman", lat:31.9454, lng:35.9284},
+  {name:"Beirut", lat:33.8938, lng:35.5018},
+  {name:"Damascus", lat:33.5138, lng:36.2765},
+  {name:"Cairo", lat:30.0444, lng:31.2357},
+];
+
+let view = { lng:-35.30, lat:-24.0, zoom: 4.2 };
+let drag = null;
+let pinch = null;
+let activeTerritory = "west-bank";
+let hoverPoint = null;
+
+function resize(){
+  W = canvas.clientWidth; H = canvas.clientHeight;
+  canvas.width = W*DPR; canvas.height = H*DPR;
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+}
+window.addEventListener('resize', resize);
+
+function project(lat,lng,R){
+  const lam = (lng - view.lng) * Math.PI/180;
+  const phi = lat * Math.PI/180;
+  const phi0 = -view.lat * Math.PI/180;
+  const cosC = Math.sin(phi0)*Math.sin(phi) + Math.cos(phi0)*Math.cos(phi)*Math.cos(lam);
+  const x = R * Math.cos(phi) * Math.sin(lam);
+  const y = R * (Math.cos(phi0)*Math.sin(phi) - Math.sin(phi0)*Math.cos(phi)*Math.cos(lam));
+  return { x, y, visible: cosC > -0.06, cosC };
+}
+
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  const cx = W/2, cy = H/2;
+  const R = Math.min(W,H) * 0.34 * (view.zoom/4.2);
+
+  const glow = ctx.createRadialGradient(cx,cy,R*0.92,cx,cy,R*1.28);
+  glow.addColorStop(0,'rgba(58,217,242,0.16)');
+  glow.addColorStop(1,'rgba(58,217,242,0)');
+  ctx.fillStyle = glow;
+  ctx.beginPath(); ctx.arc(cx,cy,R*1.28,0,Math.PI*2); ctx.fill();
+
+  const sphere = ctx.createRadialGradient(cx-R*0.35,cy-R*0.4,R*0.1,cx,cy,R*1.05);
+  sphere.addColorStop(0,'#16233d');
+  sphere.addColorStop(0.6,'#0c1526');
+  sphere.addColorStop(1,'#060a13');
+  ctx.fillStyle = sphere;
+  ctx.beginPath(); ctx.arc(cx,cy,R,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle = 'rgba(58,217,242,0.35)'; ctx.lineWidth = 1;
+  ctx.stroke();
+
+  ctx.save();
+  ctx.beginPath(); ctx.arc(cx,cy,R,0,Math.PI*2); ctx.clip();
+  ctx.strokeStyle = 'rgba(154,167,191,0.14)'; ctx.lineWidth = 1;
+  for(let lng=-180; lng<180; lng+=15){
+    ctx.beginPath(); let started=false;
+    for(let lat=-90; lat<=90; lat+=2){
+      const p = project(lat,lng,R);
+      const sx=cx+p.x, sy=cy-p.y;
+      if(p.visible){ if(!started){ctx.moveTo(sx,sy);started=true;} else ctx.lineTo(sx,sy); }
+      else started=false;
+    }
+    ctx.stroke();
+  }
+  for(let lat=-75; lat<=75; lat+=15){
+    ctx.beginPath(); let started=false;
+    for(let lng=-180; lng<=180; lng+=2){
+      const p = project(lat,lng,R);
+      const sx=cx+p.x, sy=cy-p.y;
+      if(p.visible){ if(!started){ctx.moveTo(sx,sy);started=true;} else ctx.lineTo(sx,sy); }
+      else started=false;
+    }
+    ctx.stroke();
+  }
+  ctx.strokeStyle = 'rgba(201,168,76,0.28)'; ctx.lineWidth = 1.3;
+  ctx.beginPath(); let started=false;
+  for(let lng=-180; lng<=180; lng+=2){
+    const p = project(0,lng,R); const sx=cx+p.x, sy=cy-p.y;
+    if(p.visible){ if(!started){ctx.moveTo(sx,sy);started=true;} else ctx.lineTo(sx,sy);} else started=false;
+  }
+  ctx.stroke();
+  ctx.restore();
+
+  REFCITIES.forEach(c=>{
+    const p = project(c.lat,c.lng,R);
+    if(!p.visible) return;
+    const sx=cx+p.x, sy=cy-p.y;
+    ctx.fillStyle='rgba(154,167,191,0.55)';
+    ctx.beginPath(); ctx.arc(sx,sy,1.6,0,Math.PI*2); ctx.fill();
+    ctx.font = "10px " + getComputedStyle(document.body).getPropertyValue('--font-mono');
+    ctx.fillStyle='rgba(154,167,191,0.55)';
+    ctx.fillText(c.name, sx+5, sy+3);
+  });
+
+  hoverPoint = null;
+  const t = DATA[activeTerritory];
+  const drawGroup = (list, color, kind) => {
+    (list||[]).forEach(m=>{
+      const p = project(m.lat, m.lng, R);
+      if(!p.visible) return;
+      const sx=cx+p.x, sy=cy-p.y;
+      const isNear = view.__mouse && Math.hypot(view.__mouse.x-sx, view.__mouse.y-sy) < 9;
+      ctx.beginPath(); ctx.arc(sx,sy, isNear?6:4.2, 0, Math.PI*2);
+      ctx.fillStyle = color; ctx.globalAlpha = 0.92; ctx.fill(); ctx.globalAlpha = 1;
+      ctx.beginPath(); ctx.arc(sx,sy, isNear?9:6.2, 0, Math.PI*2);
+      ctx.strokeStyle = color; ctx.globalAlpha=0.4; ctx.lineWidth=1; ctx.stroke(); ctx.globalAlpha=1;
+      if(isNear){ hoverPoint = {m,sx,sy,kind}; }
+    });
+  };
+  drawGroup(t.peaks, CATS[0].color, 'peaks');
+  drawGroup(t.checkpoints, CATS[1].color, 'checkpoints');
+  drawGroup(t.water, CATS[2].color, 'water');
+  drawGroup(t.barriers, CATS[3].color, 'barriers');
+
+  const cp = project(t.center.lat, t.center.lng, R);
+  if(cp.visible){
+    const sx=cx+cp.x, sy=cy-cp.y;
+    ctx.strokeStyle='rgba(230,200,119,0.55)'; ctx.lineWidth=1.2;
+    ctx.beginPath(); ctx.arc(sx,sy,14,0,Math.PI*2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(sx-19,sy); ctx.lineTo(sx-14,sy); ctx.moveTo(sx+14,sy); ctx.lineTo(sx+19,sy);
+    ctx.moveTo(sx,sy-19); ctx.lineTo(sx,sy-14); ctx.moveTo(sx,sy+14); ctx.lineTo(sx,sy+19); ctx.stroke();
+  }
+
+  if(hoverPoint){
+    tooltip.style.opacity = 1;
+    tooltip.style.left = (hoverPoint.sx+14)+'px';
+    tooltip.style.top = (hoverPoint.sy+10)+'px';
+    const noteText = hoverPoint.m.note || (hoverPoint.m.elev? (hoverPoint.m.elev+'m elevation'):'');
+    tooltip.innerHTML = '<div class="tt-title">'+hoverPoint.m.name+'</div>'+noteText;
+  } else {
+    tooltip.style.opacity = 0;
+  }
+}
+
+function loop(){ draw(); requestAnimationFrame(loop); }
+
+function pointerPos(e, rect){ return { x:(e.clientX-rect.left), y:(e.clientY-rect.top) }; }
+
+canvas.addEventListener('pointerdown', e=>{
+  canvas.setPointerCapture(e.pointerId);
+  canvas.classList.add('dragging');
+  drag = { x:e.clientX, y:e.clientY, lng:view.lng, lat:view.lat };
+});
+canvas.addEventListener('pointermove', e=>{
+  const rect = canvas.getBoundingClientRect();
+  view.__mouse = pointerPos(e, rect);
+  if(drag){
+    const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+    view.lng = drag.lng - dx*0.35;
+    view.lat = Math.max(-85, Math.min(85, drag.lat + dy*0.35));
+  }
+});
+window.addEventListener('pointerup', e=>{ drag=null; canvas.classList.remove('dragging'); });
+canvas.addEventListener('pointerleave', ()=>{ view.__mouse=null; });
+
+canvas.addEventListener('wheel', e=>{
+  e.preventDefault();
+  view.zoom = Math.max(1.8, Math.min(11, view.zoom - e.deltaY*0.01));
+}, {passive:false});
+
+canvas.addEventListener('touchmove', e=>{
+  if(e.touches.length===2){
+    e.preventDefault();
+    const [a,b] = e.touches;
+    const dist = Math.hypot(a.clientX-b.clientX, a.clientY-b.clientY);
+    if(pinch){
+      const delta = dist - pinch.dist;
+      view.zoom = Math.max(1.8, Math.min(11, view.zoom + delta*0.02));
+    }
+    pinch = { dist };
+  }
+}, {passive:false});
+canvas.addEventListener('touchend', e=>{ if(e.touches.length<2) pinch=null; });
+
+function fmtRange(arr, unit){
+  if(!Array.isArray(arr)) return arr+(unit||'');
+  const [a,b]=arr;
+  if(a===b) return a.toLocaleString()+(unit||'');
+  return a.toLocaleString()+'–'+b.toLocaleString()+(unit||'');
+}
+function buildTabs(){
+  const tabs = document.getElementById('tabs');
+  tabs.innerHTML = '';
+  Object.keys(DATA).forEach(key=>{
+    const b = document.createElement('button');
+    b.className = 'tab' + (key===activeTerritory?' active':'');
+    b.textContent = DATA[key].name;
+    b.onclick = ()=>{ activeTerritory = key; view.lng = -DATA[key].center.lng; view.lat = -DATA[key].center.lat+8; renderHud(); buildTabs(); };
+    tabs.appendChild(b);
+  });
+}
+function buildLegend(){
+  const l = document.getElementById('legend');
+  l.innerHTML = CATS.map(c=>'<div class="legend-row"><span class="dot" style="background:'+c.color+'"></span>'+c.label+'</div>').join('')
+    + '<div class="legend-row"><span class="dot" style="background:rgba(154,167,191,.6)"></span>Reference city</div>';
+}
+function markerRows(list, color){
+  if(!list || !list.length) return '<div class="tile-note">No sites documented for this category.</div>';
+  return '<div class="marker-list">'+list.map(m=>
+    '<div class="marker-item" data-lat="'+m.lat+'" data-lng="'+m.lng+'">'+
+      '<span class="dot" style="background:'+color+'"></span>'+
+      '<span class="m-name">'+m.name+'</span>'+
+      '<span class="m-meta">'+(m.elev?m.elev+'m':'')+'</span>'+
+    '</div>'
+  ).join('')+'</div>';
+}
+function renderHud(){
+  const t = DATA[activeTerritory];
+  document.getElementById('tName').textContent = t.name;
+  document.getElementById('tSub').textContent = t.sub;
+
+  const waterLocal = fmtRange(t.metrics.water_local,' L');
+  const waterCtrl = t.metrics.water_control ? fmtRange(t.metrics.water_control,' L') : null;
+  const waterExt = t.metrics.water_external_supplied ? fmtRange(t.metrics.water_external_supplied,' L') : null;
+
+  let html = '';
+  html += '<div class="section-label">Territorial control</div>';
+  html += '<div class="tile-grid">';
+  html += '<div class="tile"><span class="tile-val">'+t.metrics.area_sqkm.toLocaleString()+' km²</span><span class="tile-lab">Total area</span></div>';
+  html += '<div class="tile"><span class="tile-val">'+t.metrics.accessible_pct+'%</span><span class="tile-lab">Accessible to local population</span></div>';
+  html += '<div class="tile"><span class="tile-val">'+fmtRange(t.metrics.population_range)+'</span><span class="tile-lab">Local population</span></div>';
+  if(t.metrics.settler_range){
+    html += '<div class="tile"><span class="tile-val restrict">'+fmtRange(t.metrics.settler_range)+'</span><span class="tile-lab">Settler population</span><div class="data-flag">Side A/B disagree — range shown</div></div>';
+  } else {
+    html += '<div class="tile"><span class="tile-val">'+fmtRange(t.metrics.barrier_km,' km')+'</span><span class="tile-lab">Perimeter barrier</span></div>';
+  }
+  html += '</div>';
+
+  if(t.zones && t.zones.length){
+    html += '<div class="section-label">Administrative zones</div>';
+    t.zones.forEach(z=>{
+      html += '<div class="bar-row"><div class="bar-labels"><span>'+z.name+'</span><span>'+z.pct+'%</span></div>';
+      html += '<div class="bar-track"><div class="bar-fill" style="width:'+z.pct+'%;background:var(--gold)"></div></div></div>';
+    });
+  }
+
+  html += '<div class="section-label">Water security</div>';
+  html += '<div class="tile-grid">';
+  html += '<div class="tile"><span class="tile-val warn">'+waterLocal+'/day</span><span class="tile-lab">Local per-capita consumption</span></div>';
+  html += '<div class="tile"><span class="tile-val">'+t.metrics.who+' L/day</span><span class="tile-lab">WHO minimum standard</span></div>';
+  if(waterCtrl) html += '<div class="tile"><span class="tile-val">'+waterCtrl+'/day</span><span class="tile-lab">Settler consumption</span></div>';
+  if(waterExt) html += '<div class="tile"><span class="tile-val">'+waterExt+'/day</span><span class="tile-lab">External freshwater supplied</span></div>';
+  html += '<div class="tile"><span class="tile-val">'+fmtRange(t.metrics.food_import_pct,'%')+'</span><span class="tile-lab">Food import dependency</span></div>';
+  html += '</div>';
+
+  html += '<div class="section-label">High ground</div>' + markerRows(t.peaks, CATS[0].color);
+  html += '<div class="section-label">Checkpoints &amp; mobility</div>' + markerRows(t.checkpoints, CATS[1].color);
+  html += '<div class="section-label">Water infrastructure</div>' + markerRows(t.water, CATS[2].color);
+
+  html += '<div class="section-label">Environmental &amp; agricultural degradation</div>';
+  t.incidents.forEach(inc=>{
+    html += '<div class="incident"><div class="incident-head"><span class="incident-title">'+inc.type+'</span><span class="incident-area">'+inc.area+'</span></div>';
+    html += '<div class="incident-attr">';
+    html += '<div class="attr-row"><b>Stated justification —</b> '+inc.justification+'</div>';
+    html += '<div class="attr-row"><b>Disputed by —</b> '+inc.disputed+'</div>';
+    html += '</div></div>';
+  });
+
+  html += '<div class="section-label">Legal framework</div>';
+  t.legal.forEach(l=>{
+    html += '<div class="legal-row"><div class="legal-name">'+l.name+'</div><div class="legal-desc">'+l.desc+'</div></div>';
+  });
+
+  html += '<div class="footer-note">Sources referenced across this profile: '+t.sources.join(' · ')+
+    '.<br>Composite sovereignty scoring intentionally not shown here — computed downstream by a fixed formula applied identically to every territory, never eyeballed per research pass. Early build covering two territories; more are added as research is completed.</div>';
+
+  document.getElementById('hudScroll').innerHTML = html;
+
+  document.querySelectorAll('.marker-item').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      view.lng = -parseFloat(el.dataset.lng);
+      view.lat = -parseFloat(el.dataset.lat)+3;
+      view.zoom = Math.max(view.zoom, 6.5);
+    });
+  });
+}
+
+document.getElementById('hudToggle').addEventListener('click', ()=>{
+  document.getElementById('hud').classList.toggle('open');
+});
+
+resize(); buildTabs(); buildLegend(); renderHud();
+view.lng = -DATA[activeTerritory].center.lng; view.lat = -DATA[activeTerritory].center.lat+8;
+loop();
+</script>
+</body>
+</html>
