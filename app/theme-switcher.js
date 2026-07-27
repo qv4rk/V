@@ -12,11 +12,13 @@
   var STORAGE_KEY = 'feisttech-theme';
 
   var THEMES = [
-    { id: 'patina',   label: 'Patina',   swatch: '#c9a84c' },
-    { id: 'cyan',     label: 'Cyan',     swatch: '#00e5ff' },
-    { id: 'imperial', label: 'Imperial', swatch: '#e8c46a' },
-    { id: 'night',    label: 'Night',    swatch: '#e8d39a' },
-    { id: 'veil',     label: 'Veil of Babel', swatch: '#c5a059' }
+    { id: 'patina',    label: 'Patina',   swatch: '#c9a84c' },
+    { id: 'cyan',      label: 'Cyan',     swatch: '#00e5ff' },
+    { id: 'imperial',  label: 'Imperial', swatch: '#e8c46a' },
+    { id: 'night',     label: 'Night',    swatch: '#e8d39a' },
+    { id: 'veil',      label: 'Veil of Babel', swatch: '#c5a059' },
+    { id: 'paper',     label: 'Paper (Light)', swatch: '#a6702e' },
+    { id: 'slate-day', label: 'Slate Day (Light)', swatch: '#1f6fb2' }
   ];
 
   function get() {
