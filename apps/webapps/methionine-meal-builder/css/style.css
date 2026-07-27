@@ -114,17 +114,59 @@ button:disabled { opacity: 0.45; cursor: default; }
 .addTargetRow { display: flex; align-items: center; gap: 0.8rem; font-size: 0.68rem; color: var(--ink-dim); margin: 0.4rem 0; flex-wrap: wrap; }
 .addTargetRow label { display: flex; align-items: center; gap: 0.25rem; cursor: pointer; }
 
-.resultsList { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.8rem; }
+/* Card-grid result layout — image-card aesthetic (icon in place of a
+   photo, since USDA FDC has no food photography in its API), a small
+   nutrient grid, and a highlighted methionine box that turns green when
+   the value is directly lab-measured and amber when it's a disclosed
+   estimate. Every number in a card comes from the live USDA response
+   passed in at render time — nothing here is stored or precomputed. */
+.resultsList {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+  gap: 0.9rem;
+  margin-top: 0.8rem;
+}
 .resultItem {
   border: 1px solid var(--panel-edge);
-  border-radius: 7px;
-  padding: 0.6rem 0.75rem;
+  border-radius: 12px;
+  padding: 0;
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem 0.9rem;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--bg-soft);
+  transition: transform 0.15s, border-color 0.15s;
 }
-.resultName { flex: 1 1 260px; font-size: 0.82rem; }
+.resultItem:hover { transform: translateY(-2px); border-color: var(--accent); }
+/* The photo is the primary visual identifier for the card — large and
+   high-contrast so a food is recognizable at a glance, which matters most
+   for low-vision/cataract users who may struggle to read small text or
+   distinguish a small icon. */
+.cardImage {
+  width: 100%;
+  height: 170px;
+  object-fit: cover;
+  display: block;
+  background: var(--bg-deep);
+}
+.cardTop {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.8rem 0.9rem 0.5rem;
+}
+.cardIcon {
+  font-size: 1.6rem;
+  width: 2.2rem;
+  height: 2.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-deep);
+  border-radius: 8px;
+  flex: none;
+}
+.cardTitleWrap { flex: 1; min-width: 0; }
+.resultName { font-size: 0.86rem; font-weight: 600; display: block; line-height: 1.3; }
 .resultMeta { font-size: 0.62rem; color: var(--ink-dim); }
 .dtBadge {
   font-size: 0.58rem;
@@ -134,16 +176,45 @@ button:disabled { opacity: 0.45; cursor: default; }
   color: var(--ink-dim);
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  white-space: nowrap;
 }
 .dtBadge.good { border-color: color-mix(in srgb, var(--accent-3) 55%, transparent); color: var(--accent-3); }
-.nutrientRow { font-size: 0.68rem; color: var(--ink-dim); flex-basis: 100%; }
-.nutrientRow strong { color: var(--ink); font-weight: 600; }
+.cardBody { padding: 0 0.9rem 0.9rem; display: flex; flex-direction: column; gap: 0.6rem; flex: 1; }
+.nutrientGrid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+.nutrientGrid2 .nCell {
+  background: var(--bg-deep);
+  border-radius: 6px;
+  padding: 5px 8px;
+}
+.nutrientGrid2 .nLabel { font-size: 0.58rem; color: var(--ink-dim); text-transform: uppercase; letter-spacing: 0.04em; display: block; }
+.nutrientGrid2 .nValue { font-size: 0.78rem; font-weight: 600; color: var(--ink); }
+.metBox {
+  border-radius: 8px;
+  padding: 8px 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid color-mix(in srgb, var(--danger) 40%, transparent);
+  background: color-mix(in srgb, var(--danger) 10%, transparent);
+}
+.metBox.measured {
+  border-color: color-mix(in srgb, var(--accent-3) 45%, transparent);
+  background: color-mix(in srgb, var(--accent-3) 10%, transparent);
+}
+.metBox .mLabel { font-size: 0.66rem; font-weight: 600; color: var(--danger); }
+.metBox.measured .mLabel { color: var(--accent-3); }
+.metBox .mValue { font-size: 0.95rem; font-weight: 700; color: var(--danger); }
+.metBox.measured .mValue { color: var(--accent-3); }
 .metUnknown { color: var(--danger); font-style: italic; }
-.gramsInput { width: 70px; }
-.addRow { display: flex; align-items: center; gap: 0.4rem; }
+.gramsInput { width: 60px; }
+.addRow { display: flex; align-items: center; gap: 0.4rem; margin-top: auto; }
 .sourceLink { font-size: 0.62rem; color: var(--accent); text-decoration: none; white-space: nowrap; }
 .sourceLink:hover { text-decoration: underline; }
-.showMoreBtn { width: 100%; font-size: 0.7rem; }
+.showMoreBtn { grid-column: 1 / -1; width: 100%; font-size: 0.7rem; }
 
 /* Daily log */
 .logTable { width: 100%; border-collapse: collapse; font-size: 0.76rem; margin-top: 0.6rem; }
