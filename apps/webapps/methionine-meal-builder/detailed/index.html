@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Low-Methionine Meal Builder — Detailed View — FeistTech</title>
+<meta name="description" content="Search USDA FoodData Central, track daily methionine intake, and build low-methionine recipes.">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../../../app/theme-vars.css">
+<script src="../../../../app/theme-switcher.js"></script>
+<link rel="stylesheet" href="../css/style.css">
+<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <a href="../index.html">← Tracker Home</a>
+    <div>
+      <h1>Low-Methionine Meal Builder</h1>
+      <div class="sub">Detailed view — USDA food search &amp; daily methionine tracker</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <span id="themeSwitcherMount"></span>
+    <button id="btnRecipes" type="button" class="secondary">📖 Recipes</button>
+    <button id="btnAbout" type="button" class="secondary">Why methionine?</button>
+    <button id="btnHelp" type="button">? Help</button>
+    <span class="badge">v1.2</span>
+  </div>
+</header>
+
+<main>
+
+  <div class="panel totalsPanel">
+    <div class="panel-title">Today's Totals</div>
+    <div class="metBudget">
+      <div class="metBudget-row">
+        <label for="dailyCapInput">Daily methionine cap (mg):</label>
+        <input type="number" id="dailyCapInput" value="150" min="10" step="10">
+      </div>
+      <div class="metBar"><div class="metBar-fill" id="metBarFill" style="width:0%"></div></div>
+      <div class="metBar-label" id="metBarLabel">0 / 150 mg</div>
+    </div>
+    <div class="metBudget proBudget">
+      <div class="metBudget-row">
+        <label for="dailyProteinFloorInput">Daily protein floor (g):</label>
+        <input type="number" id="dailyProteinFloorInput" value="50" min="0" step="5">
+      </div>
+      <div class="metBar"><div class="metBar-fill proBar-fill" id="proBarFill" style="width:0%"></div></div>
+      <div class="metBar-label" id="proBarLabel">0 / 50 g</div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Search USDA FoodData Central</div>
+
+    <div class="quickAddRow" id="quickAddRow"></div>
+
+    <div id="scanReader" class="scanReader" hidden></div>
+
+    <div class="searchRow">
+      <input type="text" id="searchInput" placeholder="e.g. 6 oz chicken breast, 100g broccoli">
+      <button id="btnMic" type="button" class="iconBtn" title="Voice input">🎤</button>
+      <button id="btnScan" type="button" class="iconBtn" title="Scan barcode">📷</button>
+      <button id="btnSearch" type="button">Search</button>
+    </div>
+    <div class="searchStatus" id="searchStatus"></div>
+    <div class="addTargetRow">
+      Adding to:
+      <label><input type="radio" name="addTarget" value="log" checked> Today's Log</label>
+      <label><input type="radio" name="addTarget" value="shopping"> Shopping List</label>
+    </div>
+    <div class="resultsList" id="resultsList"></div>
+    <div class="hint">Methionine is only directly lab-measured for whole/basic foods (Foundation &amp; SR Legacy, marked <span class="dtBadge good" style="vertical-align:1px;">good</span>). Name-brand results are grouped separately because manufacturer numbers vary by product and are often estimated from protein content instead of measured — tap "Source" on any result to see USDA's original record.</div>
+  </div>
+
+  <div class="tabs" id="listTabs">
+    <button class="tab-btn active" data-tab="log">🍽️ Today's Log</button>
+    <button class="tab-btn" data-tab="shopping">🛒 Shopping List</button>
+  </div>
+
+  <div class="panel tab-panel active" id="tab-log">
+    <table class="logTable" id="logTable">
+      <thead>
+        <tr><th>Food</th><th>g</th><th>Cal</th><th>Pro (g)</th><th>Met (mg)</th><th></th></tr>
+      </thead>
+      <tbody id="logBody"></tbody>
+      <tfoot>
+        <tr><td>Total</td><td></td><td id="logTotalCal">0</td><td id="logTotalPro">0</td><td id="logTotalMet">0</td><td></td></tr>
+      </tfoot>
+    </table>
+
+    <div class="addRow" style="margin-top:0.9rem;">
+      <button id="btnSaveRecipe" type="button" class="secondary">Save Log as Recipe</button>
+      <button id="btnViewLogProfile" type="button" class="secondary">📊 Full Nutrition Profile</button>
+      <button id="btnClearLog" type="button" class="danger">Clear Log</button>
+    </div>
+  </div>
+
+  <div class="panel tab-panel" id="tab-shopping">
+    <table class="logTable" id="shoppingTable">
+      <thead>
+        <tr><th>Food</th><th>g</th><th>Cal</th><th>Pro (g)</th><th>Met (mg)</th><th></th></tr>
+      </thead>
+      <tbody id="shoppingBody"></tbody>
+      <tfoot>
+        <tr><td>Total</td><td></td><td id="shoppingTotalCal">0</td><td id="shoppingTotalPro">0</td><td id="shoppingTotalMet">0</td><td></td></tr>
+      </tfoot>
+    </table>
+    <div class="addRow" style="margin-top:0.9rem;">
+      <button id="btnViewShoppingProfile" type="button" class="secondary">📊 Full Nutrition Profile</button>
+      <button id="btnPrintShopping" type="button" class="secondary">🖨️ Print List</button>
+      <button id="btnClearShopping" type="button" class="danger">Clear List</button>
+    </div>
+  </div>
+</main>
+
+<!-- Recipes drawer -->
+<div class="drawerOverlay" id="recipeDrawerOverlay" hidden>
+  <div class="drawer" role="dialog" aria-labelledby="recipeDrawerTitle">
+    <div class="drawer-header">
+      <h2 id="recipeDrawerTitle">Recipes</h2>
+      <button type="button" class="closeModal" id="btnCloseRecipes">Close</button>
+    </div>
+    <div class="hint" style="margin-bottom:0.6rem;">Tap "Load" to add a recipe's ingredients to Today's Log. Loading doesn't happen automatically — nothing here is added until you tap it.</div>
+    <div class="recipeList" id="recipeList"></div>
+  </div>
+</div>
+
+<!-- Full nutrition profile modal -->
+<div class="modalOverlay" id="profileOverlay" hidden>
+  <div class="modal" role="dialog" aria-labelledby="profileTitle">
+    <h2 id="profileTitle">Complete Nutrition Profile</h2>
+    <div class="nutrientGrid" id="profileGrid"></div>
+    <button type="button" class="closeModal" id="btnCloseProfile">Close</button>
+  </div>
+</div>
+
+<!-- Help modal -->
+<div class="modalOverlay" id="helpOverlay" hidden>
+  <div class="modal" role="dialog" aria-labelledby="helpTitle">
+    <h2 id="helpTitle">How this works</h2>
+
+    <h3>New here? Start here</h3>
+    <p>You'll see amounts written like "646 mg" — <strong>mg is short for milligram</strong>, just a small unit of weight, the same way an inch is a unit of length. You don't need to do any math; the tool adds everything up for you.</p>
+    <p><strong>Step 1 — Look up a food.</strong> Type it into the search box (e.g. "chicken breast," or "6 oz chicken breast" if you know the amount), tap the microphone (🎤) and say it out loud, or tap the camera (📷) to scan a package barcode. There's also a row of buttons above the search box for common foods — just tap one instead of typing.</p>
+    <p><strong>Step 2 — Add it to your list.</strong> Each search result has a box for how many grams and a <strong>+ Add</strong> button. Change the amount to match your portion, then tap Add. The "Adding to" choice above the search box sends it either to Today's Log (what you're eating now) or the Shopping List (planning ahead — doesn't count toward your total).</p>
+    <p><strong>Step 3 — Read your total.</strong> The bar at the very top of the page always shows your running total in mg against whatever daily amount your doctor has given you (type it into the box there — this tool doesn't suggest a number itself). Tap the small × next to any item in Today's Log to remove it.</p>
+
+    <h3>Search details</h3>
+    <p>Search pulls live results from the USDA FoodData Central database. Voice input (🎤) and barcode scanning (📷, using your camera) work the same way as typing — whatever text they produce gets searched.</p>
+    <h3>Why some foods show "estimated" methionine</h3>
+    <p>USDA only publishes full amino-acid breakdowns for "Foundation Foods" and "SR Legacy" entries — whole, basic foods like raw chicken breast, lentils, or rice. "Branded" packaged foods only carry label macros, because manufacturers aren't required to disclose amino acid content. When methionine isn't in the data, this tool estimates it as a share of the food's protein content — 1.5% for produce, 2.5% for canned goods, 3.5% for meat — and always marks it as an estimate (in italics, with a ~), never presenting it as measured.</p>
+    <h3>Log, Shopping List &amp; recipes</h3>
+    <p>The log tracks what you've eaten against your daily methionine cap; the shopping list is just a running total for planning ahead, with a print button. Tap "📖 Recipes" in the top-right to open the recipe drawer — nothing there gets added to your log until you tap "Load" on a specific recipe. Save the current log as a named recipe to reuse later — everything is stored locally in your own browser, nowhere else.</p>
+    <button type="button" class="closeModal" id="btnCloseHelp">Close</button>
+  </div>
+</div>
+
+<!-- About modal -->
+<div class="modalOverlay" id="aboutOverlay" hidden>
+  <div class="modal" role="dialog" aria-labelledby="aboutTitle">
+    <h2 id="aboutTitle">Why methionine?</h2>
+    <p>Methionine is an essential amino acid. Research by Professor Robert M. Hoffman (UCSD) found that many cancer cells are unusually dependent on external methionine for growth — a phenomenon sometimes called the "Hoffman Effect" or methionine addiction — even though, unlike normal cells, they're technically capable of producing some of their own. Restricting dietary methionine has been studied preclinically, and in some published case reports, as a way to selectively stress cancer cells and potentially sensitize them to chemotherapy (the "Hoffman Protocol").</p>
+    <h3>Important context</h3>
+    <p>This research is real but early-stage: the evidence base is mostly preclinical (cell and animal studies) plus individual clinical case reports, not large randomized controlled trials. Methionine restriction is not part of standard oncology treatment guidelines, and no methionine-restricting drug is FDA-approved for cancer treatment. This tool is for people who want to track and plan a lower-methionine diet for their own reasons — it is not medical advice.</p>
+    <div class="disclosure">This app is not a medical device and does not provide medical advice. Talk to a doctor or registered dietitian before making significant dietary changes, especially in the context of a cancer diagnosis or treatment.</div>
+    <button type="button" class="closeModal" id="btnCloseAbout">Close</button>
+  </div>
+</div>
+
+<script src="../js/usda.js"></script>
+<script src="../js/openfoodfacts.js"></script>
+<script src="../js/seed-recipes.js"></script>
+<script src="../js/app.js"></script>
+
+</body>
+</html>

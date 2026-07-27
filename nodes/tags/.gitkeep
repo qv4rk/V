@@ -1,0 +1,4 @@
+Keeps this directory tracked so `git add nodes/tags/` in deploy.yml
+never hits "pathspec did not match any files" -- companion auto-tag
+files (see build.py's resolve_tags) only get written here when a node
+has no manual tags, so this dir can otherwise sit empty for a long time.

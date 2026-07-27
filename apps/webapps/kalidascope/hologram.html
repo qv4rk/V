@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Hologram Omniscope</title>
+<style>
+	html, body { margin:0; padding:0; overflow:hidden; background:#050507; height:100%; touch-action:none; }
+	canvas { display:block; }
+	#hud {
+		position:fixed; top:10px; left:10px; z-index:10;
+		font-family:'Space Mono', monospace; font-size:11px; color:#8fd; opacity:0.8;
+		background:rgba(0,0,0,0.4); padding:8px 12px; border-radius:6px; line-height:1.6;
+		pointer-events:none;
+	}
+	#controls {
+		position:fixed; bottom:14px; left:50%; transform:translateX(-50%); z-index:10;
+		display:flex; gap:10px; align-items:center;
+		font-family:'Space Mono', monospace; font-size:11px; color:#cde;
+		background:rgba(10,10,14,0.7); padding:10px 16px; border-radius:10px;
+		border:1px solid rgba(140,220,255,0.2);
+	}
+	#controls label { display:flex; flex-direction:column; gap:3px; align-items:center; }
+	#controls input[type=range] { width:120px; }
+	#modeBtn {
+		position:fixed; top:10px; right:10px; z-index:10;
+		font-family:'Space Mono', monospace; font-size:11px; color:#cde;
+		background:rgba(10,10,14,0.7); border:1px solid rgba(140,220,255,0.3);
+		padding:8px 14px; border-radius:8px; cursor:pointer;
+	}
+	#modeBtn.active { background:rgba(140,220,255,0.25); }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="hud">
+	<span id="hudTitle">SIERPINSKI TETRAHEDRON</span><br>
+	<span id="hudHint">drag: rotate &middot; wheel/pinch: zoom</span>
+</div>
+<button id="modeBtn">Switch to Assemble Mode</button>
+<div id="controls">
+	<label id="depthLabel">Depth <span id="depthVal">3</span>
+		<input type="range" id="depth" min="0" max="6" step="1" value="3">
+	</label>
+	<label>Auto-spin
+		<input type="checkbox" id="autoSpin" checked>
+	</label>
+</div>
+
+<script>
+'use strict';
+
+/* ============================================================
+   GEOMETRY — the recursive rule itself.
+   Given a tetrahedron's 4 vertices, replace it with 4 smaller
+   tetrahedra: each keeps one original corner plus the 3 edge
+   midpoints nearest it. The 5th possible piece (an octahedron
+   in the middle) is deliberately never created -- that omission
+   is the entire fractal. Pure function, no rendering knowledge,
+   independently testable.
+   ============================================================ */
+function midpoint(p, q) {
+	return { x: (p.x + q.x) / 2, y: (p.y + q.y) / 2, z: (p.z + q.z) / 2 };
+}
+
+function subdivideTetrahedron(vertices, depth) {
+	if (depth <= 0) return [vertices];
+	const [A, B, C, D] = vertices;
+	const AB = midpoint(A, B), AC = midpoint(A, C), AD = midpoint(A, D);
+	const BC = midpoint(B, C), BD = midpoint(B, D), CD = midpoint(C, D);
+	const children = [
+		[A, AB, AC, AD],
+		[B, AB, BC, BD],
+		[C, AC, BC, CD],
+		[D, AD, BD, CD]
+	];
+	let out = [];
+	for (const child of children) out = out.concat(subdivideTetrahedron(child, depth - 1));
+	return out;
+}
+
+// 4 triangular faces of one tetrahedron, each face tagged with
+// which "child slot" (0-3) it belongs to for stable coloring.
+function tetraFaces(v) {
+	const [A, B, C, D] = v;
+	return [[A, B, C], [A, B, D], [A, C, D], [B, C, D]];
+}
+
+// Regular tetrahedron via 4 alternating vertices of a cube --
+// all 6 edges equal by construction, centered at the origin.
+function baseTetrahedron(size) {
+	const s = size;
+	return [
+		{ x:  s, y:  s, z:  s },
+		{ x:  s, y: -s, z: -s },
+		{ x: -s, y:  s, z: -s },
+		{ x: -s, y: -s, z:  s }
+	];
+}
+
+
+/* ============================================================
+   3D MATH — real rotation matrices + real perspective
+   projection, same approach validated in the Holographic
+   Kaleidoscope reference this session. No WebGL, no library.
+   ============================================================ */
+function rotate3D(x, y, z, pitch, yaw) {
+	let y1 = y * Math.cos(pitch) - z * Math.sin(pitch);
+	let z1 = y * Math.sin(pitch) + z * Math.cos(pitch);
+	let x2 = x * Math.cos(yaw) - z1 * Math.sin(yaw);
+	let z2 = x * Math.sin(yaw) + z1 * Math.cos(yaw);
+	return { x: x2, y: y1, z: z2 };
+}
+
+function project3D(x, y, z, cx, cy, focal, camDist) {
+	const scale = focal / (focal + z + camDist);
+	return { x: cx + x * scale, y: cy + y * scale, scale };
+}
+
+/* ============================================================
+   RENDER
+   ============================================================ */
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+function resize() { canvas.width = innerWidth; canvas.height = innerHeight; }
+resize();
+window.addEventListener('resize', resize);
+
+const state = {
+	mode: 'fractal', // 'fractal' | 'assemble'
+	depth: 3,
+	rotX: 25,
+	rotY: -30,
+	zoom: 1,
+	autoSpin: true,
+	dragging: false,
+	lastX: 0, lastY: 0,
+	selectedPiece: null
+};
+
+let leafTetrahedra = subdivideTetrahedron(baseTetrahedron(1), state.depth);
+
+// Each leaf tetrahedron (the "unit") gets its own distinct color --
+// not the 4 faces within it. Hue spread evenly around the color
+// wheel by index, so every one of the (up to 4^6=4096) units is
+// visually distinguishable, and since children are generated in
+// spatial order, nearby units tend to land near each other in hue too.
+function colorForUnit(index, total) {
+	const hue = (index / total) * 360;
+	return `hsl(${hue}, 85%, 62%)`;
+}
+
+// The 6 edges of one tetrahedron (wireframe, not filled faces).
+function tetraEdges(v) {
+	const [A, B, C, D] = v;
+	return [[A, B], [A, C], [A, D], [B, C], [B, D], [C, D]];
+}
+
+/* ============================================================
+   ASSEMBLE MODE ("older students" tier) -- 4 flat congruent
+   triangles start scattered independently on the table. Each is
+   freely selectable and freely transformable (rotate/scale) with
+   NO locking to neighbors -- getting sizes and angles to actually
+   line up is the deliberate challenge, not something the app does
+   for you. Folding/gluing along edges is a later increment; this
+   slice is select + free manipulate.
+   ============================================================ */
+function baseTriangle(edgeLength) {
+	const R = edgeLength / Math.sqrt(3);
+	return [90, 210, 330].map(d => {
+		const a = d * Math.PI / 180;
+		return { x: R * Math.cos(a), y: R * Math.sin(a), z: 0 };
+	});
+}
+
+const SCATTER = [{ x: -1.7, y: -1.0 }, { x: 1.7, y: -1.0 }, { x: -1.7, y: 1.0 }, { x: 1.7, y: 1.0 }];
+let netPieces = SCATTER.map((pos, i) => ({
+	id: i,
+	base: baseTriangle(1.2),
+	tx: pos.x, ty: pos.y, tz: 0,
+	rotZ: 0, pieceRotX: 0, pieceRotY: 0,
+	scale: 1
+}));
+
+function transformPieceVert(v, piece) {
+	const s = piece.scale;
+	let x = v.x * s, y = v.y * s, z = v.z * s;
+	const rz = piece.rotZ * Math.PI / 180;
+	const cz = Math.cos(rz), sz = Math.sin(rz);
+	const x1 = x * cz - y * sz, y1 = x * sz + y * cz;
+	const rotated = rotate3D(x1, y1, z, piece.pieceRotX * Math.PI / 180, piece.pieceRotY * Math.PI / 180);
+	return { x: rotated.x + piece.tx, y: rotated.y + piece.ty, z: rotated.z + piece.tz };
+}
+
+function projectPiece(piece, cx, cy, pitch, yaw, focal, camDist, sceneScale) {
+	return piece.base.map(v => {
+		const t = transformPieceVert(v, piece);
+		const scaled = { x: t.x * sceneScale, y: t.y * sceneScale, z: t.z * sceneScale };
+		const rotated = rotate3D(scaled.x, scaled.y, scaled.z, pitch, yaw);
+		return project3D(rotated.x, rotated.y, rotated.z, cx, cy, focal, camDist);
+	});
+}
+
+function pointInTriangle(px, py, a, b, c) {
+	const sign = (x, y, p, q) => (x - q.x) * (p.y - q.y) - (p.x - q.x) * (y - q.y);
+	const d1 = sign(px, py, a, b), d2 = sign(px, py, b, c), d3 = sign(px, py, c, a);
+	const hasNeg = d1 < 0 || d2 < 0 || d3 < 0;
+	const hasPos = d1 > 0 || d2 > 0 || d3 > 0;
+	return !(hasNeg && hasPos);
+}
+
+function drawSelectionBox(proj) {
+	const xs = proj.map(p => p.x), ys = proj.map(p => p.y);
+	const minX = Math.min(...xs) - 10, maxX = Math.max(...xs) + 10;
+	const minY = Math.min(...ys) - 10, maxY = Math.max(...ys) + 10;
+	ctx.save();
+	ctx.strokeStyle = '#8fd9ff';
+	ctx.lineWidth = 1;
+	ctx.setLineDash([6, 4]);
+	ctx.strokeRect(minX, minY, maxX - minX, maxY - minY);
+	ctx.restore();
+}
+
+function cameraParams() {
+	const w = canvas.width, h = canvas.height;
+	return {
+		w, h, cx: w / 2, cy: h / 2,
+		pitch: state.rotX * Math.PI / 180,
+		yaw: state.rotY * Math.PI / 180,
+		focal: 800,
+		camDist: 900 / state.zoom,
+		sceneScale: Math.min(w, h) * 0.32
+	};
+}
+
+function renderAssemble() {
+	const w = canvas.width, h = canvas.height;
+	ctx.clearRect(0, 0, w, h);
+	const { cx, cy, pitch, yaw, focal, camDist, sceneScale } = cameraParams();
+
+	netPieces.forEach((piece, i) => {
+		const proj = projectPiece(piece, cx, cy, pitch, yaw, focal, camDist, sceneScale);
+		const isSel = state.selectedPiece === i;
+		ctx.beginPath();
+		ctx.moveTo(proj[0].x, proj[0].y);
+		ctx.lineTo(proj[1].x, proj[1].y);
+		ctx.lineTo(proj[2].x, proj[2].y);
+		ctx.closePath();
+		if (isSel) { ctx.fillStyle = 'rgba(140,220,255,0.18)'; ctx.fill(); }
+		ctx.strokeStyle = isSel ? '#8fd9ff' : colorForUnit(i, netPieces.length);
+		ctx.lineWidth = isSel ? 2.4 : 1.4;
+		ctx.stroke();
+		if (isSel) drawSelectionBox(proj);
+	});
+}
+
+function hitTestPiece(screenX, screenY) {
+	const { cx, cy, pitch, yaw, focal, camDist, sceneScale } = cameraParams();
+	for (let i = 0; i < netPieces.length; i++) {
+		const proj = projectPiece(netPieces[i], cx, cy, pitch, yaw, focal, camDist, sceneScale);
+		if (pointInTriangle(screenX, screenY, proj[0], proj[1], proj[2])) return i;
+	}
+	return null;
+}
+
+function handleTap(x, y) {
+	if (state.mode !== 'assemble') return;
+	const hit = hitTestPiece(x, y);
+	state.selectedPiece = (hit !== null && hit === state.selectedPiece) ? null : hit;
+}
+
+function renderFractal() {
+	const w = canvas.width, h = canvas.height;
+	ctx.clearRect(0, 0, w, h);
+
+	const cx = w / 2, cy = h / 2;
+	const pitch = state.rotX * Math.PI / 180;
+	const yaw = state.rotY * Math.PI / 180;
+	const focal = 800;
+	const camDist = 900 / state.zoom;
+	const sceneScale = Math.min(w, h) * 0.32;
+
+	const total = leafTetrahedra.length;
+	leafTetrahedra.forEach((tet, tetIdx) => {
+		const color = colorForUnit(tetIdx, total);
+		const edges = tetraEdges(tet);
+		ctx.strokeStyle = color;
+		ctx.lineWidth = 1.1;
+		edges.forEach(([p, q]) => {
+			const proj = [p, q].map(v => {
+				const scaled = { x: v.x * sceneScale, y: v.y * sceneScale, z: v.z * sceneScale };
+				const rotated = rotate3D(scaled.x, scaled.y, scaled.z, pitch, yaw);
+				return project3D(rotated.x, rotated.y, rotated.z, cx, cy, focal, camDist);
+			});
+			ctx.beginPath();
+			ctx.moveTo(proj[0].x, proj[0].y);
+			ctx.lineTo(proj[1].x, proj[1].y);
+			ctx.stroke();
+		});
+	});
+}
+
+function render() {
+	if (state.mode === 'assemble') renderAssemble();
+	else renderFractal();
+}
+
+function animate() {
+	if (state.autoSpin && !state.dragging) state.rotY += 0.25;
+	render();
+	requestAnimationFrame(animate);
+}
+animate();
+
+/* ============================================================
+   INPUT -- mouse (desktop) and multi-touch (mobile).
+   Fractal mode: unchanged, single-drag orbits camera.
+   Assemble mode: tap selects a piece. With a piece selected,
+   1-finger drag MOVES it (repositions on the table -- this is
+   the whole point, so pieces can actually be brought toward each
+   other), 2 fingers scale it, 3 fingers rotate it freely -- finger
+   count alone disambiguates, no mode toggle needed. Desktop
+   equivalent: plain drag moves the selected piece, shift+drag
+   rotates it, wheel scales it.
+   ============================================================ */
+function inAssembleWithSelection() { return state.mode === 'assemble' && state.selectedPiece !== null; }
+
+function movePieceByScreenDelta(piece, dx, dy) {
+	const { sceneScale } = cameraParams();
+	piece.tx += dx / sceneScale;
+	piece.ty += dy / sceneScale;
+}
+
+let mouseDownPos = null, mouseMoved = false;
+canvas.addEventListener('mousedown', e => {
+	mouseDownPos = { x: e.clientX, y: e.clientY };
+	mouseMoved = false;
+	state.lastX = e.clientX; state.lastY = e.clientY;
+	if (!inAssembleWithSelection()) state.dragging = true;
+});
+window.addEventListener('mousemove', e => {
+	if (!mouseDownPos) return;
+	if (Math.hypot(e.clientX - mouseDownPos.x, e.clientY - mouseDownPos.y) > 4) mouseMoved = true;
+	if (inAssembleWithSelection()) {
+		const piece = netPieces[state.selectedPiece];
+		if (e.shiftKey) {
+			piece.pieceRotY += (e.clientX - state.lastX) * 0.5;
+			piece.pieceRotX += (e.clientY - state.lastY) * 0.5;
+		} else {
+			movePieceByScreenDelta(piece, e.clientX - state.lastX, e.clientY - state.lastY);
+		}
+		state.lastX = e.clientX; state.lastY = e.clientY;
+	} else if (state.dragging) {
+		state.rotY += (e.clientX - state.lastX) * 0.5;
+		state.rotX += (e.clientY - state.lastY) * 0.5;
+		state.lastX = e.clientX; state.lastY = e.clientY;
+	}
+});
+window.addEventListener('mouseup', e => {
+	state.dragging = false;
+	if (mouseDownPos && !mouseMoved) handleTap(e.clientX, e.clientY);
+	mouseDownPos = null;
+});
+
+canvas.addEventListener('wheel', e => {
+	e.preventDefault();
+	if (inAssembleWithSelection()) {
+		const piece = netPieces[state.selectedPiece];
+		piece.scale = Math.max(0.3, Math.min(3, piece.scale - e.deltaY * 0.001));
+	} else {
+		state.zoom = Math.max(0.3, Math.min(4, state.zoom - e.deltaY * 0.001));
+	}
+}, { passive: false });
+
+let activeTouches = new Map();
+let gesture = null;
+let tapCandidate = null;
+
+function touchesArray() { return Array.from(activeTouches.values()); }
+function centroidOfPoints(pts) { return { x: pts.reduce((s, p) => s + p.x, 0) / pts.length, y: pts.reduce((s, p) => s + p.y, 0) / pts.length }; }
+function pairDist(pts) { return Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y); }
+
+function startGestureIfNeeded() {
+	if (!inAssembleWithSelection()) { gesture = null; return; }
+	const pts = touchesArray();
+	const piece = netPieces[state.selectedPiece];
+	if (pts.length === 1) gesture = { type: 'move', count: 1, lastX: pts[0].x, lastY: pts[0].y };
+	else if (pts.length === 2) gesture = { type: 'scale', count: 2, startDist: pairDist(pts), startScale: piece.scale };
+	else if (pts.length === 3) gesture = { type: 'rotate', count: 3, startCentroid: centroidOfPoints(pts), startRotX: piece.pieceRotX, startRotY: piece.pieceRotY };
+	else gesture = null;
+}
+
+canvas.addEventListener('touchstart', e => {
+	for (const t of e.changedTouches) activeTouches.set(t.identifier, { x: t.clientX, y: t.clientY });
+	const pts = touchesArray();
+	if (pts.length === 1) {
+		tapCandidate = { x: pts[0].x, y: pts[0].y, moved: false };
+		state.lastX = pts[0].x; state.lastY = pts[0].y;
+		if (inAssembleWithSelection()) { state.dragging = false; startGestureIfNeeded(); }
+		else state.dragging = true;
+	} else {
+		state.dragging = false;
+		tapCandidate = null;
+		startGestureIfNeeded();
+	}
+}, { passive: true });
+
+canvas.addEventListener('touchmove', e => {
+	for (const t of e.changedTouches) activeTouches.set(t.identifier, { x: t.clientX, y: t.clientY });
+	const pts = touchesArray();
+	if (tapCandidate && pts.length === 1) {
+		if (Math.hypot(pts[0].x - tapCandidate.x, pts[0].y - tapCandidate.y) > 8) tapCandidate.moved = true;
+	}
+	if (gesture && pts.length === gesture.count) {
+		const piece = netPieces[state.selectedPiece];
+		if (gesture.type === 'move') {
+			movePieceByScreenDelta(piece, pts[0].x - gesture.lastX, pts[0].y - gesture.lastY);
+			gesture.lastX = pts[0].x; gesture.lastY = pts[0].y;
+		} else if (gesture.type === 'scale') {
+			piece.scale = Math.max(0.3, Math.min(3, gesture.startScale * (pairDist(pts) / gesture.startDist)));
+		} else if (gesture.type === 'rotate') {
+			const c = centroidOfPoints(pts);
+			piece.pieceRotY = gesture.startRotY + (c.x - gesture.startCentroid.x) * 0.5;
+			piece.pieceRotX = gesture.startRotX + (c.y - gesture.startCentroid.y) * 0.5;
+		}
+	} else if (state.dragging && pts.length === 1) {
+		state.rotY += (pts[0].x - state.lastX) * 0.5;
+		state.rotX += (pts[0].y - state.lastY) * 0.5;
+		state.lastX = pts[0].x; state.lastY = pts[0].y;
+	}
+}, { passive: true });
+
+canvas.addEventListener('touchend', e => {
+	const wasSingle = touchesArray().length === 1;
+	for (const t of e.changedTouches) activeTouches.delete(t.identifier);
+	const pts = touchesArray();
+	if (tapCandidate && !tapCandidate.moved && wasSingle && pts.length === 0) handleTap(tapCandidate.x, tapCandidate.y);
+	if (pts.length === 0) { tapCandidate = null; state.dragging = false; gesture = null; }
+	else {
+		startGestureIfNeeded();
+		if (pts.length === 1) { state.dragging = !inAssembleWithSelection(); state.lastX = pts[0].x; state.lastY = pts[0].y; }
+	}
+}, { passive: true });
+
+document.getElementById('depth').addEventListener('input', e => {
+	state.depth = parseInt(e.target.value, 10);
+	document.getElementById('depthVal').textContent = state.depth;
+	leafTetrahedra = subdivideTetrahedron(baseTetrahedron(1), state.depth);
+});
+document.getElementById('autoSpin').addEventListener('change', e => { state.autoSpin = e.target.checked; });
+
+document.getElementById('modeBtn').addEventListener('click', () => {
+	state.mode = state.mode === 'fractal' ? 'assemble' : 'fractal';
+	const btn = document.getElementById('modeBtn');
+	const hudTitle = document.getElementById('hudTitle');
+	const hudHint = document.getElementById('hudHint');
+	const depthLabel = document.getElementById('depthLabel');
+	if (state.mode === 'assemble') {
+		btn.textContent = 'Switch to Fractal Mode';
+		btn.classList.add('active');
+		hudTitle.textContent = 'ASSEMBLE MODE — 4 FLAT FACES';
+		hudHint.textContent = 'tap: select · 1-finger/drag: move · 2-finger/wheel: scale · 3-finger/shift+drag: rotate';
+		depthLabel.style.display = 'none';
+		state.autoSpin = false;
+		document.getElementById('autoSpin').checked = false;
+	} else {
+		btn.textContent = 'Switch to Assemble Mode';
+		btn.classList.remove('active');
+		hudTitle.textContent = 'SIERPINSKI TETRAHEDRON';
+		hudHint.textContent = 'drag: rotate · wheel/pinch: zoom';
+		depthLabel.style.display = '';
+		state.selectedPiece = null;
+	}
+});
+</script>
+</body>
+</html>

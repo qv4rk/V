@@ -1,0 +1,83 @@
+{
+  "note": "Every field below was read directly from page 1 (and references) of each PDF by an AI assistant — title, authors, journal, date, and DOI are transcribed from the document itself, not looked up or guessed. Verify against the DOI link before citing.",
+  "papers": [
+    {
+      "id": "kubota-2022-pancreatic",
+      "title": "Stage IV Pancreatic Cancer Patient Treated With FOLFIRINOX Combined With Oral Methioninase: A Highly-Rare Case With Long-term Stable Disease",
+      "authors": "Yutaro Kubota, Qinghong Han, Chihiro Hozumi, Noriyuki Masaki, Jun Yamamoto, Yusuke Aoki, Takuya Tsunoda, Robert M. Hoffman",
+      "journal": "Anticancer Research",
+      "citation": "Anticancer Res 42(5): 2567-2572, 2022",
+      "date": "2022",
+      "doi": "10.21873/anticanres.15734",
+      "doiUrl": "https://doi.org/10.21873/anticanres.15734",
+      "type": "Case report",
+      "topic": "Methionine restriction / pancreatic cancer",
+      "file": "pdfs/KubotaY-etal_StageIVPancreaticCancerFOLFIRINOXOralMethioninase_2022_AnticancerResearch.pdf"
+    },
+    {
+      "id": "sato-2024-pancreatic",
+      "title": "First-line Chemotherapy in Combination With Oral Recombinant Methioninase and a Low-methionine Diet for a Stage IV Inoperable Pancreatic-Cancer Patient Resulted in 40% Tumor Reduction and an 86% CA19-9 Biomarker Decrease",
+      "authors": "Motokazu Sato, Qinghong Han, Chihiro Hozumi, Hideo Kujiraoka, Kohei Mizuta, Sei Morinaga, Byung Mo Kang, Noritoshi Kobayashi, Yasushi Ichikawa, Atsushi Nakajima, Robert M. Hoffman",
+      "journal": "Anticancer Research",
+      "citation": "Anticancer Res 44(9): 3885-3889, 2024",
+      "date": "2024",
+      "doi": "10.21873/anticanres.17215",
+      "doiUrl": "https://doi.org/10.21873/anticanres.17215",
+      "type": "Case report",
+      "topic": "Methionine restriction / pancreatic cancer",
+      "file": "pdfs/SatoM-etal_FirstLineChemoOralMethioninaseLowMethionineDietStageIVPancreatic_2024_AnticancerResearch.pdf"
+    },
+    {
+      "id": "kang-2025-rmetase-coculture",
+      "title": "Recombinant Methioninase Selectively Eliminates Cancer Cells Co-cultured With Normal Fibroblasts Indicating the High-Precision Efficacy of Targeting Methionine Addiction of Cancer",
+      "authors": "Byung Mo Kang, Qinghong Han, Shukuan Li, Jin Soo Kim, Kohei Mizuta, Yohei Asano, Yuta Miyashi, Michael Bouvet, Robert M. Hoffman",
+      "journal": "Anticancer Research",
+      "citation": "Anticancer Res 45: 4193-4200, 2025",
+      "date": "2025",
+      "doi": "10.21873/anticanres.17771",
+      "doiUrl": "https://doi.org/10.21873/anticanres.17771",
+      "type": "Preclinical study",
+      "topic": "Methionine restriction / mechanism",
+      "file": "pdfs/KangBM-etal_RecombinantMethioninaseSelectivelyEliminatesCancerCells_2025_AnticancerResearch.pdf"
+    },
+    {
+      "id": "revmed-2026-daraxonrasib",
+      "title": "Daraxonrasib Demonstrates Unprecedented Overall Survival Benefit in Pivotal Phase 3 RASolute 302 Clinical Trial in Patients with Metastatic Pancreatic Cancer",
+      "authors": "Revolution Medicines (press release; principal investigator Brian M. Wolpin, M.D., Dana-Farber Cancer Institute)",
+      "journal": "GlobeNewswire (company press release)",
+      "citation": "Revolution Medicines press release, April 13, 2026",
+      "date": "2026-04-13",
+      "doi": null,
+      "doiUrl": "https://clinicaltrials.gov/study/NCT06625320",
+      "type": "Trial results press release — not peer-reviewed",
+      "topic": "RAS(ON) inhibitor / pancreatic cancer (not methionine-related — included for pancreatic-cancer treatment context)",
+      "file": "pdfs/RevolutionMedicines_DaraxonrasibRASolute302PhaseIIIResults_2026-04-13_GlobeNewswire.pdf"
+    },
+    {
+      "id": "huang-2016-ivermectin-pak1akt",
+      "title": "Ivermectin Induces Cytostatic Autophagy by Blocking the PAK1/Akt Axis in Breast Cancer",
+      "authors": "Qianhui Dou, Hai-Ning Chen, Kui Wang, Kefei Yuan, Yunlong Lei, Kai Li, Jiang Lan, Yan Chen, Zhao Huang, Na Xie, Lu Zhang, Rong Xiang, Edouard C. Nice, Yuquan Wei, Canhua Huang",
+      "journal": "Cancer Research (AACR)",
+      "citation": "Cancer Res 76(15): 4457-4469, 2016",
+      "date": "2016",
+      "doi": "10.1158/0008-5472.CAN-15-2887",
+      "doiUrl": "https://doi.org/10.1158/0008-5472.CAN-15-2887",
+      "type": "Preclinical study",
+      "topic": "Ivermectin / breast cancer",
+      "file": "pdfs/HuangC-etal_IvermectinPAK1AktAxisBreastCancer_2016_CancerResearch-AACR.pdf"
+    },
+    {
+      "id": "draganov-2021-ivermectin-cold-hot",
+      "title": "Ivermectin converts cold tumors hot and synergizes with immune checkpoint blockade for treatment of breast cancer",
+      "authors": "Dobrin Draganov, Zhen Han, Aamir Rana, Nitasha Bennett, Darrell J. Irvine, Peter P. Lee",
+      "journal": "npj Breast Cancer (Nature Portfolio)",
+      "citation": "npj Breast Cancer 7:22, 2021",
+      "date": "2021",
+      "doi": "10.1038/s41523-021-00229-5",
+      "doiUrl": "https://doi.org/10.1038/s41523-021-00229-5",
+      "type": "Preclinical study",
+      "topic": "Ivermectin / breast cancer / immunotherapy",
+      "file": "pdfs/Draganov-etal_IvermectinConvertsColdTumorsHotBreastCancer_2021_npjBreastCancer-Nature.pdf"
+    }
+  ]
+}

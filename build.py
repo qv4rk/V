@@ -31,6 +31,27 @@ TAG_KEYWORDS_PATH = os.path.join(SCRIPT_DIR, 'tag-keywords.json')
 MONTH_NAMES = ['JAN','FEB','MAR','APR','MAY','JUN',
                'JUL','AUG','SEP','OCT','NOV','DEC']
 
+# ── Multi-language node support ──────────────────────────────────────────────
+# A node's frontmatter may set `lang: ar` / `lang: he` (default: en) and
+# `translationOf: n01` to mark it as a translation of another node. The
+# canonical (translationOf-less) node is the only one plotted on the Atlas
+# globe/search; translations still get their own article page + sitemap
+# entry, and a language-switcher linking all siblings together.
+LANG_LABELS = {'en': 'English', 'ar': 'العربية', 'he': 'עברית', 'zh': '中文'}
+RTL_LANGS   = {'ar', 'he'}
+LANG_FONT_LINKS = {
+    'en': '<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">',
+    'ar': '<link href="https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@400;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">',
+    'he': '<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Hebrew:wght@400;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">',
+    'zh': '<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">',
+}
+LANG_BODY_FONTS = {
+    'en': "'Cormorant Garamond', serif",
+    'ar': "'Noto Naskh Arabic', serif",
+    'he': "'Noto Sans Hebrew', serif",
+    'zh': "'Noto Serif SC', serif",
+}
+
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
 def parse_node_file(path):
@@ -113,7 +134,7 @@ def resolve_tags(eid, fm, body, tag_keywords):
 # Uses __TOKEN__ placeholders (avoids collisions with CSS/JS curly braces).
 
 ARTICLE_TMPL = r"""<!DOCTYPE html>
-<html lang="en">
+<html lang="__LANG__" dir="__DIR__">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -128,7 +149,7 @@ ARTICLE_TMPL = r"""<!DOCTYPE html>
 <link rel="canonical" href="__CANONICAL__">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+__FONT_LINK__
 <style>
 :root {
   --bg: #050810;
@@ -148,7 +169,7 @@ html { scroll-behavior: smooth; }
 body {
   background: var(--bg);
   color: var(--ink);
-  font-family: 'Cormorant Garamond', serif;
+  font-family: __BODY_FONT__;
   font-size: 18px;
   line-height: 1.8;
   min-height: 100vh;
@@ -180,6 +201,17 @@ body {
 .nav-btn.atlas:hover { border-color: var(--primary); color: var(--primary); }
 .nav-spacer { flex: 1; min-width: 8px; }
 
+/* ── Language switcher ── */
+.lang-switch {
+  max-width: 720px; margin: 0 auto; padding: 10px 1.5rem 0;
+  font-family: 'Space Mono', monospace;
+  font-size: 9px; letter-spacing: 1px; text-transform: uppercase;
+  color: var(--ink-mute);
+}
+.lang-switch a.lang-link { color: var(--gold); text-decoration: none; }
+.lang-switch a.lang-link:hover { text-decoration: underline; }
+.lang-switch .lang-current { color: var(--ink); }
+
 /* ── Article ── */
 article {
   max-width: 720px; margin: 0 auto;
@@ -200,7 +232,7 @@ article {
   margin: 0 4px 4px 0;
 }
 .article-title {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: __BODY_FONT__;
   font-size: clamp(1.7rem, 5vw, 2.5rem);
   font-weight: 600; line-height: 1.25;
   color: var(--ink); margin: 1rem 0 1.5rem;
@@ -226,7 +258,7 @@ article {
   border-left-color: var(--primary);
 }
 #article-content h1, #article-content h2, #article-content h3 {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: __BODY_FONT__;
   margin: 2.5rem 0 0.75rem; font-weight: 600; line-height: 1.3;
 }
 #article-content h1 { font-size: 1.9rem; }
@@ -298,7 +330,7 @@ article {
   gap: 1.5rem; padding: 2rem;
 }
 #rsvp-word {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: __BODY_FONT__;
   font-size: clamp(2.5rem, 10vw, 5rem);
   color: var(--ink); text-align: center; min-height: 1.3em;
   letter-spacing: -.01em;
@@ -326,7 +358,7 @@ article {
   <span class="nav-spacer"></span>
   <button class="nav-btn" onclick="launchRSVP()">⚡ RSVP</button>
 </nav>
-
+__LANG_SWITCHER__
 <article>
   <div class="article-meta">__TYPE_LABEL__ · __DATE_LABEL__ · __LOCATION__</div>
   __TAGS_HTML__
@@ -499,6 +531,20 @@ _ui();
 
 # ── Works-cited renderer ─────────────────────────────────────────────────────
 
+def render_lang_switcher(eid, family):
+    """family: list of (sibling_eid, lang) tuples sharing one canonical id."""
+    if len(family) < 2:
+        return ''
+    links = []
+    for sib_id, sib_lang in sorted(family, key=lambda x: x[1] != 'en'):
+        label = LANG_LABELS.get(sib_lang, sib_lang.upper())
+        if sib_id == eid:
+            links.append(f'<span class="lang-current">{label}</span>')
+        else:
+            links.append(f'<a href="{sib_id}.html" class="lang-link">{label}</a>')
+    return '<div class="lang-switch">Read in: ' + ' · '.join(links) + '</div>'
+
+
 def render_works_cited(references):
     if not references:
         return ''
@@ -534,49 +580,69 @@ def build():
     sitemap_urls = []
     tag_keywords = load_tag_keywords()
 
+    # ── First pass: parse every node and group translations by canonical id ──
+    # so each generated page can link to its siblings, regardless of which
+    # order the files happen to be processed in.
+    parsed = {}
     for fname in md_files:
         path = os.path.join(NODES_DIR, fname)
         fm, body = parse_node_file(path)
         if not fm:
             print(f'  SKIP (no frontmatter): {fname}')
             continue
-
         eid = fm.get('id') or fname[:-3]
+        parsed[eid] = (fm, body)
+
+    families = {}  # canonical_id -> [(eid, lang), ...]
+    for eid, (fm, _body) in parsed.items():
+        canonical_id = fm.get('translationOf') or eid
+        lang = fm.get('lang', 'en')
+        families.setdefault(canonical_id, []).append((eid, lang))
+
+    for eid, (fm, body) in parsed.items():
         print(f'  Building: {eid}')
         resolved_tags = resolve_tags(eid, fm, body, tag_keywords)
+        lang = fm.get('lang', 'en')
+        direction = 'rtl' if lang in RTL_LANGS else 'ltr'
+        canonical_id = fm.get('translationOf') or eid
+        lang_switcher_html = render_lang_switcher(eid, families.get(canonical_id, []))
 
-        # ── Event record for events.json ────────────────────────────────────
+        # ── Event record for events.json ─────────────────────────────────────
+        # Translations don't get their own dot on the Atlas globe/search —
+        # only the canonical (translationOf-less) node does. They still get
+        # a full article page, sitemap entry, and a switcher linking back.
         date     = fm.get('date') or {}
         location = fm.get('location') or {}
-        event = {
-            'id':         eid,
-            'title':      fm.get('title', ''),
-            'source':     fm.get('source', 'manifold'),
-            'date':       {
-                'year':  date.get('year', 0),
-                'month': date.get('month', 1),
-                'day':   date.get('day', 1),
-            },
-            'location': {
-                'lat':  location.get('lat', 0),
-                'lon':  location.get('lon', 0),
-                'name': location.get('name', ''),
-            },
-            'type':        fm.get('type', ''),
-            'nodeColor':   fm.get('nodeColor', '#a67041'),
-            'nodeSize':    fm.get('nodeSize', 0.5),
-            'tags':        resolved_tags,
-            'connections': fm.get('connections') or [],
-            'excerpt':     fm.get('excerpt', ''),
-            'content':     body,
-            'article_url': f'articles/{eid}.html',
-        }
-        # Optional manifold-only fields
-        for k in ('empire', 'mechanism'):
-            if k in fm:
-                event[k] = fm[k]
+        if not fm.get('translationOf'):
+            event = {
+                'id':         eid,
+                'title':      fm.get('title', ''),
+                'source':     fm.get('source', 'manifold'),
+                'date':       {
+                    'year':  date.get('year', 0),
+                    'month': date.get('month', 1),
+                    'day':   date.get('day', 1),
+                },
+                'location': {
+                    'lat':  location.get('lat', 0),
+                    'lon':  location.get('lon', 0),
+                    'name': location.get('name', ''),
+                },
+                'type':        fm.get('type', ''),
+                'nodeColor':   fm.get('nodeColor', '#a67041'),
+                'nodeSize':    fm.get('nodeSize', 0.5),
+                'tags':        resolved_tags,
+                'connections': fm.get('connections') or [],
+                'excerpt':     fm.get('excerpt', ''),
+                'content':     body,
+                'article_url': f'articles/{eid}.html',
+            }
+            # Optional manifold-only fields
+            for k in ('empire', 'mechanism'):
+                if k in fm:
+                    event[k] = fm[k]
 
-        all_events.append(event)
+            all_events.append(event)
 
         # ── Generate article HTML ────────────────────────────────────────────
         content_html = md_to_html_segments(body)
@@ -606,6 +672,11 @@ def build():
         html = html.replace('__WORKS_CITED__',  works_cited)
         html = html.replace('__CANONICAL__',    canonical)
         html = html.replace('__PUBDATE__',      pub_date)
+        html = html.replace('__LANG__',         lang)
+        html = html.replace('__DIR__',          direction)
+        html = html.replace('__FONT_LINK__',    LANG_FONT_LINKS.get(lang, LANG_FONT_LINKS['en']))
+        html = html.replace('__BODY_FONT__',    LANG_BODY_FONTS.get(lang, LANG_BODY_FONTS['en']))
+        html = html.replace('__LANG_SWITCHER__', lang_switcher_html)
 
         art_path = os.path.join(ARTICLES_DIR, f'{eid}.html')
         with open(art_path, 'w', encoding='utf-8') as f:

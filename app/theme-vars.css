@@ -127,3 +127,94 @@
   --milky:      rgba(216,224,236,0.05);
   --vignette:   radial-gradient(ellipse at center, transparent 35%, rgba(0,0,0,0.5) 100%);
 }
+
+/* VEIL OF BABEL — black glass, gold + blood-red, candlelight and a
+   splitting double helix. The only theme with a living background:
+   see app/veil-theme.js for the DNA/candle canvas layers it mounts. */
+[data-theme="veil"] {
+  --bg-deep:    #030303;
+  --bg:         #050505;
+  --bg-soft:    #0c0c0e;
+  --panel:      rgba(12,12,14,0.65);
+  --panel-edge: rgba(197,160,89,0.18);
+  --ink:        #e6e6e6;
+  --ink-dim:    #999999;
+  --ink-mute:   #555555;
+  --accent:     #c5a059;          /* gold */
+  --accent-2:   #dbbd82;          /* gold hi */
+  --accent-3:   #4aa8a8;          /* teal */
+  --warm:       #a67041;
+  --warm-dk:    #2a0e0e;
+  --warm-lt:    #d8b98a;
+  --hot:        #8a1c1c;          /* blood red */
+  --earth-land: #1a1214;
+  --earth-line: #c5a059;
+  --earth-grid: rgba(197,160,89,0.09);
+  --earth-bg:   #030303;
+  --node-color: #dbbd82;
+  --node-glow:  #ffe6a8;
+  --star:       #f0e0c0;
+  --constellation: rgba(74,168,168,0.38);
+  --milky:      rgba(197,160,89,0.04);
+  --vignette:   radial-gradient(ellipse at center, transparent 25%, rgba(0,0,0,0.75) 100%);
+}
+
+/* PAPER — light theme. Warm white page, ink-on-paper reading feel.
+   Built for the research/reading-heavy pages (hoffect) where a bright
+   background is easier on the eyes than any of the dark palettes above. */
+[data-theme="paper"] {
+  --bg-deep:    #f4f1e8;
+  --bg:         #faf8f2;
+  --bg-soft:    #ffffff;
+  --panel:      rgba(255,255,255,0.94);
+  --panel-edge: rgba(122,90,42,0.18);
+  --ink:        #241f16;
+  --ink-dim:    #5c5340;
+  --ink-mute:   #948a72;
+  --accent:     #a6702e;          /* ink-brown gold */
+  --accent-2:   #7d5320;          /* darker gold, for text-on-light contrast */
+  --accent-3:   #2c7a6d;          /* deep teal */
+  --warm:       #b88a52;
+  --warm-dk:    #f0e4c8;
+  --warm-lt:    #6b4a1e;
+  --hot:        #a02828;
+  --earth-land: #e4dcc4;
+  --earth-line: #a6702e;
+  --earth-grid: rgba(122,90,42,0.10);
+  --earth-bg:   #faf8f2;
+  --node-color: #7d5320;
+  --node-glow:  #a6702e;
+  --star:       #241f16;
+  --constellation: rgba(44,122,109,0.35);
+  --milky:      rgba(122,90,42,0.05);
+  --vignette:   radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.06) 100%);
+}
+
+/* SLATE DAY — light theme, cooler/neutral alternative to Paper. */
+[data-theme="slate-day"] {
+  --bg-deep:    #e8ebf0;
+  --bg:         #f2f4f7;
+  --bg-soft:    #ffffff;
+  --panel:      rgba(255,255,255,0.95);
+  --panel-edge: rgba(50,70,100,0.16);
+  --ink:        #1b2430;
+  --ink-dim:    #51607a;
+  --ink-mute:   #8b96a8;
+  --accent:     #1f6fb2;          /* slate blue */
+  --accent-2:   #14507f;
+  --accent-3:   #2c8a6d;          /* green */
+  --warm:       #6a7d99;
+  --warm-dk:    #dbe2ec;
+  --warm-lt:    #14507f;
+  --hot:        #b0342c;
+  --earth-land: #dbe2ec;
+  --earth-line: #1f6fb2;
+  --earth-grid: rgba(31,111,178,0.10);
+  --earth-bg:   #f2f4f7;
+  --node-color: #14507f;
+  --node-glow:  #1f6fb2;
+  --star:       #1b2430;
+  --constellation: rgba(44,138,109,0.35);
+  --milky:      rgba(31,111,178,0.05);
+  --vignette:   radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.05) 100%);
+}

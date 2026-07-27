@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Natal Chart — Manifold Atlas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="lib/celestial/celestial.css">
+<style>
+:root {
+  --gold:   #c9a84c;
+  --gold2:  #e8c96d;
+  --cyan:   #00d4e8;
+  --void:   #02020c;
+  --panel:  rgba(4,6,22,0.90);
+  --dim:    rgba(255,255,255,0.08);
+  --ink:    #dbe4f0;
+}
+*,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+html,body {
+  min-height:100%;
+  background:var(--void);
+  color:var(--ink);
+  font-family:'Space Mono','Courier New',monospace;
+}
+a { color:var(--gold2); }
+
+.wrap { max-width:1180px; margin:0 auto; padding:24px 18px 60px; }
+
+header.top { display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:8px; margin-bottom:22px; border-bottom:1px solid var(--dim); padding-bottom:16px; }
+header.top h1 { font-size:1.7rem; letter-spacing:1px; color:var(--gold2); font-weight:700; }
+header.top .back { font-size:.8rem; color:#7d8aa3; text-decoration:none; }
+header.top .back:hover { color:var(--gold2); }
+#meta { font-size:.72rem; color:#7d8aa3; letter-spacing:.5px; margin-top:4px; }
+
+.layout { display:grid; grid-template-columns:340px 1fr 340px; gap:20px; }
+@media (max-width:1000px) { .layout { grid-template-columns:1fr; } }
+
+.panel {
+  background:var(--panel); border:1px solid var(--dim); border-radius:10px;
+  padding:18px; margin-bottom:18px;
+}
+.panel h2 {
+  font-size:.75rem; letter-spacing:2px; text-transform:uppercase;
+  color:var(--gold); margin-bottom:14px; font-weight:700;
+}
+
+form#chart-form label {
+  display:block; font-size:.68rem; letter-spacing:1px; color:#8b96ab;
+  margin:10px 0 4px; text-transform:uppercase;
+}
+form#chart-form input {
+  width:100%; background:#0a0e1c; border:1px solid var(--dim); border-radius:6px;
+  color:var(--ink); padding:7px 9px; font-family:inherit; font-size:.85rem;
+}
+form#chart-form input:focus { outline:none; border-color:var(--gold); }
+.field-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.field-row3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
+
+.city-search { position:relative; }
+.city-dropdown {
+  position:absolute; left:0; right:0; top:calc(100% + 4px); z-index:20;
+  background:#0a0e1c; border:1px solid var(--dim); border-radius:6px;
+  max-height:260px; overflow-y:auto; box-shadow:0 8px 24px rgba(0,0,0,.5);
+}
+.city-option {
+  padding:8px 10px; font-size:.8rem; cursor:pointer; display:flex; justify-content:space-between; gap:8px;
+}
+.city-option .place { color:var(--ink); }
+.city-option .cc { color:#5f6d85; font-size:.7rem; white-space:nowrap; }
+.city-option:hover, .city-option.active { background:#151b2e; }
+.city-empty { padding:8px 10px; font-size:.75rem; color:#5f6d85; }
+
+#locations { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
+.loc-btn {
+  background:#0a0e1c; border:1px solid var(--dim); color:#9fb0c9;
+  border-radius:20px; padding:5px 12px; font-family:inherit; font-size:.68rem;
+  cursor:pointer; letter-spacing:.5px;
+}
+.loc-btn:hover { border-color:var(--gold); color:var(--gold2); }
+
+.btn-row { display:flex; gap:10px; margin-top:16px; }
+button.primary, button.secondary {
+  font-family:inherit; font-size:.78rem; letter-spacing:1px; text-transform:uppercase;
+  padding:10px 16px; border-radius:6px; cursor:pointer; flex:1;
+}
+button.primary { background:var(--gold); border:1px solid var(--gold); color:#1a1305; font-weight:700; }
+button.primary:hover { background:var(--gold2); }
+button.secondary { background:transparent; border:1px solid var(--dim); color:var(--ink); }
+button.secondary:hover { border-color:var(--cyan); color:var(--cyan); }
+
+#wheel { display:flex; justify-content:center; }
+#wheel svg { width:100%; max-width:560px; height:auto; }
+.wheel-caption { text-align:center; font-size:.68rem; color:#7d8aa3; margin-top:8px; }
+
+.row {
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+  padding:7px 4px; border-bottom:1px solid var(--dim); font-size:.8rem;
+}
+.row:last-child { border-bottom:none; }
+.row-body { display:flex; align-items:center; gap:8px; }
+.row-val { font-variant-numeric:tabular-nums; color:#c7d2e3; display:flex; align-items:center; gap:8px; white-space:nowrap; }
+.row.angle .row-body { color:var(--gold2); }
+.glyph { font-size:1.1rem; width:1.3em; text-align:center; color:var(--gold2); }
+.pname { color:#c7d2e3; }
+.rx { color:#e85050; font-weight:700; }
+.house { color:#5f6d85; font-size:.68rem; }
+.orb { color:#5f6d85; font-size:.7rem; }
+
+.note {
+  font-size:.72rem; color:#6b7690; line-height:1.5; margin-top:6px;
+  border-top:1px solid var(--dim); padding-top:12px;
+}
+
+.sky-head { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:14px; }
+.sky-head h2 { margin-bottom:0; }
+.sky-toggle { display:flex; gap:6px; }
+.sky-mode-btn {
+  background:#0a0e1c; border:1px solid var(--dim); color:#9fb0c9; border-radius:20px;
+  padding:5px 14px; font-family:inherit; font-size:.7rem; letter-spacing:.5px; cursor:pointer;
+}
+.sky-mode-btn:hover { border-color:var(--gold); color:var(--gold2); }
+.sky-mode-btn.active { background:var(--gold); border-color:var(--gold); color:#1a1305; font-weight:700; }
+#celestial-map { background:#000; border-radius:8px; overflow:hidden; }
+#celestial-map svg, #celestial-map canvas { width:100%; height:auto; display:block; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div>
+      <h1>Natal Chart</h1>
+      <div id="meta"></div>
+    </div>
+    <a class="back" href="../../../index.html">← Manifold Atlas</a>
+  </header>
+
+  <div class="layout">
+
+    <!-- ── Birth data ── -->
+    <div class="panel">
+      <h2>Birth Data</h2>
+      <form id="chart-form">
+        <label for="f-name">Name (optional)</label>
+        <input id="f-name" type="text" placeholder="Chart label">
+
+        <div class="field-row3">
+          <div><label for="f-year">Year</label><input id="f-year" type="number" step="1" required></div>
+          <div><label for="f-month">Month</label><input id="f-month" type="number" min="1" max="12" required></div>
+          <div><label for="f-day">Day</label><input id="f-day" type="number" min="1" max="31" required></div>
+        </div>
+
+        <div class="field-row3">
+          <div><label for="f-hour">Hour (0-23)</label><input id="f-hour" type="number" min="0" max="23" required></div>
+          <div><label for="f-minute">Minute</label><input id="f-minute" type="number" min="0" max="59" required></div>
+          <div><label for="f-utc">UTC offset</label><input id="f-utc" type="number" step="0.5" required></div>
+        </div>
+
+        <label for="f-city">City</label>
+        <div class="city-search">
+          <input id="f-city" type="text" placeholder="Start typing a city…" autocomplete="off">
+          <div id="city-suggestions" class="city-dropdown" hidden></div>
+        </div>
+
+        <div class="field-row">
+          <div><label for="f-lat">Latitude (N+)</label><input id="f-lat" type="number" step="any" required></div>
+          <div><label for="f-lon">Longitude (E+)</label><input id="f-lon" type="number" step="any" required></div>
+        </div>
+
+        <div id="locations"></div>
+
+        <div class="btn-row">
+          <button type="submit" class="primary">Cast Chart</button>
+          <button type="button" id="share-btn" class="secondary">⤴ Share</button>
+        </div>
+        <div class="btn-row">
+          <button type="button" id="report-print-btn" class="secondary">🖨 Print Report</button>
+          <button type="button" id="report-deluxe-btn" class="secondary">✦ Deluxe Report</button>
+        </div>
+      </form>
+      <p class="note">
+        Local time + UTC offset, no timezone/DST lookup — enter the offset that was in effect at birth.
+        Positions come from an in-browser ephemeris (astronomy-engine), accurate to a few arcseconds.
+        Placidus houses are computed from scratch and checked against Swiss Ephemeris. Chiron is
+        computed by numerically integrating a JPL-verified orbit (epoch JD 2461200.5) under
+        Sun + Jupiter + Saturn + Uranus + Neptune gravity — accuracy is best near that epoch and
+        degrades gradually further out; non-gravitational (outgassing) effects aren't modeled.
+        City search covers ~24,000 places worldwide (population 15,000+) bundled with the page —
+        nothing is sent anywhere when you type. City data © <a href="https://www.geonames.org/" target="_blank" rel="noopener">GeoNames.org</a>, CC BY 4.0.
+      </p>
+    </div>
+
+    <!-- ── Wheel ── -->
+    <div class="panel">
+      <h2>Chart Wheel</h2>
+      <div id="wheel"></div>
+      <p class="wheel-caption">Ascendant fixed to the left horizon · green = Asc · cyan = MC</p>
+    </div>
+
+    <!-- ── Positions / Houses / Aspects ── -->
+    <div>
+      <div class="panel">
+        <h2>Planetary Positions</h2>
+        <div id="positions"></div>
+      </div>
+      <div class="panel">
+        <h2>Houses (Placidus)</h2>
+        <div id="houses"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="panel">
+    <h2>Major Aspects</h2>
+    <div id="aspects"></div>
+  </div>
+
+  <div class="panel">
+    <div class="sky-head">
+      <h2>Sky View</h2>
+      <div class="sky-toggle">
+        <button type="button" id="sky-mode-whole" class="sky-mode-btn active">Whole Sky</button>
+        <button type="button" id="sky-mode-literal" class="sky-mode-btn">Literal View</button>
+      </div>
+    </div>
+    <div id="celestial-map"></div>
+    <p class="wheel-caption" id="sky-caption">Every chart point plotted against the real stars, ecliptic band running through center. Scroll/drag/pinch to explore.</p>
+    <p class="note">
+      Star field, constellations, and Milky Way band © <a href="https://github.com/ofrohn/d3-celestial" target="_blank" rel="noopener">d3-celestial</a>, Olaf Frohn, BSD-3-Clause.
+    </p>
+  </div>
+
+</div>
+
+<script src="lib/astronomy-engine.min.js"></script>
+<script src="lib/cities.js"></script>
+<script src="lib/celestial/d3.min.js"></script>
+<script src="lib/celestial/d3.geo.projection.min.js"></script>
+<script src="lib/celestial/celestial.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
