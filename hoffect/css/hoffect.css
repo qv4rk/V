@@ -131,3 +131,23 @@ body {
 
 .hf-contact-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem; }
 .hf-contact-card { height: 100%; }
+
+/* ── Mobile / touch layout ── */
+@media (max-width: 640px) {
+  body { font-size: 16px; }
+
+  .hf-nav-inner { height: auto; min-height: 56px; padding: 10px 1.1rem; flex-wrap: wrap; gap: 0.5rem 1rem; }
+  .hf-frame { padding: 1.8rem 1.1rem 3rem; }
+
+  .hf-hero h1 { font-size: 1.9rem; }
+  .hf-lede { font-size: 1rem; }
+  .hf-disclaimer { font-size: 0.82rem; }
+
+  .hf-toc a { padding: 10px 14px; font-size: 0.76rem; }
+
+  .hf-lib-grid, .hf-contact-row { grid-template-columns: 1fr; }
+  .hf-tool-card { padding: 1rem; }
+  .hf-tool-icon { font-size: 1.7rem; }
+
+  .hf-paper-actions a { padding: 8px 11px; font-size: 0.72rem; }
+}
