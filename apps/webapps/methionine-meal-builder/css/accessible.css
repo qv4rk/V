@@ -325,6 +325,27 @@ main { max-width: 640px; margin: 0 auto; padding: 1.4rem 1.1rem 4rem; }
 }
 .emptyNote { color: var(--ink-dim); font-size: 1rem; }
 
+.metEstimated {
+  color: var(--caution);
+  background: var(--caution-bg);
+  font-weight: 800;
+  border-radius: 6px;
+  padding: 2px 8px;
+  display: inline-block;
+}
+
+.estimateWarning {
+  margin-top: 0.8rem;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: var(--caution-bg);
+  color: var(--caution);
+  font-size: 0.92rem;
+  font-weight: 700;
+  text-align: center;
+}
+.estimateWarning[hidden] { display: none; }
+
 .disclaimer {
   margin-top: 1.5rem;
   padding: 1.1rem 1.2rem;
@@ -404,7 +425,7 @@ main { max-width: 640px; margin: 0 auto; padding: 1.4rem 1.1rem 4rem; }
 .tutorialNav .linkBtn { flex: none; margin-top: 0; width: auto; padding: 8px 6px; }
 
 @media print {
-  header, .totalActions, .card:has(#btnToggleSearch), .card:has(#btnMethioYes), .card:has(#btnPrint), .disclaimer { display: none !important; }
+  header, .totalActions, .card:has(#searchForm), .card:has(#btnMethioYes), .card:has(#btnPrint), .disclaimer { display: none !important; }
   body { background: white; }
   .card, .totalCard { border: 1px solid #999; }
 }

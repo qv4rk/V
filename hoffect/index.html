@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hoffect — Methionine Restriction Research &amp; Tools — FeistTech</title>
+<meta name="description" content="A research hub on the Hoffman Effect (methionine addiction of cancer): primary-source papers, a live USDA-backed methionine calculator and barcode scanner, and recipes with real nutritional citations.">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../app/theme-vars.css">
+<script src="../app/theme-switcher.js"></script>
+<link rel="stylesheet" href="css/hoffect.css">
+</head>
+<body>
+
+<header class="hf-nav">
+  <div class="hf-nav-inner">
+    <a href="../index.html" class="hf-brand">← FEISTTECH</a>
+    <span class="hf-brand-title">HOFFECT</span>
+    <span id="themeSwitcherMount"></span>
+  </div>
+</header>
+
+<main class="hf-frame">
+
+  <section class="hf-hero">
+    <p class="hf-eyebrow">Research Hub</p>
+    <h1>The Hoffman Effect</h1>
+    <p class="hf-lede">
+      Cancer cells in many tumor types show an unusually high dependence on external (dietary) methionine —
+      a phenomenon researched by Prof. Robert M. Hoffman (UCSD / AntiCancer Inc.) and sometimes called
+      "methionine addiction." Restricting dietary methionine has been studied preclinically and in a growing
+      number of published clinical case reports as a way to selectively stress cancer cells, sometimes alongside
+      chemotherapy.
+    </p>
+    <div class="hf-disclaimer">
+      This is an early-stage, actively-researched area — mostly preclinical studies plus individual case reports,
+      not large randomized controlled trials. It is not part of standard oncology treatment guidelines, and no
+      methionine-restricting drug is FDA-approved for cancer treatment. Nothing on this page is medical advice —
+      it exists to make primary sources and calculation tools easy to find. Talk to a doctor or registered
+      dietitian before making dietary changes, especially during cancer treatment.
+    </div>
+  </section>
+
+  <nav class="hf-toc">
+    <a href="#library">📚 Research Library</a>
+    <a href="#calculator">🧮 Calculator &amp; Scanner</a>
+    <a href="#recipes">🍽️ Recipes</a>
+    <a href="#contact">✉️ Contact &amp; Submissions</a>
+  </nav>
+
+  <!-- ═══════ Research Library ═══════ -->
+  <section class="hf-section" id="library">
+    <h2>Research Library</h2>
+    <p class="hf-section-sub">
+      Primary-source papers on methionine restriction, methioninase, and related pancreatic/breast-cancer
+      research. Every citation below was transcribed directly from the paper's own title page — click
+      "DOI / Source" to verify independently. Click "Read Aloud" to open the paper in the Reading Room with
+      full text-to-speech controls.
+    </p>
+    <div id="libraryGrid" class="hf-lib-grid">
+      <p class="hf-loading">Loading library…</p>
+    </div>
+    <p class="hf-hint">Have a paper you think belongs here? See <a href="#contact">Contact &amp; Submissions</a> below.</p>
+  </section>
+
+  <!-- ═══════ Calculator & Scanner ═══════ -->
+  <section class="hf-section" id="calculator">
+    <h2>Methionine Calculator &amp; Barcode Scanner</h2>
+    <p class="hf-section-sub">
+      Live USDA FoodData Central lookup — search by name, scan a package barcode, or use voice input.
+      This tool only calculates and displays numbers; it does not set or suggest a daily limit. Every value
+      it shows is fetched live from USDA at the moment you look it up, and it always tells you when a
+      number is lab-measured versus a disclosed estimate.
+    </p>
+    <a class="hf-card-link" href="../apps/webapps/methionine-meal-builder/detailed/index.html">
+      <div class="hf-tool-card">
+        <span class="hf-tool-icon">🧮</span>
+        <div>
+          <h3>Open the Calculator &amp; Scanner</h3>
+          <p>USDA food search, barcode scan, voice input, shopping list, saved recipes, and a full nutrient profile view.</p>
+        </div>
+      </div>
+    </a>
+  </section>
+
+  <!-- ═══════ Recipes ═══════ -->
+  <section class="hf-section" id="recipes">
+    <h2>Recipes</h2>
+    <p class="hf-section-sub">
+      Meal ideas with real photographs and ingredients that link straight to their USDA FoodData Central
+      entry — no invented nutrition numbers, ever. This section is actively being built out; the starter
+      recipes below already live in the calculator (linked above) and pull their nutrition live from USDA
+      rather than storing any number here.
+    </p>
+    <div class="hf-recipe-stub">
+      <p>📷 Photographed recipe cards are in progress. In the meantime, starter recipes with live USDA-sourced
+      nutrition are available inside the <a href="../apps/webapps/methionine-meal-builder/detailed/index.html">Calculator</a>
+      — open it and click "📖 Recipes."</p>
+    </div>
+  </section>
+
+  <!-- ═══════ Contact & Submissions ═══════ -->
+  <section class="hf-section" id="contact">
+    <h2>Contact &amp; Research Submissions</h2>
+    <p class="hf-section-sub">
+      GitHub Pages doesn't support comments, so if you have a research paper, correction, or question, reach out directly.
+    </p>
+    <div class="hf-contact-row">
+      <a class="hf-tool-card hf-contact-card" href="mailto:info@feisttech.com?subject=Hoffect%20research%20submission">
+        <span class="hf-tool-icon">📄</span>
+        <div>
+          <h3>Submit a Research Paper</h3>
+          <p>Send a DOI, PDF, or link — include the title, authors, and publication so it can be catalogued accurately.</p>
+        </div>
+      </a>
+      <a class="hf-tool-card hf-contact-card" href="mailto:info@feisttech.com?subject=Hoffect%20question%20or%20correction">
+        <span class="hf-tool-icon">✉️</span>
+        <div>
+          <h3>General Contact</h3>
+          <p>Questions, corrections, or anything else about this page.</p>
+        </div>
+      </a>
+    </div>
+  </section>
+
+</main>
+
+<script src="js/research.js"></script>
+</body>
+</html>

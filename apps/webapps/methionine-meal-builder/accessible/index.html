@@ -24,6 +24,7 @@
     <div class="bigTotal safe" id="bigTotal">0<span class="bigTotalUnit"> / 150 mg</span></div>
     <div class="bigBar"><div class="bigBarFill" id="bigBarFill" style="width:0%"></div></div>
     <div class="bigSubline" id="bigSubline">0 mg used today · 150 mg still safe to eat</div>
+    <div class="estimateWarning" id="estimateWarning" hidden>⚠️ This total includes rough guesses (marked ~) for foods with no lab-measured methionine — not all of this number is verified.</div>
 
     <div id="capEditRow">
       <button type="button" class="editCapLink" id="btnEditCap">Change daily limit</button>
@@ -52,12 +53,12 @@
   </section>
 
   <section class="card">
-    <button type="button" class="bigBtn secondary fullWidth" id="btnToggleSearch">🔍 Search For Another Food</button>
-    <div id="searchArea" hidden>
+    <h2>Search For Another Food</h2>
+    <div id="searchArea">
       <div id="scanReader" class="scanReader" hidden></div>
       <form id="searchForm" class="searchRow">
         <span class="searchIcon">🔍</span>
-        <input type="text" id="searchInput" placeholder="Type a food, like apple">
+        <input type="text" id="searchInput" placeholder="Type, tap 🎤 to speak, or tap 📷 to scan a barcode">
         <button type="button" class="iconBtn" id="btnMic" title="Voice input">🎤</button>
         <button type="button" class="iconBtn" id="btnScan" title="Scan barcode">📷</button>
         <button type="submit" class="bigBtn compact">Go</button>
