@@ -728,11 +728,6 @@
       if (badge) { badge.textContent = CONFIG.variantLabel; badge.hidden = false; }
     }
 
-    document.getElementById('btnToggleSearch').addEventListener('click', () => {
-      const area = document.getElementById('searchArea');
-      area.hidden = !area.hidden;
-      if (!area.hidden) document.getElementById('searchInput').focus();
-    });
     document.getElementById('searchForm').addEventListener('submit', e => {
       e.preventDefault();
       runSearch();
