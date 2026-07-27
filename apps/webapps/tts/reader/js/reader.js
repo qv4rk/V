@@ -65,6 +65,11 @@ window.onload = () => {
             document.getElementById('hamburgerMenu')?.classList.remove('open');
         }
     });
+    const params = new URLSearchParams(window.location.search);
+    const pdfUrl = params.get('pdf');
+    if (pdfUrl) {
+        loadPDFFromUrl(pdfUrl, params.get('title'));
+    }
 };
 
 function waitForLib() {
@@ -1066,26 +1071,51 @@ function handleFileSelect(input) {
     r.readAsText(input.files[0]);
 }
 
+async function parseAndLoadPDF(arrayBuffer) {
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    let txt = '';
+    for(let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const tc = await page.getTextContent();
+        txt += tc.items.map(it => it.str).join(' ') + '\n\n';
+    }
+    hideTTSStatus();
+    detectSpkrs(txt);
+    const parsed = parseTextWithSpkrs(txt);
+    const html = renderParsedSegments(parsed);
+    initReader(html);
+}
+
 async function handlePDFSelect(input) {
     showTTSStatus('⏳ Parsing PDF...', 0);
     try {
         const arrayBuffer = await input.files[0].arrayBuffer();
-        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-        let txt = '';
-        for(let i = 1; i <= pdf.numPages; i++) {
-            const page = await pdf.getPage(i);
-            const tc = await page.getTextContent();
-            txt += tc.items.map(it => it.str).join(' ') + '\n\n';
-        }
-        hideTTSStatus();
-        detectSpkrs(txt);
-        const parsed = parseTextWithSpkrs(txt);
-        const html = renderParsedSegments(parsed);
-        initReader(html);
+        await parseAndLoadPDF(arrayBuffer);
     } catch(e) {
         console.error('PDF error:', e);
         hideTTSStatus();
         alert('Error parsing PDF: ' + e.message);
+    }
+}
+
+// Deep-link support: ?pdf=<url>&title=<label> auto-fetches and loads a
+// hosted PDF straight into the reader, so other pages (e.g. the hoffect
+// research library) can send a paper here with one click instead of
+// requiring the visitor to download it and re-upload it manually.
+async function loadPDFFromUrl(url, label) {
+    showTTSStatus('⏳ Fetching ' + (label || 'PDF') + '...', 0);
+    try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const arrayBuffer = await res.arrayBuffer();
+        showTTSStatus('⏳ Parsing PDF...', 0);
+        await parseAndLoadPDF(arrayBuffer);
+        const label_el = document.getElementById('inputPanelLabel');
+        if (label_el && label) label_el.textContent = '📄 ' + label;
+    } catch(e) {
+        console.error('PDF fetch error:', e);
+        hideTTSStatus();
+        alert('Could not load "' + (label || url) + '": ' + e.message);
     }
 }
 

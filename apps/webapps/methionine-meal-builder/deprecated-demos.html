@@ -1,0 +1,248 @@
+<!doctype html><html><head><meta charset="UTF-8">
+<title>DEPRECATED METHIONINASE DEMO — SAMPLES OF WHAT NOT TO DO</title>
+</head><body>
+<h1>DEPRECATED METHIONINASE DEMO — SAMPLES OF WHAT NOT TO DO</h1>
+<p>This file replaces demo-a/, demo-b/, demo-c/, demo-d/ (all deleted). Those four "layout variants" turned out to be the same file four times with a different title and 4 config values (cap amount, lock state) — no actual layout differences, despite the original intent. Kept here only so the diff history is not lost. Not linked from the site. Not meant to render or run.</p>
+<h2>Primary copy (was demo-a/index.html)</h2>
+<pre>&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+&lt;meta charset=&quot;UTF-8&quot;&gt;
+&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;
+&lt;title&gt;Tracker 1 (150mg) — Daily Methionine Tracker&lt;/title&gt;
+&lt;meta name=&quot;description&quot; content=&quot;Large-text, high-contrast daily methionine tracker with one-tap quick-add foods and methioninase logging.&quot;&gt;
+&lt;link rel=&quot;stylesheet&quot; href=&quot;../css/accessible.css&quot;&gt;
+&lt;script src=&quot;https://unpkg.com/html5-qrcode&quot; type=&quot;text/javascript&quot;&gt;&lt;/script&gt;
+&lt;/head&gt;
+&lt;body&gt;
+
+&lt;header&gt;
+  &lt;a href=&quot;../index.html&quot; class=&quot;backLink&quot;&gt;← Tracker Home&lt;/a&gt;
+  &lt;h1&gt;Today&#x27;s Methionine&lt;/h1&gt;
+  &lt;span class=&quot;variantBadge&quot; id=&quot;variantBadge&quot; hidden&gt;&lt;/span&gt;
+  &lt;button type=&quot;button&quot; class=&quot;helpFab&quot; id=&quot;btnHelp&quot; aria-label=&quot;How to use this&quot;&gt;❓&lt;/button&gt;
+&lt;/header&gt;
+
+&lt;main&gt;
+
+  &lt;section class=&quot;totalCard&quot;&gt;
+    &lt;div class=&quot;statusPill safe&quot; id=&quot;statusPill&quot;&gt;SAFE&lt;/div&gt;
+    &lt;div class=&quot;bigTotal safe&quot; id=&quot;bigTotal&quot;&gt;0&lt;span class=&quot;bigTotalUnit&quot;&gt; / 150 mg&lt;/span&gt;&lt;/div&gt;
+    &lt;div class=&quot;bigBar&quot;&gt;&lt;div class=&quot;bigBarFill&quot; id=&quot;bigBarFill&quot; style=&quot;width:0%&quot;&gt;&lt;/div&gt;&lt;/div&gt;
+    &lt;div class=&quot;bigSubline&quot; id=&quot;bigSubline&quot;&gt;0 mg used today · 150 mg still safe to eat&lt;/div&gt;
+    &lt;div class=&quot;estimateWarning&quot; id=&quot;estimateWarning&quot; hidden&gt;⚠️ This total includes rough guesses (marked ~) for foods with no lab-measured methionine — not all of this number is verified.&lt;/div&gt;
+
+    &lt;div id=&quot;capEditRow&quot;&gt;
+      &lt;button type=&quot;button&quot; class=&quot;editCapLink&quot; id=&quot;btnEditCap&quot;&gt;Change daily limit&lt;/button&gt;
+      &lt;span class=&quot;capLockedNote&quot; id=&quot;capLockedNote&quot; hidden&gt;🔒 Daily limit set by care team&lt;/span&gt;
+    &lt;/div&gt;
+    &lt;div id=&quot;capEditFormWrap&quot; hidden&gt;
+      &lt;form id=&quot;capEditForm&quot; class=&quot;capEditForm&quot;&gt;
+        &lt;input type=&quot;number&quot; inputmode=&quot;decimal&quot; id=&quot;capEditInput&quot; min=&quot;1&quot; step=&quot;1&quot;&gt;
+        &lt;button type=&quot;submit&quot; class=&quot;bigBtn compact&quot;&gt;Save&lt;/button&gt;
+        &lt;button type=&quot;button&quot; class=&quot;linkBtn&quot; id=&quot;btnCapCancel&quot;&gt;Cancel&lt;/button&gt;
+      &lt;/form&gt;
+    &lt;/div&gt;
+
+    &lt;div class=&quot;totalActions&quot; style=&quot;margin-top:0.9rem;&quot;&gt;
+      &lt;button type=&quot;button&quot; class=&quot;bigBtn secondary&quot; id=&quot;btnReadAloud&quot;&gt;🔊 Read Total Aloud&lt;/button&gt;
+      &lt;button type=&quot;button&quot; class=&quot;bigBtn secondary&quot; id=&quot;btnUndo&quot; disabled&gt;↩️ Undo Last Add&lt;/button&gt;
+    &lt;/div&gt;
+  &lt;/section&gt;
+
+  &lt;section class=&quot;card&quot;&gt;
+    &lt;div class=&quot;cardHeaderRow&quot;&gt;
+      &lt;h2&gt;Quick Add&lt;/h2&gt;
+      &lt;button type=&quot;button&quot; class=&quot;iconEditBtn&quot; id=&quot;btnEditQuickAdd&quot; aria-label=&quot;Edit quick-add foods&quot;&gt;✏️&lt;/button&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;quickGrid&quot; id=&quot;quickGrid&quot;&gt;&lt;/div&gt;
+  &lt;/section&gt;
+
+  &lt;section class=&quot;card&quot;&gt;
+    &lt;button type=&quot;button&quot; class=&quot;bigBtn secondary fullWidth&quot; id=&quot;btnToggleSearch&quot;&gt;🔍 Search For Another Food&lt;/button&gt;
+    &lt;div id=&quot;searchArea&quot; hidden&gt;
+      &lt;div id=&quot;scanReader&quot; class=&quot;scanReader&quot; hidden&gt;&lt;/div&gt;
+      &lt;form id=&quot;searchForm&quot; class=&quot;searchRow&quot;&gt;
+        &lt;span class=&quot;searchIcon&quot;&gt;🔍&lt;/span&gt;
+        &lt;input type=&quot;text&quot; id=&quot;searchInput&quot; placeholder=&quot;Type a food, like apple&quot;&gt;
+        &lt;button type=&quot;button&quot; class=&quot;iconBtn&quot; id=&quot;btnMic&quot; title=&quot;Voice input&quot;&gt;🎤&lt;/button&gt;
+        &lt;button type=&quot;button&quot; class=&quot;iconBtn&quot; id=&quot;btnScan&quot; title=&quot;Scan barcode&quot;&gt;📷&lt;/button&gt;
+        &lt;button type=&quot;submit&quot; class=&quot;bigBtn compact&quot;&gt;Go&lt;/button&gt;
+      &lt;/form&gt;
+      &lt;div class=&quot;searchStatus&quot; id=&quot;searchStatus&quot;&gt;&lt;/div&gt;
+      &lt;div class=&quot;resultsList&quot; id=&quot;resultsList&quot;&gt;&lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/section&gt;
+
+  &lt;section class=&quot;card&quot;&gt;
+    &lt;h2&gt;Methioninase Today&lt;/h2&gt;
+    &lt;div class=&quot;methioStatus&quot; id=&quot;methioStatus&quot; hidden&gt;&lt;/div&gt;
+    &lt;button type=&quot;button&quot; class=&quot;linkBtn&quot; id=&quot;btnMethioEdit&quot; hidden&gt;✏️ Edit today&#x27;s entry&lt;/button&gt;
+    &lt;div class=&quot;methioButtons&quot; id=&quot;methioButtons&quot;&gt;
+      &lt;button type=&quot;button&quot; class=&quot;bigBtn yes&quot; id=&quot;btnMethioYes&quot;&gt;✅ Yes, took it&lt;/button&gt;
+      &lt;button type=&quot;button&quot; class=&quot;bigBtn no&quot; id=&quot;btnMethioNo&quot;&gt;❌ No, not today&lt;/button&gt;
+    &lt;/div&gt;
+    &lt;form class=&quot;methioDetails&quot; id=&quot;methioDetails&quot; hidden&gt;
+      &lt;label&gt;Time
+        &lt;input type=&quot;text&quot; id=&quot;methioTime&quot; placeholder=&quot;e.g. 8:00 AM&quot;&gt;
+      &lt;/label&gt;
+      &lt;label&gt;Amount
+        &lt;input type=&quot;text&quot; id=&quot;methioAmount&quot; placeholder=&quot;e.g. 1 dose&quot;&gt;
+      &lt;/label&gt;
+      &lt;label&gt;Notes
+        &lt;textarea id=&quot;methioNotes&quot; rows=&quot;2&quot; placeholder=&quot;Optional notes&quot;&gt;&lt;/textarea&gt;
+      &lt;/label&gt;
+      &lt;button type=&quot;submit&quot; class=&quot;bigBtn&quot; id=&quot;btnMethioSave&quot;&gt;Save&lt;/button&gt;
+    &lt;/form&gt;
+  &lt;/section&gt;
+
+  &lt;section class=&quot;card&quot;&gt;
+    &lt;h2&gt;What&#x27;s Been Logged Today&lt;/h2&gt;
+    &lt;div class=&quot;itemList&quot; id=&quot;itemList&quot;&gt;&lt;/div&gt;
+  &lt;/section&gt;
+
+  &lt;section class=&quot;card&quot;&gt;
+    &lt;div class=&quot;actionRow&quot;&gt;
+      &lt;button type=&quot;button&quot; class=&quot;bigBtn compact&quot; id=&quot;btnFeedback&quot;&gt;📧 Feedback&lt;/button&gt;
+      &lt;button type=&quot;button&quot; class=&quot;bigBtn compact secondary&quot; id=&quot;btnShare&quot;&gt;📤 Share&lt;/button&gt;
+    &lt;/div&gt;
+    &lt;button type=&quot;button&quot; class=&quot;linkBtn&quot; id=&quot;btnMoreOptions&quot;&gt;More options (print, copy)&lt;/button&gt;
+    &lt;div class=&quot;moreOptions&quot; id=&quot;moreOptions&quot; hidden&gt;
+      &lt;button type=&quot;button&quot; class=&quot;bigBtn secondary fullWidth&quot; id=&quot;btnPrint&quot;&gt;🖨️ Print Today&#x27;s Log&lt;/button&gt;
+      &lt;button type=&quot;button&quot; class=&quot;bigBtn secondary fullWidth&quot; id=&quot;btnCopy&quot; style=&quot;margin-bottom:0;&quot;&gt;📋 Copy Summary&lt;/button&gt;
+    &lt;/div&gt;
+  &lt;/section&gt;
+
+  &lt;div class=&quot;disclaimer&quot;&gt;
+    ⚠️ This tool helps track numbers only. It does not give medical advice. Always follow your doctor&#x27;s instructions. Methioninase and diet changes should only be done under medical supervision.
+  &lt;/div&gt;
+
+&lt;/main&gt;
+
+&lt;div class=&quot;toast&quot; id=&quot;toast&quot; hidden&gt;&lt;/div&gt;
+
+&lt;div class=&quot;modalOverlay&quot; id=&quot;editOverlay&quot; hidden&gt;
+  &lt;div class=&quot;modal&quot; role=&quot;dialog&quot; aria-labelledby=&quot;editTitle&quot;&gt;
+    &lt;h2 id=&quot;editTitle&quot;&gt;Edit Quick-Add Foods&lt;/h2&gt;
+    &lt;p&gt;Set this list to match what&#x27;s actually approved for daily use.&lt;/p&gt;
+    &lt;div class=&quot;editFoodList&quot; id=&quot;editFoodList&quot;&gt;&lt;/div&gt;
+    &lt;button type=&quot;button&quot; class=&quot;linkBtn&quot; id=&quot;btnAddFoodRow&quot;&gt;+ Add another food&lt;/button&gt;
+    &lt;div class=&quot;modalActions&quot;&gt;
+      &lt;button type=&quot;button&quot; class=&quot;bigBtn secondary&quot; id=&quot;btnCancelEdit&quot;&gt;Cancel&lt;/button&gt;
+      &lt;button type=&quot;button&quot; class=&quot;bigBtn&quot; id=&quot;btnSaveEdit&quot;&gt;Save&lt;/button&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div class=&quot;modalOverlay&quot; id=&quot;tutorialOverlay&quot; hidden&gt;
+  &lt;div class=&quot;modal tutorialModal&quot; role=&quot;dialog&quot; aria-labelledby=&quot;tutorialTitle&quot;&gt;
+    &lt;div class=&quot;tutorialProgress&quot; id=&quot;tutorialProgress&quot;&gt;Step 1 of 6&lt;/div&gt;
+    &lt;div class=&quot;tutorialIcon&quot; id=&quot;tutorialIcon&quot;&gt;🔢&lt;/div&gt;
+    &lt;h2 id=&quot;tutorialTitle&quot;&gt;Your Daily Total&lt;/h2&gt;
+    &lt;p id=&quot;tutorialText&quot;&gt;&lt;/p&gt;
+    &lt;div class=&quot;tutorialDots&quot; id=&quot;tutorialDots&quot;&gt;&lt;/div&gt;
+    &lt;div class=&quot;tutorialNav&quot;&gt;
+      &lt;button type=&quot;button&quot; class=&quot;bigBtn secondary&quot; id=&quot;btnTutorialBack&quot;&gt;Back&lt;/button&gt;
+      &lt;button type=&quot;button&quot; class=&quot;linkBtn&quot; id=&quot;btnTutorialSkip&quot;&gt;Skip&lt;/button&gt;
+      &lt;button type=&quot;button&quot; class=&quot;bigBtn&quot; id=&quot;btnTutorialNext&quot;&gt;Next&lt;/button&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;script&gt;
+  window.ACCESSIBLE_CONFIG = {
+    storagePrefix: &#x27;demo_a_&#x27;,
+    defaultCap: 150,
+    lockCap: false,
+    variantLabel: &#x27;Tracker 1 — 150mg&#x27;
+  };
+&lt;/script&gt;
+&lt;script src=&quot;../js/usda.js&quot;&gt;&lt;/script&gt;
+&lt;script src=&quot;../js/openfoodfacts.js&quot;&gt;&lt;/script&gt;
+&lt;script src=&quot;../js/accessible.js&quot;&gt;&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</pre>
+<h2>Diff: demo-b vs primary</h2>
+<pre>--- demo-a/index.html	2026-07-21 09:39:42.940468282 +0000
++++ demo-b/index.html	2026-07-21 09:39:54.788468986 +0000
+@@ -3,7 +3,7 @@
+ &lt;head&gt;
+ &lt;meta charset=&quot;UTF-8&quot;&gt;
+ &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;
+-&lt;title&gt;Tracker 1 (150mg) — Daily Methionine Tracker&lt;/title&gt;
++&lt;title&gt;Tracker 2 (200mg) — Daily Methionine Tracker&lt;/title&gt;
+ &lt;meta name=&quot;description&quot; content=&quot;Large-text, high-contrast daily methionine tracker with one-tap quick-add foods and methioninase logging.&quot;&gt;
+ &lt;link rel=&quot;stylesheet&quot; href=&quot;../css/accessible.css&quot;&gt;
+ &lt;script src=&quot;https://unpkg.com/html5-qrcode&quot; type=&quot;text/javascript&quot;&gt;&lt;/script&gt;
+@@ -145,10 +145,10 @@
+ 
+ &lt;script&gt;
+   window.ACCESSIBLE_CONFIG = {
+-    storagePrefix: &#x27;demo_a_&#x27;,
+-    defaultCap: 150,
++    storagePrefix: &#x27;demo_b_&#x27;,
++    defaultCap: 200,
+     lockCap: false,
+-    variantLabel: &#x27;Tracker 1 — 150mg&#x27;
++    variantLabel: &#x27;Tracker 2 — 200mg&#x27;
+   };
+ &lt;/script&gt;
+ &lt;script src=&quot;../js/usda.js&quot;&gt;&lt;/script&gt;
+</pre>
+<h2>Diff: demo-c vs primary</h2>
+<pre>--- demo-a/index.html	2026-07-21 09:39:42.940468282 +0000
++++ demo-c/index.html	2026-07-21 09:40:06.888469706 +0000
+@@ -3,7 +3,7 @@
+ &lt;head&gt;
+ &lt;meta charset=&quot;UTF-8&quot;&gt;
+ &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;
+-&lt;title&gt;Tracker 1 (150mg) — Daily Methionine Tracker&lt;/title&gt;
++&lt;title&gt;Tracker 3 (150mg, locked) — Daily Methionine Tracker&lt;/title&gt;
+ &lt;meta name=&quot;description&quot; content=&quot;Large-text, high-contrast daily methionine tracker with one-tap quick-add foods and methioninase logging.&quot;&gt;
+ &lt;link rel=&quot;stylesheet&quot; href=&quot;../css/accessible.css&quot;&gt;
+ &lt;script src=&quot;https://unpkg.com/html5-qrcode&quot; type=&quot;text/javascript&quot;&gt;&lt;/script&gt;
+@@ -145,10 +145,10 @@
+ 
+ &lt;script&gt;
+   window.ACCESSIBLE_CONFIG = {
+-    storagePrefix: &#x27;demo_a_&#x27;,
++    storagePrefix: &#x27;demo_c_&#x27;,
+     defaultCap: 150,
+-    lockCap: false,
+-    variantLabel: &#x27;Tracker 1 — 150mg&#x27;
++    lockCap: true,
++    variantLabel: &#x27;Tracker 3 — 150mg, locked&#x27;
+   };
+ &lt;/script&gt;
+ &lt;script src=&quot;../js/usda.js&quot;&gt;&lt;/script&gt;
+</pre>
+<h2>Diff: demo-d vs primary</h2>
+<pre>--- demo-a/index.html	2026-07-21 09:39:42.940468282 +0000
++++ demo-d/index.html	2026-07-21 09:40:17.820470355 +0000
+@@ -3,7 +3,7 @@
+ &lt;head&gt;
+ &lt;meta charset=&quot;UTF-8&quot;&gt;
+ &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;
+-&lt;title&gt;Tracker 1 (150mg) — Daily Methionine Tracker&lt;/title&gt;
++&lt;title&gt;Tracker 4 (200mg, locked) — Daily Methionine Tracker&lt;/title&gt;
+ &lt;meta name=&quot;description&quot; content=&quot;Large-text, high-contrast daily methionine tracker with one-tap quick-add foods and methioninase logging.&quot;&gt;
+ &lt;link rel=&quot;stylesheet&quot; href=&quot;../css/accessible.css&quot;&gt;
+ &lt;script src=&quot;https://unpkg.com/html5-qrcode&quot; type=&quot;text/javascript&quot;&gt;&lt;/script&gt;
+@@ -145,10 +145,10 @@
+ 
+ &lt;script&gt;
+   window.ACCESSIBLE_CONFIG = {
+-    storagePrefix: &#x27;demo_a_&#x27;,
+-    defaultCap: 150,
+-    lockCap: false,
+-    variantLabel: &#x27;Tracker 1 — 150mg&#x27;
++    storagePrefix: &#x27;demo_d_&#x27;,
++    defaultCap: 200,
++    lockCap: true,
++    variantLabel: &#x27;Tracker 4 — 200mg, locked&#x27;
+   };
+ &lt;/script&gt;
+ &lt;script src=&quot;../js/usda.js&quot;&gt;&lt;/script&gt;
+</pre>
+</body></html>
