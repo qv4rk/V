@@ -414,8 +414,45 @@ button:disabled { opacity: 0.45; cursor: default; }
   .metBox .mValue { font-size: 1.05rem; }
   .gramsInput { width: 70px; min-height: 42px; }
 
-  .logTable { font-size: 0.82rem; }
-  .logTable th, .logTable td { padding: 9px 8px; }
+  /* The Met (mg) column is the entire point of this app — a horizontally
+     scrolling table hides it off-screen with no visible cue that it's
+     there. Instead of scrolling, each row becomes a small stacked card
+     with every value labeled and always visible. */
+  .tableWrap { overflow-x: visible; }
+  .tableWrap .logTable { min-width: 0; }
+  .logTable { font-size: 0.86rem; width: 100%; }
+  .logTable thead { display: none; }
+  .logTable, .logTable tbody, .logTable tfoot, .logTable tr, .logTable td {
+    display: block;
+    width: 100%;
+  }
+  .logTable tbody tr, .logTable tfoot tr {
+    border: 1px solid var(--panel-edge);
+    border-radius: 8px;
+    margin-bottom: 0.6rem;
+    padding: 0.2rem 0.8rem;
+  }
+  .logTable tfoot tr {
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
+  }
+  .logTable td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px dashed var(--panel-edge);
+    text-align: right;
+  }
+  .logTable td:last-child { border-bottom: none; }
+  .logTable td[data-label]:not([data-label=""])::before {
+    content: attr(data-label);
+    font-size: 0.66rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--ink-dim);
+    text-align: left;
+  }
   .rmBtn { font-size: 1.1rem; padding: 6px 8px; min-width: 36px; }
 
   .tabs { gap: 0.4rem; }
