@@ -425,7 +425,7 @@ main { max-width: 640px; margin: 0 auto; padding: 1.4rem 1.1rem 4rem; }
 .tutorialNav .linkBtn { flex: none; margin-top: 0; width: auto; padding: 8px 6px; }
 
 @media print {
-  header, .totalActions, .card:has(#btnToggleSearch), .card:has(#btnMethioYes), .card:has(#btnPrint), .disclaimer { display: none !important; }
+  header, .totalActions, .card:has(#searchForm), .card:has(#btnMethioYes), .card:has(#btnPrint), .disclaimer { display: none !important; }
   body { background: white; }
   .card, .totalCard { border: 1px solid #999; }
 }
