@@ -436,12 +436,12 @@
         : (item.metEstimated ? '<span class="metEstimated" title="Rough guess, not lab-measured">⚠️ ~' + fmt(item.met) + '</span>' : fmt(item.met));
       const proCell = (item.protein === null || item.protein === undefined) ? '<span class="metUnknown">?</span>' : fmt(item.protein);
       tr.innerHTML = `
-        <td>${item.name}</td>
-        <td>${item.grams !== null ? fmt(item.grams) : '—'}</td>
-        <td>${fmt(item.cal)}</td>
-        <td>${proCell}</td>
-        <td>${metCell}</td>
-        <td><button class="rmBtn" title="Remove">×</button></td>
+        <td data-label="Food">${item.name}</td>
+        <td data-label="g">${item.grams !== null ? fmt(item.grams) : '—'}</td>
+        <td data-label="Cal">${fmt(item.cal)}</td>
+        <td data-label="Pro (g)">${proCell}</td>
+        <td data-label="Met (mg)">${metCell}</td>
+        <td data-label=""><button class="rmBtn" title="Remove">×</button></td>
       `;
       tr.querySelector('.rmBtn').addEventListener('click', () => removeFromList(target, item.id));
       body.appendChild(tr);
