@@ -232,50 +232,71 @@
   // Large, real representative photos for each card — this is the single
   // most useful element for low-vision/cataract users, who can recognize a
   // food from a big picture far faster than from small text. These are
-  // generic stock photos of the food GROUP (e.g. any banana), not a claim
-  // about the specific USDA entry, so they carry no factual/nutrition risk
-  // the way a typed-in number would. If a photo fails to load, the onerror
-  // fallback below swaps in a large, high-contrast text-on-color card
-  // instead of a tiny icon, so there is always something large to look at.
+  // generic photos of the food GROUP (e.g. any banana), not a claim about
+  // the specific USDA entry, so they carry no factual/nutrition risk the
+  // way a typed-in number would. Locally hosted, self-generated set — no
+  // external stock-photo license to track, unlike the previous Unsplash
+  // URLs. Ordered most-specific pattern first (e.g. "sweet potato" before
+  // "potato") since the first regex match wins. If a photo fails to load,
+  // the onerror fallback below swaps in a large, high-contrast
+  // text-on-color card instead of a tiny icon, so there is always
+  // something large to look at.
+  // app.js is loaded by detailed/index.html, one directory below where
+  // images/ lives (apps/webapps/methionine-meal-builder/images/food/),
+  // so the path must climb up one level from the page's own location.
+  const FOOD_IMG = '../images/food/';
   const CARD_PHOTOS = [
-    [/chicken|turkey|duck|poultry/i, 'https://images.unsplash.com/photo-1604503468506-a8da13d82586?w=600&q=80'],
-    [/beef|steak/i, 'https://images.unsplash.com/photo-1607116667981-27e30c8c8a3f?w=600&q=80'],
-    [/pork|ham|bacon|sausage/i, 'https://images.unsplash.com/photo-1602470520998-f4a52199a3d6?w=600&q=80'],
-    [/salmon/i, 'https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=600&q=80'],
-    [/fish|tuna|shrimp|seafood/i, 'https://images.unsplash.com/photo-1544943910-4c1dc44aab44?w=600&q=80'],
-    [/egg/i, 'https://images.unsplash.com/photo-1582722872450-11adadc1d407?w=600&q=80'],
-    [/rice/i, 'https://images.unsplash.com/photo-1516684669134-de6f7c473a2a?w=600&q=80'],
-    [/pasta|spaghetti|noodle/i, 'https://images.unsplash.com/photo-1551183053-bf91a1d81141?w=600&q=80'],
-    [/broccoli/i, 'https://images.unsplash.com/photo-1459411552884-841db9b3cc2a?w=600&q=80'],
-    [/cauliflower/i, 'https://images.unsplash.com/photo-1568584711075-3d9217eedd3f?w=600&q=80'],
-    [/shiitake|mushroom/i, 'https://images.unsplash.com/photo-1585515320310-259814833e62?w=600&q=80'],
-    [/spinach|kale|greens/i, 'https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=600&q=80'],
-    [/lettuce|salad/i, 'https://images.unsplash.com/photo-1622206151226-18ca2c9ab4a1?w=600&q=80'],
-    [/cabbage/i, 'https://images.unsplash.com/photo-1594282486552-05b4d80fbb9f?w=600&q=80'],
-    [/tomato/i, 'https://images.unsplash.com/photo-1546094096-0df4bcaaa337?w=600&q=80'],
-    [/potato/i, 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=600&q=80'],
-    [/onion/i, 'https://images.unsplash.com/photo-1518977822534-7049a61ee0c2?w=600&q=80'],
-    [/asparagus/i, 'https://images.unsplash.com/photo-1515471209610-dae1c92d8777?w=600&q=80'],
-    [/brussels/i, 'https://images.unsplash.com/photo-1584270354949-c26b0d5b4a0c?w=600&q=80'],
-    [/banana/i, 'https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=600&q=80'],
-    [/apple/i, 'https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=600&q=80'],
-    [/blueberry|blueberries/i, 'https://images.unsplash.com/photo-1498557850523-fd3d118b962e?w=600&q=80'],
-    [/strawberry|strawberries/i, 'https://images.unsplash.com/photo-1518635017498-87f514b751ba?w=600&q=80'],
-    [/berry|berries/i, 'https://images.unsplash.com/photo-1563746098251-d35aef196e83?w=600&q=80'],
-    [/mango/i, 'https://images.unsplash.com/photo-1553279768-865429fa0078?w=600&q=80'],
-    [/orange|citrus/i, 'https://images.unsplash.com/photo-1547514701-42782101795e?w=600&q=80'],
-    [/grapefruit/i, 'https://images.unsplash.com/photo-1615484477778-ca3b77940c25?w=600&q=80'],
-    [/kiwi/i, 'https://images.unsplash.com/photo-1585059895524-72359e06133a?w=600&q=80'],
-    [/pineapple/i, 'https://images.unsplash.com/photo-1550258987-190a2d41a8ba?w=600&q=80'],
-    [/melon|cantaloupe|honeydew|watermelon/i, 'https://images.unsplash.com/photo-1563114773-84221bd62daa?w=600&q=80'],
-    [/yogurt/i, 'https://images.unsplash.com/photo-1488477181946-6428a0291777?w=600&q=80'],
-    [/milk|cheese|dairy/i, 'https://images.unsplash.com/photo-1550583724-b2692b85b150?w=600&q=80'],
-    [/bean|lentil|legume/i, 'https://images.unsplash.com/photo-1515543904379-3d757afe72e4?w=600&q=80'],
-    [/bread|oat|wheat/i, 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=600&q=80'],
-    [/oil/i, 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=600&q=80'],
-    [/nut|almond|walnut/i, 'https://images.unsplash.com/photo-1508061253366-f7da158b6d46?w=600&q=80'],
-    [/pizza/i, 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=600&q=80'],
-    [/soup/i, 'https://images.unsplash.com/photo-1547592166-23ac45744acd?w=600&q=80']
+    [/sweet potato/i, FOOD_IMG + 'sweet_potato.png'],
+    [/ground beef/i, FOOD_IMG + 'ground_beef.png'],
+    [/black bean/i, FOOD_IMG + 'black_beans.png'],
+    [/canned tuna|tuna, canned/i, FOOD_IMG + 'canned_tuna.png'],
+    [/applesauce/i, FOOD_IMG + 'applesauce.png'],
+    [/turkey/i, FOOD_IMG + 'turkey.png'],
+    [/chicken|duck|poultry/i, FOOD_IMG + 'chicken_breast.png'],
+    [/beef|steak/i, FOOD_IMG + 'beef_steak.png'],
+    [/pork|ham|bacon|sausage/i, FOOD_IMG + 'pork_sausage_bacon.png'],
+    [/salmon/i, FOOD_IMG + 'salmon.png'],
+    [/shrimp|scallop|seafood/i, FOOD_IMG + 'shrimp_seafood.png'],
+    [/tuna|fish/i, FOOD_IMG + 'canned_tuna.png'],
+    [/tofu/i, FOOD_IMG + 'tofu.png'],
+    [/egg/i, FOOD_IMG + 'egg.png'],
+    [/rice/i, FOOD_IMG + 'white_rice.png'],
+    [/pasta|spaghetti|noodle/i, FOOD_IMG + 'pasta.png'],
+    [/broccoli/i, FOOD_IMG + 'broccoli.png'],
+    [/cauliflower/i, FOOD_IMG + 'cauliflower.png'],
+    [/shiitake|mushroom/i, FOOD_IMG + 'shiitake_mushrooms.png'],
+    [/spinach|kale/i, FOOD_IMG + 'spinach_kale.png'],
+    [/lettuce|salad greens/i, FOOD_IMG + 'salad_greens.png'],
+    [/cabbage/i, FOOD_IMG + 'cabbage.png'],
+    [/tomato/i, FOOD_IMG + 'tomato.png'],
+    [/potato/i, FOOD_IMG + 'baked_potato.png'],
+    [/onion/i, FOOD_IMG + 'onion.png'],
+    [/cucumber/i, FOOD_IMG + 'cucumber.png'],
+    [/carrot/i, FOOD_IMG + 'carrots.png'],
+    [/avocado/i, FOOD_IMG + 'avocado.png'],
+    [/asparagus/i, FOOD_IMG + 'asparagus.png'],
+    [/brussels/i, FOOD_IMG + 'brussels_sprouts.png'],
+    [/banana/i, FOOD_IMG + 'banana.png'],
+    [/apple/i, FOOD_IMG + 'apple.png'],
+    [/blueberry|blueberries/i, FOOD_IMG + 'blueberries.png'],
+    [/strawberry|strawberries/i, FOOD_IMG + 'strawberries.png'],
+    [/berry|berries/i, FOOD_IMG + 'mixed_berries.png'],
+    [/grape(?!fruit)/i, FOOD_IMG + 'grapes.png'],
+    [/mango/i, FOOD_IMG + 'mango.png'],
+    [/grapefruit/i, FOOD_IMG + 'grapefruit.png'],
+    [/orange|citrus/i, FOOD_IMG + 'orange.png'],
+    [/kiwi/i, FOOD_IMG + 'kiwi.png'],
+    [/pineapple/i, FOOD_IMG + 'pineapple.png'],
+    [/melon|cantaloupe|honeydew|watermelon/i, FOOD_IMG + 'melon.png'],
+    [/yogurt/i, FOOD_IMG + 'greek_yogurt.png'],
+    [/milk|cheese|dairy/i, FOOD_IMG + 'dairy_cheese.png'],
+    [/lentil/i, FOOD_IMG + 'beans_lentils.png'],
+    [/bean/i, FOOD_IMG + 'black_beans.png'],
+    [/bread|oat|wheat/i, FOOD_IMG + 'bread_oats.png'],
+    [/oil/i, FOOD_IMG + 'olive_oil.png'],
+    [/nut|almond|walnut/i, FOOD_IMG + 'nuts.png'],
+    [/pizza/i, FOOD_IMG + 'pizza.png'],
+    [/soup/i, FOOD_IMG + 'soup.png']
   ];
   function photoFor(description) {
     const match = CARD_PHOTOS.find(([re]) => re.test(description || ''));
