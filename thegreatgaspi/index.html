@@ -220,10 +220,12 @@ body{
    files (16 territories, one file per named perspective, generated from
    the GASPI protocol document and merged by data/consolidate.py). Every
    perspective is attributed to the real institution that holds it — no
-   "Side A/Side B" labels anywhere, per the courtroom-accounts model:
-   each party's account is told in full, on its own terms, none framed
-   as the default the other is objecting to. Gaps are marked "data not
-   available" rather than filled with a plausible-sounding guess.
+   "Side A/Side B" labels anywhere, per the courtroom-accounts model.
+   Where two perspectives name the SAME physical location differently,
+   both get their own marker, own full description, own attribution —
+   that naming difference is the finding, not noise to merge away.
+   Only an exact-identical name at the same coordinate collapses to one
+   marker. Gaps are marked "data not available", never guessed.
 ====================================================================== */
 const DATA = {
   "puerto-rico": {
@@ -254,18 +256,25 @@ const DATA = {
     ],
     "peaks": [
       {
-        "name": "Cordillera Central / Cerro de Punta",
-        "lat": 18.1667,
+        "name": "Cordillera Central",
+        "lat": 18.16718,
         "lng": -66.5167,
         "elev": 1339,
-        "note": "Control de observación y control de corredores de movimiento a través de la región montañosa central. Posición relativa a las cuencas hidrográficas principales."
+        "note": "Control de observación y control de corredores de movimiento a través de la región montañosa central. Posición relativa a las cuencas hidrográficas principales. — per Asamblea Legislativa de Puerto Rico / Centro de Periodismo Investigativo / UTIER"
+      },
+      {
+        "name": "Cerro de Punta",
+        "lat": 18.16622,
+        "lng": -66.5167,
+        "elev": 1339,
+        "note": "Highest point in the Cordillera Central; control of observation and fire control over interior mountain passes and movement corridors. — per U.S. Federal Government / Financial Oversight and Management Board (FOMB) / Department of the Interior"
       },
       {
         "name": "El Yunque National Forest",
         "lat": 18.3107,
         "lng": -65.7912,
         "elev": 1080,
-        "note": "Control of observation and movement corridors over the northeastern coastal plain. Position relative to critical watersheds."
+        "note": "Control of observation and movement corridors over the northeastern coastal plain. Position relative to critical watersheds. — per U.S. Federal Government / Financial Oversight and Management Board (FOMB) / Department of the Interior"
       }
     ],
     "checkpoints": [
@@ -273,21 +282,33 @@ const DATA = {
         "name": "Port of San Juan (CBP Inspections)",
         "lat": 18.4655,
         "lng": -66.1057,
-        "note": "Customs and Border Protection clearance for international cargo and passengers"
+        "note": "Customs and Border Protection clearance for international cargo and passengers — per U.S. Federal Government / Financial Oversight and Management Board (FOMB) / Department of the Interior"
       }
     ],
     "water": [
       {
-        "name": "Embalse Carraízo / Carraízo Reservoir",
-        "lat": 18.1328,
+        "name": "Embalse Carraízo",
+        "lat": 18.13328,
         "lng": -66.0342,
-        "note": "Autoridad de Acueductos y Alcantarillados (AAA) de Puerto Rico"
+        "note": "Autoridad de Acueductos y Alcantarillados (AAA) de Puerto Rico — per Asamblea Legislativa de Puerto Rico / Centro de Periodismo Investigativo / UTIER"
       },
       {
-        "name": "Embalse Dos Bocas / Dos Bocas Reservoir",
-        "lat": 18.2361,
+        "name": "Carraízo Reservoir",
+        "lat": 18.13232,
+        "lng": -66.0342,
+        "note": "PRASA (Puerto Rico Aqueduct and Sewer Authority) — per U.S. Federal Government / Financial Oversight and Management Board (FOMB) / Department of the Interior"
+      },
+      {
+        "name": "Embalse Dos Bocas",
+        "lat": 18.23658,
         "lng": -66.6878,
-        "note": "Autoridad de Acueductos y Alcantarillados (AAA) de Puerto Rico"
+        "note": "Autoridad de Acueductos y Alcantarillados (AAA) de Puerto Rico — per Asamblea Legislativa de Puerto Rico / Centro de Periodismo Investigativo / UTIER"
+      },
+      {
+        "name": "Dos Bocas Reservoir",
+        "lat": 18.23562,
+        "lng": -66.6878,
+        "note": "PRASA — per U.S. Federal Government / Financial Oversight and Management Board (FOMB) / Department of the Interior"
       }
     ],
     "barriers": [
@@ -295,7 +316,7 @@ const DATA = {
         "name": "Vieques Bombing Range (formerly restricted military zone)",
         "lat": 18.1262,
         "lng": -65.4303,
-        "note": "data not available km — manmade"
+        "note": "data not available km — manmade — per U.S. Federal Government / Financial Oversight and Management Board (FOMB) / Department of the Interior"
       }
     ],
     "incidents": [
@@ -440,43 +461,61 @@ const DATA = {
         "lat": 35.31,
         "lng": 33.05,
         "elev": 1024,
-        "note": "Kuzey kıyı şeridine tamamen hakim bir yükselti serisi. Güneydeki Mesarya Ovası'na ve başkent Lefkoşa'ya kadar uzanan gözlem ve doğrudan ateş kontrolü sağlar. Doğu-batı yönünde doğal bir hareket engeli oluşturarak adanın kuzey-güney erişimini dar geçitlerle sınırlar."
+        "note": "Kuzey kıyı şeridine tamamen hakim bir yükselti serisi. Güneydeki Mesarya Ovası'na ve başkent Lefkoşa'ya kadar uzanan gözlem ve doğrudan ateş kontrolü sağlar. Doğu-batı yönünde doğal bir hareket engeli oluşturarak adanın kuzey-güney erişimini dar geçitlerle sınırlar. — per Turkish Republic of Northern Cyprus (TRNC) / Turkish State Authorities"
       },
       {
         "name": "Mesarya Ovası",
         "lat": 35.2,
         "lng": 33.7,
         "elev": 75,
-        "note": "Lefkoşa ile Gazimağusa arasında uzanan geniş, düz ova. En önemli doğu-batı hareket koridorudur. Bu düzlük, zırhlı ve motorlu birlikler için yüksek hızlı manevra ve lojistik ikmal için uygun bir arazi yapısı sunar. Yeraltı su kaynakları (Gazimağusa Akiferi) burada bulunur."
+        "note": "Lefkoşa ile Gazimağusa arasında uzanan geniş, düz ova. En önemli doğu-batı hareket koridorudur. Bu düzlük, zırhlı ve motorlu birlikler için yüksek hızlı manevra ve lojistik ikmal için uygun bir arazi yapısı sunar. Yeraltı su kaynakları (Gazimağusa Akiferi) burada bulunur. — per Turkish Republic of Northern Cyprus (TRNC) / Turkish State Authorities"
       },
       {
         "name": "Πενταδάκτυλος (Beşparmak) - Κυπαρισσόβουνο (Selvili Tepe)",
         "lat": 35.314,
         "lng": 33.415,
         "elev": 1024,
-        "note": "Υψηλότερη κορυφή της οροσειράς που εκτείνεται κατά μήκος της βόρειας ακτής. Παρέχει απρόσκοπτη παρατήρηση και έλεγχο πυρός σε όλη την πεδιάδα της Μεσαορίας προς νότο και στη θάλασσα της Κιλικίας προς βορρά. Κυριαρχεί επί των βασικών οδικών αξόνων που συνδέουν τη Λευκωσία με τα βόρεια παράλια."
+        "note": "Υψηλότερη κορυφή της οροσειράς που εκτείνεται κατά μήκος της βόρειας ακτής. Παρέχει απρόσκοπτη παρατήρηση και έλεγχο πυρός σε όλη την πεδιάδα της Μεσαορίας προς νότο και στη θάλασσα της Κιλικίας προς βορρά. Κυριαρχεί επί των βασικών οδικών αξόνων που συνδέουν τη Λευκωσία με τα βόρεια παράλια. — per Republic of Cyprus / UN Buffer Zone Framework"
       },
       {
         "name": "Πεδιάδα Μεσαορίας (Mesaoria Plain)",
         "lat": 35.15,
         "lng": 33.6,
         "elev": 75,
-        "note": "Εκτεταμένη, επίπεδη πεδιάδα που αποτελεί την καρδιά της γεωργικής γης της Κύπρου και τον κύριο διάδρομο κίνησης ανατολής-δύσης μεταξύ Αμμοχώστου και Μόρφου. Η επίπεδη μορφολογία της διευκολύνει την ταχεία ανάπτυξη και κίνηση μηχανοκίνητων δυνάμεων. Σε αυτήν βρίσκεται ο κύριος υδροφορέας της Μόρφου."
+        "note": "Εκτεταμένη, επίπεδη πεδιάδα που αποτελεί την καρδιά της γεωργικής γης της Κύπρου και τον κύριο διάδρομο κίνησης ανατολής-δύσης μεταξύ Αμμοχώστου και Μόρφου. Η επίπεδη μορφολογία της διευκολύνει την ταχεία ανάπτυξη και κίνηση μηχανοκίνητων δυνάμεων. Σε αυτήν βρίσκεται ο κύριος υδροφορέας της Μόρφου. — per Republic of Cyprus / UN Buffer Zone Framework"
       },
       {
         "name": "Λόφος της Αμμοχώστου (Βαρώσια)",
         "lat": 35.1,
         "lng": 33.95,
         "elev": 15,
-        "note": "Παράκτια ζώνη που δεσπόζει στον κόλπο της Αμμοχώστου. Παρέχει έλεγχο των θαλάσσιων προσεγγίσεων και του λιμένα, ο οποίος ήταν το βασικό εμπορικό κέντρο του νησιού. Η περίκλειστη περιοχή των Βαρωσίων αποτελεί ένα στρατηγικά κενό, αστικό περιβάλλον υπό άμεσο στρατιωτικό έλεγχο."
+        "note": "Παράκτια ζώνη που δεσπόζει στον κόλπο της Αμμοχώστου. Παρέχει έλεγχο των θαλάσσιων προσεγγίσεων και του λιμένα, ο οποίος ήταν το βασικό εμπορικό κέντρο του νησιού. Η περίκλειστη περιοχή των Βαρωσίων αποτελεί ένα στρατηγικά κενό, αστικό περιβάλλον υπό άμεσο στρατιωτικό έλεγχο. — per Republic of Cyprus / UN Buffer Zone Framework"
       }
     ],
     "checkpoints": [
       {
-        "name": "Metehan (Agios Dometios) Kara Geçiş Kapısı / Lokmacı (Ledra Palace) Yaya Geçiş Kapısı / Σημείο Διέλευσης Αγίου Δομετίου (Metehan) / Σημείο Διέλευσης Οδού Λήδρας (Lokmacı)",
-        "lat": 35.181,
+        "name": "Metehan (Agios Dometios) Kara Geçiş Kapısı",
+        "lat": 35.18148,
         "lng": 33.358,
-        "note": "Geçerli pasaport veya KKTC/TC kimlik kartı. AB vatandaşları ve diğer ülke vatandaşları için vize prosedürü uygulanabilir."
+        "note": "Geçerli pasaport veya KKTC/TC kimlik kartı. AB vatandaşları ve diğer ülke vatandaşları için vize prosedürü uygulanabilir. — per Turkish Republic of Northern Cyprus (TRNC) / Turkish State Authorities"
+      },
+      {
+        "name": "Lokmacı (Ledra Palace) Yaya Geçiş Kapısı",
+        "lat": 35.176,
+        "lng": 33.362480000000005,
+        "note": "Geçerli pasaport veya KKTC/TC kimlik kartı. — per Turkish Republic of Northern Cyprus (TRNC) / Turkish State Authorities"
+      },
+      {
+        "name": "Σημείο Διέλευσης Αγίου Δομετίου (Metehan)",
+        "lat": 35.180519999999994,
+        "lng": 33.358,
+        "note": "Δελτίο ταυτότητας ή διαβατήριο. Οι πολίτες της Κυπριακής Δημοκρατίας μπορούν να διέρχονται με την επίδειξη της ταυτότητάς τους. — per Republic of Cyprus / UN Buffer Zone Framework"
+      },
+      {
+        "name": "Σημείο Διέλευσης Οδού Λήδρας (Lokmacı)",
+        "lat": 35.176,
+        "lng": 33.36152,
+        "note": "Δελτίο ταυτότητας ή διαβατήριο. Μόνο για πεζούς. — per Republic of Cyprus / UN Buffer Zone Framework"
       }
     ],
     "water": [
@@ -484,19 +523,25 @@ const DATA = {
         "name": "Alaköprü Barajı (Türkiye'den KKTC'ye Su Temini Projesi kaynağı)",
         "lat": 36.18,
         "lng": 33.05,
-        "note": "Türkiye Cumhuriyeti Devlet Su İşleri Genel Müdürlüğü (DSİ)"
+        "note": "Türkiye Cumhuriyeti Devlet Su İşleri Genel Müdürlüğü (DSİ) — per Turkish Republic of Northern Cyprus (TRNC) / Turkish State Authorities"
       },
       {
-        "name": "Geçitköy Barajı (Su Temini Projesi KKTC alım noktası) / Παράνομο Υδραγωγείο από Τουρκία (TRNC Water Supply Project)",
-        "lat": 35.33,
+        "name": "Geçitköy Barajı (Su Temini Projesi KKTC alım noktası)",
+        "lat": 35.33048,
         "lng": 33.07,
-        "note": "KKTC Tarım ve Doğal Kaynaklar Bakanlığı Su İşleri Dairesi"
+        "note": "KKTC Tarım ve Doğal Kaynaklar Bakanlığı Su İşleri Dairesi — per Turkish Republic of Northern Cyprus (TRNC) / Turkish State Authorities"
+      },
+      {
+        "name": "Παράνομο Υδραγωγείο από Τουρκία (TRNC Water Supply Project)",
+        "lat": 35.329519999999995,
+        "lng": 33.07,
+        "note": "Παράνομη αποσχιστική οντότητα υπό τουρκικό έλεγχο — per Republic of Cyprus / UN Buffer Zone Framework"
       },
       {
         "name": "Türkiye-KKTC Deniz Altı Boru Hattı",
         "lat": 36.05,
         "lng": 33.05,
-        "note": "DSİ ve KKTC Su İşleri Dairesi"
+        "note": "DSİ ve KKTC Su İşleri Dairesi — per Turkish Republic of Northern Cyprus (TRNC) / Turkish State Authorities"
       }
     ],
     "barriers": [
@@ -504,13 +549,13 @@ const DATA = {
         "name": "Yeşil Hat (Birleşmiş Milletler Tampon Bölgesi)",
         "lat": 35.179,
         "lng": 33.363,
-        "note": "180 km — hybrid"
+        "note": "180 km — hybrid — per Turkish Republic of Northern Cyprus (TRNC) / Turkish State Authorities"
       },
       {
         "name": "Πράσινη Γραμμή (Green Line / UN Buffer Zone)",
         "lat": 35.175,
         "lng": 33.36,
-        "note": "180 km — hybrid"
+        "note": "180 km — hybrid — per Republic of Cyprus / UN Buffer Zone Framework"
       }
     ],
     "incidents": [
@@ -737,49 +782,49 @@ const DATA = {
         "lat": 27.9878,
         "lng": 86.925,
         "elev": 8848.86,
-        "note": "地球海拔最高点。对整个喜马拉雅山脉中部具有至高无上的观察制高点控制，可俯瞰珠峰南北坡，直视廓尔喀故地（尼泊尔）及锡金方向。高海拔冰川融水是绒布河等重要水源的补给区。"
+        "note": "地球海拔最高点。对整个喜马拉雅山脉中部具有至高无上的观察制高点控制，可俯瞰珠峰南北坡，直视廓尔喀故地（尼泊尔）及锡金方向。高海拔冰川融水是绒布河等重要水源的补给区。 — per 中华人民共和国中央人民政府 / 西藏自治区人民政府"
       },
       {
         "name": "吉隆口岸 (Gyirong Port / Rasuwa Fort area)",
         "lat": 28.28,
         "lng": 85.33,
         "elev": 1850,
-        "note": "喜马拉雅山脉中段重要峡谷通道与山口。吉隆藏布河谷深切喜马拉雅山体，形成天然低海拔移动走廊，控制由尼泊尔进入西藏腹地（日喀则方向）的主要公路，相对南亚平原具备居高临下的观察与火控优势。河谷为重要水源地。"
+        "note": "喜马拉雅山脉中段重要峡谷通道与山口。吉隆藏布河谷深切喜马拉雅山体，形成天然低海拔移动走廊，控制由尼泊尔进入西藏腹地（日喀则方向）的主要公路，相对南亚平原具备居高临下的观察与火控优势。河谷为重要水源地。 — per 中华人民共和国中央人民政府 / 西藏自治区人民政府"
       },
       {
         "name": "亚东口岸 (Yadong Port / Nathu La - Doka La)",
         "lat": 27.42,
         "lng": 88.92,
         "elev": "乃堆拉山口约 4300m, 洞朗地区约 2300-4000m",
-        "note": "位于喜马拉雅山脉东南麓亚东河谷。控制由印度西里古里走廊经甘托克进入西藏腹地（春丕河谷）的咽喉通道。地形急剧下降，形成对峙防御前线，具有俯视控制印方一侧移动走廊的天然优势。水源丰沛，属亚东河流域。"
+        "note": "位于喜马拉雅山脉东南麓亚东河谷。控制由印度西里古里走廊经甘托克进入西藏腹地（春丕河谷）的咽喉通道。地形急剧下降，形成对峙防御前线，具有俯视控制印方一侧移动走廊的天然优势。水源丰沛，属亚东河流域。 — per 中华人民共和国中央人民政府 / 西藏自治区人民政府"
       },
       {
         "name": "雅鲁藏布江大峡谷 (Yarlung Tsangpo Grand Canyon - Great Bend)",
         "lat": 29.77,
         "lng": 94.99,
         "elev": "峡谷底 500-2900m, 南迦巴瓦峰 7782m",
-        "note": "全球最深的峡谷，雅鲁藏布江在此大拐弯穿越喜马拉雅山。地形垂直落差极大，形成青藏高原面向藏南/印占阿鲁纳恰尔邦方向的主要水汽通道与潜在移动走廊（艰险）。水文资源（水能蕴藏量）与生态战略位置极为关键，关系下游布拉马普特拉河流域数百万人生计。"
+        "note": "全球最深的峡谷，雅鲁藏布江在此大拐弯穿越喜马拉雅山。地形垂直落差极大，形成青藏高原面向藏南/印占阿鲁纳恰尔邦方向的主要水汽通道与潜在移动走廊（艰险）。水文资源（水能蕴藏量）与生态战略位置极为关键，关系下游布拉马普特拉河流域数百万人生计。 — per 中华人民共和国中央人民政府 / 西藏自治区人民政府"
       },
       {
         "name": "གངས་རིན་པོ་ཆེ་ (Mount Kailash)",
         "lat": 31.06,
         "lng": 81.31,
         "elev": 6656,
-        "note": "Sacred peak in Bon, Buddhist, Hindu, and Jain cosmologies. Controls the headwaters of four major rivers of Asia: the Indus (སེང་གེ་གཙང་པོ), Sutlej (གླང་ཆེན་ཁ་འབབ), Brahmaputra (ཡར་ཀླུང་གཙང་པོ), and Karnali (གངས་ཀྱི་ཆུ་རྒྱུན). Topographically dominates the southern Ngari Plateau, offering panoramic observation of all approaches from the Indian subcontinent. Location relative to water resources is paramount. བོད་ཀྱི་ཆོས་ལུགས་གཙོ་བོ་བཞིའི་གནས་རི་ཡིན་པས། འདིའི་ཞིང་ཆགས་དང་རྒྱ་ནག་གི་སྤྱི་ཚོགས་ལེགས་བཅོས་ཀྱིས་བཤིག་ཟིན། Defiled by PRC tourism and infrastructure development."
+        "note": "Sacred peak in Bon, Buddhist, Hindu, and Jain cosmologies. Controls the headwaters of four major rivers of Asia: the Indus (སེང་གེ་གཙང་པོ), Sutlej (གླང་ཆེན་ཁ་འབབ), Brahmaputra (ཡར་ཀླུང་གཙང་པོ), and Karnali (གངས་ཀྱི་ཆུ་རྒྱུན). Topographically dominates the southern Ngari Plateau, offering panoramic observation of all approaches from the Indian subcontinent. Location relative to water resources is paramount. བོད་ཀྱི་ཆོས་ལུགས་གཙོ་བོ་བཞིའི་གནས་རི་ཡིན་པས། འདིའི་ཞིང་ཆགས་དང་རྒྱ་ནག་གི་སྤྱི་ཚོགས་ལེགས་བཅོས་ཀྱིས་བཤིག་ཟིན། Defiled by PRC tourism and infrastructure development. — per Central Tibetan Administration / Customary & Rights Advocates"
       },
       {
         "name": "ཡར་ལྷ་ཤམ་པོ་ (Yarlha Shampo)",
         "lat": 29.2,
         "lng": 92.3,
         "elev": 6636,
-        "note": "བོད་ཀྱི་མངའ་མཐོ་རིགས་ཀྱི་ཡུམ་ལྷ། ཡར་ཀླུང་གཙང་པོའི་ལྷོ་ངོས་སུ་ཡོད་པ་དང་། བོད་ཀྱི་ལོ་རྒྱུས་ཀྱི་ས་ཁུལ་གཙོ་བོ་ཡིན། Ancestral mountain deity of the early Tibetan kings. Located on the southern bank of the Yarlung Tsangpo River, historically the cradle of Tibetan civilization. Topographic position controls observation of the Lhasa-Shannan valley corridor."
+        "note": "བོད་ཀྱི་མངའ་མཐོ་རིགས་ཀྱི་ཡུམ་ལྷ། ཡར་ཀླུང་གཙང་པོའི་ལྷོ་ངོས་སུ་ཡོད་པ་དང་། བོད་ཀྱི་ལོ་རྒྱུས་ཀྱི་ས་ཁུལ་གཙོ་བོ་ཡིན། Ancestral mountain deity of the early Tibetan kings. Located on the southern bank of the Yarlung Tsangpo River, historically the cradle of Tibetan civilization. Topographic position controls observation of the Lhasa-Shannan valley corridor. — per Central Tibetan Administration / Customary & Rights Advocates"
       },
       {
         "name": "དཔའ་ཤོད་ལ་ (Pashö La / Zoji La Approach)",
         "lat": 34.05,
         "lng": 75.5,
         "elev": 3528,
-        "note": "སྲིད་གཞུང་གི་དམག་སྒར་དང་སྲུང་སྐྱོབ་ཀྱི་གལ་ཆེའི་ལམ་ཁ་ཞིག་ཡིན། ལྷོ་བོད་དང་ལདྭགས་ས་ཁུལ་བར་གྱི་མཐོ་སྒང་ལམ་ཁ་ཡིན། Gateway between Kashmir, Ladakh, and the Tibetan plateau. Forms a critical military and security corridor for PRC troops moving into the Aksai Chin and Siachen dispute regions. Controls observation over the Dras-Kargil movement corridor."
+        "note": "སྲིད་གཞུང་གི་དམག་སྒར་དང་སྲུང་སྐྱོབ་ཀྱི་གལ་ཆེའི་ལམ་ཁ་ཞིག་ཡིན། ལྷོ་བོད་དང་ལདྭགས་ས་ཁུལ་བར་གྱི་མཐོ་སྒང་ལམ་ཁ་ཡིན། Gateway between Kashmir, Ladakh, and the Tibetan plateau. Forms a critical military and security corridor for PRC troops moving into the Aksai Chin and Siachen dispute regions. Controls observation over the Dras-Kargil movement corridor. — per Central Tibetan Administration / Customary & Rights Advocates"
       }
     ],
     "checkpoints": [
@@ -787,19 +832,19 @@ const DATA = {
         "name": "拉萨贡嘎机场公安检查站及民航安检",
         "lat": 29.298,
         "lng": 90.912,
-        "note": "身份证/护照/登机牌，进藏外国人另需入藏函原件，部分特殊时期会增加公安人工核验。"
+        "note": "身份证/护照/登机牌，进藏外国人另需入藏函原件，部分特殊时期会增加公安人工核验。 — per 中华人民共和国中央人民政府 / 西藏自治区人民政府"
       },
       {
         "name": "拉萨火车站公安检查站",
         "lat": 29.625,
         "lng": 91.074,
-        "note": "身份证 / 车票。公安可能进行人证合一查验、大数据核查与行李抽检。"
+        "note": "身份证 / 车票。公安可能进行人证合一查验、大数据核查与行李抽检。 — per 中华人民共和国中央人民政府 / 西藏自治区人民政府"
       },
       {
         "name": "布达拉宫广场安检口",
         "lat": 29.657,
         "lng": 91.117,
-        "note": "身份证 / 门票。经安检通道进行人身及行李安检（X光机），打火机、管制刀具、无人机、违禁标语横幅等严禁带入。"
+        "note": "身份证 / 门票。经安检通道进行人身及行李安检（X光机），打火机、管制刀具、无人机、违禁标语横幅等严禁带入。 — per 中华人民共和国中央人民政府 / 西藏自治区人民政府"
       }
     ],
     "water": [
@@ -807,19 +852,19 @@ const DATA = {
         "name": "藏木水电站 (Zangmu Hydropower Station)",
         "lat": 29.2,
         "lng": 92.5,
-        "note": "华能西藏发电有限公司"
+        "note": "华能西藏发电有限公司 — per 中华人民共和国中央人民政府 / 西藏自治区人民政府"
       },
       {
         "name": "加查水电站 (Jiacha Hydropower Station)",
         "lat": 29.14,
         "lng": 92.58,
-        "note": "华能西藏发电有限公司"
+        "note": "华能西藏发电有限公司 — per 中华人民共和国中央人民政府 / 西藏自治区人民政府"
       },
       {
         "name": "满拉水利枢纽",
         "lat": 28.92,
         "lng": 89.85,
-        "note": "西藏自治区水利厅"
+        "note": "西藏自治区水利厅 — per 中华人民共和国中央人民政府 / 西藏自治区人民政府"
       }
     ],
     "barriers": [],
@@ -1165,35 +1210,35 @@ const DATA = {
         "lat": 13.3389,
         "lng": 144.6578,
         "elev": 406,
-        "note": "Highest peak on Guam. Located near the southwest coast, south of Apra Harbor. Offers panoramic observation of the Philippine Sea to the west, the interior valleys, and approach corridors to Apra Harbor. No DoD fire control positions currently on peak; observation is topographically dominant over the southern half of the island. Proximity to Fena Valley Reservoir provides indirect relationship to water resources."
+        "note": "Highest peak on Guam. Located near the southwest coast, south of Apra Harbor. Offers panoramic observation of the Philippine Sea to the west, the interior valleys, and approach corridors to Apra Harbor. No DoD fire control positions currently on peak; observation is topographically dominant over the southern half of the island. Proximity to Fena Valley Reservoir provides indirect relationship to water resources. — per U.S. Department of Defense / Joint Region Marianas"
       },
       {
         "name": "Ritidian Point (Litekyan)",
         "lat": 13.6517,
         "lng": 144.8617,
         "elev": "Approximately 180 m (coastal high-ground atop limestone cliff)",
-        "note": "Northernmost tip of Guam, part of Andersen Air Force Base. Comprises elevated limestone plateau dropping sharply to coastal cliffs. Provides unobstructed observation and radar surveillance capability over the northern Philippine Sea and Farallon de Medinilla approach corridor. Position is integral to the Northern Guam Lens Aquifer recharge area directly beneath. The cliff line dominates the coastal movement corridor along northern beaches."
+        "note": "Northernmost tip of Guam, part of Andersen Air Force Base. Comprises elevated limestone plateau dropping sharply to coastal cliffs. Provides unobstructed observation and radar surveillance capability over the northern Philippine Sea and Farallon de Medinilla approach corridor. Position is integral to the Northern Guam Lens Aquifer recharge area directly beneath. The cliff line dominates the coastal movement corridor along northern beaches. — per U.S. Department of Defense / Joint Region Marianas"
       },
       {
         "name": "Orote Peninsula (Orote Point)",
         "lat": 13.4433,
         "lng": 144.6233,
         "elev": "Approximately 45-60 m (limestone plateau)",
-        "note": "Westernmost extension of Guam, part of Naval Base Guam. Flat limestone plateau jutting into the Philippine Sea. Controls the southern entrance to Apra Harbor. Provides observation and fire control positions across the harbor mouth and the western sea approaches. Historically fortified; active U.S. Navy firing range and communications facilities occupy the area."
+        "note": "Westernmost extension of Guam, part of Naval Base Guam. Flat limestone plateau jutting into the Philippine Sea. Controls the southern entrance to Apra Harbor. Provides observation and fire control positions across the harbor mouth and the western sea approaches. Historically fortified; active U.S. Navy firing range and communications facilities occupy the area. — per U.S. Department of Defense / Joint Region Marianas"
       },
       {
         "name": "Fena Valley Reservoir Watershed",
         "lat": 13.3386,
         "lng": 144.7064,
         "elev": "Reservoir surface approximately 30 m; surrounding ridgelines 150-300 m",
-        "note": "Largest surface water reservoir on Guam. Surrounded by upland ridgelines that control observation of the reservoir basin and connecting rivers (Maulap, Talofofo). The reservoir's watershed provides the majority of the Navy's and a portion of the civilian population's water supply. Topography funnels movement into the central valley corridor between the southern volcanic mountains and the northern limestone plateau."
+        "note": "Largest surface water reservoir on Guam. Surrounded by upland ridgelines that control observation of the reservoir basin and connecting rivers (Maulap, Talofofo). The reservoir's watershed provides the majority of the Navy's and a portion of the civilian population's water supply. Topography funnels movement into the central valley corridor between the southern volcanic mountains and the northern limestone plateau. — per U.S. Department of Defense / Joint Region Marianas"
       },
       {
         "name": "Litekyan / Ritidian Point",
         "lat": 13.6334,
         "lng": 144.8546,
         "elev": 100,
-        "note": "Northernmost point of Guam; sits above sole-source aquifer providing >80% of Guam's drinking water; nesting habitat for endangered green sea turtles; foraging and resting area for migratory seabirds; location of Air Force open burning/open detonation operations[citation:2][citation:7]"
+        "note": "Northernmost point of Guam; sits above sole-source aquifer providing >80% of Guam's drinking water; nesting habitat for endangered green sea turtles; foraging and resting area for migratory seabirds; location of Air Force open burning/open detonation operations[citation:2][citation:7] — per CHamoru Land Rights / Decolonization Advocates / Chamorro Land Trust Commission"
       }
     ],
     "checkpoints": [
@@ -1201,19 +1246,19 @@ const DATA = {
         "name": "Andersen AFB Main Gate (Patton Boulevard)",
         "lat": 13.5717,
         "lng": 144.9133,
-        "note": "Defense Biometric Identification System (DBIDS) card or sponsored visitor pass. 100% ID check. Random vehicle inspections per Force Protection Condition (FPCON) level."
+        "note": "Defense Biometric Identification System (DBIDS) card or sponsored visitor pass. 100% ID check. Random vehicle inspections per Force Protection Condition (FPCON) level. — per U.S. Department of Defense / Joint Region Marianas"
       },
       {
         "name": "Naval Base Guam Main Gate (Route 1, Piti)",
         "lat": 13.4583,
         "lng": 144.695,
-        "note": "DBIDS card or visitor pass. Commercial vehicles entering Apra Harbor must have port clearance and vehicle pass."
+        "note": "DBIDS card or visitor pass. Commercial vehicles entering Apra Harbor must have port clearance and vehicle pass. — per U.S. Department of Defense / Joint Region Marianas"
       },
       {
         "name": "MCB Camp Blaz Main Gate (Finegayan, Route 3)",
         "lat": 13.5333,
         "lng": 144.8333,
-        "note": "DBIDS card (base not yet fully operational for general traffic; construction traffic has escorted access). Upon full operational capability (2027), standard DoD access rules apply."
+        "note": "DBIDS card (base not yet fully operational for general traffic; construction traffic has escorted access). Upon full operational capability (2027), standard DoD access rules apply. — per U.S. Department of Defense / Joint Region Marianas"
       }
     ],
     "water": [
@@ -1221,19 +1266,19 @@ const DATA = {
         "name": "Northern Guam Lens Aquifer (NGLA) production wells (Andersen AFB and Yigo-Tumon well fields)",
         "lat": 13.55,
         "lng": 144.88,
-        "note": "Guam Waterworks Authority (GWA) manages civilian wells; U.S. Navy Public Works manages on-base wells. The aquifer is a hydrologically connected single resource."
+        "note": "Guam Waterworks Authority (GWA) manages civilian wells; U.S. Navy Public Works manages on-base wells. The aquifer is a hydrologically connected single resource. — per U.S. Department of Defense / Joint Region Marianas"
       },
       {
         "name": "Fena Valley Reservoir (FVR) Water Treatment Plant",
         "lat": 13.34,
         "lng": 144.7,
-        "note": "U.S. Navy (Naval Base Guam Public Works) operates the reservoir and treatment plant; GWA distributes a portion to civilian users under a 2009 Memorandum of Agreement."
+        "note": "U.S. Navy (Naval Base Guam Public Works) operates the reservoir and treatment plant; GWA distributes a portion to civilian users under a 2009 Memorandum of Agreement. — per U.S. Department of Defense / Joint Region Marianas"
       },
       {
         "name": "Fena Valley Reservoir",
         "lat": 13.3456,
         "lng": 144.7356,
-        "note": "U.S. Navy Public Works / Joint Region Marianas"
+        "note": "U.S. Navy Public Works / Joint Region Marianas — per CHamoru Land Rights / Decolonization Advocates / Chamorro Land Trust Commission"
       }
     ],
     "barriers": [],
@@ -1510,14 +1555,14 @@ const DATA = {
         "lat": 44.6125,
         "lng": 34.2347,
         "elev": 1545,
-        "note": "Контроль наблюдения над южным берегом Крыма и прилегающими районами; господствующая высота на южном склоне Главной гряды Крымских гор"
+        "note": "Контроль наблюдения над южным берегом Крыма и прилегающими районами; господствующая высота на южном склоне Главной гряды Крымских гор — per Российская Федерация / Государственный Совет Республики Крым / Росреестр / Министерство энергетики РФ"
       },
       {
         "name": "Сапун-гора",
         "lat": 44.5525,
         "lng": 33.5908,
         "elev": 240,
-        "note": "Контроль над Севастопольской бухтой и подходами к городу; ключевая позиция в обороне Севастополя; контроль наблюдения и огня над южной стороной Севастополя"
+        "note": "Контроль над Севастопольской бухтой и подходами к городу; ключевая позиция в обороне Севастополя; контроль наблюдения и огня над южной стороной Севастополя — per Российская Федерация / Государственный Совет Республики Крым / Росреестр / Министерство энергетики РФ"
       }
     ],
     "checkpoints": [
@@ -1525,13 +1570,13 @@ const DATA = {
         "name": "Джанкойский район / Административная граница с Херсонской областью",
         "lat": 45.7089,
         "lng": 34.3933,
-        "note": "Паспортный и таможенный контроль; пропуска для перемещения грузов; особый режим при въезде из зоны боевых действий"
+        "note": "Паспортный и таможенный контроль; пропуска для перемещения грузов; особый режим при въезде из зоны боевых действий — per Российская Федерация / Государственный Совет Республики Крым / Росреестр / Министерство энергетики РФ"
       },
       {
         "name": "КПП на Крымском мосту",
         "lat": 45.3094,
         "lng": 36.5067,
-        "note": "Досмотр автотранспорта; допуск только к легковому и грузовому транспорту; движение по мосту нередко перекрывается в связи с военными угрозами"
+        "note": "Досмотр автотранспорта; допуск только к легковому и грузовому транспорту; движение по мосту нередко перекрывается в связи с военными угрозами — per Российская Федерация / Государственный Совет Республики Крым / Росреестр / Министерство энергетики РФ"
       }
     ],
     "water": [
@@ -1539,13 +1584,13 @@ const DATA = {
         "name": "Северо-Крымский канал",
         "lat": 45.6828,
         "lng": 33.8261,
-        "note": "Правительство Республики Крым / Госкомводхоз РК"
+        "note": "Правительство Республики Крым / Госкомводхоз РК — per Российская Федерация / Государственный Совет Республики Крым / Росреестр / Министерство энергетики РФ"
       },
       {
         "name": "Тракт водоподачи (Нежинский, Новогригорьевский, Просторненский водозаборы — Феодосия и Керчь)",
         "lat": 45.0,
         "lng": 35.0,
-        "note": "ГУП РК «Крымэнерго» / Правительство Республики Крым"
+        "note": "ГУП РК «Крымэнерго» / Правительство Республики Крым — per Российская Федерация / Государственный Совет Республики Крым / Росреестр / Министерство энергетики РФ"
       }
     ],
     "barriers": [
@@ -1553,7 +1598,7 @@ const DATA = {
         "name": "Крымский мост",
         "lat": 45.3094,
         "lng": 36.5067,
-        "note": "19 km — manmade"
+        "note": "19 km — manmade — per Российская Федерация / Государственный Совет Республики Крым / Росреестр / Министерство энергетики РФ"
       }
     ],
     "incidents": [
@@ -1700,21 +1745,21 @@ const DATA = {
         "lat": 33.9,
         "lng": 74.4,
         "elev": 3000,
-        "note": "Controls movement corridors between Jammu and Kashmir Valley; strategic observation points over highways and valleys; position relative to Jhelum and Chenab basins"
+        "note": "Controls movement corridors between Jammu and Kashmir Valley; strategic observation points over highways and valleys; position relative to Jhelum and Chenab basins — per Government of India / Ministry of Home Affairs / J&K UT Administration"
       },
       {
         "name": "Zoji La Pass",
         "lat": 34.2783,
         "lng": 75.4714,
         "elev": 3528,
-        "note": "Strategic high-altitude pass connecting Kashmir Valley to Ladakh; control of movement corridor; critical for military logistics and troop movements"
+        "note": "Strategic high-altitude pass connecting Kashmir Valley to Ladakh; control of movement corridor; critical for military logistics and troop movements — per Government of India / Ministry of Home Affairs / J&K UT Administration"
       },
       {
         "name": "Siachen Glacier (contested)",
         "lat": 35.5,
         "lng": 77.0,
         "elev": 5770,
-        "note": "Control of observation and movement corridors in the highest battlefield; position relative to water resources and Line of Control"
+        "note": "Control of observation and movement corridors in the highest battlefield; position relative to water resources and Line of Control — per Government of India / Ministry of Home Affairs / J&K UT Administration"
       }
     ],
     "checkpoints": [],
@@ -1723,31 +1768,31 @@ const DATA = {
         "name": "Indus River (Indus Waters Treaty)",
         "lat": 34.1667,
         "lng": 77.3333,
-        "note": "Government of India / NHPC Limited"
+        "note": "Government of India / NHPC Limited — per Government of India / Ministry of Home Affairs / J&K UT Administration"
       },
       {
         "name": "Jhelum River",
         "lat": 34.1,
         "lng": 74.9,
-        "note": "Government of India / J&K State Power Development Corporation"
+        "note": "Government of India / J&K State Power Development Corporation — per Government of India / Ministry of Home Affairs / J&K UT Administration"
       },
       {
         "name": "Chenab River",
         "lat": 33.5,
         "lng": 75.5,
-        "note": "Government of India / NHPC Limited"
+        "note": "Government of India / NHPC Limited — per Government of India / Ministry of Home Affairs / J&K UT Administration"
       },
       {
         "name": "Baglihar Hydro Electric Project",
         "lat": 33.1667,
         "lng": 75.3333,
-        "note": "Government of India / NHPC Limited"
+        "note": "Government of India / NHPC Limited — per Government of India / Ministry of Home Affairs / J&K UT Administration"
       },
       {
         "name": "Kishanganga Hydroelectric Project",
         "lat": 34.4333,
         "lng": 73.8333,
-        "note": "Government of India / NHPC Limited"
+        "note": "Government of India / NHPC Limited — per Government of India / Ministry of Home Affairs / J&K UT Administration"
       }
     ],
     "barriers": [],
@@ -1967,27 +2012,33 @@ const DATA = {
         "lat": 33.4167,
         "lng": 35.85,
         "elev": 2814,
-        "note": "Not directly within West Bank; included for regional strategic context. Controls eastern approaches to northern Israel and water resources."
+        "note": "Not directly within West Bank; included for regional strategic context. Controls eastern approaches to northern Israel and water resources. — per State of Israel / Civil Administration"
       }
     ],
     "checkpoints": [
       {
-        "name": "Qalandia Checkpoint / حاجز قلنديا",
-        "lat": 31.8625,
+        "name": "Qalandia Checkpoint",
+        "lat": 31.86298,
         "lng": 35.216,
-        "note": "Israeli security permit; varies by type (work, medical, family visit)"
+        "note": "Israeli security permit; varies by type (work, medical, family visit) — per State of Israel / Civil Administration"
+      },
+      {
+        "name": "حاجز قلنديا",
+        "lat": 31.86202,
+        "lng": 35.216,
+        "note": "تصريح أمني إسرائيلي يختلف حسب النوع (عمل، علاج، زيارة عائلية) — per السلطة الوطنية الفلسطينية / دائرة الأراضي / سلطة المياه / الجهاز المركزي للإحصاء"
       },
       {
         "name": "Maale Adumim Checkpoint",
         "lat": 31.7742,
         "lng": 35.2944,
-        "note": "Israeli security permit"
+        "note": "Israeli security permit — per State of Israel / Civil Administration"
       },
       {
         "name": "حاجز حوارة",
         "lat": 32.1494,
         "lng": 35.2733,
-        "note": "تصريح أمني إسرائيلي"
+        "note": "تصريح أمني إسرائيلي — per السلطة الوطنية الفلسطينية / دائرة الأراضي / سلطة المياه / الجهاز المركزي للإحصاء"
       }
     ],
     "water": [],
@@ -2276,18 +2327,25 @@ const DATA = {
     ],
     "peaks": [
       {
-        "name": "Pegunungan Jayawijaya / Pegunungan Jayawijaya / Central Highlands",
-        "lat": -4.0833,
+        "name": "Pegunungan Jayawijaya",
+        "lat": -4.082820000000001,
         "lng": 138.0,
         "elev": 4884,
-        "note": "Pegunungan tertinggi di Indonesia dan Oseania; kontrol atas observasi, koridor gerakan, dan posisi relatif terhadap sumber daya air dan tambang Grasberg; daerah pegunungan interior masih didominasi oleh Penduduk Asli Papua (PAP) dengan populasi yang sangat terisolasi[citation:2][citation:12]"
+        "note": "Pegunungan tertinggi di Indonesia dan Oseania; kontrol atas observasi, koridor gerakan, dan posisi relatif terhadap sumber daya air dan tambang Grasberg; daerah pegunungan interior masih didominasi oleh Penduduk Asli Papua (PAP) dengan populasi yang sangat terisolasi[citation:2][citation:12] — per Pemerintah Republik Indonesia / Kementerian Koordinator Polhukam / Kementerian ESDM"
+      },
+      {
+        "name": "Pegunungan Jayawijaya / Central Highlands",
+        "lat": -4.08378,
+        "lng": 138.0,
+        "elev": 4884,
+        "note": "Mountain range covering the central highlands where most militarization and displacement is occurring; controls movement corridors, observation, and access to Wabu Block gold reserves (116 million tonnes of mineral ore), traditional agricultural lands, and water resources — per Indigenous Papuan Customary Council (Dewan Adat Papua) / Majelis Rakyat Papua / Rights Advocates / LBH Papua"
       },
       {
         "name": "Puncak Jaya",
         "lat": -4.0833,
         "lng": 137.1833,
         "elev": 4884,
-        "note": "Puncak tertinggi di Indonesia; kontrol observasi dan komunikasi di wilayah tengah Papua; posisi relatif terhadap tambang Grasberg dan sumber air"
+        "note": "Puncak tertinggi di Indonesia; kontrol observasi dan komunikasi di wilayah tengah Papua; posisi relatif terhadap tambang Grasberg dan sumber air — per Pemerintah Republik Indonesia / Kementerian Koordinator Polhukam / Kementerian ESDM"
       }
     ],
     "checkpoints": [
@@ -2295,13 +2353,13 @@ const DATA = {
         "name": "Pos Keamanan TNI/Polri di Nduga",
         "lat": -4.5,
         "lng": 138.0,
-        "note": "Surat izin perjalanan untuk memasuki zona konflik; identifikasi untuk warga sipil"
+        "note": "Surat izin perjalanan untuk memasuki zona konflik; identifikasi untuk warga sipil — per Pemerintah Republik Indonesia / Kementerian Koordinator Polhukam / Kementerian ESDM"
       },
       {
         "name": "Pos Perbatasan Skouw (RI-PNG)",
         "lat": -2.5,
         "lng": 140.8,
-        "note": "Paspor dan izin lintas perbatasan resmi"
+        "note": "Paspor dan izin lintas perbatasan resmi — per Pemerintah Republik Indonesia / Kementerian Koordinator Polhukam / Kementerian ESDM"
       }
     ],
     "water": [
@@ -2309,19 +2367,37 @@ const DATA = {
         "name": "Sungai Mamberamo",
         "lat": -1.5,
         "lng": 137.0,
-        "note": "Pemerintah Indonesia / Kementerian PUPR"
+        "note": "Pemerintah Indonesia / Kementerian PUPR — per Pemerintah Republik Indonesia / Kementerian Koordinator Polhukam / Kementerian ESDM"
       },
       {
         "name": "Sungai Digul",
         "lat": -6.0,
         "lng": 140.0,
-        "note": "Pemerintah Indonesia / Kementerian PUPR"
+        "note": "Pemerintah Indonesia / Kementerian PUPR — per Pemerintah Republik Indonesia / Kementerian Koordinator Polhukam / Kementerian ESDM"
       },
       {
-        "name": "Sungai Ajkwa dan Sistem ModADA (Modified Ajkwa Deposition Area) / Sistem Tanggul Ajkwa (Levee System) / Ajkwa River and Modified Ajkwa Deposition Area (ModADA) / Sungai Aghawagon (affected by tailings)",
-        "lat": -4.5,
+        "name": "Sungai Ajkwa dan Sistem ModADA (Modified Ajkwa Deposition Area)",
+        "lat": -4.49952,
         "lng": 137.0,
-        "note": "PT Freeport Indonesia (PTFI) / Kementerian ESDM / KLHK"
+        "note": "PT Freeport Indonesia (PTFI) / Kementerian ESDM / KLHK — per Pemerintah Republik Indonesia / Kementerian Koordinator Polhukam / Kementerian ESDM"
+      },
+      {
+        "name": "Sistem Tanggul Ajkwa (Levee System)",
+        "lat": -4.5,
+        "lng": 137.00048,
+        "note": "PT Freeport Indonesia (PTFI) — per Pemerintah Republik Indonesia / Kementerian Koordinator Polhukam / Kementerian ESDM"
+      },
+      {
+        "name": "Ajkwa River and Modified Ajkwa Deposition Area (ModADA)",
+        "lat": -4.50048,
+        "lng": 137.0,
+        "note": "PT Freeport Indonesia (PTFI) — per Indigenous Papuan Customary Council (Dewan Adat Papua) / Majelis Rakyat Papua / Rights Advocates / LBH Papua"
+      },
+      {
+        "name": "Sungai Aghawagon (affected by tailings)",
+        "lat": -4.5,
+        "lng": 136.99952,
+        "note": "PT Freeport Indonesia (PTFI) — per Indigenous Papuan Customary Council (Dewan Adat Papua) / Majelis Rakyat Papua / Rights Advocates / LBH Papua"
       }
     ],
     "barriers": [],
@@ -2601,14 +2677,14 @@ const DATA = {
         "lat": 42.0,
         "lng": 86.0,
         "elev": 7439,
-        "note": "雄伟的天山山脉横亘新疆中部，是新疆重要的地理分界线。其地势险要，可提供制高观测和通道控制。"
+        "note": "雄伟的天山山脉横亘新疆中部，是新疆重要的地理分界线。其地势险要，可提供制高观测和通道控制。 — per PRC Central Government / Xinjiang Uyghur Autonomous Region (XUAR) Authorities / XPCC"
       },
       {
         "name": "昆仑山脉 (Kunlun Mountains)",
         "lat": 36.0,
         "lng": 80.0,
         "elev": 7167,
-        "note": "位于新疆南部，昆仑山脉构成了青藏高原的北部边缘，战略地位重要。"
+        "note": "位于新疆南部，昆仑山脉构成了青藏高原的北部边缘，战略地位重要。 — per PRC Central Government / Xinjiang Uyghur Autonomous Region (XUAR) Authorities / XPCC"
       }
     ],
     "checkpoints": [
@@ -2616,19 +2692,19 @@ const DATA = {
         "name": "霍尔果斯口岸 (Khorgos Port)",
         "lat": 44.2,
         "lng": 80.4,
-        "note": "海关和出入境检查"
+        "note": "海关和出入境检查 — per PRC Central Government / Xinjiang Uyghur Autonomous Region (XUAR) Authorities / XPCC"
       },
       {
         "name": "阿拉山口口岸 (Alataw Pass Port)",
         "lat": 45.2,
         "lng": 82.5,
-        "note": "海关和出入境检查"
+        "note": "海关和出入境检查 — per PRC Central Government / Xinjiang Uyghur Autonomous Region (XUAR) Authorities / XPCC"
       },
       {
         "name": "Kashgar City Checkpoints",
         "lat": 39.4677,
         "lng": 75.9938,
-        "note": "Identity card verification; biometric scanning; travel permits to leave areas"
+        "note": "Identity card verification; biometric scanning; travel permits to leave areas — per Uyghur Rights Preservation / World Uyghur Congress / Diaspora Archives"
       }
     ],
     "water": [
@@ -2636,13 +2712,13 @@ const DATA = {
         "name": "塔里木河 (Tarim River)",
         "lat": 40.5,
         "lng": 87.0,
-        "note": "新疆维吾尔自治区水利部门"
+        "note": "新疆维吾尔自治区水利部门 — per PRC Central Government / Xinjiang Uyghur Autonomous Region (XUAR) Authorities / XPCC"
       },
       {
         "name": "额尔齐斯河 (Irtysh River)",
         "lat": 47.5,
         "lng": 87.0,
-        "note": "新疆维吾尔自治区水利部门"
+        "note": "新疆维吾尔自治区水利部门 — per PRC Central Government / Xinjiang Uyghur Autonomous Region (XUAR) Authorities / XPCC"
       }
     ],
     "barriers": [],
@@ -2779,7 +2855,7 @@ const DATA = {
         "lat": -22.0,
         "lng": 166.5,
         "elev": "data not available",
-        "note": "Zone de grands dépôts de nickel et de cobalt; position relative aux ressources hydriques et aux zones côtières."
+        "note": "Zone de grands dépôts de nickel et de cobalt; position relative aux ressources hydriques et aux zones côtières. — per État français / Haut-Commissariat de la République / Gouvernement de la Nouvelle-Calédonie"
       }
     ],
     "checkpoints": [],
@@ -2788,7 +2864,7 @@ const DATA = {
         "name": "Lagon de Nouvelle-Calédonie",
         "lat": -22.0,
         "lng": 166.0,
-        "note": "État français"
+        "note": "État français — per État français / Haut-Commissariat de la République / Gouvernement de la Nouvelle-Calédonie"
       }
     ],
     "barriers": [],
@@ -2863,14 +2939,14 @@ const DATA = {
         "lat": -14.2756,
         "lng": -170.7025,
         "elev": 653,
-        "note": "Highest point on Tutuila Island; provides observation and control over the central and eastern portions of the main island."
+        "note": "Highest point on Tutuila Island; provides observation and control over the central and eastern portions of the main island. — per U.S. Department of the Interior / Office of Insular Affairs / American Samoa Government"
       },
       {
         "name": "Mount Pioa (Rainmaker Mountain)",
         "lat": -14.2833,
         "lng": -170.6333,
         "elev": 523,
-        "note": "High ground near Pago Pago Harbor; controls observation over the harbor and its approaches."
+        "note": "High ground near Pago Pago Harbor; controls observation over the harbor and its approaches. — per U.S. Department of the Interior / Office of Insular Affairs / American Samoa Government"
       }
     ],
     "checkpoints": [
@@ -2878,7 +2954,7 @@ const DATA = {
         "name": "Pago Pago International Airport",
         "lat": -14.3315,
         "lng": -170.7105,
-        "note": "Passport and customs clearance"
+        "note": "Passport and customs clearance — per U.S. Department of the Interior / Office of Insular Affairs / American Samoa Government"
       }
     ],
     "water": [],
@@ -3022,14 +3098,14 @@ const DATA = {
         "lat": 35.0,
         "lng": 36.0,
         "elev": 1500,
-        "note": "سيطرة على الساحل السوري والمناطق الداخلية؛ مناطق تمركز الأقلية العلوية؛ نقاط مراقبة استراتيجية على المدن الساحلية والطرق المؤدية إلى الداخل"
+        "note": "سيطرة على الساحل السوري والمناطق الداخلية؛ مناطق تمركز الأقلية العلوية؛ نقاط مراقبة استراتيجية على المدن الساحلية والطرق المؤدية إلى الداخل — per الحكومة السورية المؤقتة / وزارات الدفاع والداخلية والإدارة المحلية"
       },
       {
         "name": "مرتفعات الجولان",
         "lat": 33.0,
         "lng": 35.8,
         "elev": 2800,
-        "note": "سيطرة إسرائيلية؛ نقطة مراقبة استراتيجية على جنوب سوريا والأردن وبحيرة طبريا؛ منطقة عازلة بحكم الأمر الواقع"
+        "note": "سيطرة إسرائيلية؛ نقطة مراقبة استراتيجية على جنوب سوريا والأردن وبحيرة طبريا؛ منطقة عازلة بحكم الأمر الواقع — per الحكومة السورية المؤقتة / وزارات الدفاع والداخلية والإدارة المحلية"
       }
     ],
     "checkpoints": [],
@@ -3038,19 +3114,19 @@ const DATA = {
         "name": "سد الفرات (سد الطبقة)",
         "lat": 35.8742,
         "lng": 38.4803,
-        "note": "الحكومة السورية المؤقتة (منذ يناير 2026)"
+        "note": "الحكومة السورية المؤقتة (منذ يناير 2026) — per الحكومة السورية المؤقتة / وزارات الدفاع والداخلية والإدارة المحلية"
       },
       {
         "name": "سد تشرين",
         "lat": 36.3842,
         "lng": 38.1536,
-        "note": "متنازع عليه بين قوات الحكومة المؤقتة وقوات سوريا الديمقراطية"
+        "note": "متنازع عليه بين قوات الحكومة المؤقتة وقوات سوريا الديمقراطية — per الحكومة السورية المؤقتة / وزارات الدفاع والداخلية والإدارة المحلية"
       },
       {
         "name": "محطة معالجة مياه الخفسة",
         "lat": 36.0,
         "lng": 38.0,
-        "note": "متنازع عليه بين الجيش الوطني السوري وقوات سوريا الديمقراطية"
+        "note": "متنازع عليه بين الجيش الوطني السوري وقوات سوريا الديمقراطية — per الحكومة السورية المؤقتة / وزارات الدفاع والداخلية والإدارة المحلية"
       }
     ],
     "barriers": [
@@ -3058,7 +3134,7 @@ const DATA = {
         "name": "سد الفرات (سد الطبقة)",
         "lat": 35.8742,
         "lng": 38.4803,
-        "note": "data not available km — manmade"
+        "note": "data not available km — manmade — per الحكومة السورية المؤقتة / وزارات الدفاع والداخلية والإدارة المحلية"
       }
     ],
     "incidents": [
@@ -3159,11 +3235,18 @@ const DATA = {
     ],
     "peaks": [
       {
-        "name": "Shusha heights / Shushi / Shusha Heights",
-        "lat": 39.7584,
+        "name": "Shusha heights",
+        "lat": 39.758880000000005,
         "lng": 46.7489,
         "elev": 1400,
-        "note": "Strategic high ground over the Karabakh region; controls observation over Stepanakert/Khankendi and the Lachin corridor approaches"
+        "note": "Strategic high ground over the Karabakh region; controls observation over Stepanakert/Khankendi and the Lachin corridor approaches — per Republic of Azerbaijan / Special Representative of the President / Karabakh and East Zangezur economic regions administrations"
+      },
+      {
+        "name": "Shushi / Shusha Heights",
+        "lat": 39.75792,
+        "lng": 46.7489,
+        "elev": 1400,
+        "note": "Strategic high ground over Stepanakert and the Karabakh region; control of observation and fire control over the Lachin Corridor approaches; historically significant military position — per Republic of Armenia / Artsakh authorities / Armenian rights and displacement advocates"
       }
     ],
     "checkpoints": [],
@@ -3172,7 +3255,7 @@ const DATA = {
         "name": "Sarsang reservoir",
         "lat": 40.0,
         "lng": 46.5,
-        "note": "Republic of Azerbaijan (following 2023 restoration of control)"
+        "note": "Republic of Azerbaijan (following 2023 restoration of control) — per Republic of Azerbaijan / Special Representative of the President / Karabakh and East Zangezur economic regions administrations"
       }
     ],
     "barriers": [
@@ -3180,7 +3263,7 @@ const DATA = {
         "name": "Lachin Corridor",
         "lat": 39.5,
         "lng": 46.5,
-        "note": "60 km — natural"
+        "note": "60 km — natural — per Republic of Armenia / Artsakh authorities / Armenian rights and displacement advocates"
       }
     ],
     "incidents": [
@@ -3587,29 +3670,35 @@ const DATA = {
         "lat": 28.5,
         "lng": -7.5,
         "elev": 500,
-        "note": "Contrôle des corridors de mouvement nord-sud; point d'observation sur la vallée du Draa; position relative aux ressources en eau de la vallée"
+        "note": "Contrôle des corridors de mouvement nord-sud; point d'observation sur la vallée du Draa; position relative aux ressources en eau de la vallée — per Royaume du Maroc / Ministère de l'Intérieur / Administration des Provinces du Sud"
       },
       {
         "name": "Gueltat Zemmour",
         "lat": 25.15,
         "lng": -12.3667,
         "elev": 465,
-        "note": "Point d'observation sur les routes de transhumance et les pistes commerciales; contrôle des mouvements dans le nord-est du Sahara"
+        "note": "Point d'observation sur les routes de transhumance et les pistes commerciales; contrôle des mouvements dans le nord-est du Sahara — per Royaume du Maroc / Ministère de l'Intérieur / Administration des Provinces du Sud"
       },
       {
         "name": "Meseta de Saguia el-Hamra",
         "lat": 26.5,
         "lng": -11.5,
         "elev": 450,
-        "note": "Control de las rutas de movimiento y de los principales wadis; posición relativa a la cuenca hidrográfica de Saguia el-Hamra."
+        "note": "Control de las rutas de movimiento y de los principales wadis; posición relativa a la cuenca hidrográfica de Saguia el-Hamra. — per Frente POLISARIO / República Árabe Saharaui Democrática (RASD)"
       }
     ],
     "checkpoints": [
       {
-        "name": "Poste frontière de Guerguerat / Paso fronterizo de Guerguerat",
-        "lat": 21.4268293,
+        "name": "Poste frontière de Guerguerat",
+        "lat": 21.4273093,
         "lng": -16.9598412,
-        "note": "Contrôle douanier et d'immigration pour le passage entre le Maroc et la Mauritanie"
+        "note": "Contrôle douanier et d'immigration pour le passage entre le Maroc et la Mauritanie — per Royaume du Maroc / Ministère de l'Intérieur / Administration des Provinces du Sud"
+      },
+      {
+        "name": "Paso fronterizo de Guerguerat",
+        "lat": 21.426349300000002,
+        "lng": -16.9598412,
+        "note": "— per Frente POLISARIO / República Árabe Saharaui Democrática (RASD)"
       }
     ],
     "water": [
@@ -3617,13 +3706,13 @@ const DATA = {
         "name": "Convoyeur à bande de Bou Craa",
         "lat": 26.32278,
         "lng": -12.84972,
-        "note": "Phosboucraa (Groupe OCP)"
+        "note": "Phosboucraa (Groupe OCP) — per Royaume du Maroc / Ministère de l'Intérieur / Administration des Provinces du Sud"
       },
       {
         "name": "Cuenca de Saguia el-Hamra",
         "lat": 26.5,
         "lng": -11.5,
-        "note": "Compartida; administrada de facto por Marruecos en la zona ocupada"
+        "note": "Compartida; administrada de facto por Marruecos en la zona ocupada — per Frente POLISARIO / República Árabe Saharaui Democrática (RASD)"
       }
     ],
     "barriers": [],
@@ -3842,33 +3931,57 @@ const DATA = {
         "name": "Пункт пропуска 'Бендеры (Кэушень)'",
         "lat": 46.8325,
         "lng": 29.48,
-        "note": "Регистрация на таможне ПМР; обязательный досмотр транспортных средств"
+        "note": "Регистрация на таможне ПМР; обязательный досмотр транспортных средств — per Государственные органы ПМР / Верховный Совет ПМР / Приднестровский республиканский банк"
       },
       {
         "name": "Пункт пропуска 'Вадя-луй-Водэ'",
         "lat": 46.9,
         "lng": 29.2,
-        "note": "Пограничный и таможенный контроль"
+        "note": "Пограничный и таможенный контроль — per Государственные органы ПМР / Верховный Совет ПМР / Приднестровский республиканский банк"
       },
       {
         "name": "Бендерский мост (пункт пропуска 'Бендеры-Кишинёв')",
         "lat": 46.8275,
         "lng": 29.4675,
-        "note": "Паспортный и таможенный контроль"
+        "note": "Паспортный и таможенный контроль — per Государственные органы ПМР / Верховный Совет ПМР / Приднестровский республиканский банк"
       }
     ],
     "water": [
       {
-        "name": "Дубоссарское водохранилище / Дубоссарская ГЭС / Lacul de acumulare Dubăsari / Centrala Hidroelectrică de la Dubăsari",
-        "lat": 47.25,
+        "name": "Дубоссарское водохранилище",
+        "lat": 47.25048,
         "lng": 29.1667,
-        "note": "Власти ПМР"
+        "note": "Власти ПМР — per Государственные органы ПМР / Верховный Совет ПМР / Приднестровский республиканский банк"
       },
       {
-        "name": "Молдавская ГРЭС (г. Днестровск) / Centrala Termoelectrică de la Cuciurgan (MGRES)",
-        "lat": 46.85,
+        "name": "Дубоссарская ГЭС",
+        "lat": 47.25,
+        "lng": 29.16718,
+        "note": "Власти ПМР — per Государственные органы ПМР / Верховный Совет ПМР / Приднестровский республиканский банк"
+      },
+      {
+        "name": "Lacul de acumulare Dubăsari",
+        "lat": 47.24952,
+        "lng": 29.1667,
+        "note": "Autoritățile de la Tiraspol (de facto) — per Republica Moldova / Biroul Politici de Reintegrare / Serviciul Vamal al RM"
+      },
+      {
+        "name": "Centrala Hidroelectrică de la Dubăsari",
+        "lat": 47.25,
+        "lng": 29.16622,
+        "note": "Autoritățile de la Tiraspol (de facto) — per Republica Moldova / Biroul Politici de Reintegrare / Serviciul Vamal al RM"
+      },
+      {
+        "name": "Молдавская ГРЭС (г. Днестровск)",
+        "lat": 46.850480000000005,
         "lng": 29.6333,
-        "note": "Власти ПМР / Интер РАО (Россия)"
+        "note": "Власти ПМР / Интер РАО (Россия) — per Государственные органы ПМР / Верховный Совет ПМР / Приднестровский республиканский банк"
+      },
+      {
+        "name": "Centrala Termoelectrică de la Cuciurgan (MGRES)",
+        "lat": 46.84952,
+        "lng": 29.6333,
+        "note": "Autoritățile de la Tiraspol (de facto) / Inter RAO (Rusia) — per Republica Moldova / Biroul Politici de Reintegrare / Serviciul Vamal al RM"
       }
     ],
     "barriers": [],
