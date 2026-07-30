@@ -73,6 +73,10 @@ body{
 }
 .legend-row{ display:flex; align-items:center; gap:8px; }
 .dot{ width:8px; height:8px; border-radius:50%; flex:none; }
+.legend-note{
+  display:block; margin-top:8px; padding-top:8px; border-top:1px solid var(--line-soft);
+  font-family:var(--font-mono); font-size:.56rem; line-height:1.6; color:var(--ink-mute); max-width:220px;
+}
 
 .mobile-toggle{ display:none; position:absolute; top:20px; right:20px; z-index:6; }
 @media (max-width:760px){ .mobile-toggle{ display:block; pointer-events:auto; } .topbar{padding-right:70px;} }
@@ -2186,15 +2190,7 @@ const DATA = {
         "governing_authority": "إسرائيل (سيطرة مدنية وأمنية كاملة)"
       }
     ],
-    "peaks": [
-      {
-        "name": "Mount Hermon (northern high ground)",
-        "lat": 33.4167,
-        "lng": 35.85,
-        "elev": 2814,
-        "note": "Control zone: Golan Heights. Strategic significance: Not directly within West Bank; included for regional strategic context. Controls eastern approaches to northern Israel and water resources. — per State of Israel / Civil Administration"
-      }
-    ],
+    "peaks": [],
     "checkpoints": [
       {
         "name": "Qalandia Checkpoint",
@@ -4557,9 +4553,68 @@ map.on('load', () => {
     try { map.setProjection({ type: 'globe' }); } catch (e) { /* falls back to flat mercator, still fully functional */ }
   }
   map.flyTo({ center:[DATA[activeTerritory].center.lng, DATA[activeTerritory].center.lat], zoom:8, duration:0 });
+  addFocusShadeLayer();
   plotMarkers();
 });
-map.on('style.load', () => { plotMarkers(); });
+map.on('style.load', () => { addFocusShadeLayer(); plotMarkers(); });
+
+// There's no real administrative-boundary polygon data in the source
+// research (that would need to come from a dedicated GIS source — see the
+// research prompts in research/), so this can't shade the actual border.
+// What it CAN do honestly: darken everywhere outside a circle sized from
+// the territory's own reported total area, centered on its known center,
+// so at least "roughly here, roughly this large" reads on the map instead
+// of every territory looking like an undifferentiated single dot-field on
+// a generic dark basemap. Labeled as approximate everywhere it's shown.
+function metricNumber(m){
+  if(!m) return null;
+  if(typeof m.value === 'number') return m.value;
+  if(m.reports && m.reports.length){
+    const nums = m.reports.map(r=>r.value).filter(v=>typeof v==='number');
+    if(nums.length) return nums.reduce((a,b)=>a+b,0)/nums.length;
+  }
+  return null;
+}
+function focusRadiusKm(t){
+  const area = metricNumber(t.metrics && t.metrics.area_sqkm);
+  if(area && area > 0) return Math.sqrt(area/Math.PI) * 1.6; // padded for irregular shapes
+  return 60; // fallback when area isn't known
+}
+function circlePolygon(lat, lng, radiusKm, points){
+  points = points || 72;
+  const coords = [];
+  const latRad = lat * Math.PI/180;
+  const kmPerDegLat = 111.32;
+  const kmPerDegLng = 111.32 * Math.cos(latRad) || 0.0001;
+  for(let i=0;i<=points;i++){
+    const angle = (2*Math.PI*i)/points;
+    coords.push([
+      lng + (radiusKm/kmPerDegLng) * Math.sin(angle),
+      lat + (radiusKm/kmPerDegLat) * Math.cos(angle),
+    ]);
+  }
+  return coords;
+}
+function addFocusShadeLayer(){
+  if(map.getSource('focus-shade')) return;
+  map.addSource('focus-shade', { type:'geojson', data: focusShadeGeoJSON(activeTerritory) });
+  map.addLayer({
+    id: 'focus-shade-fill',
+    type: 'fill',
+    source: 'focus-shade',
+    paint: { 'fill-color': '#050810', 'fill-opacity': 0.55 },
+  });
+}
+function focusShadeGeoJSON(key){
+  const t = DATA[key];
+  const hole = circlePolygon(t.center.lat, t.center.lng, focusRadiusKm(t));
+  const world = [[-179,-85],[179,-85],[179,85],[-179,85],[-179,-85]];
+  return { type:'Feature', geometry:{ type:'Polygon', coordinates:[world, hole.slice().reverse()] }, properties:{} };
+}
+function updateFocusShade(key){
+  const src = map.getSource('focus-shade');
+  if(src) src.setData(focusShadeGeoJSON(key));
+}
 
 function clearMarkers(){
   markers.forEach(m => m.remove());
@@ -4595,6 +4650,7 @@ function focusTerritory(key){
   const t = DATA[key];
   map.flyTo({ center:[t.center.lng, t.center.lat], zoom:8, essential:true });
   plotMarkers();
+  updateFocusShade(key);
 }
 
 function focusPoint(lat,lng){
@@ -4634,10 +4690,11 @@ function buildTabs(){
 function buildLegend(){
   const l = document.getElementById('legend');
   l.innerHTML = CATS.map(c=>'<div class="legend-row"><span class="dot" style="background:'+c.color+'"></span>'+c.label+'</div>').join('')
-    + '<div class="legend-row"><span class="dot" style="background:rgba(154,167,191,.6)"></span>Reference city</div>';
+    + '<div class="legend-row"><span class="dot" style="background:rgba(154,167,191,.6)"></span>Reference city</div>'
+    + '<div class="legend-row legend-note">Darkened area = approximate focus radius sized from the territory\'s reported total area — not a real administrative border. Real boundary data isn\'t in the source research yet.</div>';
 }
 function markerRows(list, color){
-  if(!list || !list.length) return '<div class="tile-note">No sites documented for this category yet.</div>';
+  if(!list || !list.length) return '<div class="tile-note">No site in the source research had map coordinates for this category. That doesn\'t mean nothing was documented — check Administrative zones and Legal framework above, which don\'t depend on coordinates.</div>';
   return '<div class="marker-list">'+list.map(m=>
     '<div class="marker-item" data-lat="'+m.lat+'" data-lng="'+m.lng+'">'+
       '<span class="dot" style="background:'+color+'"></span>'+
