@@ -6,28 +6,33 @@
 <title>The Great GASPI</title>
 <meta name="description" content="Global Asymmetric Sovereignty & Power Index — an interactive geospatial platform mapping topographic, hydropolitical, infrastructural, and legal asymmetry across contested territories.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='44' fill='%23050810'/%3E%3Ccircle cx='50' cy='50' r='36' fill='none' stroke='%23c9a84c' stroke-width='2'/%3E%3Cpath d='M50 18 L50 82 M18 50 L82 50' stroke='%2300e5ff' stroke-width='1' opacity='.5'/%3E%3Ccircle cx='50' cy='50' r='6' fill='%23c9a84c'/%3E%3C/svg%3E">
+<link href="../app/theme-vars.css" rel="stylesheet">
+<script src="../app/theme-switcher.js"></script>
 <link href="https://unpkg.com/maplibre-gl@4/dist/maplibre-gl.css" rel="stylesheet">
 <script src="https://unpkg.com/maplibre-gl@4/dist/maplibre-gl.js"></script>
 <style>
 /* ============ DESIGN TOKENS ============
-   Ops-console / geospatial-intelligence identity, deliberately continuing
-   feisttech.com's existing archive aesthetic (deep near-black ground,
-   gold for sovereignty/control data, cyan for infrastructure/telemetry)
-   rather than introducing a disconnected visual language. Committed
-   single dark theme — this is a satellite/telemetry instrument, not a
-   document that should invert to a light reading mode.
+   Ops-console / geospatial-intelligence layout, but the actual colors are
+   aliased to the site-wide theme (app/theme-vars.css) via [data-theme] on
+   <html> — whatever theme the user picked anywhere else on the site holds
+   here too, same as every other page. Local names kept stable so the rest
+   of this file's hundreds of var(--gold) etc. references don't need to
+   change, they just now resolve dynamically instead of to a fixed hex.
    Type: a serif display face for the wordmark/territory name (dossier,
    engraved-document feel), monospace for every coordinate/metric/label
    (tabular data reads as data), a body serif for citation prose. */
 :root{
-  --bg:#050810; --bg-panel:#0b101c; --bg-tile:#10182a;
-  --line:#1c2740; --line-soft:#141d30;
-  --gold:#c9a84c; --gold-hi:#e6c877;
-  --cyan:#3ad9f2;
-  --water:#5b9fd6;
-  --warn:#dd9a4d;
-  --restrict:#c96650;
-  --ink:#eef1f6; --ink-dim:#9aa7bf; --ink-mute:#5d6b87;
+  /* --ink / --ink-dim / --ink-mute are NOT redeclared here — they share
+     the same name in theme-vars.css, and self-referencing var(--ink) in a
+     :root rule is invalid at computed-value time (no parent to resolve
+     against), which would silently break text color. Leaving them out
+     lets theme-vars.css's per-theme values cascade through untouched. */
+  --bg:var(--bg-deep); --bg-panel:var(--panel); --bg-tile:var(--bg-soft);
+  --line:var(--panel-edge); --line-soft:var(--panel-edge);
+  --gold:var(--accent); --gold-hi:var(--accent-2);
+  --cyan:var(--accent-3);
+  --warn:var(--warm);
+  --restrict:var(--hot);
   --font-display: Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Times New Roman', serif;
   --font-body: Georgia, 'Palatino Linotype', 'Book Antiqua', serif;
   --font-mono: ui-monospace, 'SF Mono', 'Cascadia Code', 'Consolas', 'Liberation Mono', monospace;
@@ -5097,26 +5102,53 @@ const CATS = [
 let activeTerritory = "west-bank";
 let markers = [];
 
+// CARTO publishes matched light/dark basemap pairs -- picking between them
+// by the site's active theme so a light theme doesn't leave a light HUD
+// panel bolted onto a permanently-dark map underneath it.
+const LIGHT_THEMES = ['paper', 'slate-day'];
+function cartoStyleUrl(){
+  const theme = document.documentElement.getAttribute('data-theme') || 'patina';
+  return LIGHT_THEMES.includes(theme)
+    ? 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json'
+    : 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
+}
 const map = new maplibregl.Map({
   container: 'map',
-  style: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
+  style: cartoStyleUrl(),
   center: [DATA[activeTerritory].center.lng, DATA[activeTerritory].center.lat],
   zoom: 2,
   pitch: 0,
   attributionControl: { compact: false },
 });
 
-// Fall back to MapLibre's own demo tiles if the CARTO style ever fails to
-// load, so the map still renders rather than showing a blank panel.
+// If the theme changes while this page is open, follow it -- swap the
+// basemap to match, which also re-triggers plotMarkers()/addFocusShadeLayer()
+// via the 'style.load' handler below.
+document.addEventListener('feisttech-theme-change', () => { map.setStyle(cartoStyleUrl()); });
+
+// Fall back to MapLibre's own low-detail demo tiles if the CARTO style
+// fails to load on first attempt, so the map still renders rather than
+// showing a blank panel. Once the real style HAS loaded successfully at
+// least once, later 'error' events are almost always a single dropped
+// tile mid-pan/zoom on a flaky connection -- normal, non-fatal, MapLibre
+// just leaves a gap and keeps going -- not a reason to strip the whole
+// session down to the flat fallback style. The fallback itself gets one
+// retry back to the real style after a delay, so a transient failure
+// (the common case) self-heals instead of permanently losing the
+// street-level basemap for the rest of the visit.
+let styleLoadedOnce = false;
 let usedFallbackStyle = false;
 map.on('error', (e) => {
-  if (!usedFallbackStyle) {
-    usedFallbackStyle = true;
-    map.setStyle('https://demotiles.maplibre.org/style.json');
-  }
+  if (styleLoadedOnce || usedFallbackStyle) return;
+  usedFallbackStyle = true;
+  map.setStyle('https://demotiles.maplibre.org/style.json');
+  setTimeout(() => {
+    if (!styleLoadedOnce) map.setStyle(cartoStyleUrl());
+  }, 20000);
 });
 
 map.on('load', () => {
+  styleLoadedOnce = true;
   if (typeof map.setProjection === 'function') {
     try { map.setProjection({ type: 'globe' }); } catch (e) { /* falls back to flat mercator, still fully functional */ }
   }
