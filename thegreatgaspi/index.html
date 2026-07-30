@@ -147,6 +147,9 @@ body{
 .marker-item .m-meta{ font-family:var(--font-mono); font-size:.58rem; color:var(--ink-mute); white-space:nowrap; }
 
 .incident{ background:var(--bg-tile); border:1px solid var(--line); border-left:3px solid var(--warn); border-radius:2px; padding:12px 13px; margin-bottom:10px; }
+.incident-focusable{ cursor:pointer; transition:background .12s; }
+.incident-focusable:hover{ background:#141f36; }
+.incident-focus-note{ font-family:var(--font-mono); font-size:.56rem; color:var(--ink-mute); margin-top:8px; }
 .incident-head{ display:flex; justify-content:space-between; align-items:baseline; gap:10px; }
 .incident-title{ font-family:var(--font-mono); font-size:.7rem; color:var(--warn); letter-spacing:.02em; text-transform:uppercase; }
 .incident-area{ font-family:var(--font-mono); font-size:.7rem; color:var(--ink-dim); flex:none; }
@@ -171,6 +174,17 @@ body{
   color:var(--restrict); border:1px solid rgba(201,102,80,.4); background:rgba(201,102,80,.08);
   padding:2px 6px; border-radius:2px; margin-top:6px;
 }
+.pill-missing{
+  display:inline-block; font-family:var(--font-mono); font-size:.6rem; letter-spacing:.03em;
+  color:var(--ink-mute); border:1px solid var(--line-soft); background:rgba(154,167,191,.08);
+  padding:2px 8px; border-radius:999px;
+}
+.tile-multi .tile-val{ font-size:.78rem; line-height:1.6; }
+.metric-confirm{ color:var(--ink-mute); font-size:.62rem; font-weight:400; }
+.water-report{ margin-top:10px; }
+.water-report:first-child{ margin-top:0; }
+.water-persp{ font-family:var(--font-mono); font-size:.62rem; color:var(--cyan); letter-spacing:.02em; margin-bottom:6px; }
+.legal-persp{ font-family:var(--font-mono); font-size:.58rem; color:var(--ink-mute); margin-top:5px; letter-spacing:.02em; }
 
 .back-link{
   position:absolute; z-index:6; top:20px; left:24px; display:none;
@@ -236,11 +250,30 @@ const DATA = {
       "lng": -66.5901
     },
     "metrics": {
-      "area_sqkm": 9104.0,
-      "food_import_pct": 85.0,
-      "water_local": "data not available",
-      "water_control": "data not available",
-      "who": 100.0
+      "area_sqkm": {
+        "value": 9104.0,
+        "confirmed_by": 2
+      },
+      "food_import_pct": {
+        "value": 85.0,
+        "confirmed_by": 2
+      },
+      "water": {
+        "reports": [
+          {
+            "perspective": "Asamblea Legislativa de Puerto Rico / Centro de Periodismo Investigativo / UTIER",
+            "population_a": "data not available",
+            "population_b": "data not available",
+            "who_reference_standard": 100.0
+          },
+          {
+            "perspective": "U.S. Federal Government / Financial Oversight and Management Board (FOMB) / Department of the Interior",
+            "population_a": "data not available",
+            "population_b": "data not available",
+            "who_reference_standard": 100.0
+          }
+        ]
+      }
     },
     "zones": [
       {
@@ -386,35 +419,43 @@ const DATA = {
     "legal": [
       {
         "name": "Downes v. Bidwell (1901) — Tribunal Supremo de los Estados Unidos",
-        "desc": "Estableció la doctrina de 'incorporación territorial', sosteniendo que la Constitución no se aplica automáticamente a los territorios."
+        "desc": "Estableció la doctrina de 'incorporación territorial', sosteniendo que la Constitución no se aplica automáticamente a los territorios.",
+        "perspective": "Asamblea Legislativa de Puerto Rico / Centro de Periodismo Investigativo / UTIER"
       },
       {
         "name": "Puerto Rico v. Sanchez Valle (2016) — Tribunal Supremo de los Estados Unidos",
-        "desc": "Sostuvo que Puerto Rico y el gobierno federal son soberanos separados para fines de la cláusula de doble incriminación."
+        "desc": "Sostuvo que Puerto Rico y el gobierno federal son soberanos separados para fines de la cláusula de doble incriminación.",
+        "perspective": "Asamblea Legislativa de Puerto Rico / Centro de Periodismo Investigativo / UTIER"
       },
       {
         "name": "Supervisión fiscal",
-        "desc": "Conflicto entre el poder de veto absoluto de la Junta de Control Fiscal sobre las leyes locales y las leyes aprobadas por la Asamblea Legislativa de Puerto Rico."
+        "desc": "Conflicto entre el poder de veto absoluto de la Junta de Control Fiscal sobre las leyes locales y las leyes aprobadas por la Asamblea Legislativa de Puerto Rico.",
+        "perspective": "Asamblea Legislativa de Puerto Rico / Centro de Periodismo Investigativo / UTIER"
       },
       {
         "name": "Incentivos fiscales",
-        "desc": "Conflicto entre las exenciones fiscales locales y las disposiciones federales que afectan los ingresos fiscales y la deuda pública."
+        "desc": "Conflicto entre las exenciones fiscales locales y las disposiciones federales que afectan los ingresos fiscales y la deuda pública.",
+        "perspective": "Asamblea Legislativa de Puerto Rico / Centro de Periodismo Investigativo / UTIER"
       },
       {
         "name": "Downes v. Bidwell (182 U.S. 244) (1901) — Supreme Court of the United States",
-        "desc": "Established the doctrine of 'territorial incorporation,' holding that the Constitution does not automatically apply to territories."
+        "desc": "Established the doctrine of 'territorial incorporation,' holding that the Constitution does not automatically apply to territories.",
+        "perspective": "U.S. Federal Government / Financial Oversight and Management Board (FOMB) / Department of the Interior"
       },
       {
         "name": "Financial Oversight and Management Board v. Aurelius (140 S. Ct. 1649) (2020) — Supreme Court of the United States",
-        "desc": "Held that members of the FOMB were not 'officers of the United States' under the Appointments Clause."
+        "desc": "Held that members of the FOMB were not 'officers of the United States' under the Appointments Clause.",
+        "perspective": "U.S. Federal Government / Financial Oversight and Management Board (FOMB) / Department of the Interior"
       },
       {
         "name": "United States v. Vaello-Madero (2022) — Supreme Court of the United States",
-        "desc": "Held that Congress can constitutionally exclude Puerto Rico residents from the Supplemental Security Income (SSI) program."
+        "desc": "Held that Congress can constitutionally exclude Puerto Rico residents from the Supplemental Security Income (SSI) program.",
+        "perspective": "U.S. Federal Government / Financial Oversight and Management Board (FOMB) / Department of the Interior"
       },
       {
         "name": "Fiscal Oversight",
-        "desc": "Conflict between the FOMB's absolute veto power over local fiscal laws and the locally enacted budget and tax laws passed by the Puerto Rican legislature."
+        "desc": "Conflict between the FOMB's absolute veto power over local fiscal laws and the locally enacted budget and tax laws passed by the Puerto Rican legislature.",
+        "perspective": "U.S. Federal Government / Financial Oversight and Management Board (FOMB) / Department of the Interior"
       }
     ],
     "sources": [
@@ -432,11 +473,30 @@ const DATA = {
       "lng": 33.75
     },
     "metrics": {
-      "area_sqkm": 3355.0,
-      "food_import_pct": 80.0,
-      "water_local": "data not available",
-      "water_control": 280,
-      "who": 100.0
+      "area_sqkm": {
+        "value": 3355.0,
+        "confirmed_by": 2
+      },
+      "food_import_pct": {
+        "value": 80.0,
+        "confirmed_by": 1
+      },
+      "water": {
+        "reports": [
+          {
+            "perspective": "Turkish Republic of Northern Cyprus (TRNC) / Turkish State Authorities",
+            "population_a": 280,
+            "population_b": "data not available",
+            "who_reference_standard": 100.0
+          },
+          {
+            "perspective": "Republic of Cyprus / UN Buffer Zone Framework",
+            "population_a": 250,
+            "population_b": "data not available",
+            "who_reference_standard": 100.0
+          }
+        ]
+      }
     },
     "zones": [
       {
@@ -693,27 +753,33 @@ const DATA = {
     "legal": [
       {
         "name": "Demopoulos ve Diğerleri / Türkiye (2010) — Avrupa İnsan Hakları Mahkemesi (AİHM)",
-        "desc": "AİHM, 67/2005 sayılı Taşınmaz Mal Komisyonu Yasası ile kurulan TMK'nın, mülkiyet hakkı ihlalleri için ulaşılabilir ve etkili bir iç hukuk yolu olduğuna karar vererek, başvuranların iç hukuk yollarını tüketmeden AİHM'e başvurduğu gerekçesiyle başvuruyu kabul edilemez bulmuştur."
+        "desc": "AİHM, 67/2005 sayılı Taşınmaz Mal Komisyonu Yasası ile kurulan TMK'nın, mülkiyet hakkı ihlalleri için ulaşılabilir ve etkili bir iç hukuk yolu olduğuna karar vererek, başvuranların iç hukuk yollarını tüketmeden AİHM'e başvurduğu gerekçesiyle başvuruyu kabul edilemez bulmuştur.",
+        "perspective": "Turkish Republic of Northern Cyprus (TRNC) / Turkish State Authorities"
       },
       {
         "name": "1960 Garanti Antlaşması Madde 4 (1960) — Garanti ve İttifak Antlaşması",
-        "desc": "Antlaşma, garantör devletlere (Türkiye, Yunanistan ve Birleşik Krallık) Kıbrıs Cumhuriyeti'nin anayasal düzenini ve bağımsızlığını korumak için tek başına hareket etme hakkı tanımaktadır."
+        "desc": "Antlaşma, garantör devletlere (Türkiye, Yunanistan ve Birleşik Krallık) Kıbrıs Cumhuriyeti'nin anayasal düzenini ve bağımsızlığını korumak için tek başına hareket etme hakkı tanımaktadır.",
+        "perspective": "Turkish Republic of Northern Cyprus (TRNC) / Turkish State Authorities"
       },
       {
         "name": "Mülkiyet Hukuku",
-        "desc": "KKTC yasaları, 1974 sonrası ortaya çıkan mülkiyet durumuna ve bırakılan mallara ilişkin yeni bir hukuki rejim oluşturmuştur. Kıbrıs Rum mülk sahiplerinin, 1974 öncesi tapularına dayanarak doğrudan mülklerini talep ve kontrol etme hakları, KKTC mevzuatıyla kısıtlanmış ve TMK bünyesinde bir başvuru prosedürüne bağlanmıştır."
+        "desc": "KKTC yasaları, 1974 sonrası ortaya çıkan mülkiyet durumuna ve bırakılan mallara ilişkin yeni bir hukuki rejim oluşturmuştur. Kıbrıs Rum mülk sahiplerinin, 1974 öncesi tapularına dayanarak doğrudan mülklerini talep ve kontrol etme hakları, KKTC mevzuatıyla kısıtlanmış ve TMK bünyesinde bir başvuru prosedürüne bağlanmıştır.",
+        "perspective": "Turkish Republic of Northern Cyprus (TRNC) / Turkish State Authorities"
       },
       {
         "name": "Λοϊζίδου κατά Τουρκίας (Προκαταρκτικές Ενστάσεις και Ουσία) (1996) — Ευρωπαϊκό Δικαστήριο Δικαιωμάτων του Ανθρώπου (ΕΔΔΑ)",
-        "desc": "Το ΕΔΔΑ έκρινε ότι η Τουρκία ασκεί αποτελεσματικό έλεγχο στη βόρεια Κύπρο και είναι υπεύθυνη για τις παραβιάσεις των δικαιωμάτων που διαπράττονται εκεί. Αναγνώρισε τη συνεχιζόμενη παραβίαση του δικαιώματος περιουσίας της προσφεύγουσας λόγω άρνησης πρόσβασης στην περιουσία της στην Κερύνεια."
+        "desc": "Το ΕΔΔΑ έκρινε ότι η Τουρκία ασκεί αποτελεσματικό έλεγχο στη βόρεια Κύπρο και είναι υπεύθυνη για τις παραβιάσεις των δικαιωμάτων που διαπράττονται εκεί. Αναγνώρισε τη συνεχιζόμενη παραβίαση του δικαιώματος περιουσίας της προσφεύγουσας λόγω άρνησης πρόσβασης στην περιουσία της στην Κερύνεια.",
+        "perspective": "Republic of Cyprus / UN Buffer Zone Framework"
       },
       {
         "name": "Κύπρος κατά Τουρκίας (Τέταρτη Διακρατική Προσφυγή) (2001) — Ευρωπαϊκό Δικαστήριο Δικαιωμάτων του Ανθρώπου (ΕΔΔΑ)",
-        "desc": "Το ΕΔΔΑ έκρινε την Τουρκία υπεύθυνη για 14 κατηγορίες μαζικών και συστηματικών παραβιάσεων της Ευρωπαϊκής Σύμβασης Ανθρωπίνων Δικαιωμάτων, συμπεριλαμβανομένων των εξαφανισμένων ατόμων, των δικαιωμάτων των εκτοπισμένων, των συνθηκών διαβίωσης των εγκλωβισμένων και των δικαιωμάτων ιδιοκτησίας."
+        "desc": "Το ΕΔΔΑ έκρινε την Τουρκία υπεύθυνη για 14 κατηγορίες μαζικών και συστηματικών παραβιάσεων της Ευρωπαϊκής Σύμβασης Ανθρωπίνων Δικαιωμάτων, συμπεριλαμβανομένων των εξαφανισμένων ατόμων, των δικαιωμάτων των εκτοπισμένων, των συνθηκών διαβίωσης των εγκλωβισμένων και των δικαιωμάτων ιδιοκτησίας.",
+        "perspective": "Republic of Cyprus / UN Buffer Zone Framework"
       },
       {
         "name": "Ιδιοκτησία και Σφετερισμός Γης",
-        "desc": "Υπάρχει άμεση και πλήρης αντίθεση. Το Σύνταγμα της Κυπριακής Δημοκρατίας προστατεύει το δικαίωμα στην ιδιοκτησία όλων των νόμιμων πολιτών της. Οι πράξεις του παράνομου καθεστώτος, που βασίζονται στη βίαιη εκδίωξη των ιδιοκτητών, συνιστούν συνεχιζόμενο σφετερισμό και έγκλημα κατά του Διεθνούς Δικαίου. Κανένας 'τίτλος ιδιοκτησίας' που εκδίδεται από το ψευδοκράτος δεν αναγνωρίζεται από την Κυπριακή Δημοκρατία ή διεθνή δικαστήρια."
+        "desc": "Υπάρχει άμεση και πλήρης αντίθεση. Το Σύνταγμα της Κυπριακής Δημοκρατίας προστατεύει το δικαίωμα στην ιδιοκτησία όλων των νόμιμων πολιτών της. Οι πράξεις του παράνομου καθεστώτος, που βασίζονται στη βίαιη εκδίωξη των ιδιοκτητών, συνιστούν συνεχιζόμενο σφετερισμό και έγκλημα κατά του Διεθνούς Δικαίου. Κανένας 'τίτλος ιδιοκτησίας' που εκδίδεται από το ψευδοκράτος δεν αναγνωρίζεται από την Κυπριακή Δημοκρατία ή διεθνή δικαστήρια.",
+        "perspective": "Republic of Cyprus / UN Buffer Zone Framework"
       }
     ],
     "sources": [
@@ -738,11 +804,29 @@ const DATA = {
       "lng": 89.0
     },
     "metrics": {
-      "area_sqkm": 1228400.0,
-      "food_import_pct": "data not available",
-      "water_local": "data not available (总体人均综合用水量数据未按民族拆分)",
-      "water_control": "data not available (总体人均综合用水量数据未按民族拆分)",
-      "who": 100.0
+      "area_sqkm": {
+        "value": 1228400.0,
+        "confirmed_by": 1
+      },
+      "food_import_pct": {
+        "value": "data not available"
+      },
+      "water": {
+        "reports": [
+          {
+            "perspective": "中华人民共和国中央人民政府 / 西藏自治区人民政府",
+            "population_a": "data not available (总体人均综合用水量数据未按民族拆分)",
+            "population_b": "data not available (总体人均综合用水量数据未按民族拆分)",
+            "who_reference_standard": 100.0
+          },
+          {
+            "perspective": "Central Tibetan Administration / Customary & Rights Advocates",
+            "population_a": "བོད་མི་ (Indigenous Tibetan pastoralists): དགུན་དུས་སུ་ 20-50 L/c/d (Limited access due to fencing, mining contamination, and diversion to state projects. གནམ་གཤིས་དང་ས་ཁམས་ཀྱི་གནས་བབ་ལ་གཞིགས་ནས་ཆུ་མི་འདང་ངེས། )",
+            "population_b": "རྒྱ་རིགས་ (Han settlers and PLA): 150+ L/c/d (Priority municipal supply and bottled water for military/police stations.)",
+            "who_reference_standard": 100.0
+          }
+        ]
+      }
     },
     "zones": [
       {
@@ -1105,27 +1189,33 @@ const DATA = {
     "legal": [
       {
         "name": "《关于和平解放西藏办法的协议》（《十七条协议》） (1951) — 全国人民代表大会",
-        "desc": "西藏和平解放，中国人民解放军进驻西藏，巩固国防。西藏地方政府协助人民解放军巩固国防、维护国家统一。该协议的签署标志着中国政府在西藏恢复行使全部国家主权。"
+        "desc": "西藏和平解放，中国人民解放军进驻西藏，巩固国防。西藏地方政府协助人民解放军巩固国防、维护国家统一。该协议的签署标志着中国政府在西藏恢复行使全部国家主权。",
+        "perspective": "中华人民共和国中央人民政府 / 西藏自治区人民政府"
       },
       {
         "name": "关于建立西藏自治区的决定 (1965) — 全国人民代表大会",
-        "desc": "撤销西藏地区行政公署，成立西藏自治区，实施民族区域自治制度，在中央统一领导下行使自治权。"
+        "desc": "撤销西藏地区行政公署，成立西藏自治区，实施民族区域自治制度，在中央统一领导下行使自治权。",
+        "perspective": "中华人民共和国中央人民政府 / 西藏自治区人民政府"
       },
       {
         "name": "《藏传佛教活佛转世管理办法》 (2007) — 国家宗教事务局 / 国务院办公厅",
-        "desc": "活佛转世必须遵循宗教仪轨、历史定制，并必须报请政府批准。任何组织和个人不得擅自开展活佛转世灵童的寻访和认定。"
+        "desc": "活佛转世必须遵循宗教仪轨、历史定制，并必须报请政府批准。任何组织和个人不得擅自开展活佛转世灵童的寻访和认定。",
+        "perspective": "中华人民共和国中央人民政府 / 西藏自治区人民政府"
       },
       {
         "name": "《流亡藏人宪法》及相关声明 (1963年制定，后续多次修改) — 达赖喇嘛流亡政府",
-        "desc": "主张西藏是一个被中国非法占领的独立国家（'大藏区'），流亡政府是唯一合法代表。要求恢复所谓历史疆域，包括西藏自治区、青海省全部及甘肃、四川、云南的部分藏族自治地区。"
+        "desc": "主张西藏是一个被中国非法占领的独立国家（'大藏区'），流亡政府是唯一合法代表。要求恢复所谓历史疆域，包括西藏自治区、青海省全部及甘肃、四川、云南的部分藏族自治地区。",
+        "perspective": "中华人民共和国中央人民政府 / 西藏自治区人民政府"
       },
       {
         "name": "领土与主权",
-        "desc": "流亡藏人团体及达赖喇嘛流亡政府完全否认中华人民共和国对西藏的主权管辖权，主张独立的'大藏区'，构成国家主权与领土完整方面的根本性、不可调和的对抗，并被我国政府定性为分裂行为。"
+        "desc": "流亡藏人团体及达赖喇嘛流亡政府完全否认中华人民共和国对西藏的主权管辖权，主张独立的'大藏区'，构成国家主权与领土完整方面的根本性、不可调和的对抗，并被我国政府定性为分裂行为。",
+        "perspective": "中华人民共和国中央人民政府 / 西藏自治区人民政府"
       },
       {
         "name": "活佛转世",
-        "desc": "涉及藏传佛教最高精神领袖继承权的合法性之争。中央政府坚持历史定制与宗教仪轨、金瓶掣签及政府批准的历史惯例和法律规定；而境外势力则试图单方面指定转世灵童，以延续其政治影响。"
+        "desc": "涉及藏传佛教最高精神领袖继承权的合法性之争。中央政府坚持历史定制与宗教仪轨、金瓶掣签及政府批准的历史惯例和法律规定；而境外势力则试图单方面指定转世灵童，以延续其政治影响。",
+        "perspective": "中华人民共和国中央人民政府 / 西藏自治区人民政府"
       }
     ],
     "sources": [
@@ -1161,11 +1251,29 @@ const DATA = {
       "lng": 144.7937
     },
     "metrics": {
-      "area_sqkm": 544.0,
-      "food_import_pct": "data not available",
-      "water_local": "Civilian population: approximately 300-380 L/c/d (average residential and commercial per GWA billing data, 2023).",
-      "water_control": "Military population: approximately 450-550 L/c/d (including industrial/institutional uses on base per DoD facility reports; residential component estimated at 250-350 L/c/d.)",
-      "who": 100.0
+      "area_sqkm": {
+        "value": 544.0,
+        "confirmed_by": 2
+      },
+      "food_import_pct": {
+        "value": "data not available"
+      },
+      "water": {
+        "reports": [
+          {
+            "perspective": "U.S. Department of Defense / Joint Region Marianas",
+            "population_a": "Military population: approximately 450-550 L/c/d (including industrial/institutional uses on base per DoD facility reports; residential component estimated at 250-350 L/c/d.)",
+            "population_b": "Civilian population: approximately 300-380 L/c/d (average residential and commercial per GWA billing data, 2023).",
+            "who_reference_standard": 100.0
+          },
+          {
+            "perspective": "CHamoru Land Rights / Decolonization Advocates / Chamorro Land Trust Commission",
+            "population_a": "data not available",
+            "population_b": "data not available",
+            "who_reference_standard": 100.0
+          }
+        ]
+      }
     },
     "zones": [
       {
@@ -1461,47 +1569,58 @@ const DATA = {
     "legal": [
       {
         "name": "Davis v. Guam (2017) — U.S. Supreme Court",
-        "desc": "The U.S. Supreme Court denied certiorari, leaving in place the Ninth Circuit ruling that struck down Guam's native Chamorro-only plebiscite law (1 GCA § 2101 et seq.) as a violation of the 15th Amendment's prohibition on racial discrimination in voting. Guam may not restrict participation in a political status plebiscite based on ancestry."
+        "desc": "The U.S. Supreme Court denied certiorari, leaving in place the Ninth Circuit ruling that struck down Guam's native Chamorro-only plebiscite law (1 GCA § 2101 et seq.) as a violation of the 15th Amendment's prohibition on racial discrimination in voting. Guam may not restrict participation in a political status plebiscite based on ancestry.",
+        "perspective": "U.S. Department of Defense / Joint Region Marianas"
       },
       {
         "name": "Guam v. United States (CERCLA settlement litigation) (2021) — U.S. Supreme Court",
-        "desc": "The U.S. Supreme Court ruled unanimously that under CERCLA, a party that settles its liability with the EPA for environmental contamination may seek contribution from the United States if the U.S. is also a responsible party, even if the U.S. has not itself resolved its own liability through a formal settlement. Guam could seek a portion of cleanup costs for the Ordot Dump from the U.S. Navy."
+        "desc": "The U.S. Supreme Court ruled unanimously that under CERCLA, a party that settles its liability with the EPA for environmental contamination may seek contribution from the United States if the U.S. is also a responsible party, even if the U.S. has not itself resolved its own liability through a formal settlement. Guam could seek a portion of cleanup costs for the Ordot Dump from the U.S. Navy.",
+        "perspective": "U.S. Department of Defense / Joint Region Marianas"
       },
       {
         "name": "United States ex rel. Guam v. United States (Fena Valley Reservoir lawsuit) (2023) — U.S. Court of Appeals for the D.C. Circuit",
-        "desc": "Pending litigation. Guam alleges that the Navy's operation of the Fena Valley Reservoir since WWII constitutes an unpermitted discharge of pollutants into waters of the United States under the Clean Water Act. The Navy argues sovereign immunity and that its operations are in compliance with a 2009 Memorandum of Agreement with the Government of Guam."
+        "desc": "Pending litigation. Guam alleges that the Navy's operation of the Fena Valley Reservoir since WWII constitutes an unpermitted discharge of pollutants into waters of the United States under the Clean Water Act. The Navy argues sovereign immunity and that its operations are in compliance with a 2009 Memorandum of Agreement with the Government of Guam.",
+        "perspective": "U.S. Department of Defense / Joint Region Marianas"
       },
       {
         "name": "Land tenure and voting rights: Federal Equal Protection v. Native self-determination",
-        "desc": "Federal courts have invalidated the native-only voting registry under the federal Equal Protection Clause, on the rationale that race-based voting is prohibited regardless of decolonization context. The Chamorro Land Trust Act, which operates similarly by ancestry-based eligibility, remains in effect but faces ongoing federal constitutional challenges. The tension is between federally protected individual rights (non-discrimination in voting) and collective indigenous rights to self-determination and land restitution."
+        "desc": "Federal courts have invalidated the native-only voting registry under the federal Equal Protection Clause, on the rationale that race-based voting is prohibited regardless of decolonization context. The Chamorro Land Trust Act, which operates similarly by ancestry-based eligibility, remains in effect but faces ongoing federal constitutional challenges. The tension is between federally protected individual rights (non-discrimination in voting) and collective indigenous rights to self-determination and land restitution.",
+        "perspective": "U.S. Department of Defense / Joint Region Marianas"
       },
       {
         "name": "Environmental compliance: DoD claimed exemptions v. local enforcement",
-        "desc": "Guam alleges that the U.S. Navy has not obtained NPDES permits for stormwater and operational discharges from the Fena Valley Reservoir and Naval Base Guam, as required by the CWA. The Navy argues that certain activities are exempt as sovereign functions and that the CWA waiver of sovereign immunity is narrower than Guam claims."
+        "desc": "Guam alleges that the U.S. Navy has not obtained NPDES permits for stormwater and operational discharges from the Fena Valley Reservoir and Naval Base Guam, as required by the CWA. The Navy argues that certain activities are exempt as sovereign functions and that the CWA waiver of sovereign immunity is narrower than Guam claims.",
+        "perspective": "U.S. Department of Defense / Joint Region Marianas"
       },
       {
         "name": "Davis v. Guam, 932 F.3d 822 (9th Cir. 2019) (2019) — U.S. Court of Appeals, Ninth Circuit",
-        "desc": "Struck down Guam's political status plebiscite law restricting voting to 'Native Inhabitants of Guam' on 15th Amendment grounds; held that the restriction functioned as a proxy for race and could not stand; Supreme Court denied certiorari May 4, 2020[citation:3][citation:11][citation:14]"
+        "desc": "Struck down Guam's political status plebiscite law restricting voting to 'Native Inhabitants of Guam' on 15th Amendment grounds; held that the restriction functioned as a proxy for race and could not stand; Supreme Court denied certiorari May 4, 2020[citation:3][citation:11][citation:14]",
+        "perspective": "CHamoru Land Rights / Decolonization Advocates / Chamorro Land Trust Commission"
       },
       {
         "name": "Prutehi Litekyan: Save Ritidian v. United States Department of the Air Force, No. 22-16613 (2025) — U.S. Court of Appeals, Ninth Circuit",
-        "desc": "Reversed district court dismissal; held that: (1) Prutehi Litekyan had standing to challenge OB/OD operations; (2) the Air Force engaged in final agency action ripe for judicial review; (3) NEPA applies to the Air Force's decision to conduct OB/OD at Tarague Beach; remanded for proceedings[citation:2][citation:7]"
+        "desc": "Reversed district court dismissal; held that: (1) Prutehi Litekyan had standing to challenge OB/OD operations; (2) the Air Force engaged in final agency action ripe for judicial review; (3) NEPA applies to the Air Force's decision to conduct OB/OD at Tarague Beach; remanded for proceedings[citation:2][citation:7]",
+        "perspective": "CHamoru Land Rights / Decolonization Advocates / Chamorro Land Trust Commission"
       },
       {
         "name": "Article IX (1898) — Treaty of Paris",
-        "desc": "The civil rights and political status of the native inhabitants of the territories ceded to the United States shall be determined by the Congress[citation:5][citation:12]"
+        "desc": "The civil rights and political status of the native inhabitants of the territories ceded to the United States shall be determined by the Congress[citation:5][citation:12]",
+        "perspective": "CHamoru Land Rights / Decolonization Advocates / Chamorro Land Trust Commission"
       },
       {
         "name": "Self-determination / Voting Rights",
-        "desc": "Direct contradiction between federal court decisions (Davis v. Guam striking down native voting rights under federal equal protection) and native CHamoru statutory rights to self-determination plebiscites under local law. The plebiscite law as written has been effectively nullified by the court, leaving no lawful pathway for Chamorro self-determination within the U.S. system[citation:3][citation:11]"
+        "desc": "Direct contradiction between federal court decisions (Davis v. Guam striking down native voting rights under federal equal protection) and native CHamoru statutory rights to self-determination plebiscites under local law. The plebiscite law as written has been effectively nullified by the court, leaving no lawful pathway for Chamorro self-determination within the U.S. system[citation:3][citation:11]",
+        "perspective": "CHamoru Land Rights / Decolonization Advocates / Chamorro Land Trust Commission"
       },
       {
         "name": "Land Rights / Ancestral Property",
-        "desc": "Conflict between native CHamoru statutory rights to ancestral land distribution and federal land confiscation. Under the GALC Act, 'original lands' are those confiscated or condemned by the U.S. on or after January 1, 1930. However, a process does not exist to recognize ancestral land rights for properties not declared excess by the military. Replacement land is limited to excess federal government land[citation:15]. The military retains control over ancestral lands; CHamoru only own ~1/3 of island[citation:14]"
+        "desc": "Conflict between native CHamoru statutory rights to ancestral land distribution and federal land confiscation. Under the GALC Act, 'original lands' are those confiscated or condemned by the U.S. on or after January 1, 1930. However, a process does not exist to recognize ancestral land rights for properties not declared excess by the military. Replacement land is limited to excess federal government land[citation:15]. The military retains control over ancestral lands; CHamoru only own ~1/3 of island[citation:14]",
+        "perspective": "CHamoru Land Rights / Decolonization Advocates / Chamorro Land Trust Commission"
       },
       {
         "name": "Land Trust Qualifications",
-        "desc": "When the federal government sued Guam alleging the Chamorro Land Trust program discriminated on race/national origin under the Fair Housing Act, the legislature removed native inhabitant-based qualifications. This reflects tension between federal anti-discrimination law and the goal of preferential access to land for the indigenous population[citation:3]"
+        "desc": "When the federal government sued Guam alleging the Chamorro Land Trust program discriminated on race/national origin under the Fair Housing Act, the legislature removed native inhabitant-based qualifications. This reflects tension between federal anti-discrimination law and the goal of preferential access to land for the indigenous population[citation:3]",
+        "perspective": "CHamoru Land Rights / Decolonization Advocates / Chamorro Land Trust Commission"
       }
     ],
     "sources": [
@@ -1531,11 +1650,23 @@ const DATA = {
       "lng": 34.0
     },
     "metrics": {
-      "area_sqkm": 27000.0,
-      "food_import_pct": "data not available",
-      "water_local": "data not available",
-      "water_control": "data not available",
-      "who": 100.0
+      "area_sqkm": {
+        "value": 27000.0,
+        "confirmed_by": 1
+      },
+      "food_import_pct": {
+        "value": "data not available"
+      },
+      "water": {
+        "reports": [
+          {
+            "perspective": "Российская Федерация / Государственный Совет Республики Крым / Росреестр / Министерство энергетики РФ",
+            "population_a": "data not available",
+            "population_b": "data not available",
+            "who_reference_standard": 100.0
+          }
+        ]
+      }
     },
     "zones": [
       {
@@ -1667,27 +1798,33 @@ const DATA = {
     "legal": [
       {
         "name": "Проверка конституционности Федерального конституционного закона № 6-ФКЗ (2014) — Конституционный Суд Российской Федерации",
-        "desc": "Подтвердил конституционность принятия Крыма в состав РФ"
+        "desc": "Подтвердил конституционность принятия Крыма в состав РФ",
+        "perspective": "Российская Федерация / Государственный Совет Республики Крым / Росреестр / Министерство энергетики РФ"
       },
       {
         "name": "Ратификация Договора о принятии Крыма в РФ (2014) — Государственная Дума РФ",
-        "desc": "Договор и ФКЗ № 6-ФКЗ приняты 20-21 марта 2014 года; 443-445 депутатов поддержали[citation:5]"
+        "desc": "Договор и ФКЗ № 6-ФКЗ приняты 20-21 марта 2014 года; 443-445 депутатов поддержали[citation:5]",
+        "perspective": "Российская Федерация / Государственный Совет Республики Крым / Росреестр / Министерство энергетики РФ"
       },
       {
         "name": "Резолюция о территориальной целостности Украины (2014) — Генеральная Ассамблея ООН",
-        "desc": "Не признаёт присоединение Крыма к РФ"
+        "desc": "Не признаёт присоединение Крыма к РФ",
+        "perspective": "Российская Федерация / Государственный Совет Республики Крым / Росреестр / Министерство энергетики РФ"
       },
       {
         "name": "Конституционное право",
-        "desc": "Прямой конфликт между ФКЗ № 6-ФКЗ, признающим Крым субъектом РФ, и Конституцией Украины, рассматривающей Крым как временно оккупированную территорию[citation:13]"
+        "desc": "Прямой конфликт между ФКЗ № 6-ФКЗ, признающим Крым субъектом РФ, и Конституцией Украины, рассматривающей Крым как временно оккупированную территорию[citation:13]",
+        "perspective": "Российская Федерация / Государственный Совет Республики Крым / Росреестр / Министерство энергетики РФ"
       },
       {
         "name": "Международное право / Суверенитет",
-        "desc": "Конфликт между аннексией территории по законодательству РФ и международным признанием Крыма как части Украины[citation:13]"
+        "desc": "Конфликт между аннексией территории по законодательству РФ и международным признанием Крыма как части Украины[citation:13]",
+        "perspective": "Российская Федерация / Государственный Совет Республики Крым / Росреестр / Министерство энергетики РФ"
       },
       {
         "name": "Права национальных меньшинств",
-        "desc": "Конфликт в связи с обвинениями в преследовании крымских татар и запретом ряда организаций. Согласно данным Госдепартамента США, оккупационные власти продолжают притеснять и запугивать крымских татар, мусульман и других меньшинств, запрещая «Хизб ут-Тахрир» и задерживая активистов[citation:13]"
+        "desc": "Конфликт в связи с обвинениями в преследовании крымских татар и запретом ряда организаций. Согласно данным Госдепартамента США, оккупационные власти продолжают притеснять и запугивать крымских татар, мусульман и других меньшинств, запрещая «Хизб ут-Тахрир» и задерживая активистов[citation:13]",
+        "perspective": "Российская Федерация / Государственный Совет Республики Крым / Росреестр / Министерство энергетики РФ"
       }
     ],
     "sources": [
@@ -1706,11 +1843,29 @@ const DATA = {
       "lng": 76.5762
     },
     "metrics": {
-      "area_sqkm": 55538.0,
-      "food_import_pct": "data not available",
-      "water_local": "data not available",
-      "water_control": "data not available",
-      "who": 100.0
+      "area_sqkm": {
+        "value": 55538.0,
+        "confirmed_by": 2
+      },
+      "food_import_pct": {
+        "value": "data not available"
+      },
+      "water": {
+        "reports": [
+          {
+            "perspective": "Government of India / Ministry of Home Affairs / J&K UT Administration",
+            "population_a": "data not available",
+            "population_b": "data not available",
+            "who_reference_standard": 100.0
+          },
+          {
+            "perspective": "Local Kashmiri Advocates / J&K Coalition of Civil Society / High Court Bar Association",
+            "population_a": "data not available",
+            "population_b": "data not available",
+            "who_reference_standard": 100.0
+          }
+        ]
+      }
     },
     "zones": [
       {
@@ -1921,31 +2076,38 @@ const DATA = {
     "legal": [
       {
         "name": "Article 370 Abrogation Judgment (2023) — Supreme Court of India (Constitution Bench)",
-        "desc": "Five-judge Constitution Bench unanimously upheld the Central government's 2019 decision to abrogate Article 370. Key holdings include: J&K did not retain internal sovereignty; Article 370 is a temporary provision; the President had the power to notify abrogation without State Assembly concurrence; the J&K Constitution is now inoperative; elections to be held by September 30, 2024 [citation:5][citation:12]. Justice S.K. Kaul recommended an impartial Truth and Reconciliation Commission to investigate human rights violations since the 1980s [citation:5]."
+        "desc": "Five-judge Constitution Bench unanimously upheld the Central government's 2019 decision to abrogate Article 370. Key holdings include: J&K did not retain internal sovereignty; Article 370 is a temporary provision; the President had the power to notify abrogation without State Assembly concurrence; the J&K Constitution is now inoperative; elections to be held by September 30, 2024 [citation:5][citation:12]. Justice S.K. Kaul recommended an impartial Truth and Reconciliation Commission to investigate human rights violations since the 1980s [citation:5].",
+        "perspective": "Government of India / Ministry of Home Affairs / J&K UT Administration"
       },
       {
         "name": "Jammu and Kashmir Reorganisation Act, 2019 (2019) — Parliament of India",
-        "desc": "Bifurcated the erstwhile state of Jammu and Kashmir into two Union Territories: Jammu and Kashmir, and Ladakh, effective October 31, 2019 [citation:1][citation:2]."
+        "desc": "Bifurcated the erstwhile state of Jammu and Kashmir into two Union Territories: Jammu and Kashmir, and Ladakh, effective October 31, 2019 [citation:1][citation:2].",
+        "perspective": "Government of India / Ministry of Home Affairs / J&K UT Administration"
       },
       {
         "name": "Land Ownership / Property Law",
-        "desc": "Prior to 2019, Article 35A restricted land ownership in J&K to permanent residents. The revocation of Article 370 allowed central laws to apply, effectively superseding the 1938 J&K Alienation of Land Act and Big Land Estates Abolition Act of 1950. This allows non-domicile individuals to purchase land in the UT."
+        "desc": "Prior to 2019, Article 35A restricted land ownership in J&K to permanent residents. The revocation of Article 370 allowed central laws to apply, effectively superseding the 1938 J&K Alienation of Land Act and Big Land Estates Abolition Act of 1950. This allows non-domicile individuals to purchase land in the UT.",
+        "perspective": "Government of India / Ministry of Home Affairs / J&K UT Administration"
       },
       {
         "name": "Constitutional Law",
-        "desc": "The Central government's revocation of the special status is contested by local advocates who consider the 2019 act unconstitutional, arguing it bypassed the requirement for State concurrence and undermined the historical autonomy of the region."
+        "desc": "The Central government's revocation of the special status is contested by local advocates who consider the 2019 act unconstitutional, arguing it bypassed the requirement for State concurrence and undermined the historical autonomy of the region.",
+        "perspective": "Government of India / Ministry of Home Affairs / J&K UT Administration"
       },
       {
         "name": "Article 370 Abrogation Judgment (2023) — Supreme Court of India",
-        "desc": "Constitution Bench upheld the revocation of Article 370"
+        "desc": "Constitution Bench upheld the revocation of Article 370",
+        "perspective": "Local Kashmiri Advocates / J&K Coalition of Civil Society / High Court Bar Association"
       },
       {
         "name": "Land Rights",
-        "desc": "Clause-by-clause conflict between the Jammu and Kashmir Reorganisation Act 2019 and the traditional land rights of local Kashmiri residents under Article 35A. The 2019 Act and subsequent amendments allowed non-residents to purchase land, effectively overriding the 1938 J&K Alienation of Land Act which restricted land ownership to permanent residents."
+        "desc": "Clause-by-clause conflict between the Jammu and Kashmir Reorganisation Act 2019 and the traditional land rights of local Kashmiri residents under Article 35A. The 2019 Act and subsequent amendments allowed non-residents to purchase land, effectively overriding the 1938 J&K Alienation of Land Act which restricted land ownership to permanent residents.",
+        "perspective": "Local Kashmiri Advocates / J&K Coalition of Civil Society / High Court Bar Association"
       },
       {
         "name": "Constitutional Law / Self-Governance",
-        "desc": "Conflict between the historical constitutional framework that granted special status and autonomy to Jammu and Kashmir and the 2019 revocation which made all central laws applicable to the UT"
+        "desc": "Conflict between the historical constitutional framework that granted special status and autonomy to Jammu and Kashmir and the 2019 revocation which made all central laws applicable to the UT",
+        "perspective": "Local Kashmiri Advocates / J&K Coalition of Civil Society / High Court Bar Association"
       }
     ],
     "sources": [
@@ -1963,11 +2125,29 @@ const DATA = {
       "lng": 35.2332
     },
     "metrics": {
-      "area_sqkm": 5655.0,
-      "food_import_pct": "data not available",
-      "water_local": "73",
-      "water_control": "242",
-      "who": 100.0
+      "area_sqkm": {
+        "value": 5655.0,
+        "confirmed_by": 2
+      },
+      "food_import_pct": {
+        "value": "data not available"
+      },
+      "water": {
+        "reports": [
+          {
+            "perspective": "State of Israel / Civil Administration",
+            "population_a": "242",
+            "population_b": "73",
+            "who_reference_standard": 100.0
+          },
+          {
+            "perspective": "السلطة الوطنية الفلسطينية / دائرة الأراضي / سلطة المياه / الجهاز المركزي للإحصاء",
+            "population_a": 73,
+            "population_b": 242,
+            "who_reference_standard": 100.0
+          }
+        ]
+      }
     },
     "zones": [
       {
@@ -2215,51 +2395,63 @@ const DATA = {
     "legal": [
       {
         "name": "June 2004 Ruling on Separation Barrier Route (2004) — Israel Supreme Court (Bagatz)",
-        "desc": "Ruled that a portion of the barrier west of Jerusalem violated the rights of Palestinians and ordered 30 km of existing and planned barrier to be rerouted; but ruled the barrier is legal in essence and accepted the government's security justification[citation:11]"
+        "desc": "Ruled that a portion of the barrier west of Jerusalem violated the rights of Palestinians and ordered 30 km of existing and planned barrier to be rerouted; but ruled the barrier is legal in essence and accepted the government's security justification[citation:11]",
+        "perspective": "State of Israel / Civil Administration"
       },
       {
         "name": "Advisory Opinion on the Legal Consequences of the Construction of a Wall in the Occupied Palestinian Territory (2004) — International Court of Justice (ICJ)",
-        "desc": "Found that the construction of the wall, and its associated regime, are contrary to international law; cannot rely on a right of self-defense or state of necessity to preclude wrongfulness[citation:11]"
+        "desc": "Found that the construction of the wall, and its associated regime, are contrary to international law; cannot rely on a right of self-defense or state of necessity to preclude wrongfulness[citation:11]",
+        "perspective": "State of Israel / Civil Administration"
       },
       {
         "name": "Death Penalty for Terrorism Law (2026) — Knesset (Israeli Parliament)",
-        "desc": "Passed by 62-48 vote making death penalty the default punishment for Palestinians convicted in military courts of killing Israelis; applies to Palestinians under Military Order 1651 but not to Israeli settlers tried in civilian courts[citation:13]"
+        "desc": "Passed by 62-48 vote making death penalty the default punishment for Palestinians convicted in military courts of killing Israelis; applies to Palestinians under Military Order 1651 but not to Israeli settlers tried in civilian courts[citation:13]",
+        "perspective": "State of Israel / Civil Administration"
       },
       {
         "name": "Criminal law / Death penalty",
-        "desc": "System of capital punishment applied to one national group (Palestinians) but not another (Israeli settlers) within the same territory. Palestinians are subject to military courts with 96% conviction rate and mandatory death penalty; Israelis are tried in civilian courts. Procedural differences include: unanimity required for civilian death sentences reduced to majority for military courts, elimination of military commander's power to commute sentences, prohibition of pardons, 90-day execution mandate, and restricted appeals. 93% of complaints regarding settler violence against Palestinians are closed without charges filed.[citation:13]"
+        "desc": "System of capital punishment applied to one national group (Palestinians) but not another (Israeli settlers) within the same territory. Palestinians are subject to military courts with 96% conviction rate and mandatory death penalty; Israelis are tried in civilian courts. Procedural differences include: unanimity required for civilian death sentences reduced to majority for military courts, elimination of military commander's power to commute sentences, prohibition of pardons, 90-day execution mandate, and restricted appeals. 93% of complaints regarding settler violence against Palestinians are closed without charges filed.[citation:13]",
+        "perspective": "State of Israel / Civil Administration"
       },
       {
         "name": "Land ownership / Property law",
-        "desc": "Israel's security cabinet repealed Law No. 40, opening Israeli land purchases in the West Bank. Previously, this law restricted land sales to Arab buyers to prevent Israeli settlement. The change allows settlement expansion that could undermine Palestinian sovereignty and statehood. Finance Minister Bezalel Smotrich stated: 'We will continue to kill the idea of a Palestinian state.'[citation:10]"
+        "desc": "Israel's security cabinet repealed Law No. 40, opening Israeli land purchases in the West Bank. Previously, this law restricted land sales to Arab buyers to prevent Israeli settlement. The change allows settlement expansion that could undermine Palestinian sovereignty and statehood. Finance Minister Bezalel Smotrich stated: 'We will continue to kill the idea of a Palestinian state.'[citation:10]",
+        "perspective": "State of Israel / Civil Administration"
       },
       {
         "name": "Planning and Construction law",
-        "desc": "Israel uses Military Order 418 to control all planning and construction in Area C. The Civil Administration bans Palestinian construction while encouraging settlement development through a parallel mechanism. A parallel planning mechanism grants approvals for settlers while ignoring their building violations.[citation:1]"
+        "desc": "Israel uses Military Order 418 to control all planning and construction in Area C. The Civil Administration bans Palestinian construction while encouraging settlement development through a parallel mechanism. A parallel planning mechanism grants approvals for settlers while ignoring their building violations.[citation:1]",
+        "perspective": "State of Israel / Civil Administration"
       },
       {
         "name": "الآثار القانونية المترتبة على سياسات إسرائيل وممارساتها في الأرض الفلسطينية المحتلة (2024) — محكمة العدل الدولية",
-        "desc": "أعلنت المحكمة أن احتلال إسرائيل للأراضي الفلسطينية غير قانوني، ويجب إنهاؤه 'في أقرب وقت ممكن'. قرارات الضم والاستيطان وتهجير السكان 'باطلة تماماً ولا يمكن أن تغير الوضع القانوني للأراضي المحتلة' [citation:1][citation:8]."
+        "desc": "أعلنت المحكمة أن احتلال إسرائيل للأراضي الفلسطينية غير قانوني، ويجب إنهاؤه 'في أقرب وقت ممكن'. قرارات الضم والاستيطان وتهجير السكان 'باطلة تماماً ولا يمكن أن تغير الوضع القانوني للأراضي المحتلة' [citation:1][citation:8].",
+        "perspective": "السلطة الوطنية الفلسطينية / دائرة الأراضي / سلطة المياه / الجهاز المركزي للإحصاء"
       },
       {
         "name": "الآثار القانونية لبناء جدار في الأرض الفلسطينية المحتلة (2004) — محكمة العدل الدولية",
-        "desc": "بناء الجدار ونظامه المرافق يتعارض مع القانون الدولي؛ لا يمكن الاعتماد على حق الدفاع عن النفس أو ضرورة الحالة لتبرير المخالفة [citation:1]."
+        "desc": "بناء الجدار ونظامه المرافق يتعارض مع القانون الدولي؛ لا يمكن الاعتماد على حق الدفاع عن النفس أو ضرورة الحالة لتبرير المخالفة [citation:1].",
+        "perspective": "السلطة الوطنية الفلسطينية / دائرة الأراضي / سلطة المياه / الجهاز المركزي للإحصاء"
       },
       {
         "name": "قرار الجمعية العامة ES-10/23 (2024) — محكمة العدل الدولية / الأمم المتحدة",
-        "desc": "حددت الجمعية العامة أن دولة فلسطين مؤهلة للعضوية الكاملة في الأمم المتحدة [citation:1]."
+        "desc": "حددت الجمعية العامة أن دولة فلسطين مؤهلة للعضوية الكاملة في الأمم المتحدة [citation:1].",
+        "perspective": "السلطة الوطنية الفلسطينية / دائرة الأراضي / سلطة المياه / الجهاز المركزي للإحصاء"
       },
       {
         "name": "قانون الأراضي والملكية",
-        "desc": "في فبراير 2026، وافق مجلس الأمن الإسرائيلي على سلسلة من القرارات تسمح للإسرائيليين بشراء الأراضي في الضفة الغربية، وإلغاء القوانين الأردنية التي تحكم ملكية الأراضي منذ 1967. يصف الخبراء هذا بأنه انتهاك لقرارات مجلس الأمن 242 و446 و2334 وقد يرقى إلى جريمة حرب. استئناف عملية تسجيل الأراضي سيؤدي إلى تهجير منهجي للفلسطينيين حيث أن 70% من أراضي الضفة غير مسجلة وغير مثبتة الملكية [citation:4][citation:8]."
+        "desc": "في فبراير 2026، وافق مجلس الأمن الإسرائيلي على سلسلة من القرارات تسمح للإسرائيليين بشراء الأراضي في الضفة الغربية، وإلغاء القوانين الأردنية التي تحكم ملكية الأراضي منذ 1967. يصف الخبراء هذا بأنه انتهاك لقرارات مجلس الأمن 242 و446 و2334 وقد يرقى إلى جريمة حرب. استئناف عملية تسجيل الأراضي سيؤدي إلى تهجير منهجي للفلسطينيين حيث أن 70% من أراضي الضفة غير مسجلة وغير مثبتة الملكية [citation:4][citation:8].",
+        "perspective": "السلطة الوطنية الفلسطينية / دائرة الأراضي / سلطة المياه / الجهاز المركزي للإحصاء"
       },
       {
         "name": "قانون التخطيط والبناء",
-        "desc": "تستخدم إسرائيل الأمر العسكري رقم 418 للسيطرة على جميع عمليات التخطيط والبناء في المنطقة (ج). تمنع الإدارة المدنية الإسرائيلية البناء الفلسطيني بينما تشجع تطوير المستوطنات من خلال آلية موازية تمنح الموافقات للمستوطنين وتتجاهل انتهاكات البناء الخاصة بهم. يفرض هذا النظام تمييزاً واضحاً في الحق في السكن والتنمية [citation:1]."
+        "desc": "تستخدم إسرائيل الأمر العسكري رقم 418 للسيطرة على جميع عمليات التخطيط والبناء في المنطقة (ج). تمنع الإدارة المدنية الإسرائيلية البناء الفلسطيني بينما تشجع تطوير المستوطنات من خلال آلية موازية تمنح الموافقات للمستوطنين وتتجاهل انتهاكات البناء الخاصة بهم. يفرض هذا النظام تمييزاً واضحاً في الحق في السكن والتنمية [citation:1].",
+        "perspective": "السلطة الوطنية الفلسطينية / دائرة الأراضي / سلطة المياه / الجهاز المركزي للإحصاء"
       },
       {
         "name": "القانون الجنائي / عقوبة الإعدام",
-        "desc": "نظام عقوبة الإعدام يطبق على الفلسطينيين في المحاكم العسكرية (معدل إدانة 96%) ولكن لا يطبق على المستوطنين الإسرائيليين في المحاكم المدنية. الاختلافات الإجرائية تشمل: إلغاء اشتراط الإجماع في أحكام الإعدام، منع العفو، مهلة تنفيذ 90 يوماً، تقييد الطعون. 93% من شكاوى العنف الاستيطاني ضد الفلسطينيين تغلق دون توجيه تهم [citation:1]."
+        "desc": "نظام عقوبة الإعدام يطبق على الفلسطينيين في المحاكم العسكرية (معدل إدانة 96%) ولكن لا يطبق على المستوطنين الإسرائيليين في المحاكم المدنية. الاختلافات الإجرائية تشمل: إلغاء اشتراط الإجماع في أحكام الإعدام، منع العفو، مهلة تنفيذ 90 يوماً، تقييد الطعون. 93% من شكاوى العنف الاستيطاني ضد الفلسطينيين تغلق دون توجيه تهم [citation:1].",
+        "perspective": "السلطة الوطنية الفلسطينية / دائرة الأراضي / سلطة المياه / الجهاز المركزي للإحصاء"
       }
     ],
     "sources": [
@@ -2287,11 +2479,29 @@ const DATA = {
       "lng": 137.0
     },
     "metrics": {
-      "area_sqkm": 418707.0,
-      "food_import_pct": "data not available",
-      "water_local": "data not available",
-      "water_control": "data not available",
-      "who": 100.0
+      "area_sqkm": {
+        "value": 418707.0,
+        "confirmed_by": 2
+      },
+      "food_import_pct": {
+        "value": "data not available"
+      },
+      "water": {
+        "reports": [
+          {
+            "perspective": "Pemerintah Republik Indonesia / Kementerian Koordinator Polhukam / Kementerian ESDM",
+            "population_a": "data not available",
+            "population_b": "data not available",
+            "who_reference_standard": 100.0
+          },
+          {
+            "perspective": "Indigenous Papuan Customary Council (Dewan Adat Papua) / Majelis Rakyat Papua / Rights Advocates / LBH Papua",
+            "population_a": "data not available",
+            "population_b": "data not available",
+            "who_reference_standard": 100.0
+          }
+        ]
+      }
     },
     "zones": [
       {
@@ -2567,43 +2777,53 @@ const DATA = {
     "legal": [
       {
         "name": "Pengujian UU Otsus Papua (UU No. 21 Tahun 2001 dan UU No. 2 Tahun 2021) (2023) — Mahkamah Konstitusi Indonesia",
-        "desc": "MK memutuskan tetap mempertahankan UU Otsus Papua sebagai kebijakan afirmatif untuk meningkatkan kesejahteraan rakyat Papua dan mengakui eksistensi Orang Asli Papua dalam pengelolaan daerah melalui MRP dan afirmasi di DPRK[citation:1][citation:11]."
+        "desc": "MK memutuskan tetap mempertahankan UU Otsus Papua sebagai kebijakan afirmatif untuk meningkatkan kesejahteraan rakyat Papua dan mengakui eksistensi Orang Asli Papua dalam pengelolaan daerah melalui MRP dan afirmasi di DPRK[citation:1][citation:11].",
+        "perspective": "Pemerintah Republik Indonesia / Kementerian Koordinator Polhukam / Kementerian ESDM"
       },
       {
         "name": "Submisi mengenai hak anak di Papua (Aisyah Novanarima) (2025) — Dewan Hak Asasi Manusia PBB",
-        "desc": "Konflik bersenjata di Papua telah berlangsung selama puluhan tahun, melanggar hak-hak anak termasuk hilangnya nyawa, kekerasan seksual, trauma psikologis, kehilangan pendidikan, risiko kesehatan, dan eksploitasi anak. Dalam 2023-2024 tercatat 150 korban jiwa dari 294 insiden benturan senjata[citation:5]."
+        "desc": "Konflik bersenjata di Papua telah berlangsung selama puluhan tahun, melanggar hak-hak anak termasuk hilangnya nyawa, kekerasan seksual, trauma psikologis, kehilangan pendidikan, risiko kesehatan, dan eksploitasi anak. Dalam 2023-2024 tercatat 150 korban jiwa dari 294 insiden benturan senjata[citation:5].",
+        "perspective": "Pemerintah Republik Indonesia / Kementerian Koordinator Polhukam / Kementerian ESDM"
       },
       {
         "name": "Hukum Agraria / Hak Atas Tanah",
-        "desc": "Pertentangan eksplisit antara hukum agraria nasional yang menetapkan Kawasan Hutan Negara atas tanah Papua (5,5 juta hektar konsesi HPH korporasi vs 78,040 hektar konsesi HPH masyarakat adat) dan pengakuan Hak Ulayat berdasarkan hukum adat setempat[citation:5][citation:11]. Program food estate dan pembukaan lahan 20 juta hektar semakin memperparah konflik ini[citation:5][citation:10]."
+        "desc": "Pertentangan eksplisit antara hukum agraria nasional yang menetapkan Kawasan Hutan Negara atas tanah Papua (5,5 juta hektar konsesi HPH korporasi vs 78,040 hektar konsesi HPH masyarakat adat) dan pengakuan Hak Ulayat berdasarkan hukum adat setempat[citation:5][citation:11]. Program food estate dan pembukaan lahan 20 juta hektar semakin memperparah konflik ini[citation:5][citation:10].",
+        "perspective": "Pemerintah Republik Indonesia / Kementerian Koordinator Polhukam / Kementerian ESDM"
       },
       {
         "name": "Hak menentukan nasib sendiri / Otonomi Khusus",
-        "desc": "Pertentangan antara kerangka hukum otonomi khusus yang ditawarkan pemerintah pusat dan tuntutan masyarakat adat Papua akan hak menentukan pilihan (right to self-determination). Tuntutan referendum Papua telah muncul sejak 1998 (FORERI), dan beberapa kelompok menolak Otsus Jilid II karena dianggap gagal menyelesaikan akar persoalan[citation:6][citation:11]. Hasil evaluasi MRP 2013 menyimpulkan Otsus gagal[citation:6]."
+        "desc": "Pertentangan antara kerangka hukum otonomi khusus yang ditawarkan pemerintah pusat dan tuntutan masyarakat adat Papua akan hak menentukan pilihan (right to self-determination). Tuntutan referendum Papua telah muncul sejak 1998 (FORERI), dan beberapa kelompok menolak Otsus Jilid II karena dianggap gagal menyelesaikan akar persoalan[citation:6][citation:11]. Hasil evaluasi MRP 2013 menyimpulkan Otsus gagal[citation:6].",
+        "perspective": "Pemerintah Republik Indonesia / Kementerian Koordinator Polhukam / Kementerian ESDM"
       },
       {
         "name": "Keadilan bagi korban pelanggaran HAM masa lalu",
-        "desc": "Konflik antara tidak adanya mekanisme yang jelas untuk menyelesaikan pelanggaran HAM masa lalu di Papua dan tuntutan masyarakat adat akan keadilan. Salah satu akar konflik utama adalah ketidakadilan sejarah integrasi Papua ke Indonesia pada 1969, kekerasan politik, pelanggaran HAM, kegagalan pembangunan, rasisme, dan marginalisasi Orang Asli Papua (OAP). Kebijakan selama puluhan tahun belum menyelesaikan masalah diskriminasi dan ketidakadilan[citation:1][citation:11]."
+        "desc": "Konflik antara tidak adanya mekanisme yang jelas untuk menyelesaikan pelanggaran HAM masa lalu di Papua dan tuntutan masyarakat adat akan keadilan. Salah satu akar konflik utama adalah ketidakadilan sejarah integrasi Papua ke Indonesia pada 1969, kekerasan politik, pelanggaran HAM, kegagalan pembangunan, rasisme, dan marginalisasi Orang Asli Papua (OAP). Kebijakan selama puluhan tahun belum menyelesaikan masalah diskriminasi dan ketidakadilan[citation:1][citation:11].",
+        "perspective": "Pemerintah Republik Indonesia / Kementerian Koordinator Polhukam / Kementerian ESDM"
       },
       {
         "name": "Putusan MK tentang Hutan Adat (Customary Forests Ruling) (2012) — Mahkamah Konstitusi (Constitutional Court of Indonesia)",
-        "desc": "Recognized that customary forests are not state forests, affirming the existence of customary rights. However, the ruling did not significantly enthuse local governments in Papua, and initiatives for formal recognition only gained momentum after Regulation of MoIA No. 52/2014."
+        "desc": "Recognized that customary forests are not state forests, affirming the existence of customary rights. However, the ruling did not significantly enthuse local governments in Papua, and initiatives for formal recognition only gained momentum after Regulation of MoIA No. 52/2014.",
+        "perspective": "Indigenous Papuan Customary Council (Dewan Adat Papua) / Majelis Rakyat Papua / Rights Advocates / LBH Papua"
       },
       {
         "name": "Study on indigenous peoples and the right to participate in decision-making (Submission by Dewan Adat Papua) (2011) — United Nations Expert Mechanism on the Rights of Indigenous Peoples",
-        "desc": "The DAP presented that the organization is blocked from running effectively, denied free, prior and informed consent (FPIC), and blocked from receiving support from government, donors, and international bodies. Both Dewan Adat Papua and Majelis Rakyat Papua have been labelled 'separatist,' preventing their effective functioning."
+        "desc": "The DAP presented that the organization is blocked from running effectively, denied free, prior and informed consent (FPIC), and blocked from receiving support from government, donors, and international bodies. Both Dewan Adat Papua and Majelis Rakyat Papua have been labelled 'separatist,' preventing their effective functioning.",
+        "perspective": "Indigenous Papuan Customary Council (Dewan Adat Papua) / Majelis Rakyat Papua / Rights Advocates / LBH Papua"
       },
       {
         "name": "Second Papuan People's Congress (Kongres Rakyat Papua II) (2000) — Dewan Adat Papua / Papuan People's Congress",
-        "desc": "Established the Papuan Presidium Council (PDP) and intensified demand for Papuan independence. The DAP was established as a representative adat institution based on bottom-up characteristics, giving it legitimacy as a representable adat institution."
+        "desc": "Established the Papuan Presidium Council (PDP) and intensified demand for Papuan independence. The DAP was established as a representative adat institution based on bottom-up characteristics, giving it legitimacy as a representable adat institution.",
+        "perspective": "Indigenous Papuan Customary Council (Dewan Adat Papua) / Majelis Rakyat Papua / Rights Advocates / LBH Papua"
       },
       {
         "name": "Hak Ulayat / Land Rights",
-        "desc": "Direct contradiction between National Forest Area designations that designate most of Papua as state forest (5.5 million hectares of corporate HPH concessions vs 78,040 hectares for indigenous communities) and Hak Ulayat customary land rights. The Special Autonomy Law's revised amendments (UU No. 2/2021) allow central land acquisition, overriding customary protections. Food estate and mining projects are permitted without free, prior, and informed consent (FPIC). The DAP has called for implementation of FPIC."
+        "desc": "Direct contradiction between National Forest Area designations that designate most of Papua as state forest (5.5 million hectares of corporate HPH concessions vs 78,040 hectares for indigenous communities) and Hak Ulayat customary land rights. The Special Autonomy Law's revised amendments (UU No. 2/2021) allow central land acquisition, overriding customary protections. Food estate and mining projects are permitted without free, prior, and informed consent (FPIC). The DAP has called for implementation of FPIC.",
+        "perspective": "Indigenous Papuan Customary Council (Dewan Adat Papua) / Majelis Rakyat Papua / Rights Advocates / LBH Papua"
       },
       {
         "name": "Institutional Legitimacy / Self-Determination",
-        "desc": "Government refuses to recognize the DAP, the most representative indigenous institution, branding it and its members as 'separatist.' The government instead created a top-down LMA that is less representative but receives government support and funding. This has created a plurality of adat institutions confusing to Papuans. The DAP is blocked from effectively functioning and denied free, prior, and informed consent."
+        "desc": "Government refuses to recognize the DAP, the most representative indigenous institution, branding it and its members as 'separatist.' The government instead created a top-down LMA that is less representative but receives government support and funding. This has created a plurality of adat institutions confusing to Papuans. The DAP is blocked from effectively functioning and denied free, prior, and informed consent.",
+        "perspective": "Indigenous Papuan Customary Council (Dewan Adat Papua) / Majelis Rakyat Papua / Rights Advocates / LBH Papua"
       }
     ],
     "sources": [
@@ -2638,11 +2858,29 @@ const DATA = {
       "lng": 85.0
     },
     "metrics": {
-      "area_sqkm": 1664900.0,
-      "food_import_pct": "data not available",
-      "water_local": "数据待查",
-      "water_control": "数据待查",
-      "who": 100.0
+      "area_sqkm": {
+        "value": 1664900.0,
+        "confirmed_by": 2
+      },
+      "food_import_pct": {
+        "value": "data not available"
+      },
+      "water": {
+        "reports": [
+          {
+            "perspective": "PRC Central Government / Xinjiang Uyghur Autonomous Region (XUAR) Authorities / XPCC",
+            "population_a": "数据待查",
+            "population_b": "数据待查",
+            "who_reference_standard": 100.0
+          },
+          {
+            "perspective": "Uyghur Rights Preservation / World Uyghur Congress / Diaspora Archives",
+            "population_a": "data not available",
+            "population_b": "data not available",
+            "who_reference_standard": 100.0
+          }
+        ]
+      }
     },
     "zones": [
       {
@@ -2787,27 +3025,33 @@ const DATA = {
     "legal": [
       {
         "name": "《新疆生产建设兵团的历史与发展》白皮书 (2014) — 中华人民共和国中央人民政府",
-        "desc": "明确兵团是新疆维吾尔自治区的重要组成部分，承担屯垦戍边职责，实行党政军企合一的特殊管理体制 [citation:3]。"
+        "desc": "明确兵团是新疆维吾尔自治区的重要组成部分，承担屯垦戍边职责，实行党政军企合一的特殊管理体制 [citation:3]。",
+        "perspective": "PRC Central Government / Xinjiang Uyghur Autonomous Region (XUAR) Authorities / XPCC"
       },
       {
         "name": "国家安全与去极端化立法",
-        "desc": "中国政府的反恐和去极端化法律与部分国家和国际人权组织对于宗教自由和文化权利的关注点存在分歧。"
+        "desc": "中国政府的反恐和去极端化法律与部分国家和国际人权组织对于宗教自由和文化权利的关注点存在分歧。",
+        "perspective": "PRC Central Government / Xinjiang Uyghur Autonomous Region (XUAR) Authorities / XPCC"
       },
       {
         "name": "OHCHR Report on Human Rights in Xinjiang (2022) — United Nations Human Rights Council",
-        "desc": "The UN High Commissioner for Human Rights found significant concerns about arbitrary detention, torture, forced labor, and restrictions on fundamental freedoms in Xinjiang"
+        "desc": "The UN High Commissioner for Human Rights found significant concerns about arbitrary detention, torture, forced labor, and restrictions on fundamental freedoms in Xinjiang",
+        "perspective": "Uyghur Rights Preservation / World Uyghur Congress / Diaspora Archives"
       },
       {
         "name": "Uyghur Human Rights Policy Act (2020) — U.S. Congress",
-        "desc": "Declared China's actions in Xinjiang a 'massive human rights abuse' and imposed sanctions on officials and entities"
+        "desc": "Declared China's actions in Xinjiang a 'massive human rights abuse' and imposed sanctions on officials and entities",
+        "perspective": "Uyghur Rights Preservation / World Uyghur Congress / Diaspora Archives"
       },
       {
         "name": "De-extremification Regulations vs. Customary Rights",
-        "desc": "Authorities have banned Islamic-sounding names, restricted fasting during Ramadan, confiscated religious materials, and regulated mosque activities [citation:12]. The regulations blur the line between lawful religious practice and 'extremism,' allowing authorities to criminalize cultural and religious expression. Two-faced people' (those deemed insufficiently supportive of state policies) face detention."
+        "desc": "Authorities have banned Islamic-sounding names, restricted fasting during Ramadan, confiscated religious materials, and regulated mosque activities [citation:12]. The regulations blur the line between lawful religious practice and 'extremism,' allowing authorities to criminalize cultural and religious expression. Two-faced people' (those deemed insufficiently supportive of state policies) face detention.",
+        "perspective": "Uyghur Rights Preservation / World Uyghur Congress / Diaspora Archives"
       },
       {
         "name": "Land Rights / Forced Labor",
-        "desc": "Uyghur populations are assigned to work in factories under surveillance; the 'smart factory' system uses data from checkpoints and smartphones to hold people in place, facilitating a system of unfree labor [citation:4]. Former detainees are released to ongoing surveillance and work restrictions."
+        "desc": "Uyghur populations are assigned to work in factories under surveillance; the 'smart factory' system uses data from checkpoints and smartphones to hold people in place, facilitating a system of unfree labor [citation:4]. Former detainees are released to ongoing surveillance and work restrictions.",
+        "perspective": "Uyghur Rights Preservation / World Uyghur Congress / Diaspora Archives"
       }
     ],
     "sources": [
@@ -2826,11 +3070,23 @@ const DATA = {
       "lng": 165.5
     },
     "metrics": {
-      "area_sqkm": 18575.0,
-      "food_import_pct": "data not available",
-      "water_local": "data not available",
-      "water_control": "data not available",
-      "who": 100.0
+      "area_sqkm": {
+        "value": 18575.0,
+        "confirmed_by": 1
+      },
+      "food_import_pct": {
+        "value": "data not available"
+      },
+      "water": {
+        "reports": [
+          {
+            "perspective": "État français / Haut-Commissariat de la République / Gouvernement de la Nouvelle-Calédonie",
+            "population_a": "data not available",
+            "population_b": "data not available",
+            "who_reference_standard": 100.0
+          }
+        ]
+      }
     },
     "zones": [
       {
@@ -2893,11 +3149,13 @@ const DATA = {
     "legal": [
       {
         "name": "Adoption de la loi organique (1999) — Sénat français",
-        "desc": "Statut particulier de la Nouvelle-Calédonie et partage des compétences entre l'État et le pays."
+        "desc": "Statut particulier de la Nouvelle-Calédonie et partage des compétences entre l'État et le pays.",
+        "perspective": "État français / Haut-Commissariat de la République / Gouvernement de la Nouvelle-Calédonie"
       },
       {
         "name": "Corps électoral",
-        "desc": "Tension entre le corps électoral spécial prévu par les Accords de Nouméa et les revendications d'élargissement formulées par les organisations kanakes."
+        "desc": "Tension entre le corps électoral spécial prévu par les Accords de Nouméa et les revendications d'élargissement formulées par les organisations kanakes.",
+        "perspective": "État français / Haut-Commissariat de la République / Gouvernement de la Nouvelle-Calédonie"
       }
     ],
     "sources": []
@@ -2910,11 +3168,29 @@ const DATA = {
       "lng": -170.1322
     },
     "metrics": {
-      "area_sqkm": 199.0,
-      "food_import_pct": "data not available",
-      "water_local": "data not available",
-      "water_control": "data not available",
-      "who": 100.0
+      "area_sqkm": {
+        "value": 199.0,
+        "confirmed_by": 2
+      },
+      "food_import_pct": {
+        "value": "data not available"
+      },
+      "water": {
+        "reports": [
+          {
+            "perspective": "U.S. Department of the Interior / Office of Insular Affairs / American Samoa Government",
+            "population_a": "data not available",
+            "population_b": "data not available",
+            "who_reference_standard": 100.0
+          },
+          {
+            "perspective": "Samoan Customary Land / Fa’amatai Advocates / Communal Land Defenders",
+            "population_a": "data not available",
+            "population_b": "data not available",
+            "who_reference_standard": 100.0
+          }
+        ]
+      }
     },
     "zones": [
       {
@@ -3020,31 +3296,43 @@ const DATA = {
     "legal": [
       {
         "name": "Tuaua v. United States, 788 F.3d 300 (2015) — U.S. Court of Appeals for the D.C. Circuit",
-        "desc": "Affirmed that persons born in American Samoa are U.S. nationals, not U.S. citizens, under the Fourteenth Amendment; the Insular Cases doctrine applies."
+        "desc": "Affirmed that persons born in American Samoa are U.S. nationals, not U.S. citizens, under the Fourteenth Amendment; the Insular Cases doctrine applies.",
+        "perspective": "U.S. Department of the Interior / Office of Insular Affairs / American Samoa Government"
       },
       {
         "name": "Fitisemanu v. United States (2022) — U.S. District Court for the District of Utah",
-        "desc": "The court ordered the government to grant birthright citizenship to individuals born in American Samoa, relying on the Fourteenth Amendment."
+        "desc": "The court ordered the government to grant birthright citizenship to individuals born in American Samoa, relying on the Fourteenth Amendment.",
+        "perspective": "U.S. Department of the Interior / Office of Insular Affairs / American Samoa Government"
       },
       {
         "name": "Fitisemanu v. United States (on appeal) (2026) — U.S. Court of Appeals for the 10th Circuit",
-        "desc": "Appeal ongoing; the government argues American Samoa's status as a 'self-governing territory' that ceded sovereignty by Deed of Cession makes it unique [citation:2]."
+        "desc": "Appeal ongoing; the government argues American Samoa's status as a 'self-governing territory' that ceded sovereignty by Deed of Cession makes it unique [citation:2].",
+        "perspective": "U.S. Department of the Interior / Office of Insular Affairs / American Samoa Government"
       },
       {
         "name": "Citizenship",
-        "desc": "Conflict between federal court interpretations of the Fourteenth Amendment and local statutes and the Deed of Cession, which some argue grant a right to self-determination on citizenship status [citation:2][citation:12]. The American Samoa Statutory Nationality and Citizenship Act (H.R. 6158) was introduced in the House to create a path to citizenship while protecting self-determination [citation:4][citation:13]."
+        "desc": "Conflict between federal court interpretations of the Fourteenth Amendment and local statutes and the Deed of Cession, which some argue grant a right to self-determination on citizenship status [citation:2][citation:12]. The American Samoa Statutory Nationality and Citizenship Act (H.R. 6158) was introduced in the House to create a path to citizenship while protecting self-determination [citation:4][citation:13].",
+        "perspective": "U.S. Department of the Interior / Office of Insular Affairs / American Samoa Government"
       },
       {
         "name": "Land Tenure",
-        "desc": "Long-standing tension between federal and Western notions of private property and the communal land tenure system (fa'aleaganu'u) recognized under local law [citation:5][citation:9][citation:14]."
+        "desc": "Long-standing tension between federal and Western notions of private property and the communal land tenure system (fa'aleaganu'u) recognized under local law [citation:5][citation:9][citation:14].",
+        "perspective": "U.S. Department of the Interior / Office of Insular Affairs / American Samoa Government"
       },
       {
         "name": "data not available (data not available) — data not available",
-        "desc": "data not available"
+        "desc": "data not available",
+        "perspective": "Samoan Customary Land / Fa’amatai Advocates / Communal Land Defenders"
+      },
+      {
+        "name": "Land Tenure",
+        "desc": "Tension between U.S. constitutional and market principles which generally favor free alienation of property, and the Samoan customary system (fa’amatai) which is based on communal land tenure and prohibits permanent alienation of customary land to non-Samoans or non-members of the title-holding family group. Local statutes are designed to restrict the sale of communal land to non-Samoans, supported by the Deed of Cession protections.",
+        "perspective": "Samoan Customary Land / Fa’amatai Advocates / Communal Land Defenders"
       },
       {
         "name": "Constitutional Status and Citizenship",
-        "desc": "Tension between U.S. constitutional birthright citizenship norms and the continued non-citizen national status of persons born in American Samoa. This unique status affects the political and legal position of Samoans within the U.S. framework."
+        "desc": "Tension between U.S. constitutional birthright citizenship norms and the continued non-citizen national status of persons born in American Samoa. This unique status affects the political and legal position of Samoans within the U.S. framework.",
+        "perspective": "Samoan Customary Land / Fa’amatai Advocates / Communal Land Defenders"
       }
     ],
     "sources": [
@@ -3059,11 +3347,22 @@ const DATA = {
       "lng": 39.0
     },
     "metrics": {
-      "area_sqkm": "data not available",
-      "food_import_pct": "data not available",
-      "water_local": "data not available",
-      "water_control": "data not available",
-      "who": 100.0
+      "area_sqkm": {
+        "value": "data not available"
+      },
+      "food_import_pct": {
+        "value": "data not available"
+      },
+      "water": {
+        "reports": [
+          {
+            "perspective": "الحكومة السورية المؤقتة / وزارات الدفاع والداخلية والإدارة المحلية",
+            "population_a": "data not available",
+            "population_b": "data not available",
+            "who_reference_standard": 100.0
+          }
+        ]
+      }
     },
     "zones": [
       {
@@ -3176,23 +3475,28 @@ const DATA = {
     "legal": [
       {
         "name": "اتفاقية الاندماج مع قوات سوريا الديمقراطية (14 نقطة) (2026) — الحكومة السورية المؤقتة",
-        "desc": "اتفاقية شاملة وقعت في 30 يناير 2026 بين الحكومة السورية المؤقتة وقوات سوريا الديمقراطية تنظم الاندماج العسكري والأمني، ونقل السيطرة على حقول النفط والمعابر الحدودية، وإنشاء تقسيم عسكري لمحافظة الحسكة، وتعيين قائد كردي نائباً لوزير الدفاع للمنطقة الشرقية. كما تنص على الاعتراف باللغة الكردية كلغة رسمية ومنح الجنسية لعشرات الآلاف من الأكراد عديمي الجنسية (المكتومين) بموجب المرسوم رقم 13 لعام 2026، وإعلان عيد نوروز عطلة وطنية."
+        "desc": "اتفاقية شاملة وقعت في 30 يناير 2026 بين الحكومة السورية المؤقتة وقوات سوريا الديمقراطية تنظم الاندماج العسكري والأمني، ونقل السيطرة على حقول النفط والمعابر الحدودية، وإنشاء تقسيم عسكري لمحافظة الحسكة، وتعيين قائد كردي نائباً لوزير الدفاع للمنطقة الشرقية. كما تنص على الاعتراف باللغة الكردية كلغة رسمية ومنح الجنسية لعشرات الآلاف من الأكراد عديمي الجنسية (المكتومين) بموجب المرسوم رقم 13 لعام 2026، وإعلان عيد نوروز عطلة وطنية.",
+        "perspective": "الحكومة السورية المؤقتة / وزارات الدفاع والداخلية والإدارة المحلية"
       },
       {
         "name": "اتفاقية 8 نقاط مع الإدارة الذاتية لشمال وشرق سوريا (2025) — الحكومة السورية المؤقتة",
-        "desc": "اتفاقية أولية في 10 مارس 2025 لبدء عملية دمج الإدارة الذاتية في الحكومة المركزية؛ تضمنت انسحاب القوات الكردية من أحياء حلب ووقف إطلاق النار حول سد تشرين."
+        "desc": "اتفاقية أولية في 10 مارس 2025 لبدء عملية دمج الإدارة الذاتية في الحكومة المركزية؛ تضمنت انسحاب القوات الكردية من أحياء حلب ووقف إطلاق النار حول سد تشرين.",
+        "perspective": "الحكومة السورية المؤقتة / وزارات الدفاع والداخلية والإدارة المحلية"
       },
       {
         "name": "خطة التقسيم الأمني لسوريا (2025) — الحكومة السورية المؤقتة / وزارة الداخلية",
-        "desc": "تقسيم البلاد إلى 5 مناطق أمنية رئيسية: الشرقية (الحسكة، الرقة، دير الزور)، الشمالية (حلب، إدلب)، الساحلية (اللاذقية، طرطوس)، الوسطى (حمص، حماة)، والجنوبية (دمشق، درعا، السويداء، القنيطرة). كل منطقة يترأسها نائب وزير داخلية مسؤول عن إدارات الشرطة المحلية وقوات الأمن العامة."
+        "desc": "تقسيم البلاد إلى 5 مناطق أمنية رئيسية: الشرقية (الحسكة، الرقة، دير الزور)، الشمالية (حلب، إدلب)، الساحلية (اللاذقية، طرطوس)، الوسطى (حمص، حماة)، والجنوبية (دمشق، درعا، السويداء، القنيطرة). كل منطقة يترأسها نائب وزير داخلية مسؤول عن إدارات الشرطة المحلية وقوات الأمن العامة.",
+        "perspective": "الحكومة السورية المؤقتة / وزارات الدفاع والداخلية والإدارة المحلية"
       },
       {
         "name": "الحكم الذاتي / اللامركزية",
-        "desc": "تعارض مباشر بين إطار الحكومة المركزية الموحدة الذي أعلنته الحكومة السورية المؤقتة بموجب الإعلان الدستوري واتفاقيات الاندماج، وطموحات الحكم الذاتي التي كانت قائمة في شمال شرق سوريا منذ عام 2012. أدى الهجوم العسكري في يناير 2026 إلى إنهاء الحكم الذاتي فعلياً، مع بقاء منطقة الحسكة تحت إدارة قوات سوريا الديمقراطية لكن مع سيطرة حكومية على الموارد الاستراتيجية والمعابر الحدودية."
+        "desc": "تعارض مباشر بين إطار الحكومة المركزية الموحدة الذي أعلنته الحكومة السورية المؤقتة بموجب الإعلان الدستوري واتفاقيات الاندماج، وطموحات الحكم الذاتي التي كانت قائمة في شمال شرق سوريا منذ عام 2012. أدى الهجوم العسكري في يناير 2026 إلى إنهاء الحكم الذاتي فعلياً، مع بقاء منطقة الحسكة تحت إدارة قوات سوريا الديمقراطية لكن مع سيطرة حكومية على الموارد الاستراتيجية والمعابر الحدودية.",
+        "perspective": "الحكومة السورية المؤقتة / وزارات الدفاع والداخلية والإدارة المحلية"
       },
       {
         "name": "السيادة الوطنية والوجود العسكري الأجنبي",
-        "desc": "تعارض بين إعلان الحكومة السورية المؤقتة استعادة السيادة على كامل الأراضي السورية، واستمرار الوجود العسكري الأجنبي (تركيا، الولايات المتحدة، إسرائيل) في مناطق متعددة من البلاد. تشير المصادر إلى أن استعادة الحكومة المركزية للسيطرة تمت في إطار حدود خارجية حددتها القوى الكبرى وليس من خلال مفاوضات وطنية شاملة. إسرائيل تشترط نزع السلاح في جنوب سوريا كشرط للانسحاب من المناطق المحتلة، بينما تتفق تركيا والولايات المتحدة على استعادة السيطرة المركزية كأفضل طريقة لتحقيق الاستقرار."
+        "desc": "تعارض بين إعلان الحكومة السورية المؤقتة استعادة السيادة على كامل الأراضي السورية، واستمرار الوجود العسكري الأجنبي (تركيا، الولايات المتحدة، إسرائيل) في مناطق متعددة من البلاد. تشير المصادر إلى أن استعادة الحكومة المركزية للسيطرة تمت في إطار حدود خارجية حددتها القوى الكبرى وليس من خلال مفاوضات وطنية شاملة. إسرائيل تشترط نزع السلاح في جنوب سوريا كشرط للانسحاب من المناطق المحتلة، بينما تتفق تركيا والولايات المتحدة على استعادة السيطرة المركزية كأفضل طريقة لتحقيق الاستقرار.",
+        "perspective": "الحكومة السورية المؤقتة / وزارات الدفاع والداخلية والإدارة المحلية"
       }
     ],
     "sources": [
@@ -3210,11 +3514,29 @@ const DATA = {
       "lng": 46.75
     },
     "metrics": {
-      "area_sqkm": 11458.0,
-      "food_import_pct": "data not available",
-      "water_local": "data not available",
-      "water_control": "data not available",
-      "who": 100.0
+      "area_sqkm": {
+        "value": 11458.0,
+        "confirmed_by": 1
+      },
+      "food_import_pct": {
+        "value": "data not available"
+      },
+      "water": {
+        "reports": [
+          {
+            "perspective": "Republic of Azerbaijan / Special Representative of the President / Karabakh and East Zangezur economic regions administrations",
+            "population_a": "data not available",
+            "population_b": "data not available",
+            "who_reference_standard": 100.0
+          },
+          {
+            "perspective": "Republic of Armenia / Artsakh authorities / Armenian rights and displacement advocates",
+            "population_a": "data not available",
+            "population_b": "data not available",
+            "who_reference_standard": 100.0
+          }
+        ]
+      }
     },
     "zones": [
       {
@@ -3336,27 +3658,33 @@ const DATA = {
     "legal": [
       {
         "name": "Armenia-Azerbaijan Peace Agreement (White House) (2025) — United States Government (mediation)",
-        "desc": "Armenia and Azerbaijan signed a peace agreement at the White House on August 8, 2025, which included a decision to build a 43.5-kilometer corridor (Zangezur Corridor) through southern Armenia, with the United States obtaining a 99-year lease[citation:2]"
+        "desc": "Armenia and Azerbaijan signed a peace agreement at the White House on August 8, 2025, which included a decision to build a 43.5-kilometer corridor (Zangezur Corridor) through southern Armenia, with the United States obtaining a 99-year lease[citation:2]",
+        "perspective": "Republic of Azerbaijan / Special Representative of the President / Karabakh and East Zangezur economic regions administrations"
       },
       {
         "name": "Self-determination / Sovereignty",
-        "desc": "A direct conflict exists between current Azerbaijani legislation asserting sovereignty over the Karabakh and East Zangezur regions and prior local administrative acts of the former Republic of Artsakh, as well as Armenian legal claims regarding the territory. The 2025 US-mediated peace agreement acknowledged Azerbaijan's sovereignty over the Nagorno-Karabakh region[citation:2]"
+        "desc": "A direct conflict exists between current Azerbaijani legislation asserting sovereignty over the Karabakh and East Zangezur regions and prior local administrative acts of the former Republic of Artsakh, as well as Armenian legal claims regarding the territory. The 2025 US-mediated peace agreement acknowledged Azerbaijan's sovereignty over the Nagorno-Karabakh region[citation:2]",
+        "perspective": "Republic of Azerbaijan / Special Representative of the President / Karabakh and East Zangezur economic regions administrations"
       },
       {
         "name": "Citizenship and returnee rights",
-        "desc": "Legal conflicts between the Republic of Azerbaijan's reintegration framework and Armenian legal positions regarding the rights of the displaced Armenian population"
+        "desc": "Legal conflicts between the Republic of Azerbaijan's reintegration framework and Armenian legal positions regarding the rights of the displaced Armenian population",
+        "perspective": "Republic of Azerbaijan / Special Representative of the President / Karabakh and East Zangezur economic regions administrations"
       },
       {
         "name": "Orders regarding the Lachin Corridor (2023) — International Court of Justice (ICJ)",
-        "desc": "The ICJ ordered that Azerbaijan 'take all measures at its disposal to ensure unimpeded movement of persons, vehicles and cargo along the Lachin Corridor in both directions.'"
+        "desc": "The ICJ ordered that Azerbaijan 'take all measures at its disposal to ensure unimpeded movement of persons, vehicles and cargo along the Lachin Corridor in both directions.'",
+        "perspective": "Republic of Armenia / Artsakh authorities / Armenian rights and displacement advocates"
       },
       {
         "name": "Briefing on the situation in the Lachin Corridor (2023) — United Nations Security Council",
-        "desc": "The UN Security Council heard briefings on humanitarian concerns and the blockade, though no resolution was passed."
+        "desc": "The UN Security Council heard briefings on humanitarian concerns and the blockade, though no resolution was passed.",
+        "perspective": "Republic of Armenia / Artsakh authorities / Armenian rights and displacement advocates"
       },
       {
         "name": "Self-determination / Humanitarian Law",
-        "desc": "A direct conflict between the abolition of the Republic of Artsakh by Azerbaijan and the international and Armenian legal positions concerning the right to self-determination of the Armenian population."
+        "desc": "A direct conflict between the abolition of the Republic of Artsakh by Azerbaijan and the international and Armenian legal positions concerning the right to self-determination of the Armenian population.",
+        "perspective": "Republic of Armenia / Artsakh authorities / Armenian rights and displacement advocates"
       }
     ],
     "sources": [
@@ -3375,11 +3703,29 @@ const DATA = {
       "lng": 34.4667
     },
     "metrics": {
-      "area_sqkm": 365.0,
-      "food_import_pct": "data not available",
-      "water_local": "data not available",
-      "water_control": 107,
-      "who": 100.0
+      "area_sqkm": {
+        "value": 365.0,
+        "confirmed_by": 2
+      },
+      "food_import_pct": {
+        "value": "data not available"
+      },
+      "water": {
+        "reports": [
+          {
+            "perspective": "State of Israel / Southern Command / COGAT",
+            "population_a": 107,
+            "population_b": "data not available",
+            "who_reference_standard": 100.0
+          },
+          {
+            "perspective": "السلطة الوطنية الفلسطينية / سلطة الطاقة / سلطة المياه / شركة توزيع الكهرباء / مصلحة مياه بلديات الساحل / وزارة الاتصالات / المراكز الحقوقية الميدانية",
+            "population_a": "2-8 لترات للفرد يومياً",
+            "population_b": "20-107 لترات للفرد يومياً (اختلاف حسب المنطقة)",
+            "who_reference_standard": 100.0
+          }
+        ]
+      }
     },
     "zones": [
       {
@@ -3561,39 +3907,48 @@ const DATA = {
     "legal": [
       {
         "name": "Advisory Opinion on Genocide and Occupation (2024) (2024) — International Court of Justice (ICJ)",
-        "desc": "The ICJ affirmed that Israel's obligations as an occupying power were not terminated by the 2005 disengagement, as Israel maintains effective control over the Gaza Strip's borders, airspace, and maritime zones[citation:8]."
+        "desc": "The ICJ affirmed that Israel's obligations as an occupying power were not terminated by the 2005 disengagement, as Israel maintains effective control over the Gaza Strip's borders, airspace, and maritime zones[citation:8].",
+        "perspective": "State of Israel / Southern Command / COGAT"
       },
       {
         "name": "Jaber Al-Bassiouni Ahmed and others v. Prime Minister and Minister of Defence (HCJ 9132/07) (2008) — Israeli Supreme Court",
-        "desc": "The Supreme Court held that restrictions on fuel and electricity must be balanced against the humanitarian needs of Gaza's population. The court accepted the state's position that it had no duty to allow unlimited fuel/electricity when some is used for terrorism, and that duties derive from the state of armed conflict and control over crossings[citation:15]."
+        "desc": "The Supreme Court held that restrictions on fuel and electricity must be balanced against the humanitarian needs of Gaza's population. The court accepted the state's position that it had no duty to allow unlimited fuel/electricity when some is used for terrorism, and that duties derive from the state of armed conflict and control over crossings[citation:15].",
+        "perspective": "State of Israel / Southern Command / COGAT"
       },
       {
         "name": "Humanitarian Law / Occupation Status",
-        "desc": "Conflict between Israel's legal position (that it is not the occupying power and has limited obligations) and international bodies (ICJ, UN, human rights organizations) that maintain Israel remains the occupying power and is subject to the full obligations under the Fourth Geneva Convention[citation:8][citation:15]."
+        "desc": "Conflict between Israel's legal position (that it is not the occupying power and has limited obligations) and international bodies (ICJ, UN, human rights organizations) that maintain Israel remains the occupying power and is subject to the full obligations under the Fourth Geneva Convention[citation:8][citation:15].",
+        "perspective": "State of Israel / Southern Command / COGAT"
       },
       {
         "name": "فتوى محكمة العدل الدولية 2025 حول التزامات إسرائيل في الأراضي الفلسطينية المحتلة (2025) — محكمة العدل الدولية (ICJ)",
-        "desc": "أكدت المحكمة أن إسرائيل قوة محتلة في قطاع غزة، وأن التزاماتها بموجب قانون الاحتلال مستمرة، خاصة فيما يتعلق بتسهيل وصول المساعدات الإنسانية والإمدادات الأساسية. إسرائيل ملزمة بالالتزامات غير المشروطة بموجب المادة 59 من اتفاقية جنيف الرابعة لتسهيل برامج الإغاثة."
+        "desc": "أكدت المحكمة أن إسرائيل قوة محتلة في قطاع غزة، وأن التزاماتها بموجب قانون الاحتلال مستمرة، خاصة فيما يتعلق بتسهيل وصول المساعدات الإنسانية والإمدادات الأساسية. إسرائيل ملزمة بالالتزامات غير المشروطة بموجب المادة 59 من اتفاقية جنيف الرابعة لتسهيل برامج الإغاثة.",
+        "perspective": "السلطة الوطنية الفلسطينية / سلطة الطاقة / سلطة المياه / شركة توزيع الكهرباء / مصلحة مياه بلديات الساحل / وزارة الاتصالات / المراكز الحقوقية الميدانية"
       },
       {
         "name": "فتوى محكمة العدل الدولية 2024 حول سياسات إسرائيل وممارساتها في الأراضي الفلسطينية المحتلة (2024) — محكمة العدل الدولية (ICJ)",
-        "desc": "أكدت المحكمة أن التزامات إسرائيل بموجب قانون الاحتلال هي 'بما يتناسب مع درجة سيطرتها الفعلية' على قطاع غزة، واستمرار تطبيق بعض أحكام قانون الاحتلال رغم الانسحاب من غزة في 2005."
+        "desc": "أكدت المحكمة أن التزامات إسرائيل بموجب قانون الاحتلال هي 'بما يتناسب مع درجة سيطرتها الفعلية' على قطاع غزة، واستمرار تطبيق بعض أحكام قانون الاحتلال رغم الانسحاب من غزة في 2005.",
+        "perspective": "السلطة الوطنية الفلسطينية / سلطة الطاقة / سلطة المياه / شركة توزيع الكهرباء / مصلحة مياه بلديات الساحل / وزارة الاتصالات / المراكز الحقوقية الميدانية"
       },
       {
         "name": "قضية الإبادة الجماعية (جنوب أفريقيا ضد إسرائيل) (2024) — محكمة العدل الدولية (ICJ)",
-        "desc": "وجدت المحكمة أن ادعاء جنوب أفريقيا بوجود إبادة جماعية في غزة 'معقول'، وأصدرت أوامر بإجراءات مؤقتة لإسرائيل لضمان تقديم المساعدات الإنسانية ومنع الإبادة الجماعية."
+        "desc": "وجدت المحكمة أن ادعاء جنوب أفريقيا بوجود إبادة جماعية في غزة 'معقول'، وأصدرت أوامر بإجراءات مؤقتة لإسرائيل لضمان تقديم المساعدات الإنسانية ومنع الإبادة الجماعية.",
+        "perspective": "السلطة الوطنية الفلسطينية / سلطة الطاقة / سلطة المياه / شركة توزيع الكهرباء / مصلحة مياه بلديات الساحل / وزارة الاتصالات / المراكز الحقوقية الميدانية"
       },
       {
         "name": "قانون الاحتلال / تقديم المساعدات الإنسانية",
-        "desc": "صراع بين موقف إسرائيل القانوني (أنها ليست قوة محتلة ولديها التزامات محدودة) وموقف الهيئات الدولية (محكمة العدل الدولية، الأمم المتحدة، منظمات حقوق الإنسان) التي تؤكد أن إسرائيل لا تزال قوة محتلة وخاضعة للالتزامات الكاملة بموجب اتفاقية جنيف الرابعة."
+        "desc": "صراع بين موقف إسرائيل القانوني (أنها ليست قوة محتلة ولديها التزامات محدودة) وموقف الهيئات الدولية (محكمة العدل الدولية، الأمم المتحدة، منظمات حقوق الإنسان) التي تؤكد أن إسرائيل لا تزال قوة محتلة وخاضعة للالتزامات الكاملة بموجب اتفاقية جنيف الرابعة.",
+        "perspective": "السلطة الوطنية الفلسطينية / سلطة الطاقة / سلطة المياه / شركة توزيع الكهرباء / مصلحة مياه بلديات الساحل / وزارة الاتصالات / المراكز الحقوقية الميدانية"
       },
       {
         "name": "قانون الموارد الطبيعية والمياه",
-        "desc": "صراع حول حق الفلسطينيين في الموارد المائية والطاقة، حيث تسيطر إسرائيل على معظم الإمدادات وتستخدمها كسلاح حرب، وتفرض قيوداً مشددة على دخول الوقود والمعدات اللازمة لتشغيل البنية التحتية الحيوية، ما يشكل انتهاكاً للقانون الدولي الإنساني."
+        "desc": "صراع حول حق الفلسطينيين في الموارد المائية والطاقة، حيث تسيطر إسرائيل على معظم الإمدادات وتستخدمها كسلاح حرب، وتفرض قيوداً مشددة على دخول الوقود والمعدات اللازمة لتشغيل البنية التحتية الحيوية، ما يشكل انتهاكاً للقانون الدولي الإنساني.",
+        "perspective": "السلطة الوطنية الفلسطينية / سلطة الطاقة / سلطة المياه / شركة توزيع الكهرباء / مصلحة مياه بلديات الساحل / وزارة الاتصالات / المراكز الحقوقية الميدانية"
       },
       {
         "name": "السيادة والحدود والمجال الجوي والبري والبحري",
-        "desc": "صراع بين حق الفلسطينيين في السيادة على أراضيهم ومياههم الإقليمية ومجالهم الجوي، والسيطرة الإسرائيلية الفعلية على كل هذه العناصر، ما يمنع أي تنمية اقتصادية أو سياسية حقيقية لقطاع غزة."
+        "desc": "صراع بين حق الفلسطينيين في السيادة على أراضيهم ومياههم الإقليمية ومجالهم الجوي، والسيطرة الإسرائيلية الفعلية على كل هذه العناصر، ما يمنع أي تنمية اقتصادية أو سياسية حقيقية لقطاع غزة.",
+        "perspective": "السلطة الوطنية الفلسطينية / سلطة الطاقة / سلطة المياه / شركة توزيع الكهرباء / مصلحة مياه بلديات الساحل / وزارة الاتصالات / المراكز الحقوقية الميدانية"
       }
     ],
     "sources": [
@@ -3618,14 +3973,37 @@ const DATA = {
       "lng": -13.0
     },
     "metrics": {
-      "area_sqkm": [
-        266000.0,
-        710850.0
-      ],
-      "food_import_pct": "data not available",
-      "water_local": "data not available",
-      "water_control": "data not available",
-      "who": 100.0
+      "area_sqkm": {
+        "reports": [
+          {
+            "perspective": "Royaume du Maroc / Ministère de l'Intérieur / Administration des Provinces du Sud",
+            "value": 710850.0
+          },
+          {
+            "perspective": "Frente POLISARIO / República Árabe Saharaui Democrática (RASD)",
+            "value": 266000.0
+          }
+        ]
+      },
+      "food_import_pct": {
+        "value": "data not available"
+      },
+      "water": {
+        "reports": [
+          {
+            "perspective": "Royaume du Maroc / Ministère de l'Intérieur / Administration des Provinces du Sud",
+            "population_a": "data not available",
+            "population_b": "data not available",
+            "who_reference_standard": 100.0
+          },
+          {
+            "perspective": "Frente POLISARIO / República Árabe Saharaui Democrática (RASD)",
+            "population_a": "data not available",
+            "population_b": "data not available",
+            "who_reference_standard": 100.0
+          }
+        ]
+      }
     },
     "zones": [
       {
@@ -3830,39 +4208,48 @@ const DATA = {
     "legal": [
       {
         "name": "Avis consultatif sur le Sahara occidental (1975) — Cour Internationale de Justice (CIJ)",
-        "desc": "La CIJ a estimé qu'il n'existait pas de liens de souveraineté territoriale entre le territoire du Sahara occidental et le Maroc ou la Mauritanie à l'époque coloniale, et a reconnu le droit à l'autodétermination du peuple sahraoui."
+        "desc": "La CIJ a estimé qu'il n'existait pas de liens de souveraineté territoriale entre le territoire du Sahara occidental et le Maroc ou la Mauritanie à l'époque coloniale, et a reconnu le droit à l'autodétermination du peuple sahraoui.",
+        "perspective": "Royaume du Maroc / Ministère de l'Intérieur / Administration des Provinces du Sud"
       },
       {
         "name": "Annulation des accords de pêche et d'agriculture UE-Maroc (2024) — Cour de Justice de l'Union Européenne (CJUE)",
-        "desc": "La CJUE a annulé les accords de pêche et d'agriculture entre l'UE et le Maroc dans la mesure où ils s'appliquaient au Sahara occidental, estimant que le consentement du peuple sahraoui n'avait pas été obtenu[reference:39]."
+        "desc": "La CJUE a annulé les accords de pêche et d'agriculture entre l'UE et le Maroc dans la mesure où ils s'appliquaient au Sahara occidental, estimant que le consentement du peuple sahraoui n'avait pas été obtenu[reference:39].",
+        "perspective": "Royaume du Maroc / Ministère de l'Intérieur / Administration des Provinces du Sud"
       },
       {
         "name": "Droit des ressources naturelles",
-        "desc": "Conflit sur la légitimité de l'exploitation des ressources naturelles (phosphate, pêche) dans les eaux et le territoire du Sahara occidental, le Maroc affirmant sa souveraineté et le POLISARIO revendiquant les ressources pour un futur État sahraoui."
+        "desc": "Conflit sur la légitimité de l'exploitation des ressources naturelles (phosphate, pêche) dans les eaux et le territoire du Sahara occidental, le Maroc affirmant sa souveraineté et le POLISARIO revendiquant les ressources pour un futur État sahraoui.",
+        "perspective": "Royaume du Maroc / Ministère de l'Intérieur / Administration des Provinces du Sud"
       },
       {
         "name": "Droit maritime / ZEE",
-        "desc": "Conflit sur la délimitation des eaux territoriales et de la ZEE au large du Sahara occidental, le Maroc l'ayant intégrée dans son arsenal juridique et le POLISARIO revendiquant une ZEE distincte."
+        "desc": "Conflit sur la délimitation des eaux territoriales et de la ZEE au large du Sahara occidental, le Maroc l'ayant intégrée dans son arsenal juridique et le POLISARIO revendiquant une ZEE distincte.",
+        "perspective": "Royaume du Maroc / Ministère de l'Intérieur / Administration des Provinces du Sud"
       },
       {
         "name": "Dictamen consultivo sobre el Sáhara Occidental (1975) — Corte Internacional de Justicia (CIJ)",
-        "desc": "La CIJ determinó que no existían vínculos de soberanía territorial entre el Sáhara Occidental y Marruecos o Mauritania, y reconoció el derecho a la autodeterminación del pueblo saharaui."
+        "desc": "La CIJ determinó que no existían vínculos de soberanía territorial entre el Sáhara Occidental y Marruecos o Mauritania, y reconoció el derecho a la autodeterminación del pueblo saharaui.",
+        "perspective": "Frente POLISARIO / República Árabe Saharaui Democrática (RASD)"
       },
       {
         "name": "Sentencia Front Polisario II (Asuntos acumulados C-778/21P y C-798/21P; C-779/21P y C-799/21P) (2024) — Tribunal de Justicia de la Unión Europea (TJUE)",
-        "desc": "El TJUE anuló los acuerdos de pesca y agricultura entre la UE y Marruecos en la medida en que se aplicaban al Sáhara Occidental, por no haber obtenido el consentimiento del pueblo saharaui."
+        "desc": "El TJUE anuló los acuerdos de pesca y agricultura entre la UE y Marruecos en la medida en que se aplicaban al Sáhara Occidental, por no haber obtenido el consentimiento del pueblo saharaui.",
+        "perspective": "Frente POLISARIO / República Árabe Saharaui Democrática (RASD)"
       },
       {
         "name": "Resolución 1514 (XV) de la Asamblea General de la ONU (1960) — Consejo de Seguridad de la ONU",
-        "desc": "Declaración sobre la concesión de la independencia a los países y pueblos coloniales."
+        "desc": "Declaración sobre la concesión de la independencia a los países y pueblos coloniales.",
+        "perspective": "Frente POLISARIO / República Árabe Saharaui Democrática (RASD)"
       },
       {
         "name": "Soberanía y autodeterminación",
-        "desc": "Conflicto entre la reivindicación de soberanía de la RASD sobre todo el territorio del Sáhara Occidental y la anexión y administración de facto por parte de Marruecos."
+        "desc": "Conflicto entre la reivindicación de soberanía de la RASD sobre todo el territorio del Sáhara Occidental y la anexión y administración de facto por parte de Marruecos.",
+        "perspective": "Frente POLISARIO / República Árabe Saharaui Democrática (RASD)"
       },
       {
         "name": "Recursos Naturales",
-        "desc": "Conflicto sobre la legitimidad de la explotación de los recursos naturales del Sáhara Occidental (fosfatos, pesca) por parte de Marruecos y terceros países, sin el consentimiento del pueblo saharaui."
+        "desc": "Conflicto sobre la legitimidad de la explotación de los recursos naturales del Sáhara Occidental (fosfatos, pesca) por parte de Marruecos y terceros países, sin el consentimiento del pueblo saharaui.",
+        "perspective": "Frente POLISARIO / República Árabe Saharaui Democrática (RASD)"
       }
     ],
     "sources": [
@@ -3887,11 +4274,29 @@ const DATA = {
       "lng": 29.6167
     },
     "metrics": {
-      "area_sqkm": 4163.0,
-      "food_import_pct": "data not available",
-      "water_local": "data not available",
-      "water_control": "data not available",
-      "who": 100.0
+      "area_sqkm": {
+        "value": 4163.0,
+        "confirmed_by": 2
+      },
+      "food_import_pct": {
+        "value": "data not available"
+      },
+      "water": {
+        "reports": [
+          {
+            "perspective": "Государственные органы ПМР / Верховный Совет ПМР / Приднестровский республиканский банк",
+            "population_a": "data not available",
+            "population_b": "data not available",
+            "who_reference_standard": 100.0
+          },
+          {
+            "perspective": "Republica Moldova / Biroul Politici de Reintegrare / Serviciul Vamal al RM",
+            "population_a": "data not available",
+            "population_b": "data not available",
+            "who_reference_standard": 100.0
+          }
+        ]
+      }
     },
     "zones": [
       {
@@ -4054,35 +4459,43 @@ const DATA = {
     "legal": [
       {
         "name": "Декларация о независимости ПМР (1990) — Верховный Совет ПМР",
-        "desc": "Провозглашение независимости от Молдавской ССР и создание самостоятельного государства."
+        "desc": "Провозглашение независимости от Молдавской ССР и создание самостоятельного государства.",
+        "perspective": "Государственные органы ПМР / Верховный Совет ПМР / Приднестровский республиканский банк"
       },
       {
         "name": "Соглашение о принципах мирного урегулирования вооружённого конфликта (1992) — Соглашение между Молдовой, Россией и ПМР",
-        "desc": "Создание Объединённой контрольной комиссии и ввод миротворческих сил России, Молдовы и ПМР в Зону безопасности."
+        "desc": "Создание Объединённой контрольной комиссии и ввод миротворческих сил России, Молдовы и ПМР в Зону безопасности.",
+        "perspective": "Государственные органы ПМР / Верховный Совет ПМР / Приднестровский республиканский банк"
       },
       {
         "name": "Конституционное право",
-        "desc": "Прямое противоречие между нормами Конституции ПМР, провозглашающей суверенитет и независимость республики, и Конституцией Молдовы, определяющей ПМР как часть территории Молдовы."
+        "desc": "Прямое противоречие между нормами Конституции ПМР, провозглашающей суверенитет и независимость республики, и Конституцией Молдовы, определяющей ПМР как часть территории Молдовы.",
+        "perspective": "Государственные органы ПМР / Верховный Совет ПМР / Приднестровский республиканский банк"
       },
       {
         "name": "Таможенное право",
-        "desc": "Наличие собственной таможенной системы ПМР, не признаваемой Молдовой, вступает в противоречие с нормами молдавского права о единой таможенной территории."
+        "desc": "Наличие собственной таможенной системы ПМР, не признаваемой Молдовой, вступает в противоречие с нормами молдавского права о единой таможенной территории.",
+        "perspective": "Государственные органы ПМР / Верховный Совет ПМР / Приднестровский республиканский банк"
       },
       {
         "name": "Cauza Catan și alții (2012) — Curtea Europeană a Drepturilor Omului (CEDO)",
-        "desc": "CEDO a constatat că Republica Moldova are jurisdicție asupra întregului teritoriu, inclusiv asupra regiunii transnistrene, și că este responsabilă pentru încălcările drepturilor omului din regiune. Moldova trebuie să ia măsuri pentru a garanta drepturile omului."
+        "desc": "CEDO a constatat că Republica Moldova are jurisdicție asupra întregului teritoriu, inclusiv asupra regiunii transnistrene, și că este responsabilă pentru încălcările drepturilor omului din regiune. Moldova trebuie să ia măsuri pentru a garanta drepturile omului.",
+        "perspective": "Republica Moldova / Biroul Politici de Reintegrare / Serviciul Vamal al RM"
       },
       {
         "name": "Declarația de la Moscova (1993) — Organizația pentru Securitate și Cooperare în Europa (OSCE)",
-        "desc": "Angajamentul statelor membre OSCE de a respecta integritatea teritorială a Republicii Moldova și de a căuta o soluție politică pentru conflict."
+        "desc": "Angajamentul statelor membre OSCE de a respecta integritatea teritorială a Republicii Moldova și de a căuta o soluție politică pentru conflict.",
+        "perspective": "Republica Moldova / Biroul Politici de Reintegrare / Serviciul Vamal al RM"
       },
       {
         "name": "Drept constituțional",
-        "desc": "Conflict direct între Constituția Republicii Moldova, care proclamă suveranitatea și integritatea teritorială asupra întregului teritoriu național (inclusiv regiunea transnistreană), și actele constitutive ale autorităților separatiste de la Tiraspol, care revendică independența."
+        "desc": "Conflict direct între Constituția Republicii Moldova, care proclamă suveranitatea și integritatea teritorială asupra întregului teritoriu național (inclusiv regiunea transnistreană), și actele constitutive ale autorităților separatiste de la Tiraspol, care revendică independența.",
+        "perspective": "Republica Moldova / Biroul Politici de Reintegrare / Serviciul Vamal al RM"
       },
       {
         "name": "Drept administrativ / Vamal",
-        "desc": "Conflict între unitatea teritoriului vamal al Republicii Moldova și existența unui regim vamal separat în regiunea transnistreană, care nu este recunoscut de autoritățile constituționale."
+        "desc": "Conflict între unitatea teritoriului vamal al Republicii Moldova și existența unui regim vamal separat în regiunea transnistreană, care nu este recunoscut de autoritățile constituționale.",
+        "perspective": "Republica Moldova / Biroul Politici de Reintegrare / Serviciul Vamal al RM"
       }
     ],
     "sources": [
@@ -4229,8 +4642,30 @@ function markerRows(list, color){
   ).join('')+'</div>';
 }
 function statTile(val, label, cls){
-  const shown = (val===undefined || val===null || val==='') ? 'data not available' : (Array.isArray(val) ? fmtRange(val) : val);
+  const missing = (val===undefined || val===null || val==='' || val==='data not available');
+  const shown = missing ? '<span class="pill-missing">data not available</span>' : (Array.isArray(val) ? fmtRange(val) : val);
   return '<div class="tile"><span class="tile-val'+(cls?' '+cls:'')+'">'+shown+'</span><span class="tile-lab">'+label+'</span></div>';
+}
+function fmtNum(n){
+  return (typeof n === 'number') ? n.toLocaleString() : n;
+}
+// Renders an attributed_metric()-shaped value from consolidate.py:
+// {value:n, confirmed_by:k} when every perspective that reported it agrees,
+// or {reports:[{perspective,value},...]} when they disagree or only some
+// reported it — shown as one line per perspective instead of a merged
+// number or an unattributed range.
+function attrTile(metric, label, unit, cls){
+  unit = unit || '';
+  if(!metric || (metric.reports && !metric.reports.length) || (metric.value===undefined && !metric.reports)){
+    return statTile(null, label, cls);
+  }
+  if(metric.reports && metric.reports.length){
+    const lines = metric.reports.map(r=>fmtNum(r.value)+unit+' <span class="m-note">— '+r.perspective+'</span>').join('<br>');
+    return '<div class="tile tile-multi"><span class="tile-val'+(cls?' '+cls:'')+'">'+lines+'</span><span class="tile-lab">'+label+'</span></div>';
+  }
+  if(metric.value==='data not available') return statTile(null, label, cls);
+  const confirm = (metric.confirmed_by>1) ? ' <span class="metric-confirm">(confirmed by '+metric.confirmed_by+')</span>' : '';
+  return '<div class="tile"><span class="tile-val'+(cls?' '+cls:'')+'">'+fmtNum(metric.value)+unit+confirm+'</span><span class="tile-lab">'+label+'</span></div>';
 }
 function renderHud(){
   const t = DATA[activeTerritory];
@@ -4244,8 +4679,8 @@ function renderHud(){
   html += '<div class="section-label">Territorial control</div>';
   html += '<div class="section-blurb">Who physically controls how much of the land, and what that leaves for everyone else.</div>';
   html += '<div class="tile-grid">';
-  html += statTile(m.area_sqkm ? (Array.isArray(m.area_sqkm)?fmtRange(m.area_sqkm,' km²'):m.area_sqkm.toLocaleString()+' km²') : null, 'Total area');
-  html += statTile(m.food_import_pct, 'Food import dependency', 'warn');
+  html += attrTile(m.area_sqkm, 'Total area', ' km²');
+  html += attrTile(m.food_import_pct, 'Food import dependency', '%', 'warn');
   html += '</div>';
 
   if(t.zones && t.zones.length){
@@ -4258,14 +4693,16 @@ function renderHud(){
     });
   }
 
-  if(m.water_local || m.water_control || m.who){
+  if(m.water && m.water.reports && m.water.reports.length){
     html += '<div class="section-label">Water security</div>';
-    html += '<div class="section-blurb">Who controls the tap. Consumption gaps between populations sharing the same territory are one of the clearest, most measurable forms of leverage in this whole framework.</div>';
-    html += '<div class="tile-grid">';
-    html += statTile(m.water_local ? (Array.isArray(m.water_local)?fmtRange(m.water_local,' L'):m.water_local+' L') : null, 'Local per-capita consumption /day', 'warn');
-    html += statTile(m.who ? m.who+' L/day' : null, 'WHO minimum standard');
-    if(m.water_control && m.water_control !== 'data not available') html += statTile(Array.isArray(m.water_control)?fmtRange(m.water_control,' L'):m.water_control+' L', 'Controlling population /day');
-    html += '</div>';
+    html += '<div class="section-blurb">Who controls the tap. Consumption gaps between populations sharing the same territory are one of the clearest, most measurable forms of leverage in this whole framework — each perspective\'s own read on the numbers, kept separate rather than picked.</div>';
+    m.water.reports.forEach(r=>{
+      html += '<div class="water-report"><div class="water-persp">'+r.perspective+'</div><div class="tile-grid">';
+      html += statTile(r.population_a, 'Population A per-capita /day', 'warn');
+      html += statTile(r.population_b, 'Population B per-capita /day');
+      html += statTile(r.who_reference_standard!=null ? r.who_reference_standard+' L/day' : null, 'WHO minimum standard');
+      html += '</div></div>';
+    });
   }
 
   html += '<div class="section-label">High ground</div>';
@@ -4291,7 +4728,10 @@ function renderHud(){
     html += '<div class="section-blurb">Documented damage to land, water, or crops. Effect and attribution are kept separate on purpose — the numbers are measured, the cause is each party\'s own account, told in full, not summarized as one side\'s "justification" against another\'s "objection."</div>';
     t.incidents.forEach(inc=>{
       const area = (inc.area===undefined||inc.area===null||inc.area==='') ? 'data not available' : inc.area;
-      html += '<div class="incident"><div class="incident-head"><span class="incident-title">'+(inc.type||'Incident')+'</span><span class="incident-area">'+area+'</span></div>';
+      // Incidents don't carry their own point coordinates — fall back to the
+      // territory's known center so clicking still moves the map somewhere
+      // relevant instead of doing nothing.
+      html += '<div class="incident incident-focusable" data-lat="'+t.center.lat+'" data-lng="'+t.center.lng+'"><div class="incident-head"><span class="incident-title">'+(inc.type||'Incident')+'</span><span class="incident-area">'+area+'</span></div>';
       html += '<div class="incident-attr">';
       (inc.accounts||[]).forEach(acc=>{
         html += '<div class="attr-row"><b>'+acc.party+' —</b> '+acc.account+'</div>';
@@ -4299,7 +4739,7 @@ function renderHud(){
       if(!inc.accounts || !inc.accounts.length){
         html += '<div class="attr-row">No attributed account recorded for this incident yet.</div>';
       }
-      html += '</div></div>';
+      html += '</div><div class="incident-focus-note">Click to center the map on '+t.name+' — this incident isn\'t tied to a single mapped point.</div></div>';
     });
   }
 
@@ -4307,7 +4747,9 @@ function renderHud(){
     html += '<div class="section-label">Legal framework</div>';
     html += '<div class="section-blurb">Where the enforced legal system and the locally preferred one diverge, and the specific statutes, orders, or rulings involved.</div>';
     t.legal.forEach(l=>{
-      html += '<div class="legal-row"><div class="legal-name">'+l.name+'</div><div class="legal-desc">'+l.desc+'</div></div>';
+      html += '<div class="legal-row"><div class="legal-name">'+l.name+'</div><div class="legal-desc">'+l.desc+'</div>'+
+        (l.perspective && l.perspective!=='data not available' ? '<div class="legal-persp">— per '+l.perspective+'</div>' : '')+
+        '</div>';
     });
   }
 
@@ -4318,6 +4760,11 @@ function renderHud(){
   document.getElementById('hudScroll').innerHTML = html;
 
   document.querySelectorAll('.marker-item').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      focusPoint(parseFloat(el.dataset.lat), parseFloat(el.dataset.lng));
+    });
+  });
+  document.querySelectorAll('.incident-focusable').forEach(el=>{
     el.addEventListener('click', ()=>{
       focusPoint(parseFloat(el.dataset.lat), parseFloat(el.dataset.lng));
     });
