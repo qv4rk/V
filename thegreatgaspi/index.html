@@ -5097,26 +5097,39 @@ const CATS = [
 let activeTerritory = "west-bank";
 let markers = [];
 
+const CARTO_STYLE_URL = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
 const map = new maplibregl.Map({
   container: 'map',
-  style: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
+  style: CARTO_STYLE_URL,
   center: [DATA[activeTerritory].center.lng, DATA[activeTerritory].center.lat],
   zoom: 2,
   pitch: 0,
   attributionControl: { compact: false },
 });
 
-// Fall back to MapLibre's own demo tiles if the CARTO style ever fails to
-// load, so the map still renders rather than showing a blank panel.
+// Fall back to MapLibre's own low-detail demo tiles if the CARTO style
+// fails to load on first attempt, so the map still renders rather than
+// showing a blank panel. Once the real style HAS loaded successfully at
+// least once, later 'error' events are almost always a single dropped
+// tile mid-pan/zoom on a flaky connection -- normal, non-fatal, MapLibre
+// just leaves a gap and keeps going -- not a reason to strip the whole
+// session down to the flat fallback style. The fallback itself gets one
+// retry back to the real style after a delay, so a transient failure
+// (the common case) self-heals instead of permanently losing the
+// street-level basemap for the rest of the visit.
+let styleLoadedOnce = false;
 let usedFallbackStyle = false;
 map.on('error', (e) => {
-  if (!usedFallbackStyle) {
-    usedFallbackStyle = true;
-    map.setStyle('https://demotiles.maplibre.org/style.json');
-  }
+  if (styleLoadedOnce || usedFallbackStyle) return;
+  usedFallbackStyle = true;
+  map.setStyle('https://demotiles.maplibre.org/style.json');
+  setTimeout(() => {
+    if (!styleLoadedOnce) map.setStyle(CARTO_STYLE_URL);
+  }, 20000);
 });
 
 map.on('load', () => {
+  styleLoadedOnce = true;
   if (typeof map.setProjection === 'function') {
     try { map.setProjection({ type: 'globe' }); } catch (e) { /* falls back to flat mercator, still fully functional */ }
   }
