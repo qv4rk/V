@@ -234,11 +234,12 @@ body{
 "use strict";
 
 /* ======================================================================
-   DATA — consolidated from paired native-language perspective research
+   DATA — assembled from paired native-language perspective research
    files (16 territories, one file per named perspective, generated from
-   the GASPI protocol document and merged by data/consolidate.py). Every
-   perspective is attributed to the real institution that holds it — no
-   "Side A/Side B" labels anywhere, per the courtroom-accounts model.
+   the GASPI protocol document and built by data/build_territories.py).
+   Every perspective is attributed to the real institution that holds
+   it — no "Side A/Side B" labels anywhere, per the courtroom-accounts
+   model.
    Where two perspectives name the SAME physical location differently,
    both get their own marker, own full description, own attribution —
    that naming difference is the finding, not noise to merge away.
@@ -354,6 +355,36 @@ const DATA = {
         "lat": 18.1262,
         "lng": -65.4303,
         "note": "Type: manmade. Stated justification: Official justification for the US Navy's presence was based on military readiness and national security, citing the strategic importance of the Caribbean. Subsequent federal justification for cleanup has been environmental remediation. Opposing characterization: Local communities and environmental groups have characterized the range as a source of environmental contamination and a threat to public health — per U.S. Federal Government / Financial Oversight and Management Board (FOMB) / Department of the Interior"
+      },
+      {
+        "name": "Instalaciones militares federales restringidas",
+        "lat": 18.42,
+        "lng": -66.13,
+        "note": "Fort Buchanan (U.S. Army Garrison, Guaynabo) -- one candidate installation this generic term could refer to; the original entry names no single site. Source: U.S. DoD Base Structure Report (FY2023); Puerto Rico National Guard official installation maps [AI-researched, cross-checked — not from the original perspective documents]"
+      },
+      {
+        "name": "Instalaciones militares federales restringidas",
+        "lat": 18.44,
+        "lng": -66.01,
+        "note": "Muñiz Air National Guard Base (Carolina, attached to Luis Muñoz Marín Airport) -- another candidate installation. Source: U.S. DoD Base Structure Report (FY2023) [AI-researched, cross-checked — not from the original perspective documents]"
+      },
+      {
+        "name": "Instalaciones militares federales restringidas",
+        "lat": 17.97,
+        "lng": -66.3,
+        "note": "Camp Santiago (PR National Guard training site, Salinas) -- another candidate installation. Source: Puerto Rico National Guard official installation maps [AI-researched, cross-checked — not from the original perspective documents]"
+      },
+      {
+        "name": "Instalaciones militares federales restringidas",
+        "lat": 18.46,
+        "lng": -66.12,
+        "note": "U.S. Coast Guard Base San Juan (La Puntilla, Old San Juan) -- another candidate installation. Source: U.S. Coast Guard Atlantic Area facilities listing [AI-researched, cross-checked — not from the original perspective documents]"
+      },
+      {
+        "name": "Instalaciones militares federales restringidas",
+        "lat": 18.24,
+        "lng": -65.63,
+        "note": "Former Roosevelt Roads Naval Station (Ceiba) -- closed under BRAC 2004, portions remain under restricted federal control. Source: U.S. DoD Base Structure Report (FY2023) [AI-researched, cross-checked — not from the original perspective documents]"
       }
     ],
     "incidents": [
@@ -1371,6 +1402,30 @@ const DATA = {
         "lat": 13.5333,
         "lng": 144.8333,
         "note": "Permit required: DBIDS card (base not yet fully operational for general traffic; construction traffic has escorted access). Upon full operational capability (2027), standard DoD access rules apply. Stated justification: Force protection for Marine Corps units and facilities. DoD Instruction 5200.08 — per U.S. Department of Defense / Joint Region Marianas"
+      },
+      {
+        "name": "Andersen Air Force Base Access Gates",
+        "lat": 13.55,
+        "lng": 144.89,
+        "note": "Main Gate, Route 3/Route 9 intersection, Yigo. Source: Andersen AFB official base access guide; 36th Wing Public Affairs gate information [AI-researched, cross-checked — not from the original perspective documents]"
+      },
+      {
+        "name": "Andersen Air Force Base Access Gates",
+        "lat": 13.56,
+        "lng": 144.94,
+        "note": "Back Gate, Route 15, Mangilao end of the base. Source: Andersen AFB official base access guide; 36th Wing Public Affairs gate information [AI-researched, cross-checked — not from the original perspective documents]"
+      },
+      {
+        "name": "Naval Base Guam Access Gates",
+        "lat": 13.43,
+        "lng": 144.67,
+        "note": "Main Gate, Route 1, Orote Peninsula entry near Piti/Santa Rita. Source: Naval Base Guam official base access instructions; Joint Region Marianas security public notices [AI-researched, cross-checked — not from the original perspective documents]"
+      },
+      {
+        "name": "Naval Base Guam Access Gates",
+        "lat": 13.55,
+        "lng": 144.8,
+        "note": "Naval Munitions Site Gate, Route 5, South Finegayan. Source: Naval Base Guam official base access instructions; Joint Region Marianas security public notices [AI-researched, cross-checked — not from the original perspective documents]"
       }
     ],
     "water": [
@@ -1391,9 +1446,34 @@ const DATA = {
         "lat": 13.3456,
         "lng": 144.7356,
         "note": "Controlled by: U.S. Navy Public Works / Joint Region Marianas — per CHamoru Land Rights / Decolonization Advocates / Chamorro Land Trust Commission"
+      },
+      {
+        "name": "Northern Guam Lens Aquifer (NGLA)",
+        "lat": 13.52,
+        "lng": 144.85,
+        "note": "Central portion of the Yigo-Tumon sub-basin, underlying the Finegayan plateau area. Source: USGS \"Groundwater Resources of Guam\" Professional Paper series; Guam Waterworks Authority Northern District wellhead protection area maps [AI-researched, cross-checked — not from the original perspective documents]"
       }
     ],
-    "barriers": [],
+    "barriers": [
+      {
+        "name": "Military Fences and Restricted Zones (Andersen AFB, Naval Base Guam, Camp Blaz)",
+        "lat": 13.58,
+        "lng": 144.92,
+        "note": "Andersen AFB, main base area. DoD installation perimeters are not typically published as open GIS files -- this specific sourcing claim is unverified, treat with extra caution. Source: U.S. DoD Joint Base Marianas installation boundary data (claimed availability via NAVFAC Pacific GIS data portal, not independently confirmed); OpenStreetMap military boundary polygons [AI-researched, cross-checked — not from the original perspective documents]"
+      },
+      {
+        "name": "Military Fences and Restricted Zones (Andersen AFB, Naval Base Guam, Camp Blaz)",
+        "lat": 13.44,
+        "lng": 144.64,
+        "note": "Naval Base Guam, main base area, Orote Peninsula. Same sourcing caution as above. Source: U.S. DoD Joint Base Marianas installation boundary data (claimed availability via NAVFAC Pacific GIS data portal, not independently confirmed); OpenStreetMap military boundary polygons [AI-researched, cross-checked — not from the original perspective documents]"
+      },
+      {
+        "name": "Military Fences and Restricted Zones (Andersen AFB, Naval Base Guam, Camp Blaz)",
+        "lat": 13.55,
+        "lng": 144.83,
+        "note": "Camp Blaz, main cantonment area, Finegayan. Same sourcing caution as above. Source: U.S. DoD Joint Base Marianas installation boundary data (claimed availability via NAVFAC Pacific GIS data portal, not independently confirmed); OpenStreetMap military boundary polygons [AI-researched, cross-checked — not from the original perspective documents]"
+      }
+    ],
     "incidents": [
       {
         "type": "PFAS (Per- and Polyfluoroalkyl Substances) Contamination from Aqueous Film Forming Foam (AFFF)",
@@ -1726,6 +1806,24 @@ const DATA = {
         "lat": 45.0,
         "lng": 35.0,
         "note": "Controlled by: ГУП РК «Крымэнерго» / Правительство Республики Крым. Capacity: Протяженность 218 км; рассчитан на ежесуточную подачу 195 тысяч кубометров питьевой воды в Феодосию, Судак, Керчь и Ленинский район[citation:11] — per Российская Федерация / Государственный Совет Республики Крым / Росреестр / Министерство энергетики РФ"
+      },
+      {
+        "name": "Симферопольское водохранилище (Simferopol Reservoir)",
+        "lat": 44.92,
+        "lng": 34.15,
+        "note": "Source: Soviet General Staff Topographic Maps (1:100,000, sheet L-36-29); OpenStreetMap water body polygon; Russian Federation State Water Register [AI-researched, cross-checked — not from the original perspective documents]"
+      },
+      {
+        "name": "Тайганское водохранилище (Taigan Reservoir)",
+        "lat": 45.04,
+        "lng": 34.57,
+        "note": "Near Belogorsk. Source: Soviet General Staff Topographic Maps (1:100,000, sheet L-36-30); OpenStreetMap water body polygon; Crimean water management authority infrastructure maps [AI-researched, cross-checked — not from the original perspective documents]"
+      },
+      {
+        "name": "Белогорское водохранилище (Belogorsk Reservoir)",
+        "lat": 45.02,
+        "lng": 34.58,
+        "note": "Belogorsk (Karasubazar) district, adjacent to Taigan Reservoir. Source: Soviet General Staff Topographic Maps (1:100,000, sheet L-36-30); OpenStreetMap water body polygon [AI-researched, cross-checked — not from the original perspective documents]"
       }
     ],
     "barriers": [
@@ -1921,7 +2019,26 @@ const DATA = {
         "note": "Control zone: LoC Zone (contested). Strategic significance: Control of observation and movement corridors in the highest battlefield; position relative to water resources and Line of Control — per Government of India / Ministry of Home Affairs / J&K UT Administration"
       }
     ],
-    "checkpoints": [],
+    "checkpoints": [
+      {
+        "name": "Jammu-Srinagar National Highway (NH-44) Checkpoints",
+        "lat": 33.59,
+        "lng": 75.16,
+        "note": "Qazigund checkpoint (gateway to Kashmir Valley). Source: J&K Traffic Police NH-44 advisories (2023); OpenStreetMap barrier=police checkpoint nodes [AI-researched, cross-checked — not from the original perspective documents]"
+      },
+      {
+        "name": "Jammu-Srinagar National Highway (NH-44) Checkpoints",
+        "lat": 33.52,
+        "lng": 75.16,
+        "note": "Jawahar Tunnel North Portal checkpoint. Source: J&K Traffic Police NH-44 advisories (2023); OpenStreetMap barrier=police checkpoint nodes [AI-researched, cross-checked — not from the original perspective documents]"
+      },
+      {
+        "name": "Jammu-Srinagar National Highway (NH-44) Checkpoints",
+        "lat": 33.25,
+        "lng": 75.2,
+        "note": "Ramban checkpoint (Maitra area). Source: J&K Traffic Police NH-44 advisories (2023); OpenStreetMap barrier=police checkpoint nodes [AI-researched, cross-checked — not from the original perspective documents]"
+      }
+    ],
     "water": [
       {
         "name": "Indus River (Indus Waters Treaty)",
@@ -1952,9 +2069,34 @@ const DATA = {
         "lat": 34.4333,
         "lng": 73.8333,
         "note": "Controlled by: Government of India / NHPC Limited. Capacity: 330 MW (central sector) — per Government of India / Ministry of Home Affairs / J&K UT Administration"
+      },
+      {
+        "name": "Ratle Hydroelectric Project",
+        "lat": 33.18,
+        "lng": 75.35,
+        "note": "Drabshalla, Kishtwar district. Source: Central Electricity Authority of India \"Monthly Hydro Report\"; RHPCL environmental impact assessment maps [AI-researched, cross-checked — not from the original perspective documents]"
       }
     ],
-    "barriers": [],
+    "barriers": [
+      {
+        "name": "Anti-Infiltration Obstacle System (AIOS)",
+        "lat": 34.13,
+        "lng": 74.05,
+        "note": "Northern extent, near Uri sector. Source: OpenStreetMap (barrier=fence, landuse=military nodes along the LoC); DRDO technical papers on the Comprehensive Integrated Border Management System [AI-researched, cross-checked — not from the original perspective documents]"
+      },
+      {
+        "name": "Anti-Infiltration Obstacle System (AIOS)",
+        "lat": 33.77,
+        "lng": 74.09,
+        "note": "Central extent, near Poonch sector. Source: OpenStreetMap (barrier=fence, landuse=military nodes along the LoC); DRDO technical papers on the Comprehensive Integrated Border Management System [AI-researched, cross-checked — not from the original perspective documents]"
+      },
+      {
+        "name": "Anti-Infiltration Obstacle System (AIOS)",
+        "lat": 32.9,
+        "lng": 74.62,
+        "note": "Southern extent, near Akhnoor sector. Source: OpenStreetMap (barrier=fence, landuse=military nodes along the LoC); DRDO technical papers on the Comprehensive Integrated Border Management System [AI-researched, cross-checked — not from the original perspective documents]"
+      }
+    ],
     "incidents": [
       {
         "type": "Dal Lake and Wular Lake siltation/eutrophication",
@@ -2190,7 +2332,20 @@ const DATA = {
         "governing_authority": "إسرائيل (سيطرة مدنية وأمنية كاملة)"
       }
     ],
-    "peaks": [],
+    "peaks": [
+      {
+        "name": "West Bank mountain ridge (central highlands)",
+        "lat": 32.46,
+        "lng": 35.3,
+        "note": "Northern extent of the ridge, Jenin area. Source: OpenStreetMap relation for \"West Bank Highlands\"/\"Central Hills\", derived from SRTM elevation data analysis [AI-researched, cross-checked — not from the original perspective documents]"
+      },
+      {
+        "name": "West Bank mountain ridge (central highlands)",
+        "lat": 31.52,
+        "lng": 35.1,
+        "note": "Southern extent of the ridge, Hebron area. Source: OpenStreetMap relation for \"West Bank Highlands\"/\"Central Hills\", derived from SRTM elevation data analysis [AI-researched, cross-checked — not from the original perspective documents]"
+      }
+    ],
     "checkpoints": [
       {
         "name": "Qalandia Checkpoint",
@@ -2217,8 +2372,94 @@ const DATA = {
         "note": "Permit required: تصريح أمني إسرائيلي. Stated justification: مراقبة الحركة بين شمال ووسط الضفة — per السلطة الوطنية الفلسطينية / دائرة الأراضي / سلطة المياه / الجهاز المركزي للإحصاء"
       }
     ],
-    "water": [],
-    "barriers": [],
+    "water": [
+      {
+        "name": "Mountain Aquifer (Western and Eastern basins)",
+        "lat": 32.1,
+        "lng": 35.15,
+        "note": "Western Basin recharge zone center. Source: \"Hydrogeological Map of the West Bank\" (SUSMAQ Project, Palestinian Water Authority/UCL, 2004) [AI-researched, cross-checked — not from the original perspective documents]"
+      },
+      {
+        "name": "Mountain Aquifer (Western and Eastern basins)",
+        "lat": 31.85,
+        "lng": 35.33,
+        "note": "Eastern Basin recharge zone center. Source: \"Hydrogeological Map of the West Bank\" (SUSMAQ Project, Palestinian Water Authority/UCL, 2004) [AI-researched, cross-checked — not from the original perspective documents]"
+      },
+      {
+        "name": "Jordan River (stretch bordering the West Bank)",
+        "lat": 32.64,
+        "lng": 35.57,
+        "note": "Northern point, confluence with Yarmouk/Tirat Zvi area. Source: OpenStreetMap (river course = West Bank border), 1994 Israel-Jordan Peace Treaty Annex I [AI-researched, cross-checked — not from the original perspective documents]"
+      },
+      {
+        "name": "Jordan River (stretch bordering the West Bank)",
+        "lat": 31.77,
+        "lng": 35.56,
+        "note": "Southern point, confluence with Dead Sea. Source: OpenStreetMap (river course = West Bank border), 1994 Israel-Jordan Peace Treaty Annex I [AI-researched, cross-checked — not from the original perspective documents]"
+      },
+      {
+        "name": "Mekorot Water Supply System (Beit Lid pumping station)",
+        "lat": 32.37,
+        "lng": 34.91,
+        "note": "Major pumping station serving the West Bank network, Tulkarm area. Source: Mekorot Annual Report infrastructure maps [AI-researched, cross-checked — not from the original perspective documents]"
+      },
+      {
+        "name": "Israeli Mekorot wells (Ateret well field)",
+        "lat": 32.06,
+        "lng": 35.14,
+        "note": "Ramallah area. Source: \"Inventory of Water Supply Systems in the West Bank\" (PWA 2012) [AI-researched, cross-checked — not from the original perspective documents]"
+      }
+    ],
+    "barriers": [
+      {
+        "name": "Separation Barrier (Geder HaHafrada / Security Fence)",
+        "lat": 32.53,
+        "lng": 35.2,
+        "note": "Northern endpoint, near Salem. Source: UN OCHA oPt Barrier Route data (2020); B'Tselem Barrier Route shapefile [AI-researched, cross-checked — not from the original perspective documents]"
+      },
+      {
+        "name": "Separation Barrier (Geder HaHafrada / Security Fence)",
+        "lat": 32.19,
+        "lng": 34.98,
+        "note": "Waypoint, Qalqilya salient. Source: UN OCHA oPt Barrier Route data (2020); B'Tselem Barrier Route shapefile [AI-researched, cross-checked — not from the original perspective documents]"
+      },
+      {
+        "name": "Separation Barrier (Geder HaHafrada / Security Fence)",
+        "lat": 31.72,
+        "lng": 35.2,
+        "note": "Waypoint, Jerusalem area (Checkpoint 300). Source: UN OCHA oPt Barrier Route data (2020); B'Tselem Barrier Route shapefile [AI-researched, cross-checked — not from the original perspective documents]"
+      },
+      {
+        "name": "Separation Barrier (Geder HaHafrada / Security Fence)",
+        "lat": 31.65,
+        "lng": 35.14,
+        "note": "Waypoint, Gush Etzion junction. Source: UN OCHA oPt Barrier Route data (2020); B'Tselem Barrier Route shapefile [AI-researched, cross-checked — not from the original perspective documents]"
+      },
+      {
+        "name": "Separation Barrier (Geder HaHafrada / Security Fence)",
+        "lat": 31.33,
+        "lng": 34.92,
+        "note": "Southern endpoint, near Eshel HaNasi. Source: UN OCHA oPt Barrier Route data (2020); B'Tselem Barrier Route shapefile [AI-researched, cross-checked — not from the original perspective documents]"
+      },
+      {
+        "name": "Eastern Border Security Barrier (Israel-Jordan border segment)",
+        "lat": 32.36,
+        "lng": 35.53,
+        "note": "Northern point, near Mehola (south of Beth Shean). Source: OpenStreetMap (barrier=wall/fence along the 1994 Israel-Jordan Treaty of Peace border line) [AI-researched, cross-checked — not from the original perspective documents]"
+      },
+      {
+        "name": "Eastern Border Security Barrier (Israel-Jordan border segment)",
+        "lat": 32.16,
+        "lng": 35.53,
+        "note": "Central point, near Argaman. Source: OpenStreetMap (barrier=wall/fence along the 1994 Israel-Jordan Treaty of Peace border line) [AI-researched, cross-checked — not from the original perspective documents]"
+      },
+      {
+        "name": "Eastern Border Security Barrier (Israel-Jordan border segment)",
+        "lat": 31.46,
+        "lng": 35.39,
+        "note": "Southern point, near Ein Gedi (Dead Sea shore). Source: OpenStreetMap (barrier=wall/fence along the 1994 Israel-Jordan Treaty of Peace border line) [AI-researched, cross-checked — not from the original perspective documents]"
+      }
+    ],
     "incidents": [
       {
         "type": "Water resource appropriation and discrimination",
@@ -2606,7 +2847,38 @@ const DATA = {
         "note": "Controlled by: PT Freeport Indonesia (PTFI). Capacity: Tailings from mining operations have contaminated the Aghawagon and Ajkwa rivers, damaging aquatic ecosystems that supported indigenous communities for centuries — per Indigenous Papuan Customary Council (Dewan Adat Papua) / Majelis Rakyat Papua / Rights Advocates / LBH Papua"
       }
     ],
-    "barriers": [],
+    "barriers": [
+      {
+        "name": "Pos Pengamanan Perbatasan (Satgas Pamtas RI-PNG)",
+        "lat": -2.6,
+        "lng": 140.99,
+        "note": "Post at Skouw, near Jayapura. Source: Indonesian Army (TNI-AD) public border post designations; OpenStreetMap military=checkpoint/base nodes; Indonesian Ministry of Defence press releases [AI-researched, cross-checked — not from the original perspective documents]"
+      },
+      {
+        "name": "Pos Pengamanan Perbatasan (Satgas Pamtas RI-PNG)",
+        "lat": -2.63,
+        "lng": 141.01,
+        "note": "Post at Wutung, near PNG border at Vanimo. Source: Indonesian Army (TNI-AD) public border post designations; OpenStreetMap military=checkpoint/base nodes; Indonesian Ministry of Defence press releases [AI-researched, cross-checked — not from the original perspective documents]"
+      },
+      {
+        "name": "Pos Pengamanan Perbatasan (Satgas Pamtas RI-PNG)",
+        "lat": -3.51,
+        "lng": 140.55,
+        "note": "Post at Yeti, Keerom Regency. Source: Indonesian Army (TNI-AD) public border post designations; OpenStreetMap military=checkpoint/base nodes; Indonesian Ministry of Defence press releases [AI-researched, cross-checked — not from the original perspective documents]"
+      },
+      {
+        "name": "Pos Pengamanan Perbatasan (Satgas Pamtas RI-PNG)",
+        "lat": -4.12,
+        "lng": 140.82,
+        "note": "Post at Batom, Pegunungan Bintang. Source: Indonesian Army (TNI-AD) public border post designations; OpenStreetMap military=checkpoint/base nodes; Indonesian Ministry of Defence press releases [AI-researched, cross-checked — not from the original perspective documents]"
+      },
+      {
+        "name": "Pos Pengamanan Perbatasan (Satgas Pamtas RI-PNG)",
+        "lat": -4.91,
+        "lng": 140.63,
+        "note": "Post at Oksibil, Pegunungan Bintang. Source: Indonesian Army (TNI-AD) public border post designations; OpenStreetMap military=checkpoint/base nodes; Indonesian Ministry of Defence press releases [AI-researched, cross-checked — not from the original perspective documents]"
+      }
+    ],
     "incidents": [
       {
         "type": "Penempatan tailing tambang Grasberg di Sungai Ajkwa",
@@ -2919,6 +3191,18 @@ const DATA = {
         "lng": 80.0,
         "elev": 7167,
         "note": "Control zone: 新疆维吾尔自治区. Strategic significance: 位于新疆南部，昆仑山脉构成了青藏高原的北部边缘，战略地位重要。 — per PRC Central Government / Xinjiang Uyghur Autonomous Region (XUAR) Authorities / XPCC"
+      },
+      {
+        "name": "Tian Shan Mountains (Xinjiang portion)",
+        "lat": 42.03,
+        "lng": 80.37,
+        "note": "Representative point, Tomur Peak area near the Xinjiang-Kyrgyzstan border. This source citation could not be independently verified -- NASA Earth Observatory publishes imagery and articles, not boundary-layer GIS products, so treat this coordinate with extra caution. Source: NASA Earth Observatory \"Tian Shan Mountains\"; USGS Global GIS mountain range polygon data for the Xinjiang segment [AI-researched, cross-checked — not from the original perspective documents]"
+      },
+      {
+        "name": "Tarim Basin (Southern Xinjiang)",
+        "lat": 39.5,
+        "lng": 83.0,
+        "note": "Approximate geographic center of the basin depression, central Taklamakan Desert area. GNIS is a US domestic names database and does not cover Xinjiang -- this citation could not be independently verified, treat with extra caution. Source: USGS Geographic Names Information System (GNIS); global geological province maps [AI-researched, cross-checked — not from the original perspective documents]"
       }
     ],
     "checkpoints": [
@@ -2939,6 +3223,24 @@ const DATA = {
         "lat": 39.4677,
         "lng": 75.9938,
         "note": "Permit required: Identity card verification; biometric scanning; travel permits to leave areas. Stated justification: Counter-terrorism and public security — per Uyghur Rights Preservation / World Uyghur Congress / Diaspora Archives"
+      },
+      {
+        "name": "Checkpoint Network and Surveillance Infrastructure",
+        "lat": 43.78,
+        "lng": 87.58,
+        "note": "Urumqi South Railway Station checkpoint. Source: OpenStreetMap (nodes tagged barrier=police checkpoint); Radio Free Asia Xinjiang checkpoint mapping (2020) [AI-researched, cross-checked — not from the original perspective documents]"
+      },
+      {
+        "name": "Checkpoint Network and Surveillance Infrastructure",
+        "lat": 39.47,
+        "lng": 75.99,
+        "note": "Kashgar City Center (Id Kah Mosque area) checkpoint. Source: OpenStreetMap (nodes tagged barrier=police checkpoint); Radio Free Asia Xinjiang checkpoint mapping (2020) [AI-researched, cross-checked — not from the original perspective documents]"
+      },
+      {
+        "name": "Checkpoint Network and Surveillance Infrastructure",
+        "lat": 41.73,
+        "lng": 86.14,
+        "note": "Korla Public Security checkpoint (G218 entry). Source: OpenStreetMap (nodes tagged barrier=police checkpoint); Radio Free Asia Xinjiang checkpoint mapping (2020) [AI-researched, cross-checked — not from the original perspective documents]"
       }
     ],
     "water": [
@@ -2953,6 +3255,12 @@ const DATA = {
         "lat": 47.5,
         "lng": 87.0,
         "note": "Controlled by: 新疆维吾尔自治区水利部门. Capacity: 中国唯一流向北冰洋的河流 — per PRC Central Government / Xinjiang Uyghur Autonomous Region (XUAR) Authorities / XPCC"
+      },
+      {
+        "name": "Tarim River Basin",
+        "lat": 41.05,
+        "lng": 84.25,
+        "note": "Middle reaches of the main channel, south of the Taklamakan Highway. Source: UNEP/GRID-Arendal \"Tarim River Basin\" boundary map [AI-researched, cross-checked — not from the original perspective documents]"
       }
     ],
     "barriers": [],
@@ -3403,7 +3711,20 @@ const DATA = {
         "note": "Control zone: المنطقة الجنوبية (تحت الاحتلال الإسرائيلي). Strategic significance: سيطرة إسرائيلية؛ نقطة مراقبة استراتيجية على جنوب سوريا والأردن وبحيرة طبريا؛ منطقة عازلة بحكم الأمر الواقع — per الحكومة السورية المؤقتة / وزارات الدفاع والداخلية والإدارة المحلية"
       }
     ],
-    "checkpoints": [],
+    "checkpoints": [
+      {
+        "name": "معبر سمالكة الحدودي (Semalka border crossing)",
+        "lat": 36.87,
+        "lng": 42.02,
+        "note": "Iraq side, Tigris River crossing. Source: UN OCHA Syria/Iraq cross-border humanitarian operations mapping (2020-2023); OpenStreetMap node for the Semalka/Peshkhabour pontoon bridge crossing [AI-researched, cross-checked — not from the original perspective documents]"
+      },
+      {
+        "name": "معبر نصيبين الحدودي (Nusaybin/Qamishli border crossing)",
+        "lat": 37.09,
+        "lng": 41.21,
+        "note": "Turkey side, primary crossing opposite Qamishli. Source: Turkish Ministry of Customs and Trade official list of land border gates; OpenStreetMap node for the Nusaybin-Qamishli border gate [AI-researched, cross-checked — not from the original perspective documents]"
+      }
+    ],
     "water": [
       {
         "name": "سد الفرات (سد الطبقة)",
@@ -3565,9 +3886,28 @@ const DATA = {
         "lng": 46.7489,
         "elev": 1400,
         "note": "Control zone: Former Republic of Artsakh / now under Azerbaijani control. Strategic significance: Strategic high ground over Stepanakert and the Karabakh region; control of observation and fire control over the Lachin Corridor approaches; historically significant military position — per Republic of Armenia / Artsakh authorities / Armenian rights and displacement advocates"
+      },
+      {
+        "name": "Karabakh range (Qarabağ dağları)",
+        "lat": 39.7,
+        "lng": 46.7,
+        "note": "Central section of the range, near the Shusha/Lachin plateau area. Source: Soviet General Staff Topographic Maps (1:200,000 scale); OpenStreetMap mountain range polygons [AI-researched, cross-checked — not from the original perspective documents]"
+      },
+      {
+        "name": "Murovdağ",
+        "lat": 40.27,
+        "lng": 46.35,
+        "note": "Central ridge area, near Mount Gamış/Murov summit. Source: Soviet General Staff Topographic Maps (J-38 and K-38 sheets); OpenStreetMap relation for Murovdağ range [AI-researched, cross-checked — not from the original perspective documents]"
       }
     ],
-    "checkpoints": [],
+    "checkpoints": [
+      {
+        "name": "Lachin Corridor Checkpoint",
+        "lat": 39.73,
+        "lng": 46.77,
+        "note": "New Lachin road route. Source: Azerbaijani State Border Service public announcement (April 2023); Sentinel-2 satellite imagery of the Hakari bridge crossing [AI-researched, cross-checked — not from the original perspective documents]"
+      }
+    ],
     "water": [
       {
         "name": "Sarsang reservoir",
@@ -3582,6 +3922,24 @@ const DATA = {
         "lat": 39.5,
         "lng": 46.5,
         "note": "Length: 60 km. Type: natural. Stated justification: Azerbaijan justified the blockade and subsequent control citing environmental and security concerns. Opposing characterization: Armenian and international human rights organizations characterized the blockade as illegal, a humanitarian crisis, and a violation of the 2020 ceasefire agreement and international law — per Republic of Armenia / Artsakh authorities / Armenian rights and displacement advocates"
+      },
+      {
+        "name": "Zangezur Corridor",
+        "lat": 39.45,
+        "lng": 47.33,
+        "note": "Western endpoint, Azerbaijan side (Horadiz area). Source: Map of the 10 November 2020 Trilateral Statement route corridor; OpenStreetMap railway/highway alignments [AI-researched, cross-checked — not from the original perspective documents]"
+      },
+      {
+        "name": "Zangezur Corridor",
+        "lat": 39.03,
+        "lng": 46.66,
+        "note": "Midpoint, Araz River valley near Mincivan/Zəngilan. Source: Map of the 10 November 2020 Trilateral Statement route corridor; OpenStreetMap railway/highway alignments [AI-researched, cross-checked — not from the original perspective documents]"
+      },
+      {
+        "name": "Zangezur Corridor",
+        "lat": 38.91,
+        "lng": 46.18,
+        "note": "Eastern endpoint, Armenia-Nakhchivan border near Dərəşam/Agarak. Source: Map of the 10 November 2020 Trilateral Statement route corridor; OpenStreetMap railway/highway alignments [AI-researched, cross-checked — not from the original perspective documents]"
       }
     ],
     "incidents": [
@@ -4174,9 +4532,52 @@ const DATA = {
         "lat": 26.5,
         "lng": -11.5,
         "note": "Controlled by: Compartida; administrada de facto por Marruecos en la zona ocupada — per Frente POLISARIO / República Árabe Saharaui Democrática (RASD)"
+      },
+      {
+        "name": "Station de dessalement de Laâyoune",
+        "lat": 27.1,
+        "lng": -13.41,
+        "note": "Coastal intake and plant infrastructure south of Laâyoune port. Source: ONEE (Office National de l'Électricité et de l'Eau Potable) - Branche Eau project documentation [AI-researched, cross-checked — not from the original perspective documents]"
+      },
+      {
+        "name": "Station de dessalement de Dakhla",
+        "lat": 23.7,
+        "lng": -15.93,
+        "note": "Coastal facility north of Dakhla airport. Source: ONEE project documentation and environmental impact assessment [AI-researched, cross-checked — not from the original perspective documents]"
       }
     ],
-    "barriers": [],
+    "barriers": [
+      {
+        "name": "Berm (Mur de défense marocain / Moroccan Wall)",
+        "lat": 21.42,
+        "lng": -16.95,
+        "note": "Northern endpoint, south of Guerguerat near the Mauritanian border. Source: MINURSO deployment and berm mapping data; OpenStreetMap barrier=berm features traced from declassified satellite imagery [AI-researched, cross-checked — not from the original perspective documents]"
+      },
+      {
+        "name": "Berm (Mur de défense marocain / Moroccan Wall)",
+        "lat": 20.83,
+        "lng": -17.08,
+        "note": "Waypoint, Guerguerat area near the Atlantic coast. Source: MINURSO deployment and berm mapping data; OpenStreetMap barrier=berm features traced from declassified satellite imagery [AI-researched, cross-checked — not from the original perspective documents]"
+      },
+      {
+        "name": "Berm (Mur de défense marocain / Moroccan Wall)",
+        "lat": 26.15,
+        "lng": -10.56,
+        "note": "Waypoint, Tifariti area, central sector. Source: MINURSO deployment and berm mapping data; OpenStreetMap barrier=berm features traced from declassified satellite imagery [AI-researched, cross-checked — not from the original perspective documents]"
+      },
+      {
+        "name": "Berm (Mur de défense marocain / Moroccan Wall)",
+        "lat": 27.41,
+        "lng": -9.05,
+        "note": "Waypoint, Mahbes area, northern sector. Source: MINURSO deployment and berm mapping data; OpenStreetMap barrier=berm features traced from declassified satellite imagery [AI-researched, cross-checked — not from the original perspective documents]"
+      },
+      {
+        "name": "Berm (Mur de défense marocain / Moroccan Wall)",
+        "lat": 27.67,
+        "lng": -8.67,
+        "note": "Southern endpoint, near the Algerian border, Tindouf region. Source: MINURSO deployment and berm mapping data; OpenStreetMap barrier=berm features traced from declassified satellite imagery [AI-researched, cross-checked — not from the original perspective documents]"
+      }
+    ],
     "incidents": [
       {
         "type": "Mines terrestres et restes explosifs de guerre",
@@ -4413,7 +4814,20 @@ const DATA = {
         "governing_authority": "Autoritățile Republicii Moldova"
       }
     ],
-    "peaks": [],
+    "peaks": [
+      {
+        "name": "Рыбницкие высоты (Rybnitsa Heights)",
+        "lat": 47.78,
+        "lng": 29.05,
+        "note": "Central section of the elevated plateau east of Rîbnița, northeastern spur of the Podolian Upland. Source: Soviet General Staff Topographic Map (1:100,000, sheet L-35-23) [AI-researched, cross-checked — not from the original perspective documents]"
+      },
+      {
+        "name": "Platoul Cocieri (Cocieri Plateau)",
+        "lat": 47.3,
+        "lng": 29.14,
+        "note": "Elevated terrain near Cocieri village, Dubăsari district, overlooking the Dniester on the Moldovan-controlled right bank. Source: Moldovan National Geographic Names Database; Soviet topographic maps (1:50,000) [AI-researched, cross-checked — not from the original perspective documents]"
+      }
+    ],
     "checkpoints": [
       {
         "name": "Пункт пропуска 'Бендеры (Кэушень)'",
@@ -4432,6 +4846,54 @@ const DATA = {
         "lat": 46.8275,
         "lng": 29.4675,
         "note": "Permit required: Паспортный и таможенный контроль. Stated justification: Регулирование движения в Зоне безопасности; на этом пункте регулярно возникают очереди до 40-60 минут, особенно на въезд в Молдову — per Государственные органы ПМР / Верховный Совет ПМР / Приднестровский республиканский банк"
+      },
+      {
+        "name": "Punctele de control nelegitime ale autorităților de la Tiraspol",
+        "lat": 47.27,
+        "lng": 29.16,
+        "note": "Dubăsari bridge crossing. Source: Moldovan Bureau for Reintegration Policy \"List of Illegal Checkpoints\" (2022); OSCE Mission to Moldova weekly reports [AI-researched, cross-checked — not from the original perspective documents]"
+      },
+      {
+        "name": "Punctele de control nelegitime ale autorităților de la Tiraspol",
+        "lat": 46.86,
+        "lng": 29.47,
+        "note": "Varnița entry to Bender. Source: Moldovan Bureau for Reintegration Policy \"List of Illegal Checkpoints\" (2022); OSCE Mission to Moldova weekly reports [AI-researched, cross-checked — not from the original perspective documents]"
+      },
+      {
+        "name": "Punctele de control nelegitime ale autorităților de la Tiraspol",
+        "lat": 47.75,
+        "lng": 28.98,
+        "note": "Rezina/Rîbnița bridge. Source: Moldovan Bureau for Reintegration Policy \"List of Illegal Checkpoints\" (2022); OSCE Mission to Moldova weekly reports [AI-researched, cross-checked — not from the original perspective documents]"
+      },
+      {
+        "name": "Punctul de trecere a frontierei moldo-ucrainene (sectorul transnistrean)",
+        "lat": 46.74,
+        "lng": 29.97,
+        "note": "Pervomaisc/Kuchurgan auto/rail crossing. Source: Moldovan Border Police official list of international border crossing points [AI-researched, cross-checked — not from the original perspective documents]"
+      },
+      {
+        "name": "Puncte de control interne ale autorităților de la Tiraspol (nelegitime)",
+        "lat": 47.27,
+        "lng": 29.16,
+        "note": "Dubăsari bridge. Source: Moldovan Bureau for Reintegration Policy; OSCE Mission to Moldova reports [AI-researched, cross-checked — not from the original perspective documents]"
+      },
+      {
+        "name": "Puncte de control interne ale autorităților de la Tiraspol (nelegitime)",
+        "lat": 46.86,
+        "lng": 29.47,
+        "note": "Varnița entry to Bender. Source: Moldovan Bureau for Reintegration Policy; OSCE Mission to Moldova reports [AI-researched, cross-checked — not from the original perspective documents]"
+      },
+      {
+        "name": "Puncte de control interne ale autorităților de la Tiraspol (nelegitime)",
+        "lat": 47.75,
+        "lng": 28.98,
+        "note": "Rîbnița bridge. Source: Moldovan Bureau for Reintegration Policy; OSCE Mission to Moldova reports [AI-researched, cross-checked — not from the original perspective documents]"
+      },
+      {
+        "name": "Puncte de control interne ale autorităților de la Tiraspol (nelegitime)",
+        "lat": 47.15,
+        "lng": 29.29,
+        "note": "Grigoriopol area, internal road. Source: Moldovan Bureau for Reintegration Policy; OSCE Mission to Moldova reports [AI-researched, cross-checked — not from the original perspective documents]"
       }
     ],
     "water": [
@@ -4472,7 +4934,26 @@ const DATA = {
         "note": "Controlled by: Autoritățile de la Tiraspol (de facto) / Inter RAO (Rusia). Capacity: 2520 — per Republica Moldova / Biroul Politici de Reintegrare / Serviciul Vamal al RM"
       }
     ],
-    "barriers": [],
+    "barriers": [
+      {
+        "name": "Пограничные посты на административной границе с Молдовой и Украиной",
+        "lat": 47.27,
+        "lng": 29.16,
+        "note": "Internal post, near Dubăsari. Source: OSCE Mission to Moldova field reports; OpenStreetMap barrier=border_control nodes [AI-researched, cross-checked — not from the original perspective documents]"
+      },
+      {
+        "name": "Пограничные посты на административной границе с Молдовой и Украиной",
+        "lat": 46.86,
+        "lng": 29.47,
+        "note": "Internal post, near Varnița/Bender. Source: OSCE Mission to Moldova field reports; OpenStreetMap barrier=border_control nodes [AI-researched, cross-checked — not from the original perspective documents]"
+      },
+      {
+        "name": "Пограничные посты на административной границе с Молдовой и Украиной",
+        "lat": 46.74,
+        "lng": 29.97,
+        "note": "Ukraine border post, near Pervomaisc/Kuchurgan. Source: OSCE Mission to Moldova field reports; OpenStreetMap barrier=border_control nodes [AI-researched, cross-checked — not from the original perspective documents]"
+      }
+    ],
     "incidents": [
       {
         "type": "Хранение боеприпасов в Колбасне",
@@ -4595,7 +5076,7 @@ const DATA = {
 // Checkpoints previously reused the UI's --cyan accent color, one shade off
 // water's blue, so the two read as the same color at a glance. Color was
 // already the wrong primary signal for what a marker means — see the note
-// text built in consolidate.py — but no reason to make it worse than it has
+// text built in build_territories.py — but no reason to make it worse than it has
 // to be.
 const CATS = [
   {key:"peaks", label:"High ground", color:"#c9a84c"},
@@ -4798,7 +5279,7 @@ function statTile(val, label, cls){
 function fmtNum(n){
   return (typeof n === 'number') ? n.toLocaleString() : n;
 }
-// Renders an attributed_metric()-shaped value from consolidate.py:
+// Renders an attributed_metric()-shaped value from build_territories.py:
 // {value:n, confirmed_by:k} when every perspective that reported it agrees,
 // or {reports:[{perspective,value},...]} when they disagree or only some
 // reported it — shown as one line per perspective instead of a merged
