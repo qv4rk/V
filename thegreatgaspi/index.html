@@ -5416,8 +5416,7 @@ function renderHud(){
   }
 
   const sourcesLine = (t.sources && t.sources.length) ? t.sources.join(' · ') : 'data not available';
-  html += '<div class="footer-note">Sources referenced across this profile: '+sourcesLine+
-    '.<br>Composite sovereignty scoring intentionally not shown here — computed downstream by a fixed formula applied identically to every territory, never eyeballed per research pass.</div>';
+  html += '<div class="footer-note">Sources referenced across this profile: '+sourcesLine+'.</div>';
 
   document.getElementById('hudScroll').innerHTML = html;
 
