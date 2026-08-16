@@ -1,0 +1,825 @@
+{
+  "schema_version": "2.0.0",
+  "territory_key": "west-bank",
+  "migrated_from": [
+    "P1_West_Bank_12of12.json",
+    "P2_الضفة_الغربية_12of12.json"
+  ],
+  "actors": [
+    {
+      "id": "actor:international-court-of-justice-icj",
+      "name": "International Court of Justice (ICJ)",
+      "actor_type": "judicial_body",
+      "jurisdiction": "data not available",
+      "notes": ""
+    },
+    {
+      "id": "actor:israel-state",
+      "name": "Israel",
+      "actor_type": "state",
+      "jurisdiction": "data not available",
+      "notes": ""
+    },
+    {
+      "id": "actor:israel-supreme-court-bagatz",
+      "name": "Israel Supreme Court (Bagatz)",
+      "actor_type": "judicial_body",
+      "jurisdiction": "data not available",
+      "notes": ""
+    },
+    {
+      "id": "actor:israeli-settlers-in-west-bank",
+      "name": "Israeli settlers in West Bank",
+      "actor_type": "unattributed",
+      "jurisdiction": "data not available",
+      "notes": ""
+    },
+    {
+      "id": "actor:knesset-israeli-parliament",
+      "name": "Knesset (Israeli Parliament)",
+      "actor_type": "unattributed",
+      "jurisdiction": "data not available",
+      "notes": ""
+    },
+    {
+      "id": "actor:palestinians-in-the-west-bank",
+      "name": "Palestinians in the West Bank",
+      "actor_type": "unattributed",
+      "jurisdiction": "data not available",
+      "notes": ""
+    },
+    {
+      "id": "actor:unclassified-3652",
+      "name": "محكمة العدل الدولية / الأمم المتحدة",
+      "actor_type": "judicial_body",
+      "jurisdiction": "data not available",
+      "notes": ""
+    },
+    {
+      "id": "actor:unclassified-4627",
+      "name": "محكمة العدل الدولية",
+      "actor_type": "judicial_body",
+      "jurisdiction": "data not available",
+      "notes": ""
+    },
+    {
+      "id": "actor:unclassified-8563",
+      "name": "السلطة الوطنية الفلسطينية / دائرة الأراضي / سلطة المياه / الجهاز المركزي للإحصاء",
+      "actor_type": "sub_state_authority",
+      "jurisdiction": "data not available",
+      "notes": ""
+    }
+  ],
+  "perspectives": [
+    {
+      "id": "perspective:west-bank:state-of-israel-civil-administration",
+      "territory": "west-bank",
+      "represented_actor": "actor:israel-state",
+      "label": "State of Israel / Civil Administration",
+      "research_language": "he",
+      "source_language_reason": "Primary documentary language of the represented institution",
+      "years_of_scope": "1967-2026",
+      "original_text_preserved": false,
+      "literal_translation": false,
+      "contextual_translation": true
+    },
+    {
+      "id": "perspective:west-bank:perspective-arabic",
+      "territory": "west-bank",
+      "represented_actor": "actor:unclassified-8563",
+      "label": "السلطة الوطنية الفلسطينية / دائرة الأراضي / سلطة المياه / الجهاز المركزي للإحصاء",
+      "research_language": "ar",
+      "source_language_reason": "Primary documentary language of the represented institution",
+      "years_of_scope": "1948-2026",
+      "original_text_preserved": false,
+      "literal_translation": false,
+      "contextual_translation": true
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim:west-bank:separation-barrier-geder-hahafrada-security-fence:justification",
+      "territory": "west-bank",
+      "perspective": "perspective:west-bank:state-of-israel-civil-administration",
+      "subject": "physical_barrier:west-bank:separation-barrier-geder-hahafrada-security-fence",
+      "claim_type": "justification",
+      "text": "Israel states the barrier is necessary to protect Israeli civilians from Palestinian terrorism, particularly suicide bombings which increased significantly during the Second Intifada. From the beginning of the Second Intifada until July 2003, 73 Palestinian suicide bombings from the West Bank killed 293 Israelis and injured over 1,900. During the 11 months after the first continuous segment was built, only 3 suicide attacks succeeded; the number of attacks declined by over 90%. Israel also cites the need to provide air defense, with enemy aircraft able to cross from the Jordan River to the Mediterranean in three minutes.[citation:7][citation:11]",
+      "sources": [
+        "source:west-bank:wikipedia",
+        "source:west-bank:israeli-supreme-court-rulings",
+        "source:west-bank:international-court-of-justice-advisory-opinion-2004"
+      ],
+      "status": "documented"
+    },
+    {
+      "id": "claim:west-bank:separation-barrier-geder-hahafrada-security-fence:characterization",
+      "territory": "west-bank",
+      "perspective": "perspective:west-bank:state-of-israel-civil-administration",
+      "subject": "physical_barrier:west-bank:separation-barrier-geder-hahafrada-security-fence",
+      "claim_type": "characterization",
+      "text": "Opponents argue the barrier's route deviates substantially from the Green Line, is an illegal attempt to annex Palestinian land under the guise of security, violates international law, preempts final status negotiations, and severely restricts Palestinian movement and access to work. The International Court of Justice ruled in 2004 that the construction of the wall and its associated regime are contrary to international law.[citation:11]",
+      "sources": [
+        "source:west-bank:wikipedia",
+        "source:west-bank:israeli-supreme-court-rulings",
+        "source:west-bank:international-court-of-justice-advisory-opinion-2004"
+      ],
+      "status": "documented"
+    },
+    {
+      "id": "claim:west-bank:eastern-border-security-barrier-israel-jordan-border:justification",
+      "territory": "west-bank",
+      "perspective": "perspective:west-bank:state-of-israel-civil-administration",
+      "subject": "physical_barrier:west-bank:eastern-border-security-barrier-israel-jordan-border",
+      "claim_type": "justification",
+      "text": "Israel's longest and most porous border; used for weapons smuggling from Iran and its proxies to Palestinian terrorist groups in the West Bank. Since 2020, Israeli and Jordanian authorities intercepted more than 1,000 firearms; however, many still cross successfully. In October 2024, two Jordanians crossed and attacked Israeli soldiers.[citation:4]",
+      "sources": [
+        "source:west-bank:foundation-for-defense-of-democracies-fdd"
+      ],
+      "status": "documented"
+    },
+    {
+      "id": "claim:west-bank:eastern-border-security-barrier-israel-jordan-border:characterization",
+      "territory": "west-bank",
+      "perspective": "perspective:west-bank:state-of-israel-civil-administration",
+      "subject": "physical_barrier:west-bank:eastern-border-security-barrier-israel-jordan-border",
+      "claim_type": "characterization",
+      "text": "Palestinian sources likely characterize this as further territorial separation and collective punishment; also strains Israeli-Jordanian relations despite security cooperation.[citation:4]",
+      "sources": [
+        "source:west-bank:foundation-for-defense-of-democracies-fdd"
+      ],
+      "status": "documented"
+    },
+    {
+      "id": "claim:west-bank:water-resource-appropriation-and-discrimination:justification",
+      "territory": "west-bank",
+      "perspective": "perspective:west-bank:state-of-israel-civil-administration",
+      "subject": "incident:west-bank:water-resource-appropriation-and-discrimination",
+      "claim_type": "justification",
+      "text": "Israel states it has responded to Palestinian needs and increased water quantities provided beyond the Interim Agreement specifications; however, 60% of water provided is sold to Palestinians at inflated prices[citation:5]",
+      "sources": [
+        "source:west-bank:ecomena",
+        "source:west-bank:business-human-rights-resource-centre"
+      ],
+      "status": "documented"
+    },
+    {
+      "id": "claim:west-bank:water-resource-appropriation-and-discrimination:characterization",
+      "territory": "west-bank",
+      "perspective": "perspective:west-bank:state-of-israel-civil-administration",
+      "subject": "incident:west-bank:water-resource-appropriation-and-discrimination",
+      "claim_type": "characterization",
+      "text": "Palestinian sources report discriminatory distribution: Israel uses 85% of water from West Bank aquifers, Palestinians receive 15%. Per capita use in Israel is 3.5 times higher than in the West Bank. Under international law, expropriating water from occupied territories for use by Israeli citizens is illegal.[citation:5]",
+      "sources": [
+        "source:west-bank:ecomena",
+        "source:west-bank:business-human-rights-resource-centre"
+      ],
+      "status": "documented"
+    },
+    {
+      "id": "claim:west-bank:settlement-expansion-and-land-confiscation:justification",
+      "territory": "west-bank",
+      "perspective": "perspective:west-bank:state-of-israel-civil-administration",
+      "subject": "incident:west-bank:settlement-expansion-and-land-confiscation",
+      "claim_type": "justification",
+      "text": "Israel advances settlement construction for civilian and security purposes; the Civil Administration views Area C as serving Israeli needs including military training, economic interests, and settlement development[citation:1]",
+      "sources": [
+        "source:west-bank:b-tselem",
+        "source:west-bank:jns-org",
+        "source:west-bank:ava-press",
+        "source:west-bank:the-national"
+      ],
+      "status": "documented"
+    },
+    {
+      "id": "claim:west-bank:settlement-expansion-and-land-confiscation:characterization",
+      "territory": "west-bank",
+      "perspective": "perspective:west-bank:state-of-israel-civil-administration",
+      "subject": "incident:west-bank:settlement-expansion-and-land-confiscation",
+      "claim_type": "characterization",
+      "text": "Israeli settlements in the West Bank are considered illegal under international law; settlement expansion undermines a future Palestinian state. As of 2025-2026, more than 700,000 settlers live in the West Bank including East Jerusalem. Israel advanced plans for 2,377 housing units between December 1, 2024 and January 2025 alone.[citation:1][citation:8][citation:9]",
+      "sources": [
+        "source:west-bank:b-tselem",
+        "source:west-bank:jns-org",
+        "source:west-bank:ava-press",
+        "source:west-bank:the-national"
+      ],
+      "status": "documented"
+    },
+    {
+      "id": "claim:west-bank:criminal-law-death-penalty",
+      "territory": "west-bank",
+      "perspective": "perspective:west-bank:state-of-israel-civil-administration",
+      "subject": "legal:west-bank:criminal-law-death-penalty",
+      "claim_type": "factual_assertion",
+      "text": "System of capital punishment applied to one national group (Palestinians) but not another (Israeli settlers) within the same territory. Palestinians are subject to military courts with 96% conviction rate and mandatory death penalty; Israelis are tried in civilian courts. Procedural differences include: unanimity required for civilian death sentences reduced to majority for military courts, elimination of military commander's power to commute sentences, prohibition of pardons, 90-day execution mandate, and restricted appeals. 93% of complaints regarding settler violence against Palestinians are closed without charges filed.[citation:13]",
+      "sources": [
+        "source:west-bank:fadel-abdulghany-analysis",
+        "source:west-bank:knesset-legislation"
+      ],
+      "status": "documented"
+    },
+    {
+      "id": "claim:west-bank:land-ownership-property-law",
+      "territory": "west-bank",
+      "perspective": "perspective:west-bank:state-of-israel-civil-administration",
+      "subject": "legal:west-bank:land-ownership-property-law",
+      "claim_type": "factual_assertion",
+      "text": "Israel's security cabinet repealed Law No. 40, opening Israeli land purchases in the West Bank. Previously, this law restricted land sales to Arab buyers to prevent Israeli settlement. The change allows settlement expansion that could undermine Palestinian sovereignty and statehood. Finance Minister Bezalel Smotrich stated: 'We will continue to kill the idea of a Palestinian state.'[citation:10]",
+      "sources": [
+        "source:west-bank:the-national"
+      ],
+      "status": "documented"
+    },
+    {
+      "id": "claim:west-bank:planning-and-construction-law",
+      "territory": "west-bank",
+      "perspective": "perspective:west-bank:state-of-israel-civil-administration",
+      "subject": "legal:west-bank:planning-and-construction-law",
+      "claim_type": "factual_assertion",
+      "text": "Israel uses Military Order 418 to control all planning and construction in Area C. The Civil Administration bans Palestinian construction while encouraging settlement development through a parallel mechanism. A parallel planning mechanism grants approvals for settlers while ignoring their building violations.[citation:1]",
+      "sources": [
+        "source:west-bank:b-tselem"
+      ],
+      "status": "documented"
+    },
+    {
+      "id": "claim:west-bank:barrier-760:justification",
+      "territory": "west-bank",
+      "perspective": "perspective:west-bank:perspective-arabic",
+      "subject": "physical_barrier:west-bank:barrier-760",
+      "claim_type": "justification",
+      "text": "تدعي إسرائيل أن الجدار ضروري لحماية المدنيين الإسرائيليين من العمليات الفلسطينية [citation:1].",
+      "sources": [
+        "source:west-bank:2004"
+      ],
+      "status": "documented"
+    },
+    {
+      "id": "claim:west-bank:barrier-760:characterization",
+      "territory": "west-bank",
+      "perspective": "perspective:west-bank:perspective-arabic",
+      "subject": "physical_barrier:west-bank:barrier-760",
+      "claim_type": "characterization",
+      "text": "يرى الفلسطينيون أن الجدار هو أداة لضم الأراضي وتهجير السكان الفلسطينيين، ويفصل قرى عن أراضيها الزراعية ويحد من الحركة، وقد حكمت محكمة العدل الدولية عام 2004 بأن بناء الجدار والنظام المرافق له يتعارضان مع القانون الدولي [citation:1][citation:8].",
+      "sources": [
+        "source:west-bank:2004"
+      ],
+      "status": "documented"
+    },
+    {
+      "id": "claim:west-bank:incident-13:justification",
+      "territory": "west-bank",
+      "perspective": "perspective:west-bank:perspective-arabic",
+      "subject": "incident:west-bank:incident-13",
+      "claim_type": "justification",
+      "text": "تدعي إسرائيل أنها استجابت لاحتياجات الفلسطينيين وزودتهم بكميات مياه تفوق ما هو منصوص عليه في الاتفاقية المرحلية، لكن 60% من المياه الموردة تبيعها بأسعار مرتفعة [citation:11].",
+      "sources": [
+        "source:west-bank:ecomena-ocha"
+      ],
+      "status": "documented"
+    },
+    {
+      "id": "claim:west-bank:incident-13:characterization",
+      "territory": "west-bank",
+      "perspective": "perspective:west-bank:perspective-arabic",
+      "subject": "incident:west-bank:incident-13",
+      "claim_type": "characterization",
+      "text": "وفقاً للمصادر الفلسطينية والدولية، تستخدم إسرائيل 85% من مياه الأحواض الجوفية في الضفة الغربية بينما يحصل الفلسطينيون على 15% فقط. استهلاك الفرد في إسرائيل أعلى بثلاثة أضعاف ونصف من الضفة الغربية. يمنع الفلسطينيون من حفر آبار جديدة دون تصاريح إسرائيلية شبه مستحيلة الحصول عليها. الهدم المتكرر للآبار والخزانات: منذ 2021، هدمت السلطات الإسرائيلية ما يقرب من 160 خزاناً وشبكة صرف صحي وبئراً في الضفة الغربية والقدس الشرقية بدعوى عدم الترخيص [citation:11][citation:15].",
+      "sources": [
+        "source:west-bank:ecomena-ocha"
+      ],
+      "status": "documented"
+    },
+    {
+      "id": "claim:west-bank:incident-15:justification",
+      "territory": "west-bank",
+      "perspective": "perspective:west-bank:perspective-arabic",
+      "subject": "incident:west-bank:incident-15",
+      "claim_type": "justification",
+      "text": "تقدم إسرائيل البناء الاستيطاني لأغراض مدنية وأمنية [citation:1].",
+      "sources": [
+        "source:west-bank:peace-now",
+        "source:west-bank:bimkom"
+      ],
+      "status": "documented"
+    },
+    {
+      "id": "claim:west-bank:incident-15:characterization",
+      "territory": "west-bank",
+      "perspective": "perspective:west-bank:perspective-arabic",
+      "subject": "incident:west-bank:incident-15",
+      "claim_type": "characterization",
+      "text": "المصادر الفلسطينية توثق أن الاستيطان الإسرائيلي في الضفة الغربية غير قانوني بموجب القانون الدولي. في 2024، تم إنشاء 60 بؤرة استيطانية عشوائية (ضعف عدد 2023). بين 1996 وأوائل 2023، كان المتوسط أقل من 7 بؤر سنوياً [citation:2]. في فبراير 2026، وافقت الحكومة الإسرائيلية على استئناف عملية تسجيل الأراضي في الضفة لأول مرة منذ 1967، وهو ما تصفه منظمات حقوقية إسرائيلية بأنه \"إضفاء منهجية على تهجير الفلسطينيين\" حيث أن 70% من أراضي الضفة غير مسجلة وغير مثبتة الملكية للفلسطينيين [citation:8].",
+      "sources": [
+        "source:west-bank:peace-now",
+        "source:west-bank:bimkom"
+      ],
+      "status": "documented"
+    },
+    {
+      "id": "claim:west-bank:incident-17:justification",
+      "territory": "west-bank",
+      "perspective": "perspective:west-bank:perspective-arabic",
+      "subject": "incident:west-bank:incident-17",
+      "claim_type": "justification",
+      "text": "تقدم إسرائيل البناء الاستيطاني لأغراض مدنية وأمنية [citation:1].",
+      "sources": [
+        "source:west-bank:peace-now",
+        "source:west-bank:bimkom"
+      ],
+      "status": "documented"
+    },
+    {
+      "id": "claim:west-bank:incident-17:characterization",
+      "territory": "west-bank",
+      "perspective": "perspective:west-bank:perspective-arabic",
+      "subject": "incident:west-bank:incident-17",
+      "claim_type": "characterization",
+      "text": "المصادر الفلسطينية توثق أن الاستيطان الإسرائيلي في الضفة الغربية غير قانوني بموجب القانون الدولي. في 2024، تم إنشاء 60 بؤرة استيطانية عشوائية (ضعف عدد 2023). بين 1996 وأوائل 2023، كان المتوسط أقل من 7 بؤر سنوياً [citation:2]. في فبراير 2026، وافقت الحكومة الإسرائيلية على استئناف عملية تسجيل الأراضي في الضفة لأول مرة منذ 1967، وهو ما تصفه منظمات حقوقية إسرائيلية بأنه 'إضفاء منهجية على تهجير الفلسطينيين' حيث أن 70% من أراضي الضفة غير مسجلة وغير مثبتة الملكية للفلسطينيين [citation:8].",
+      "sources": [
+        "source:west-bank:peace-now",
+        "source:west-bank:bimkom"
+      ],
+      "status": "documented"
+    },
+    {
+      "id": "claim:west-bank:statutory-conflict-19",
+      "territory": "west-bank",
+      "perspective": "perspective:west-bank:perspective-arabic",
+      "subject": "legal:west-bank:statutory-conflict-19",
+      "claim_type": "factual_assertion",
+      "text": "في فبراير 2026، وافق مجلس الأمن الإسرائيلي على سلسلة من القرارات تسمح للإسرائيليين بشراء الأراضي في الضفة الغربية، وإلغاء القوانين الأردنية التي تحكم ملكية الأراضي منذ 1967. يصف الخبراء هذا بأنه انتهاك لقرارات مجلس الأمن 242 و446 و2334 وقد يرقى إلى جريمة حرب. استئناف عملية تسجيل الأراضي سيؤدي إلى تهجير منهجي للفلسطينيين حيث أن 70% من أراضي الضفة غير مسجلة وغير مثبتة الملكية [citation:4][citation:8].",
+      "sources": [
+        "source:west-bank:anadolu-ajans",
+        "source:west-bank:bimkom"
+      ],
+      "status": "documented"
+    },
+    {
+      "id": "claim:west-bank:statutory-conflict-20",
+      "territory": "west-bank",
+      "perspective": "perspective:west-bank:perspective-arabic",
+      "subject": "legal:west-bank:statutory-conflict-20",
+      "claim_type": "factual_assertion",
+      "text": "تستخدم إسرائيل الأمر العسكري رقم 418 للسيطرة على جميع عمليات التخطيط والبناء في المنطقة (ج). تمنع الإدارة المدنية الإسرائيلية البناء الفلسطيني بينما تشجع تطوير المستوطنات من خلال آلية موازية تمنح الموافقات للمستوطنين وتتجاهل انتهاكات البناء الخاصة بهم. يفرض هذا النظام تمييزاً واضحاً في الحق في السكن والتنمية [citation:1].",
+      "sources": [
+        "source:west-bank:b-tselem"
+      ],
+      "status": "documented"
+    },
+    {
+      "id": "claim:west-bank:statutory-conflict-21",
+      "territory": "west-bank",
+      "perspective": "perspective:west-bank:perspective-arabic",
+      "subject": "legal:west-bank:statutory-conflict-21",
+      "claim_type": "factual_assertion",
+      "text": "نظام عقوبة الإعدام يطبق على الفلسطينيين في المحاكم العسكرية (معدل إدانة 96%) ولكن لا يطبق على المستوطنين الإسرائيليين في المحاكم المدنية. الاختلافات الإجرائية تشمل: إلغاء اشتراط الإجماع في أحكام الإعدام، منع العفو، مهلة تنفيذ 90 يوماً، تقييد الطعون. 93% من شكاوى العنف الاستيطاني ضد الفلسطينيين تغلق دون توجيه تهم [citation:1].",
+      "sources": [
+        "source:west-bank:fadel-abdulghany",
+        "source:west-bank:src-2407"
+      ],
+      "status": "documented"
+    }
+  ],
+  "measurements": [
+    {
+      "id": "measurement:west-bank:per-capita-water-consumption:settlers",
+      "territory": "west-bank",
+      "metric": "per_capita_water_consumption",
+      "unit": "liters_per_person_per_day",
+      "value": 242.0,
+      "population": {
+        "group": "Israeli settlers in West Bank",
+        "actor": "actor:israeli-settlers-in-west-bank"
+      },
+      "period": "not_available",
+      "reported_by": [
+        "perspective:west-bank:state-of-israel-civil-administration",
+        "perspective:west-bank:perspective-arabic"
+      ],
+      "sources": [
+        "source:west-bank:al-jazeera",
+        "source:west-bank:b-tselem",
+        "source:west-bank:ecomena",
+        "source:west-bank:palestinian-hydrology-group"
+      ],
+      "corroboration": "confirmed_by_2_perspectives",
+      "who_reference_standard": 100.0
+    },
+    {
+      "id": "measurement:west-bank:per-capita-water-consumption:palestinians",
+      "territory": "west-bank",
+      "metric": "per_capita_water_consumption",
+      "unit": "liters_per_person_per_day",
+      "value": 73.0,
+      "population": {
+        "group": "Palestinians in the West Bank",
+        "actor": "actor:palestinians-in-the-west-bank"
+      },
+      "period": "not_available",
+      "reported_by": [
+        "perspective:west-bank:state-of-israel-civil-administration",
+        "perspective:west-bank:perspective-arabic"
+      ],
+      "sources": [
+        "source:west-bank:al-jazeera",
+        "source:west-bank:b-tselem",
+        "source:west-bank:ecomena",
+        "source:west-bank:palestinian-hydrology-group"
+      ],
+      "corroboration": "confirmed_by_2_perspectives",
+      "who_reference_standard": 100.0
+    }
+  ],
+  "sources": [
+    {
+      "id": "source:west-bank:2004",
+      "title": "محكمة العدل الدولية (2004)؛ بيانات فلسطينية",
+      "publisher": "محكمة العدل الدولية (2004)؛ بيانات فلسطينية",
+      "source_type": "unattributed_secondary",
+      "date_published": "not_researched",
+      "date_accessed": "not_researched",
+      "url": "not_researched",
+      "language": "data not available",
+      "reliability_notes": "NEEDS REVIEW: citation string, not yet resolved to a dated, linked, classified source."
+    },
+    {
+      "id": "source:west-bank:2024",
+      "title": "محكمة العدل الدولية، يوليو 2024",
+      "publisher": "محكمة العدل الدولية، يوليو 2024",
+      "source_type": "unattributed_secondary",
+      "date_published": "not_researched",
+      "date_accessed": "not_researched",
+      "url": "not_researched",
+      "language": "data not available",
+      "reliability_notes": "NEEDS REVIEW: citation string, not yet resolved to a dated, linked, classified source."
+    },
+    {
+      "id": "source:west-bank:al-jazeera",
+      "title": "Al Jazeera",
+      "publisher": "Al Jazeera",
+      "source_type": "unattributed_secondary",
+      "date_published": "not_researched",
+      "date_accessed": "not_researched",
+      "url": "not_researched",
+      "language": "data not available",
+      "reliability_notes": "NEEDS REVIEW: citation string, not yet resolved to a dated, linked, classified source."
+    },
+    {
+      "id": "source:west-bank:anadolu-ajans",
+      "title": "Anadolu Ajansı",
+      "publisher": "Anadolu Ajansı",
+      "source_type": "unattributed_secondary",
+      "date_published": "not_researched",
+      "date_accessed": "not_researched",
+      "url": "not_researched",
+      "language": "data not available",
+      "reliability_notes": "NEEDS REVIEW: citation string, not yet resolved to a dated, linked, classified source."
+    },
+    {
+      "id": "source:west-bank:ava-press",
+      "title": "AVA Press",
+      "publisher": "AVA Press",
+      "source_type": "unattributed_secondary",
+      "date_published": "not_researched",
+      "date_accessed": "not_researched",
+      "url": "not_researched",
+      "language": "data not available",
+      "reliability_notes": "NEEDS REVIEW: citation string, not yet resolved to a dated, linked, classified source."
+    },
+    {
+      "id": "source:west-bank:b-tselem",
+      "title": "B'Tselem",
+      "publisher": "B'Tselem",
+      "source_type": "unattributed_secondary",
+      "date_published": "not_researched",
+      "date_accessed": "not_researched",
+      "url": "not_researched",
+      "language": "data not available",
+      "reliability_notes": "NEEDS REVIEW: citation string, not yet resolved to a dated, linked, classified source."
+    },
+    {
+      "id": "source:west-bank:bimkom",
+      "title": "Bimkom",
+      "publisher": "Bimkom",
+      "source_type": "unattributed_secondary",
+      "date_published": "not_researched",
+      "date_accessed": "not_researched",
+      "url": "not_researched",
+      "language": "data not available",
+      "reliability_notes": "NEEDS REVIEW: citation string, not yet resolved to a dated, linked, classified source."
+    },
+    {
+      "id": "source:west-bank:business-human-rights-resource-centre",
+      "title": "Business & Human Rights Resource Centre",
+      "publisher": "Business & Human Rights Resource Centre",
+      "source_type": "unattributed_secondary",
+      "date_published": "not_researched",
+      "date_accessed": "not_researched",
+      "url": "not_researched",
+      "language": "data not available",
+      "reliability_notes": "NEEDS REVIEW: citation string, not yet resolved to a dated, linked, classified source."
+    },
+    {
+      "id": "source:west-bank:ecomena",
+      "title": "EcoMENA",
+      "publisher": "EcoMENA",
+      "source_type": "unattributed_secondary",
+      "date_published": "not_researched",
+      "date_accessed": "not_researched",
+      "url": "not_researched",
+      "language": "data not available",
+      "reliability_notes": "NEEDS REVIEW: citation string, not yet resolved to a dated, linked, classified source."
+    },
+    {
+      "id": "source:west-bank:ecomena-ocha",
+      "title": "EcoMENA؛ تقارير OCHA",
+      "publisher": "EcoMENA؛ تقارير OCHA",
+      "source_type": "unattributed_secondary",
+      "date_published": "not_researched",
+      "date_accessed": "not_researched",
+      "url": "not_researched",
+      "language": "data not available",
+      "reliability_notes": "NEEDS REVIEW: citation string, not yet resolved to a dated, linked, classified source."
+    },
+    {
+      "id": "source:west-bank:es-10-23",
+      "title": "قرار الجمعية العامة للأمم المتحدة ES-10/23",
+      "publisher": "قرار الجمعية العامة للأمم المتحدة ES-10/23",
+      "source_type": "unattributed_secondary",
+      "date_published": "not_researched",
+      "date_accessed": "not_researched",
+      "url": "not_researched",
+      "language": "data not available",
+      "reliability_notes": "NEEDS REVIEW: citation string, not yet resolved to a dated, linked, classified source."
+    },
+    {
+      "id": "source:west-bank:fadel-abdulghany",
+      "title": "Fadel Abdulghany",
+      "publisher": "Fadel Abdulghany",
+      "source_type": "unattributed_secondary",
+      "date_published": "not_researched",
+      "date_accessed": "not_researched",
+      "url": "not_researched",
+      "language": "data not available",
+      "reliability_notes": "NEEDS REVIEW: citation string, not yet resolved to a dated, linked, classified source."
+    },
+    {
+      "id": "source:west-bank:fadel-abdulghany-analysis",
+      "title": "Fadel Abdulghany analysis",
+      "publisher": "Fadel Abdulghany analysis",
+      "source_type": "unattributed_secondary",
+      "date_published": "not_researched",
+      "date_accessed": "not_researched",
+      "url": "not_researched",
+      "language": "data not available",
+      "reliability_notes": "NEEDS REVIEW: citation string, not yet resolved to a dated, linked, classified source."
+    },
+    {
+      "id": "source:west-bank:foundation-for-defense-of-democracies-fdd",
+      "title": "Foundation for Defense of Democracies (FDD)",
+      "publisher": "Foundation for Defense of Democracies (FDD)",
+      "source_type": "unattributed_secondary",
+      "date_published": "not_researched",
+      "date_accessed": "not_researched",
+      "url": "not_researched",
+      "language": "data not available",
+      "reliability_notes": "NEEDS REVIEW: citation string, not yet resolved to a dated, linked, classified source."
+    },
+    {
+      "id": "source:west-bank:icj-advisory-opinion-2004",
+      "title": "ICJ Advisory Opinion (2004)",
+      "publisher": "ICJ Advisory Opinion (2004)",
+      "source_type": "unattributed_secondary",
+      "date_published": "not_researched",
+      "date_accessed": "not_researched",
+      "url": "not_researched",
+      "language": "data not available",
+      "reliability_notes": "NEEDS REVIEW: citation string, not yet resolved to a dated, linked, classified source."
+    },
+    {
+      "id": "source:west-bank:international-court-of-justice-advisory-opinion-2004",
+      "title": "International Court of Justice Advisory Opinion (2004)",
+      "publisher": "International Court of Justice Advisory Opinion (2004)",
+      "source_type": "unattributed_secondary",
+      "date_published": "not_researched",
+      "date_accessed": "not_researched",
+      "url": "not_researched",
+      "language": "data not available",
+      "reliability_notes": "NEEDS REVIEW: citation string, not yet resolved to a dated, linked, classified source."
+    },
+    {
+      "id": "source:west-bank:israeli-supreme-court-decision",
+      "title": "Israeli Supreme Court decision",
+      "publisher": "Israeli Supreme Court decision",
+      "source_type": "unattributed_secondary",
+      "date_published": "not_researched",
+      "date_accessed": "not_researched",
+      "url": "not_researched",
+      "language": "data not available",
+      "reliability_notes": "NEEDS REVIEW: citation string, not yet resolved to a dated, linked, classified source."
+    },
+    {
+      "id": "source:west-bank:israeli-supreme-court-rulings",
+      "title": "Israeli Supreme Court rulings",
+      "publisher": "Israeli Supreme Court rulings",
+      "source_type": "unattributed_secondary",
+      "date_published": "not_researched",
+      "date_accessed": "not_researched",
+      "url": "not_researched",
+      "language": "data not available",
+      "reliability_notes": "NEEDS REVIEW: citation string, not yet resolved to a dated, linked, classified source."
+    },
+    {
+      "id": "source:west-bank:jns-org",
+      "title": "JNS.org",
+      "publisher": "JNS.org",
+      "source_type": "unattributed_secondary",
+      "date_published": "not_researched",
+      "date_accessed": "not_researched",
+      "url": "not_researched",
+      "language": "data not available",
+      "reliability_notes": "NEEDS REVIEW: citation string, not yet resolved to a dated, linked, classified source."
+    },
+    {
+      "id": "source:west-bank:knesset-legislation",
+      "title": "Knesset legislation",
+      "publisher": "Knesset legislation",
+      "source_type": "unattributed_secondary",
+      "date_published": "not_researched",
+      "date_accessed": "not_researched",
+      "url": "not_researched",
+      "language": "data not available",
+      "reliability_notes": "NEEDS REVIEW: citation string, not yet resolved to a dated, linked, classified source."
+    },
+    {
+      "id": "source:west-bank:palestinian-hydrology-group",
+      "title": "Palestinian Hydrology Group",
+      "publisher": "Palestinian Hydrology Group",
+      "source_type": "unattributed_secondary",
+      "date_published": "not_researched",
+      "date_accessed": "not_researched",
+      "url": "not_researched",
+      "language": "data not available",
+      "reliability_notes": "NEEDS REVIEW: citation string, not yet resolved to a dated, linked, classified source."
+    },
+    {
+      "id": "source:west-bank:peace-now",
+      "title": "Peace Now",
+      "publisher": "Peace Now",
+      "source_type": "unattributed_secondary",
+      "date_published": "not_researched",
+      "date_accessed": "not_researched",
+      "url": "not_researched",
+      "language": "data not available",
+      "reliability_notes": "NEEDS REVIEW: citation string, not yet resolved to a dated, linked, classified source."
+    },
+    {
+      "id": "source:west-bank:src-2407",
+      "title": "الكنيست الإسرائيلي",
+      "publisher": "الكنيست الإسرائيلي",
+      "source_type": "unattributed_secondary",
+      "date_published": "not_researched",
+      "date_accessed": "not_researched",
+      "url": "not_researched",
+      "language": "data not available",
+      "reliability_notes": "NEEDS REVIEW: citation string, not yet resolved to a dated, linked, classified source."
+    },
+    {
+      "id": "source:west-bank:the-national",
+      "title": "The National",
+      "publisher": "The National",
+      "source_type": "unattributed_secondary",
+      "date_published": "not_researched",
+      "date_accessed": "not_researched",
+      "url": "not_researched",
+      "language": "data not available",
+      "reliability_notes": "NEEDS REVIEW: citation string, not yet resolved to a dated, linked, classified source."
+    },
+    {
+      "id": "source:west-bank:wikipedia",
+      "title": "Wikipedia",
+      "publisher": "Wikipedia",
+      "source_type": "unattributed_secondary",
+      "date_published": "not_researched",
+      "date_accessed": "not_researched",
+      "url": "not_researched",
+      "language": "data not available",
+      "reliability_notes": "NEEDS REVIEW: citation string, not yet resolved to a dated, linked, classified source."
+    }
+  ],
+  "findings": [
+    {
+      "id": "finding:west-bank:june-2004-ruling-on-separation-barrier-route",
+      "territory": "west-bank",
+      "issuing_body": "actor:israel-supreme-court-bagatz",
+      "subject": "legal:west-bank:june-2004-ruling-on-separation-barrier-route",
+      "finding_type": "judicial",
+      "text": "Ruled that a portion of the barrier west of Jerusalem violated the rights of Palestinians and ordered 30 km of existing and planned barrier to be rerouted; but ruled the barrier is legal in essence and accepted the government's security justification[citation:11]",
+      "date": "2004",
+      "sources": [
+        "source:west-bank:israeli-supreme-court-decision",
+        "source:west-bank:wikipedia"
+      ],
+      "binding_status": "data not available",
+      "accepted_by": [],
+      "rejected_by": []
+    },
+    {
+      "id": "finding:west-bank:advisory-opinion-on-the-legal-consequences-of-the-construction-of-a-wall-in-the-occupied-palestinian-territory",
+      "territory": "west-bank",
+      "issuing_body": "actor:international-court-of-justice-icj",
+      "subject": "legal:west-bank:advisory-opinion-on-the-legal-consequences-of-the-construction-of-a-wall-in-the-occupied-palestinian-territory",
+      "finding_type": "judicial",
+      "text": "Found that the construction of the wall, and its associated regime, are contrary to international law; cannot rely on a right of self-defense or state of necessity to preclude wrongfulness[citation:11]",
+      "date": "2004",
+      "sources": [
+        "source:west-bank:icj-advisory-opinion-2004"
+      ],
+      "binding_status": "data not available",
+      "accepted_by": [],
+      "rejected_by": []
+    },
+    {
+      "id": "finding:west-bank:death-penalty-for-terrorism-law",
+      "territory": "west-bank",
+      "issuing_body": "actor:knesset-israeli-parliament",
+      "subject": "legal:west-bank:death-penalty-for-terrorism-law",
+      "finding_type": "judicial",
+      "text": "Passed by 62-48 vote making death penalty the default punishment for Palestinians convicted in military courts of killing Israelis; applies to Palestinians under Military Order 1651 but not to Israeli settlers tried in civilian courts[citation:13]",
+      "date": "2026",
+      "sources": [
+        "source:west-bank:knesset-legislation",
+        "source:west-bank:fadel-abdulghany-analysis"
+      ],
+      "binding_status": "data not available",
+      "accepted_by": [],
+      "rejected_by": []
+    },
+    {
+      "id": "finding:west-bank:finding-3",
+      "territory": "west-bank",
+      "issuing_body": "actor:unclassified-4627",
+      "subject": "legal:west-bank:finding-3",
+      "finding_type": "judicial",
+      "text": "أعلنت المحكمة أن احتلال إسرائيل للأراضي الفلسطينية غير قانوني، ويجب إنهاؤه 'في أقرب وقت ممكن'. قرارات الضم والاستيطان وتهجير السكان 'باطلة تماماً ولا يمكن أن تغير الوضع القانوني للأراضي المحتلة' [citation:1][citation:8].",
+      "date": "2024",
+      "sources": [
+        "source:west-bank:2024"
+      ],
+      "binding_status": "data not available",
+      "accepted_by": [],
+      "rejected_by": []
+    },
+    {
+      "id": "finding:west-bank:finding-4",
+      "territory": "west-bank",
+      "issuing_body": "actor:unclassified-4627",
+      "subject": "legal:west-bank:finding-4",
+      "finding_type": "judicial",
+      "text": "بناء الجدار ونظامه المرافق يتعارض مع القانون الدولي؛ لا يمكن الاعتماد على حق الدفاع عن النفس أو ضرورة الحالة لتبرير المخالفة [citation:1].",
+      "date": "2004",
+      "sources": [
+        "source:west-bank:2004"
+      ],
+      "binding_status": "data not available",
+      "accepted_by": [],
+      "rejected_by": []
+    },
+    {
+      "id": "finding:west-bank:es-10-23",
+      "territory": "west-bank",
+      "issuing_body": "actor:unclassified-3652",
+      "subject": "legal:west-bank:es-10-23",
+      "finding_type": "judicial",
+      "text": "حددت الجمعية العامة أن دولة فلسطين مؤهلة للعضوية الكاملة في الأمم المتحدة [citation:1].",
+      "date": "2024",
+      "sources": [
+        "source:west-bank:es-10-23"
+      ],
+      "binding_status": "data not available",
+      "accepted_by": [],
+      "rejected_by": []
+    }
+  ],
+  "disputes": [
+    {
+      "id": "dispute:west-bank:separation-barrier-legality",
+      "territory": "west-bank",
+      "subject": "physical_barrier:west-bank:separation-barrier-geder-hahafrada-security-fence",
+      "relationship": "contradicts",
+      "parties": [
+        {
+          "claim": "claim:west-bank:separation-barrier-geder-hahafrada-security-fence:justification",
+          "position": "documented"
+        },
+        {
+          "claim": "finding:west-bank:advisory-opinion-on-the-legal-consequences-of-the-construction-of-a-wall-in-the-occupied-palestinian-territory",
+          "position": "documented"
+        }
+      ],
+      "status": "unresolved",
+      "notes": "Israel's own justification for the barrier and the ICJ's 2004 finding that the barrier and its regime are contrary to international law are both documented in the source research. GASPI records both without adjudicating which is authoritative for the reader."
+    }
+  ]
+}
