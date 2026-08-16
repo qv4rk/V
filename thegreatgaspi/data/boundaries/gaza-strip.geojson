@@ -1,0 +1,129 @@
+{
+  "type": "Feature",
+  "properties": {
+    "territory_key": "gaza-strip",
+    "geometry_status": "documented",
+    "confidence": "high",
+    "geometry_scope": "present-day administrative extent only — not a historical reconstruction for any prior period",
+    "source": "Natural Earth, 1:10m Cultural Vectors, Admin-0 Map Subunits (v5.1.2)",
+    "source_url": "https://www.naturalearthdata.com/downloads/10m-cultural-vectors/10m-admin-0-details/",
+    "license": "Public domain (Natural Earth terms of use — no permission/attribution required, credit given as good practice)",
+    "retrieved": "2026-08-15",
+    "notes": "Geometry only. GASPI does not adopt Natural Earth's own SOVEREIGNT/ADMIN labels for this feature; territory naming and perspective attribution follow the GASPI schema (data/raw/), not this source."
+  },
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [
+          34.481204,
+          31.583141
+        ],
+        [
+          34.520126,
+          31.558327
+        ],
+        [
+          34.556032,
+          31.539825
+        ],
+        [
+          34.528259,
+          31.520144
+        ],
+        [
+          34.495703,
+          31.494409
+        ],
+        [
+          34.495496,
+          31.494409
+        ],
+        [
+          34.480407,
+          31.485624
+        ],
+        [
+          34.367339,
+          31.392814
+        ],
+        [
+          34.345841,
+          31.357725
+        ],
+        [
+          34.345531,
+          31.340724
+        ],
+        [
+          34.353799,
+          31.306359
+        ],
+        [
+          34.350905,
+          31.289254
+        ],
+        [
+          34.315869,
+          31.256905
+        ],
+        [
+          34.264399,
+          31.224193
+        ],
+        [
+          34.248351,
+          31.211449
+        ],
+        [
+          34.230396,
+          31.25923
+        ],
+        [
+          34.224608,
+          31.275715
+        ],
+        [
+          34.200269,
+          31.314267
+        ],
+        [
+          34.222667,
+          31.326646
+        ],
+        [
+          34.236664,
+          31.342353
+        ],
+        [
+          34.281423,
+          31.376695
+        ],
+        [
+          34.301606,
+          31.407701
+        ],
+        [
+          34.348399,
+          31.437649
+        ],
+        [
+          34.368175,
+          31.468166
+        ],
+        [
+          34.44337,
+          31.534573
+        ],
+        [
+          34.47877,
+          31.578274
+        ],
+        [
+          34.481204,
+          31.583141
+        ]
+      ]
+    ]
+  }
+}
