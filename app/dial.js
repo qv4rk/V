@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────────────────────
-   MANIFOLD ATLAS — Antikythera Dial (SVG component)
+   THE ATLAS — Antikythera Dial (SVG component)
 
    Two modes:
      - 'atrium' — full hero dial, all rings, planet hands, ornament

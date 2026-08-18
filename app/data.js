@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────────────────────
-   MANIFOLD ATLAS — Astronomical data + helpers
+   THE ATLAS — Astronomical data + helpers
    Shared by every module. Keep math pure here.
    ───────────────────────────────────────────────────────────── */
 window.MA = window.MA || {};

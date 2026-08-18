@@ -138,7 +138,7 @@ ARTICLE_TMPL = r"""<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>__TITLE__ · Manifold Atlas</title>
+<title>__TITLE__ · The Atlas</title>
 <meta name="description" content="__EXCERPT_ATTR__">
 <meta name="robots" content="index, follow">
 <meta property="og:title" content="__TITLE_ATTR__">
