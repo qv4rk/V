@@ -7519,11 +7519,12 @@ buildTabs(); buildLegend(); renderHud();
     var summaryEl = document.getElementById('g2Summary');
     if (activeTerritory === 'gaza-strip') {
       summaryEl.innerHTML = 'Explore the geographic, legal, hydrological and administrative record without collapsing competing descriptions into one narrative.<br><br>'
-        + '<button id="azzToggleBtn" class="g2-mode" style="width:100%;text-align:left;white-space:normal;line-height:1.4;padding:8px 10px;">⛭ Az Zaitoun: building-level damage over time <span style="color:var(--ink-mute)">— real UNOSAT satellite data, 15 dated passes, on this map</span></button>';
-      if (typeof window.__azzWireToggle === 'function') window.__azzWireToggle();
+        + '<div style="font-family:var(--font-mono);font-size:.6rem;color:var(--ink-mute);letter-spacing:.05em;margin-bottom:4px;">BUILDING-LEVEL DAMAGE OVER TIME — REAL UNOSAT SATELLITE DATA, ON THIS MAP</div>'
+        + (typeof window.__gzSummaryHTML === 'function' ? window.__gzSummaryHTML() : '');
+      if (typeof window.__gzWireToggle === 'function') window.__gzWireToggle();
     } else {
       summaryEl.textContent = 'Explore the geographic, legal, hydrological and administrative record without collapsing competing descriptions into one narrative.';
-      if (typeof window.__azzHide === 'function') window.__azzHide();
+      if (typeof window.__gzHide === 'function') window.__gzHide();
     }
     document.getElementById('g2ModeLabel').textContent=mode==='all'?'All perspectives':mode==='single'?('Perspective · '+ps[selectedPerspective%ps.length]):'Compare perspectives';
     var pills=[];
@@ -7580,30 +7581,35 @@ buildTabs(); buildLegend(); renderHud();
 </script>
 
 <!-- ======================================================================
-     Az Zaitoun damage-over-time -- as a LAYER on this map, not a separate
-     page. Toggled from the Gaza Strip perspective card. Lazy-loads its
-     ~9MB of real building + damage-point data only when switched on, never
-     on page load for visitors looking at any other territory.
+     Gaza City damage-over-time -- as LAYERS on this map, not separate
+     pages. One neighborhood active at a time, picked from the button
+     list on the Gaza Strip perspective card. Each neighborhood lazily
+     fetches its own real building + damage-point data (a few MB) only
+     when first switched on, cached after that. Add a neighborhood by
+     appending to the NEIGHBORHOODS list below and dropping its matching
+     <slug>_buildings.geojson / <slug>_unmatched_points.geojson pair in
+     gaza-damage/data/.
      ====================================================================== -->
 <style>
-.azz-dial-wrap{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:7;display:none;flex-direction:column;align-items:center;gap:8px;pointer-events:none}
-.azz-dial-wrap.active{display:flex}
-.azz-dial-readout{pointer-events:auto;font-family:var(--font-display);font-size:1.1rem;color:var(--gold-hi);background:rgba(5,8,16,.9);border:1px solid var(--line);padding:6px 16px;backdrop-filter:blur(10px)}
-.azz-dial-sub{pointer-events:auto;font-family:var(--font-mono);font-size:.6rem;color:var(--ink-mute);letter-spacing:.05em;text-align:center;max-width:260px}
-#azzDial{pointer-events:auto;width:180px;height:180px;cursor:grab;touch-action:none}
-#azzDial:active{cursor:grabbing}
-.azz-tick{stroke:var(--ink-mute);stroke-width:1.5}
-.azz-tick.active{stroke:var(--gold);stroke-width:2.5}
-.azz-ring{fill:none;stroke:var(--line);stroke-width:1}
-.azz-pointer{stroke:var(--gold);stroke-width:2}
-.azz-hub{fill:var(--gold)}
-@media(max-width:820px){.azz-dial-wrap{bottom:66px}#azzDial{width:140px;height:140px}}
+.gz-dial-wrap{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:7;display:none;flex-direction:column;align-items:center;gap:8px;pointer-events:none}
+.gz-dial-wrap.active{display:flex}
+.gz-dial-readout{pointer-events:auto;font-family:var(--font-display);font-size:1.1rem;color:var(--gold-hi);background:rgba(5,8,16,.9);border:1px solid var(--line);padding:6px 16px;backdrop-filter:blur(10px)}
+.gz-dial-sub{pointer-events:auto;font-family:var(--font-mono);font-size:.6rem;color:var(--ink-mute);letter-spacing:.05em;text-align:center;max-width:260px}
+#gzDial{pointer-events:auto;width:180px;height:180px;cursor:grab;touch-action:none}
+#gzDial:active{cursor:grabbing}
+.gz-tick{stroke:var(--ink-mute);stroke-width:1.5}
+.gz-tick.active{stroke:var(--gold);stroke-width:2.5}
+.gz-ring{fill:none;stroke:var(--line);stroke-width:1}
+.gz-pointer{stroke:var(--gold);stroke-width:2}
+.gz-hub{fill:var(--gold)}
+.gz-toggle-btn.active{border-color:var(--gold)}
+@media(max-width:820px){.gz-dial-wrap{bottom:66px}#gzDial{width:140px;height:140px}}
 </style>
 
-<div class="azz-dial-wrap" id="azzDialWrap">
-  <div class="azz-dial-readout" id="azzDialReadout">—</div>
-  <svg id="azzDial" viewBox="0 0 180 180"></svg>
-  <div class="azz-dial-sub" id="azzDialStats">drag the ring to change the assessment date</div>
+<div class="gz-dial-wrap" id="gzDialWrap">
+  <div class="gz-dial-readout" id="gzDialReadout">—</div>
+  <svg id="gzDial" viewBox="0 0 180 180"></svg>
+  <div class="gz-dial-sub" id="gzDialStats">drag the ring to change the assessment date</div>
 </div>
 
 <script>
@@ -7611,12 +7617,18 @@ buildTabs(); buildLegend(); renderHud();
   'use strict';
   var CLASS_COLORS = {1:'#c0392b',2:'#e0793a',3:'#d4b83f',4:'#8a9a5b'};
   var CLASS_LABELS = {1:'Destroyed',2:'Severe Damage',3:'Moderate Damage',4:'Possible Damage'};
-  var DATA_URLS = {
-    buildings: '../gaza-damage/data/az-zaitoun_buildings.geojson',
-    unmatched: '../gaza-damage/data/az-zaitoun_unmatched_points.geojson',
-  };
-  var HOME_VIEW = { center:[34.4436,31.4885], zoom:14.2 };
-  var state = { loaded:false, active:false, dates:[], idx:0, buildings:null, unmatched:null, wired:false };
+  var NEIGHBORHOODS = [
+    { slug:'az-zaitoun', label:'Az Zaitoun', homeView:{ center:[34.4436,31.4885], zoom:14.2 } },
+    { slug:'as-sabra', label:'As Sabra', homeView:{ center:[34.4483,31.5079], zoom:14.8 } },
+    { slug:'ash-sheikh-ijleen', label:"Ash Sheikh 'Ijleen", homeView:{ center:[34.4242,31.5049], zoom:14.8 } },
+    { slug:'ash-sheikh-radwan', label:'Ash Sheikh Radwan', homeView:{ center:[34.4693,31.5331], zoom:15.0 } },
+  ];
+  function nbBySlug(slug){ for (var i=0;i<NEIGHBORHOODS.length;i++) if (NEIGHBORHOODS[i].slug===slug) return NEIGHBORHOODS[i]; return null; }
+  function dataUrls(slug){ return { buildings:'../gaza-damage/data/'+slug+'_buildings.geojson', unmatched:'../gaza-damage/data/'+slug+'_unmatched_points.geojson' }; }
+  function escapeHtmlLocal(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]});}
+
+  var cache = {};
+  var state = { activeSlug:null, idx:0 };
 
   function classAsOf(sites, selectedDate){
     var worst = null;
@@ -7644,27 +7656,29 @@ buildTabs(); buildLegend(); renderHud();
   }
 
   function addLayers(){
-    map.addSource('azz-buildings', { type:'geojson', data: annotateBuildings(structuredClone(state.buildings), state.dates[state.idx]) });
-    map.addLayer({ id:'azz-buildings-fill', type:'fill', source:'azz-buildings', paint:{
+    var c = cache[state.activeSlug];
+    map.addSource('gz-buildings', { type:'geojson', data: annotateBuildings(structuredClone(c.buildings), c.dates[state.idx]) });
+    map.addLayer({ id:'gz-buildings-fill', type:'fill', source:'gz-buildings', paint:{
       'fill-color':['match',['get','currentClass'],1,CLASS_COLORS[1],2,CLASS_COLORS[2],3,CLASS_COLORS[3],4,CLASS_COLORS[4],'rgba(120,130,145,0.08)'],
       'fill-opacity':['case',['==',['get','currentClass'],null],0.25,0.85],
     }});
-    map.addLayer({ id:'azz-buildings-line', type:'line', source:'azz-buildings', paint:{ 'line-color':'#000', 'line-width':0.3, 'line-opacity':0.4 } });
-    map.addSource('azz-unmatched', { type:'geojson', data: annotatePoints(structuredClone(state.unmatched), state.dates[state.idx]) });
-    map.addLayer({ id:'azz-unmatched-points', type:'circle', source:'azz-unmatched', paint:{
+    map.addLayer({ id:'gz-buildings-line', type:'line', source:'gz-buildings', paint:{ 'line-color':'#000', 'line-width':0.3, 'line-opacity':0.4 } });
+    map.addSource('gz-unmatched', { type:'geojson', data: annotatePoints(structuredClone(c.unmatched), c.dates[state.idx]) });
+    map.addLayer({ id:'gz-unmatched-points', type:'circle', source:'gz-unmatched', paint:{
       'circle-radius':3,
       'circle-color':['match',['get','currentClass'],1,CLASS_COLORS[1],2,CLASS_COLORS[2],3,CLASS_COLORS[3],4,CLASS_COLORS[4],'#888'],
       'circle-stroke-width':0.5,'circle-stroke-color':'#000',
     }});
   }
   function removeLayers(){
-    ['azz-buildings-fill','azz-buildings-line','azz-unmatched-points'].forEach(function(id){ if (map.getLayer(id)) map.removeLayer(id); });
-    ['azz-buildings','azz-unmatched'].forEach(function(id){ if (map.getSource(id)) map.removeSource(id); });
+    ['gz-buildings-fill','gz-buildings-line','gz-unmatched-points'].forEach(function(id){ if (map.getLayer(id)) map.removeLayer(id); });
+    ['gz-buildings','gz-unmatched'].forEach(function(id){ if (map.getSource(id)) map.removeSource(id); });
   }
   function updateLayers(){
-    var d = state.dates[state.idx];
-    if (map.getSource('azz-buildings')) map.getSource('azz-buildings').setData(annotateBuildings(structuredClone(state.buildings), d));
-    if (map.getSource('azz-unmatched')) map.getSource('azz-unmatched').setData(annotatePoints(structuredClone(state.unmatched), d));
+    var c = cache[state.activeSlug];
+    var d = c.dates[state.idx];
+    if (map.getSource('gz-buildings')) map.getSource('gz-buildings').setData(annotateBuildings(structuredClone(c.buildings), d));
+    if (map.getSource('gz-unmatched')) map.getSource('gz-unmatched').setData(annotatePoints(structuredClone(c.unmatched), d));
     updateReadout();
     updateDialVisual();
   }
@@ -7673,32 +7687,34 @@ buildTabs(); buildLegend(); renderHud();
     return d.toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric',timeZone:'UTC'});
   }
   function updateReadout(){
-    document.getElementById('azzDialReadout').textContent = fmtDate(state.dates[state.idx]);
+    var c = cache[state.activeSlug];
+    document.getElementById('gzDialReadout').textContent = fmtDate(c.dates[state.idx]);
     var counts = {1:0,2:0,3:0,4:0};
-    state.buildings.features.forEach(function(f){
+    c.buildings.features.forEach(function(f){
       var sites = f.properties.damage_sites || [];
-      var cls = sites.length ? classAsOf(sites, state.dates[state.idx]) : null;
+      var cls = sites.length ? classAsOf(sites, c.dates[state.idx]) : null;
       if (cls && counts[cls] !== undefined) counts[cls]++;
     });
-    document.getElementById('azzDialStats').textContent =
+    document.getElementById('gzDialStats').textContent =
       counts[1]+' destroyed · '+counts[2]+' severe · '+counts[3]+' moderate · '+counts[4]+' possible (UNOSAT, this date)';
   }
 
   var DIAL_R=70, DIAL_CX=90, DIAL_CY=90;
   function buildDial(){
-    var svg = document.getElementById('azzDial');
-    var n = state.dates.length;
-    var html = '<circle class="azz-ring" cx="'+DIAL_CX+'" cy="'+DIAL_CY+'" r="'+DIAL_R+'"/>';
+    var svg = document.getElementById('gzDial');
+    var c = cache[state.activeSlug];
+    var n = c.dates.length;
+    var html = '<circle class="gz-ring" cx="'+DIAL_CX+'" cy="'+DIAL_CY+'" r="'+DIAL_R+'"/>';
     for (var i=0;i<n;i++){
       var a = (2*Math.PI*i)/n - Math.PI/2;
       var x1=DIAL_CX+(DIAL_R-6)*Math.cos(a), y1=DIAL_CY+(DIAL_R-6)*Math.sin(a);
       var x2=DIAL_CX+(DIAL_R+6)*Math.cos(a), y2=DIAL_CY+(DIAL_R+6)*Math.sin(a);
-      html += '<line class="azz-tick" data-idx="'+i+'" x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" style="cursor:pointer"/>';
+      html += '<line class="gz-tick" data-idx="'+i+'" x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" style="cursor:pointer"/>';
     }
-    html += '<line class="azz-pointer" id="azzPointer" x1="'+DIAL_CX+'" y1="'+DIAL_CY+'" x2="'+DIAL_CX+'" y2="'+(DIAL_CY-DIAL_R)+'"/>';
-    html += '<circle class="azz-hub" cx="'+DIAL_CX+'" cy="'+DIAL_CY+'" r="5"/>';
+    html += '<line class="gz-pointer" id="gzPointer" x1="'+DIAL_CX+'" y1="'+DIAL_CY+'" x2="'+DIAL_CX+'" y2="'+(DIAL_CY-DIAL_R)+'"/>';
+    html += '<circle class="gz-hub" cx="'+DIAL_CX+'" cy="'+DIAL_CY+'" r="5"/>';
     svg.innerHTML = html;
-    svg.querySelectorAll('.azz-tick').forEach(function(el){
+    svg.querySelectorAll('.gz-tick').forEach(function(el){
       el.addEventListener('click', function(){ state.idx = parseInt(el.dataset.idx,10); updateLayers(); });
     });
     var dragging=false;
@@ -7721,69 +7737,85 @@ buildTabs(); buildLegend(); renderHud();
     window.addEventListener('touchend', function(){ dragging=false; });
   }
   function updateDialVisual(){
-    document.querySelectorAll('.azz-tick').forEach(function(el){ el.classList.toggle('active', parseInt(el.dataset.idx,10)===state.idx); });
-    var n = state.dates.length;
+    var c = cache[state.activeSlug];
+    document.querySelectorAll('.gz-tick').forEach(function(el){ el.classList.toggle('active', parseInt(el.dataset.idx,10)===state.idx); });
+    var n = c.dates.length;
     var a = (2*Math.PI*state.idx)/n - Math.PI/2;
-    var p = document.getElementById('azzPointer');
+    var p = document.getElementById('gzPointer');
     if (p){ p.setAttribute('x2', DIAL_CX+DIAL_R*Math.cos(a)); p.setAttribute('y2', DIAL_CY+DIAL_R*Math.sin(a)); }
   }
 
-  function setToggleLabel(on){
-    var btn = document.getElementById('azzToggleBtn');
+  function setToggleLabel(slug, on, loading){
+    var btn = document.querySelector('.gz-toggle-btn[data-gzslug="'+slug+'"]');
     if (!btn) return;
-    btn.innerHTML = (on ? '● HIDE' : '⛭') + ' Az Zaitoun: building-level damage over time <span style="color:var(--ink-mute)">— real UNOSAT satellite data, 15 dated passes, on this map</span>';
+    var nb = nbBySlug(slug);
+    var icon = loading ? '⏳' : (on ? '● HIDE' : '⛭');
+    var suffix = loading
+      ? ' Loading '+escapeHtmlLocal(nb.label)+' real building + damage data (one-time)…'
+      : (' '+escapeHtmlLocal(nb.label)+': building-level damage over time <span style="color:var(--ink-mute)">— real UNOSAT satellite data, on this map</span>');
+    btn.innerHTML = icon + suffix;
     btn.classList.toggle('active', on);
   }
 
-  function activate(){
-    document.getElementById('azzDialWrap').classList.add('active');
-    if (state.loaded){
-      addLayers();
-      if (typeof buildDial === 'function' && !document.getElementById('azzDial').innerHTML) buildDial();
-      updateLayers();
-      map.flyTo({ center:HOME_VIEW.center, zoom:HOME_VIEW.zoom, essential:true });
-      state.active = true; setToggleLabel(true);
-      return;
-    }
-    setToggleLabel(true);
-    var btn = document.getElementById('azzToggleBtn');
-    var origHTML = btn.innerHTML;
-    btn.innerHTML = '⏳ Loading real building + damage data (~9MB, one-time)…';
-    Promise.all([
-      fetch(DATA_URLS.buildings).then(function(r){ return r.json(); }),
-      fetch(DATA_URLS.unmatched).then(function(r){ return r.json(); }),
-    ]).then(function(results){
-      state.buildings = results[0]; state.unmatched = results[1];
-      var dateSet = {};
-      state.buildings.features.forEach(function(f){ (f.properties.damage_sites||[]).forEach(function(s){ s.h.forEach(function(h){ dateSet[h[0]]=1; }); }); });
-      state.unmatched.features.forEach(function(f){ f.properties.h.forEach(function(h){ dateSet[h[0]]=1; }); });
-      state.dates = Object.keys(dateSet).sort();
-      state.idx = state.dates.length - 1;
-      state.loaded = true;
+  function activate(slug){
+    var nb = nbBySlug(slug); if (!nb) return;
+    document.getElementById('gzDialWrap').classList.add('active');
+    function goLive(){
+      state.activeSlug = slug;
+      state.idx = cache[slug].dates.length - 1;
       addLayers();
       buildDial();
       updateLayers();
-      map.flyTo({ center:HOME_VIEW.center, zoom:HOME_VIEW.zoom, essential:true });
-      state.active = true; setToggleLabel(true);
+      map.flyTo({ center:nb.homeView.center, zoom:nb.homeView.zoom, essential:true });
+      setToggleLabel(slug, true, false);
+    }
+    if (cache[slug]) { goLive(); return; }
+    setToggleLabel(slug, false, true);
+    var urls = dataUrls(slug);
+    Promise.all([
+      fetch(urls.buildings).then(function(r){ return r.json(); }),
+      fetch(urls.unmatched).then(function(r){ return r.json(); }),
+    ]).then(function(results){
+      var buildings = results[0], unmatched = results[1];
+      var dateSet = {};
+      buildings.features.forEach(function(f){ (f.properties.damage_sites||[]).forEach(function(s){ s.h.forEach(function(h){ dateSet[h[0]]=1; }); }); });
+      unmatched.features.forEach(function(f){ f.properties.h.forEach(function(h){ dateSet[h[0]]=1; }); });
+      cache[slug] = { buildings:buildings, unmatched:unmatched, dates:Object.keys(dateSet).sort() };
+      goLive();
     }).catch(function(err){
-      btn.innerHTML = '⚠ Failed to load: ' + err.message;
-      setTimeout(function(){ btn.innerHTML = origHTML; }, 4000);
+      var btn = document.querySelector('.gz-toggle-btn[data-gzslug="'+slug+'"]');
+      if (btn) btn.innerHTML = '⚠ Failed to load: ' + err.message;
+      setTimeout(function(){ setToggleLabel(slug, false, false); }, 4000);
     });
   }
   function deactivate(){
+    if (!state.activeSlug) return;
     removeLayers();
-    document.getElementById('azzDialWrap').classList.remove('active');
-    state.active = false; setToggleLabel(false);
+    document.getElementById('gzDialWrap').classList.remove('active');
+    setToggleLabel(state.activeSlug, false, false);
+    state.activeSlug = null;
     if (activeTerritory === 'gaza-strip') { var t = DATA['gaza-strip']; map.flyTo({ center:[t.center.lng,t.center.lat], zoom:8, essential:true }); }
   }
+  function switchTo(slug){
+    if (state.activeSlug === slug) { deactivate(); return; }
+    if (state.activeSlug) { removeLayers(); setToggleLabel(state.activeSlug, false, false); }
+    activate(slug);
+  }
 
-  window.__azzWireToggle = function(){
-    var btn = document.getElementById('azzToggleBtn');
-    if (!btn || btn.dataset.wired) return;
-    btn.dataset.wired = '1';
-    btn.addEventListener('click', function(){ state.active ? deactivate() : activate(); });
+  window.__gzSummaryHTML = function(){
+    return '<div id="gzButtonsWrap" style="display:flex;flex-direction:column;gap:6px;">'
+      + NEIGHBORHOODS.map(function(nb){
+          return '<button class="g2-mode gz-toggle-btn" data-gzslug="'+nb.slug+'" style="width:100%;text-align:left;white-space:normal;line-height:1.4;padding:8px 10px;">⛭ '+escapeHtmlLocal(nb.label)+': building-level damage over time <span style="color:var(--ink-mute)">— real UNOSAT satellite data, on this map</span></button>';
+        }).join('')
+      + '</div>';
   };
-  window.__azzHide = function(){ if (state.active) deactivate(); };
+  window.__gzWireToggle = function(){
+    document.querySelectorAll('.gz-toggle-btn').forEach(function(btn){
+      btn.addEventListener('click', function(){ switchTo(btn.getAttribute('data-gzslug')); });
+    });
+    if (state.activeSlug) setToggleLabel(state.activeSlug, true, false);
+  };
+  window.__gzHide = function(){ if (state.activeSlug) deactivate(); };
 })();
 </script>
 </body>
