@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Az Zaitoun — Damage Over Time</title>
+<meta name="description" content="Documented structural damage in Az Zaitoun, Gaza City, tracked across 15 dated UNOSAT satellite passes (Oct 2023 – Sept 2025), shown on real OpenStreetMap building footprints.">
+<link href="../app/theme-vars.css" rel="stylesheet">
+<script src="../app/theme-switcher.js"></script>
+<link href="https://unpkg.com/maplibre-gl@4/dist/maplibre-gl.css" rel="stylesheet">
+<script src="https://unpkg.com/maplibre-gl@4/dist/maplibre-gl.js"></script>
+<style>
+:root{
+  --dial-size: 260px;
+  --font-display: 'Cinzel', serif;
+  --font-mono: 'Space Mono', 'Courier New', monospace;
+}
+*{ box-sizing:border-box; }
+html,body{ margin:0; padding:0; height:100%; background:var(--bg-deep); color:var(--ink); font-family:var(--font-mono); overflow:hidden; }
+#map{ position:absolute; inset:0; }
+
+.topbar{
+  position:fixed; top:0; left:0; right:0; z-index:5; pointer-events:none;
+  display:flex; align-items:flex-start; justify-content:space-between; padding:16px 20px;
+}
+.wordmark{ pointer-events:auto; background:var(--panel); border:1px solid var(--panel-edge); padding:10px 14px; backdrop-filter:blur(10px); }
+.wordmark b{ font-family:var(--font-display); color:var(--accent-2); letter-spacing:.08em; font-size:.95rem; }
+.wordmark .sub{ display:block; font-size:.62rem; color:var(--ink-dim); margin-top:3px; letter-spacing:.04em; }
+.back-link{ pointer-events:auto; background:var(--panel); border:1px solid var(--panel-edge); padding:10px 14px; color:var(--ink-dim); text-decoration:none; font-size:.68rem; letter-spacing:.06em; backdrop-filter:blur(10px); }
+.back-link:hover{ color:var(--accent-2); border-color:var(--accent); }
+
+.stat-panel{
+  position:fixed; top:80px; right:16px; z-index:5; width:280px; max-width:calc(100vw - 32px);
+  background:var(--panel); border:1px solid var(--panel-edge); padding:16px; backdrop-filter:blur(10px);
+}
+.stat-kicker{ font-size:.6rem; letter-spacing:.14em; text-transform:uppercase; color:var(--accent-3); margin-bottom:4px; }
+.stat-date{ font-family:var(--font-display); font-size:1.15rem; color:var(--accent-2); margin-bottom:10px; }
+.stat-row{ display:flex; align-items:center; justify-content:space-between; padding:4px 0; font-size:.74rem; }
+.stat-row .dot{ width:9px; height:9px; border-radius:50%; display:inline-block; margin-right:7px; }
+.stat-row .lab{ display:flex; align-items:center; color:var(--ink-dim); }
+.stat-row .val{ font-variant-numeric:tabular-nums; color:var(--ink); }
+.stat-divider{ height:1px; background:var(--panel-edge); margin:10px 0; }
+.stat-note{ font-size:.64rem; color:var(--ink-mute); line-height:1.5; }
+.stat-note b{ color:var(--ink-dim); }
+
+.dial-wrap{
+  position:fixed; left:50%; bottom:22px; transform:translateX(-50%); z-index:6;
+  display:flex; flex-direction:column; align-items:center; gap:8px;
+}
+.dial-date-readout{
+  font-family:var(--font-display); font-size:1.3rem; color:var(--accent-2);
+  background:var(--panel); border:1px solid var(--panel-edge); padding:6px 18px; backdrop-filter:blur(10px);
+}
+#dial{ width:var(--dial-size); height:var(--dial-size); cursor:grab; touch-action:none; }
+#dial:active{ cursor:grabbing; }
+.dial-hint{ font-size:.6rem; color:var(--ink-mute); letter-spacing:.06em; }
+
+.tick-label{ font-family:var(--font-mono); font-size:8px; fill:var(--ink-mute); }
+.tick-label.active{ fill:var(--accent-2); font-weight:bold; }
+.tick-mark{ stroke:var(--ink-mute); stroke-width:1.5; }
+.tick-mark.active{ stroke:var(--accent); stroke-width:2.5; }
+.dial-ring{ fill:none; stroke:var(--panel-edge); stroke-width:1; }
+.dial-pointer{ stroke:var(--accent); stroke-width:2; }
+.dial-hub{ fill:var(--accent); }
+
+.loading{
+  position:fixed; inset:0; z-index:20; background:var(--bg-deep); display:flex; align-items:center; justify-content:center;
+  flex-direction:column; gap:10px; transition:opacity .4s;
+}
+.loading .word{ font-family:var(--font-display); color:var(--accent-2); letter-spacing:.1em; }
+.loading .sub{ font-size:.66rem; color:var(--ink-mute); }
+.loading.hidden{ opacity:0; pointer-events:none; }
+
+.gaspi-popup .maplibregl-popup-content{ background:var(--panel); border:1px solid var(--panel-edge); color:var(--ink); font-family:var(--font-mono); font-size:.7rem; padding:10px 12px; max-width:260px; }
+.gaspi-popup .maplibregl-popup-tip{ border-top-color:var(--panel-edge)!important; border-bottom-color:var(--panel-edge)!important; }
+.popup-title{ color:var(--accent-2); font-family:var(--font-display); margin-bottom:5px; }
+.popup-row{ margin:2px 0; color:var(--ink-dim); }
+.popup-row b{ color:var(--ink); }
+
+@media(max-width:640px){
+  .stat-panel{ width:220px; padding:12px; }
+  :root{ --dial-size: 200px; }
+}
+</style>
+</head>
+<body>
+
+<div class="loading" id="loading">
+  <div class="word">AZ ZAITOUN</div>
+  <div class="sub">loading 14,305 buildings and 15 dated satellite passes…</div>
+</div>
+
+<div id="map"></div>
+
+<div class="topbar">
+  <div class="wordmark">
+    <b>AZ ZAITOUN — DAMAGE OVER TIME</b>
+    <span class="sub">Gaza City · UNOSAT/OCHA Comprehensive Damage Assessment</span>
+  </div>
+  <a class="back-link" href="../thegreatgaspi/index.html">← THE GREAT GASPI</a>
+</div>
+
+<div class="stat-panel">
+  <div class="stat-kicker">Assessment date</div>
+  <div class="stat-date" id="statDate">—</div>
+  <div id="statRows"></div>
+  <div class="stat-divider"></div>
+  <div class="stat-note">
+    <b>What this shows:</b> real OpenStreetMap building footprints, colored by the most severe UNOSAT-documented damage classification as of the selected date. Buildings with no color have no UNOSAT damage record — that means not individually assessed, not "confirmed undamaged." Small dots are damage sites UNOSAT assessed with no mapped building footprint within 20m nearby (likely destroyed before mapping caught up).
+    <br><br>
+    Damage class labels (Destroyed/Severe/Moderate/Possible) follow UNOSAT's standard public scheme, inferred from this release's own value distribution — not yet confirmed against its official legend.
+  </div>
+</div>
+
+<div class="dial-wrap">
+  <div class="dial-date-readout" id="dialReadout">—</div>
+  <svg id="dial" viewBox="0 0 260 260"></svg>
+  <div class="dial-hint">drag the ring, or click a tick, to change the assessment date</div>
+</div>
+
+<script>
+'use strict';
+
+const CLASS_COLORS = {
+  1: '#c0392b', // Destroyed
+  2: '#e0793a', // Severe
+  3: '#d4b83f', // Moderate
+  4: '#8a9a5b', // Possible
+};
+const CLASS_LABELS = { 1: 'Destroyed', 2: 'Severe Damage', 3: 'Moderate Damage', 4: 'Possible Damage' };
+const NO_DATA_COLOR = 'rgba(120,130,145,0.10)';
+const NO_DATA_LINE = 'rgba(120,130,145,0.25)';
+
+let DATES = [];          // sorted ISO date strings, all real passes present in this neighborhood's data
+let selectedIdx = 0;
+let buildingsData = null;
+let unmatchedData = null;
+
+// worst (lowest numeric code = most severe) class across a building's damage_sites, as of selectedDate
+function classAsOf(damageSites, selectedDate) {
+  let worst = null;
+  for (const site of damageSites) {
+    let latest = null;
+    for (const h of site.h) {
+      if (h[0] <= selectedDate) latest = h; // h sorted ascending already
+    }
+    if (latest && latest[1] != null) {
+      if (worst === null || latest[1] < worst) worst = latest[1];
+    }
+  }
+  return worst;
+}
+
+function colorExpressionAsOf(selectedDate) {
+  // Precompute per-feature at render time instead of a maplibre expression --
+  // damage_sites is a nested array maplibre's expression language can't easily
+  // fold over, so we set a flattened 'currentClass' property client-side and
+  // key the paint expression off that instead.
+}
+
+function annotateFeatures(fc, selectedDate) {
+  for (const f of fc.features) {
+    const sites = f.properties.damage_sites || [];
+    f.properties.currentClass = sites.length ? classAsOf(sites, selectedDate) : null;
+    f.properties.siteCount = sites.length;
+  }
+  return fc;
+}
+
+function annotatePoints(fc, selectedDate) {
+  for (const f of fc.features) {
+    let latest = null;
+    for (const h of f.properties.h) if (h[0] <= selectedDate) latest = h;
+    f.properties.currentClass = latest ? latest[1] : null;
+  }
+  return fc;
+}
+
+const map = new maplibregl.Map({
+  container: 'map',
+  style: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
+  center: [34.4436, 31.4885],
+  zoom: 14.2,
+  pitch: 0,
+});
+map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'bottom-right');
+
+Promise.all([
+  fetch('data/az-zaitoun_buildings.geojson').then(r => r.json()),
+  fetch('data/az-zaitoun_unmatched_points.geojson').then(r => r.json()),
+]).then(([buildings, unmatched]) => {
+  buildingsData = buildings;
+  unmatchedData = unmatched;
+
+  const dateSet = new Set();
+  for (const f of buildings.features) for (const s of (f.properties.damage_sites || [])) for (const h of s.h) dateSet.add(h[0]);
+  for (const f of unmatched.features) for (const h of f.properties.h) dateSet.add(h[0]);
+  DATES = Array.from(dateSet).sort();
+  selectedIdx = DATES.length - 1; // start at most recent
+
+  if (map.loaded()) init(); else map.on('load', init);
+}).catch(err => {
+  document.getElementById('loading').innerHTML = '<div class="word">FAILED TO LOAD DATA</div><div class="sub">' + err.message + '</div>';
+});
+
+function init() {
+  const selectedDate = DATES[selectedIdx];
+  map.addSource('buildings', { type: 'geojson', data: annotateFeatures(structuredClone(buildingsData), selectedDate) });
+  map.addLayer({
+    id: 'buildings-fill',
+    type: 'fill',
+    source: 'buildings',
+    paint: {
+      'fill-color': [
+        'match', ['get', 'currentClass'],
+        1, CLASS_COLORS[1], 2, CLASS_COLORS[2], 3, CLASS_COLORS[3], 4, CLASS_COLORS[4],
+        NO_DATA_COLOR,
+      ],
+      'fill-opacity': ['case', ['==', ['get', 'currentClass'], null], 0.35, 0.82],
+    },
+  });
+  map.addLayer({
+    id: 'buildings-line',
+    type: 'line',
+    source: 'buildings',
+    paint: {
+      'line-color': ['case', ['==', ['get', 'currentClass'], null], NO_DATA_LINE, '#000000'],
+      'line-width': 0.4,
+      'line-opacity': 0.5,
+    },
+  });
+
+  map.addSource('unmatched', { type: 'geojson', data: annotatePoints(structuredClone(unmatchedData), selectedDate) });
+  map.addLayer({
+    id: 'unmatched-points',
+    type: 'circle',
+    source: 'unmatched',
+    paint: {
+      'circle-radius': 3,
+      'circle-color': [
+        'match', ['get', 'currentClass'],
+        1, CLASS_COLORS[1], 2, CLASS_COLORS[2], 3, CLASS_COLORS[3], 4, CLASS_COLORS[4],
+        '#888',
+      ],
+      'circle-stroke-width': 0.5,
+      'circle-stroke-color': '#000',
+      'circle-opacity': 0.9,
+    },
+  });
+
+  const popup = new maplibregl.Popup({ closeButton: false, className: 'gaspi-popup' });
+  for (const layerId of ['buildings-fill', 'unmatched-points']) {
+    map.on('mousemove', layerId, (e) => {
+      map.getCanvas().style.cursor = 'pointer';
+      const f = e.features[0];
+      const p = f.properties;
+      let html;
+      if (layerId === 'buildings-fill') {
+        const siteCount = p.siteCount;
+        const cls = p.currentClass;
+        html = '<div class="popup-title">Building #' + p.bldg_id + '</div>'
+          + '<div class="popup-row"><b>' + (cls ? CLASS_LABELS[cls] || ('Class ' + cls) : 'No UNOSAT record') + '</b></div>'
+          + '<div class="popup-row">' + siteCount + ' matched damage site' + (siteCount === 1 ? '' : 's') + '</div>';
+      } else {
+        html = '<div class="popup-title">Damage site ' + p.site_id + '</div>'
+          + '<div class="popup-row"><b>' + (p.currentClass ? CLASS_LABELS[p.currentClass] : 'Not yet assessed at this date') + '</b></div>'
+          + '<div class="popup-row">No mapped building within 20m</div>';
+      }
+      popup.setLngLat(e.lngLat).setHTML(html).addTo(map);
+    });
+    map.on('mouseleave', layerId, () => { map.getCanvas().style.cursor = ''; popup.remove(); });
+  }
+
+  buildDial();
+  updateAll();
+  document.getElementById('loading').classList.add('hidden');
+}
+
+function updateAll() {
+  const selectedDate = DATES[selectedIdx];
+  if (map.getSource('buildings')) map.getSource('buildings').setData(annotateFeatures(structuredClone(buildingsData), selectedDate));
+  if (map.getSource('unmatched')) map.getSource('unmatched').setData(annotatePoints(structuredClone(unmatchedData), selectedDate));
+  updateStats(selectedDate);
+  updateDialVisual();
+}
+
+function fmtDate(iso) {
+  const d = new Date(iso);
+  return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' });
+}
+
+function updateStats(selectedDate) {
+  document.getElementById('statDate').textContent = fmtDate(selectedDate);
+  document.getElementById('dialReadout').textContent = fmtDate(selectedDate);
+  const counts = { 1: 0, 2: 0, 3: 0, 4: 0, none: 0 };
+  for (const f of buildingsData.features) {
+    const sites = f.properties.damage_sites || [];
+    const cls = sites.length ? classAsOf(sites, selectedDate) : null;
+    if (cls && counts[cls] !== undefined) counts[cls]++; else counts.none++;
+  }
+  const rows = [1, 2, 3, 4].map(c =>
+    '<div class="stat-row"><span class="lab"><span class="dot" style="background:' + CLASS_COLORS[c] + '"></span>' + CLASS_LABELS[c] + '</span><span class="val">' + counts[c].toLocaleString() + '</span></div>'
+  ).join('') + '<div class="stat-row"><span class="lab"><span class="dot" style="background:rgba(120,130,145,0.4)"></span>No UNOSAT record</span><span class="val">' + counts.none.toLocaleString() + '</span></div>';
+  document.getElementById('statRows').innerHTML = rows;
+}
+
+// ---- Radial dial ----
+const DIAL_R = 100, DIAL_CX = 130, DIAL_CY = 130;
+function buildDial() {
+  const svg = document.getElementById('dial');
+  const n = DATES.length;
+  let svgContent = '<circle class="dial-ring" cx="' + DIAL_CX + '" cy="' + DIAL_CY + '" r="' + DIAL_R + '"/>';
+  for (let i = 0; i < n; i++) {
+    const angle = (2 * Math.PI * i) / n - Math.PI / 2;
+    const x1 = DIAL_CX + (DIAL_R - 8) * Math.cos(angle), y1 = DIAL_CY + (DIAL_R - 8) * Math.sin(angle);
+    const x2 = DIAL_CX + (DIAL_R + 8) * Math.cos(angle), y2 = DIAL_CY + (DIAL_R + 8) * Math.sin(angle);
+    svgContent += '<line class="tick-mark" data-idx="' + i + '" x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" style="cursor:pointer"/>';
+  }
+  svgContent += '<line class="dial-pointer" id="dialPointer" x1="' + DIAL_CX + '" y1="' + DIAL_CY + '" x2="' + DIAL_CX + '" y2="' + (DIAL_CY - DIAL_R) + '"/>';
+  svgContent += '<circle class="dial-hub" cx="' + DIAL_CX + '" cy="' + DIAL_CY + '" r="6"/>';
+  svg.innerHTML = svgContent;
+
+  svg.querySelectorAll('.tick-mark').forEach(el => {
+    el.addEventListener('click', () => { selectedIdx = parseInt(el.dataset.idx, 10); updateAll(); });
+  });
+
+  let dragging = false;
+  function angleFromEvent(evt) {
+    const rect = svg.getBoundingClientRect();
+    const clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
+    const clientY = evt.touches ? evt.touches[0].clientY : evt.clientY;
+    const x = (clientX - rect.left) / rect.width * 260 - DIAL_CX;
+    const y = (clientY - rect.top) / rect.height * 260 - DIAL_CY;
+    let a = Math.atan2(y, x) + Math.PI / 2;
+    if (a < 0) a += 2 * Math.PI;
+    return a;
+  }
+  function setFromAngle(a) {
+    const idx = Math.round((a / (2 * Math.PI)) * n) % n;
+    if (idx !== selectedIdx) { selectedIdx = idx; updateAll(); }
+  }
+  svg.addEventListener('mousedown', (e) => { dragging = true; setFromAngle(angleFromEvent(e)); });
+  window.addEventListener('mousemove', (e) => { if (dragging) setFromAngle(angleFromEvent(e)); });
+  window.addEventListener('mouseup', () => { dragging = false; });
+  svg.addEventListener('touchstart', (e) => { dragging = true; setFromAngle(angleFromEvent(e)); }, { passive: true });
+  svg.addEventListener('touchmove', (e) => { if (dragging) setFromAngle(angleFromEvent(e)); }, { passive: true });
+  window.addEventListener('touchend', () => { dragging = false; });
+}
+
+function updateDialVisual() {
+  const n = DATES.length;
+  document.querySelectorAll('.tick-mark').forEach(el => {
+    el.classList.toggle('active', parseInt(el.dataset.idx, 10) === selectedIdx);
+  });
+  const angle = (2 * Math.PI * selectedIdx) / n - Math.PI / 2;
+  const pointer = document.getElementById('dialPointer');
+  if (pointer) {
+    pointer.setAttribute('x2', DIAL_CX + DIAL_R * Math.cos(angle));
+    pointer.setAttribute('y2', DIAL_CY + DIAL_R * Math.sin(angle));
+  }
+}
+</script>
+</body>
+</html>
