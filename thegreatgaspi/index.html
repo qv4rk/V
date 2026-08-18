@@ -7505,6 +7505,13 @@ buildTabs(); buildLegend(); renderHud();
     var ps=splitPerspectives(d), sources=sourceList(d);
     document.getElementById('g2Territory').firstChild.textContent=(d.name||activeTerritory)+' ';
     document.getElementById('g2Badge').style.display = v2 ? '' : 'none';
+    var summaryEl = document.getElementById('g2Summary');
+    if (activeTerritory === 'gaza-strip') {
+      summaryEl.innerHTML = 'Explore the geographic, legal, hydrological and administrative record without collapsing competing descriptions into one narrative.<br><br>'
+        + '<a href="../gaza-damage/az-zaitoun.html" style="color:var(--gold-hi);text-decoration:none;border-bottom:1px dotted var(--gold)">→ Az Zaitoun: building-level damage over time (real UNOSAT satellite data, 15 dated passes)</a>';
+    } else {
+      summaryEl.textContent = 'Explore the geographic, legal, hydrological and administrative record without collapsing competing descriptions into one narrative.';
+    }
     document.getElementById('g2ModeLabel').textContent=mode==='all'?'All perspectives':mode==='single'?('Perspective · '+ps[selectedPerspective%ps.length]):'Compare perspectives';
     var pills=[];
     if(d.metrics&&d.metrics.area_sqkm){var a=d.metrics.area_sqkm.value; if(a!==undefined)pills.push('Area '+a+' km²');}
