@@ -7405,9 +7405,19 @@ buildTabs(); buildLegend(); renderHud();
    duplicated branding once g2-command was added. .topbar's .hint (drag/
    scroll/click instructions) stays; it isn't repeated anywhere else. */
 .topbar .wordmark{display:none}
+.g2-rail-toggle{display:none}
 @media(max-width:820px){
   .g2-command{left:10px;right:10px;top:10px}.g2-modes{margin-top:6px}.g2-brand{display:inline-block}
-  .g2-rail{left:10px;right:10px;bottom:58px;width:auto;max-width:none}
+  /* The rail (perspective cards, can run to several screens of text) used
+     to be always-visible and fixed-position on every viewport -- on a
+     phone that meant it and the command bar together covered the map
+     completely, with no way to shrink or dismiss it (unlike the older
+     .hud panel, which already had exactly this problem solved via its
+     own Dossier toggle). Collapsed by default here, matching that
+     existing pattern instead of inventing a new one. */
+  .g2-rail{left:10px;right:10px;bottom:16px;width:auto;max-width:none;display:none}
+  .g2-rail.open{display:flex}
+  .g2-rail-toggle{display:inline-flex}
 }
 @media(max-width:600px){.g2-brand span{display:none}.g2-brand{padding:8px 10px}.g2-mode{padding:7px 8px}}
 </style>
@@ -7418,10 +7428,11 @@ buildTabs(); buildLegend(); renderHud();
     <button class="g2-mode active" data-g2mode="all">All</button>
     <button class="g2-mode" data-g2mode="single">Single perspective</button>
     <button class="g2-mode" data-g2mode="compare">Compare</button>
+    <button class="g2-mode g2-rail-toggle" id="g2RailToggle" aria-expanded="false" aria-controls="g2Rail">Evidence ▾</button>
   </div>
 </div>
 
-<div class="g2-rail">
+<div class="g2-rail" id="g2Rail">
   <section class="g2-card">
     <div class="g2-kicker">Current territory</div>
     <div class="g2-title" id="g2Territory">West Bank<span class="g2-badge" id="g2Badge" style="display:none">GASPI 2.0 pilot</span></div>
@@ -7549,7 +7560,16 @@ buildTabs(); buildLegend(); renderHud();
     document.getElementById('g2Drawer').classList.add('open'); document.getElementById('g2Drawer').setAttribute('aria-hidden','false');
   }
   function escapeHtml(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]});}
-  document.querySelectorAll('.g2-mode').forEach(function(b){b.addEventListener('click',function(){mode=b.getAttribute('data-g2mode');document.querySelectorAll('.g2-mode').forEach(function(x){x.classList.toggle('active',x===b)});render();});});
+  document.querySelectorAll('.g2-mode[data-g2mode]').forEach(function(b){b.addEventListener('click',function(){mode=b.getAttribute('data-g2mode');document.querySelectorAll('.g2-mode[data-g2mode]').forEach(function(x){x.classList.toggle('active',x===b)});render();});});
+  var railToggle = document.getElementById('g2RailToggle');
+  var rail = document.getElementById('g2Rail');
+  if (railToggle && rail) {
+    railToggle.addEventListener('click', function(){
+      var open = rail.classList.toggle('open');
+      railToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      railToggle.textContent = open ? 'Evidence ▴' : 'Evidence ▾';
+    });
+  }
   document.getElementById('g2SourcesBtn').addEventListener('click',openSources);
   document.getElementById('g2Close').addEventListener('click',function(){document.getElementById('g2Drawer').classList.remove('open');document.getElementById('g2Drawer').setAttribute('aria-hidden','true');});
   document.getElementById('g2Drawer').addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
