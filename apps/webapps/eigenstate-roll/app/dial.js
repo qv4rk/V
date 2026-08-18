@@ -1,6 +1,6 @@
 /* ─────────────────────────────────────────────────────────────
    EIGENSTATE ROLL — Antikythera Triplicity Dial
-   A purpose-built companion to the Manifold Atlas's dial: instead of
+   A purpose-built companion to The Atlas's dial: instead of
    tracking a Julian date, this dial reads the D4 Root/Element roll and
    sweeps its pointer to that element's triplicity across the twelve
    zodiac wedges, giving the cardinal, fixed and mutable signs a soft

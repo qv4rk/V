@@ -880,7 +880,7 @@
       ${skyImg ? `<img src="${skyImg}" alt="Sky view">` : ''}
       <div class="sky-cap">${escapeHtml(skyModeLabel)}</div>
     </div>
-    <footer>Generated ${generatedStr} · Manifold Atlas Natal Chart · in-browser ephemeris, Placidus houses, ecliptic of date</footer>
+    <footer>Generated ${generatedStr} · The Atlas Natal Chart · in-browser ephemeris, Placidus houses, ecliptic of date</footer>
   </div>
 </body></html>`;
   }

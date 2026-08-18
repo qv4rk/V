@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────────────────────
-   MANIFOLD ATLAS — Earth renderer
+   THE ATLAS — Earth renderer
 
    Orthographic projection. Uses d3-geo + topojson-client for the
    coastlines (world-atlas land-110m). Article nodes are pinned by

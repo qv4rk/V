@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────────────────────
-   MANIFOLD ATLAS — main controller
+   THE ATLAS — main controller
 
    Boots the three modules (dial / earth / sky), wires time as
    the master variable across them, loads articles, renders the
@@ -211,7 +211,7 @@ window.MA = window.MA || {};
       if (!btn) return;
       btn.addEventListener('click', () => {
         this._syncURL();
-        const data = { title: document.title, text: 'Manifold Atlas — ' + MA.fmtDate(this.jd), url: location.href };
+        const data = { title: document.title, text: 'The Atlas — ' + MA.fmtDate(this.jd), url: location.href };
         if (navigator.share) {
           navigator.share(data).catch(() => {});
         } else if (navigator.clipboard) {

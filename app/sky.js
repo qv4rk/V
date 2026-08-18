@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────────────────────
-   MANIFOLD ATLAS — Sky renderer
+   THE ATLAS — Sky renderer
 
    Full-bleed stereographic projection of the night sky from a
    chosen observer (lat/lon) at a chosen date. Pulls the d3-celestial
