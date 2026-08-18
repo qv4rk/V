@@ -97,7 +97,10 @@ html,body{ margin:0; padding:0; height:100%; background:var(--bg-deep); color:va
     <b>AZ ZAITOUN — DAMAGE OVER TIME</b>
     <span class="sub">Gaza City · UNOSAT/OCHA Comprehensive Damage Assessment</span>
   </div>
-  <a class="back-link" href="../thegreatgaspi/index.html">← THE GREAT GASPI</a>
+  <div style="display:flex;gap:8px;pointer-events:auto;">
+    <button class="back-link" id="recenterBtn" style="cursor:pointer;font-family:inherit;">⌖ RECENTER</button>
+    <a class="back-link" href="../thegreatgaspi/index.html">← THE GREAT GASPI</a>
+  </div>
 </div>
 
 <div class="stat-panel">
@@ -274,6 +277,11 @@ function init() {
   buildDial();
   updateAll();
   document.getElementById('loading').classList.add('hidden');
+
+  const HOME_VIEW = { center: [34.4436, 31.4885], zoom: 14.2, pitch: 0 };
+  document.getElementById('recenterBtn').addEventListener('click', () => {
+    map.flyTo({ ...HOME_VIEW, essential: true });
+  });
 }
 
 function updateAll() {
