@@ -7622,6 +7622,13 @@ buildTabs(); buildLegend(); renderHud();
     { slug:'as-sabra', label:'As Sabra', homeView:{ center:[34.4483,31.5079], zoom:14.8 } },
     { slug:'ash-sheikh-ijleen', label:"Ash Sheikh 'Ijleen", homeView:{ center:[34.4242,31.5049], zoom:14.8 } },
     { slug:'ash-sheikh-radwan', label:'Ash Sheikh Radwan', homeView:{ center:[34.4693,31.5331], zoom:15.0 } },
+    { slug:'ad-darraj', label:'Ad Darraj', homeView:{ center:[34.4641,31.5173], zoom:14.8 } },
+    { slug:'an-naser', label:'An Naser', homeView:{ center:[34.4581,31.5309], zoom:15.0 } },
+    { slug:'ash-shuja-iyeh-ijdeedeh', label:"Ash Shuja'iyeh - Ijdeedeh", homeView:{ center:[34.4823,31.5002], zoom:14.7 } },
+    { slug:'at-tuffah', label:'At Tuffah', homeView:{ center:[34.4834,31.5133], zoom:14.7 } },
+    { slug:'at-turukman-ijdeedeh', label:'At Turukman - Ijdeedeh', homeView:{ center:[34.4693,31.4935], zoom:14.9 } },
+    { slug:'northern-remal', label:'Northern Remal', homeView:{ center:[34.4494,31.5220], zoom:14.9 } },
+    { slug:'southern-remal', label:'Southern Remal', homeView:{ center:[34.4377,31.5180], zoom:14.8 } },
   ];
   function nbBySlug(slug){ for (var i=0;i<NEIGHBORHOODS.length;i++) if (NEIGHBORHOODS[i].slug===slug) return NEIGHBORHOODS[i]; return null; }
   function dataUrls(slug){ return { buildings:'../gaza-damage/data/'+slug+'_buildings.geojson', unmatched:'../gaza-damage/data/'+slug+'_unmatched_points.geojson' }; }
