@@ -7629,6 +7629,10 @@ buildTabs(); buildLegend(); renderHud();
     { slug:'at-turukman-ijdeedeh', label:'At Turukman - Ijdeedeh', homeView:{ center:[34.4693,31.4935], zoom:14.9 } },
     { slug:'northern-remal', label:'Northern Remal', homeView:{ center:[34.4494,31.5220], zoom:14.9 } },
     { slug:'southern-remal', label:'Southern Remal', homeView:{ center:[34.4377,31.5180], zoom:14.8 } },
+    { slug:'al-awadah', label:'Al Awadah', homeView:{ center:[34.4578,31.5413], zoom:15.0 } },
+    { slug:'ijdeedeh', label:'Ijdeedeh', homeView:{ center:[34.4974,31.5030], zoom:14.7 }, note:'partial OSM building coverage — most damage points have no matched footprint' },
+    { slug:'old-city', label:'Old City', homeView:{ center:[34.4644,31.5045], zoom:15.1 } },
+    { slug:'tal-el-hawa', label:'Tal El Hawa', homeView:{ center:[34.4356,31.5047], zoom:15.0 } },
   ];
   function nbBySlug(slug){ for (var i=0;i<NEIGHBORHOODS.length;i++) if (NEIGHBORHOODS[i].slug===slug) return NEIGHBORHOODS[i]; return null; }
   function dataUrls(slug){ return { buildings:'../gaza-damage/data/'+slug+'_buildings.geojson', unmatched:'../gaza-damage/data/'+slug+'_unmatched_points.geojson' }; }
@@ -7757,9 +7761,10 @@ buildTabs(); buildLegend(); renderHud();
     if (!btn) return;
     var nb = nbBySlug(slug);
     var icon = loading ? '⏳' : (on ? '● HIDE' : '⛭');
+    var noteHtml = nb.note ? ' <span style="color:var(--ink-mute)">('+escapeHtmlLocal(nb.note)+')</span>' : '';
     var suffix = loading
       ? ' Loading '+escapeHtmlLocal(nb.label)+' real building + damage data (one-time)…'
-      : (' '+escapeHtmlLocal(nb.label)+': building-level damage over time <span style="color:var(--ink-mute)">— real UNOSAT satellite data, on this map</span>');
+      : (' '+escapeHtmlLocal(nb.label)+': building-level damage over time <span style="color:var(--ink-mute)">— real UNOSAT satellite data, on this map</span>'+noteHtml);
     btn.innerHTML = icon + suffix;
     btn.classList.toggle('active', on);
   }
@@ -7812,7 +7817,8 @@ buildTabs(); buildLegend(); renderHud();
   window.__gzSummaryHTML = function(){
     return '<div id="gzButtonsWrap" style="display:flex;flex-direction:column;gap:6px;">'
       + NEIGHBORHOODS.map(function(nb){
-          return '<button class="g2-mode gz-toggle-btn" data-gzslug="'+nb.slug+'" style="width:100%;text-align:left;white-space:normal;line-height:1.4;padding:8px 10px;">⛭ '+escapeHtmlLocal(nb.label)+': building-level damage over time <span style="color:var(--ink-mute)">— real UNOSAT satellite data, on this map</span></button>';
+          var noteHtml = nb.note ? ' <span style="color:var(--ink-mute)">('+escapeHtmlLocal(nb.note)+')</span>' : '';
+          return '<button class="g2-mode gz-toggle-btn" data-gzslug="'+nb.slug+'" style="width:100%;text-align:left;white-space:normal;line-height:1.4;padding:8px 10px;">⛭ '+escapeHtmlLocal(nb.label)+': building-level damage over time <span style="color:var(--ink-mute)">— real UNOSAT satellite data, on this map</span>'+noteHtml+'</button>';
         }).join('')
       + '</div>';
   };
