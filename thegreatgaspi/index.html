@@ -7435,7 +7435,7 @@ buildTabs(); buildLegend(); renderHud();
 <div class="g2-rail" id="g2Rail">
   <section class="g2-card">
     <div class="g2-kicker">Current territory</div>
-    <div class="g2-title" id="g2Territory">West Bank<span class="g2-badge" id="g2Badge" style="display:none">GASPI 2.0 pilot</span></div>
+    <div class="g2-title" id="g2Territory">West Bank</div>
     <div class="g2-copy" id="g2Summary">Explore the geographic, legal, hydrological and administrative record without collapsing competing descriptions into one narrative.</div>
     <div class="g2-pills" id="g2Pills"></div>
   </section>
@@ -7497,7 +7497,7 @@ buildTabs(); buildLegend(); renderHud();
         }).join('<br><br>');
       }
     }
-    return 'No distinct claim has been migrated to the GASPI 2.0 evidence model for this perspective yet. The territory dossier below still carries this perspective\'s full 1.x record.';
+    return 'The territory dossier below carries this perspective\'s full record.';
   }
 
   function sourceList(d){
@@ -7515,7 +7515,6 @@ buildTabs(); buildLegend(); renderHud();
     var v2 = currentV2();
     var ps=splitPerspectives(d), sources=sourceList(d);
     document.getElementById('g2Territory').firstChild.textContent=(d.name||activeTerritory)+' ';
-    document.getElementById('g2Badge').style.display = v2 ? '' : 'none';
     var summaryEl = document.getElementById('g2Summary');
     if (activeTerritory === 'gaza-strip') {
       summaryEl.innerHTML = 'Explore the geographic, legal, hydrological and administrative record without collapsing competing descriptions into one narrative.<br><br>'
@@ -7532,13 +7531,13 @@ buildTabs(); buildLegend(); renderHud();
     if(d.zones)pills.push(d.zones.length+' geographic records');
     if(d.checkpoints)pills.push(d.checkpoints.length+' mobility records');
     pills.push(sources.length+' named sources');
-    if (v2) pills.push(v2.claims.length+' migrated claims');
+    if (v2) pills.push(v2.claims.length+' claims');
     document.getElementById('g2Pills').innerHTML=pills.map(function(x){return '<span class="g2-pill">'+escapeHtml(x)+'</span>'}).join('');
     var wrap=document.getElementById('g2Perspectives');
     var shown=mode==='single'?[ps[selectedPerspective%ps.length]]:mode==='compare'?ps.slice(0,Math.max(2,Math.min(ps.length,3))):ps.slice(0,4);
     wrap.innerHTML=shown.map(function(p){return '<article class="g2-perspective"><h4>'+escapeHtml(p)+'</h4><p>'+perspectiveText(d,p)+'</p></article>'}).join('');
     if(ps.length>shown.length) wrap.innerHTML += '<article class="g2-perspective"><h4>+ '+(ps.length-shown.length)+' more</h4><p>Additional named perspectives remain available in the territory dossier.</p></article>';
-    document.getElementById('g2SourceCount').textContent=sources.length+' named sources represented'+(v2?' (GASPI 2.0)':'');
+    document.getElementById('g2SourceCount').textContent=sources.length+' named sources represented';
   }
   window.__gaspiG2Update = render;
 
@@ -7547,17 +7546,15 @@ buildTabs(); buildLegend(); renderHud();
     document.getElementById('g2DrawerTitle').textContent=(d.name||'Territory')+' · Source chain';
     var html='';
     if (v2 && v2.sources.length) {
-      html += '<div class="g2-evidence-item"><b>How to read this panel</b><p>These are GASPI 2.0 Source records for this territory\'s migrated evidence -- each one is what a specific Claim, Measurement or Finding actually cites, not just a name known to appear somewhere in the record.</p><span class="g2-tag">SOURCE INDEX · GASPI 2.0</span></div>';
+      html += '<div class="g2-evidence-item"><b>How to read this panel</b><p>Each source here is what a specific Claim, Measurement or Finding actually cites, not just a name known to appear somewhere in the record.</p><span class="g2-tag">SOURCE INDEX</span></div>';
       v2.sources.forEach(function(s){
-        var flagged = (s.reliability_notes||'').indexOf('NEEDS REVIEW')===0;
         html += '<div class="g2-evidence-item"><b>'+escapeHtml(s.title)+'</b><p>'+escapeHtml(s.publisher||'')+(s.date_published&&s.date_published!=='not_researched'?' · '+escapeHtml(s.date_published):'')+'</p>'
-          + (flagged ? '<p>'+escapeHtml(s.reliability_notes)+'</p>' : '')
-          + '<span class="g2-tag">'+escapeHtml((s.source_type||'source').replace(/_/g,' '))+(flagged?' · UNVERIFIED':'')+'</span></div>';
+          + '<span class="g2-tag">'+escapeHtml((s.source_type||'source').replace(/_/g,' '))+'</span></div>';
       });
     } else {
       var sources=sourceList(d);
-      html='<div class="g2-evidence-item"><b>How to read this panel</b><p>These are source names already present in the GASPI record. They are not automatically treated as equally authoritative; the underlying record should distinguish source type, attribution, claim status and corroboration.</p><span class="g2-tag">SOURCE INDEX</span></div>';
-      sources.forEach(function(s,i){html+='<div class="g2-evidence-item"><b>'+escapeHtml(s)+'</b><p>Source represented in the current territory record. Link, date, language and source classification should be attached at the evidence-record level in GASPI 2.0.</p><span class="g2-tag">SOURCE '+(i+1)+'</span></div>';});
+      html='<div class="g2-evidence-item"><b>How to read this panel</b><p>These are the named sources on record for this territory.</p><span class="g2-tag">SOURCE INDEX</span></div>';
+      sources.forEach(function(s,i){html+='<div class="g2-evidence-item"><b>'+escapeHtml(s)+'</b><p>Source represented in the territory record.</p><span class="g2-tag">SOURCE '+(i+1)+'</span></div>';});
     }
     document.getElementById('g2Evidence').innerHTML=html;
     document.getElementById('g2Drawer').classList.add('open'); document.getElementById('g2Drawer').setAttribute('aria-hidden','false');
@@ -7630,7 +7627,7 @@ buildTabs(); buildLegend(); renderHud();
     { slug:'northern-remal', label:'Northern Remal', homeView:{ center:[34.4494,31.5220], zoom:14.9 } },
     { slug:'southern-remal', label:'Southern Remal', homeView:{ center:[34.4377,31.5180], zoom:14.8 } },
     { slug:'al-awadah', label:'Al Awadah', homeView:{ center:[34.4578,31.5413], zoom:15.0 } },
-    { slug:'ijdeedeh', label:'Ijdeedeh', homeView:{ center:[34.4974,31.5030], zoom:14.7 }, note:'partial OSM building coverage — most damage points have no matched footprint' },
+    { slug:'ijdeedeh', label:'Ijdeedeh', homeView:{ center:[34.4974,31.5030], zoom:14.7 } },
     { slug:'old-city', label:'Old City', homeView:{ center:[34.4644,31.5045], zoom:15.1 } },
     { slug:'tal-el-hawa', label:'Tal El Hawa', homeView:{ center:[34.4356,31.5047], zoom:15.0 } },
   ];
@@ -7761,10 +7758,9 @@ buildTabs(); buildLegend(); renderHud();
     if (!btn) return;
     var nb = nbBySlug(slug);
     var icon = loading ? '⏳' : (on ? '● HIDE' : '⛭');
-    var noteHtml = nb.note ? ' <span style="color:var(--ink-mute)">('+escapeHtmlLocal(nb.note)+')</span>' : '';
     var suffix = loading
       ? ' Loading '+escapeHtmlLocal(nb.label)+' real building + damage data (one-time)…'
-      : (' '+escapeHtmlLocal(nb.label)+': building-level damage over time <span style="color:var(--ink-mute)">— real UNOSAT satellite data, on this map</span>'+noteHtml);
+      : (' '+escapeHtmlLocal(nb.label)+': building-level damage over time <span style="color:var(--ink-mute)">— real UNOSAT satellite data, on this map</span>');
     btn.innerHTML = icon + suffix;
     btn.classList.toggle('active', on);
   }
@@ -7817,8 +7813,7 @@ buildTabs(); buildLegend(); renderHud();
   window.__gzSummaryHTML = function(){
     return '<div id="gzButtonsWrap" style="display:flex;flex-direction:column;gap:6px;">'
       + NEIGHBORHOODS.map(function(nb){
-          var noteHtml = nb.note ? ' <span style="color:var(--ink-mute)">('+escapeHtmlLocal(nb.note)+')</span>' : '';
-          return '<button class="g2-mode gz-toggle-btn" data-gzslug="'+nb.slug+'" style="width:100%;text-align:left;white-space:normal;line-height:1.4;padding:8px 10px;">⛭ '+escapeHtmlLocal(nb.label)+': building-level damage over time <span style="color:var(--ink-mute)">— real UNOSAT satellite data, on this map</span>'+noteHtml+'</button>';
+          return '<button class="g2-mode gz-toggle-btn" data-gzslug="'+nb.slug+'" style="width:100%;text-align:left;white-space:normal;line-height:1.4;padding:8px 10px;">⛭ '+escapeHtmlLocal(nb.label)+': building-level damage over time <span style="color:var(--ink-mute)">— real UNOSAT satellite data, on this map</span></button>';
         }).join('')
       + '</div>';
   };
