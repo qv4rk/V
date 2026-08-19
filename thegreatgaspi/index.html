@@ -7647,10 +7647,29 @@ buildTabs(); buildLegend(); renderHud();
     });
     return worst;
   }
+  var RETAIN_FRACTION = {1:0.08, 2:0.28, 3:0.55, 4:0.85};
+  var MIN_HEIGHT_DAMAGED = 1.2;   // destroyed/severe buildings still show as a low rubble volume, not a flat void
+  var MIN_HEIGHT_STANDING = 2.5;
+
+  // Deterministic pseudo-random per building (stable across re-renders, no
+  // per-frame flicker) so buildings in the same damage class don't all
+  // extrude to identical heights -- a ragged, uneven skyline instead of
+  // uniform blocks, closer to what the real damage actually looks like.
+  function jitterFor(bldgId){
+    var x = Math.sin((bldgId||0) * 12.9898) * 43758.5453;
+    var frac = x - Math.floor(x);
+    return 0.82 + frac * 0.36; // 0.82 - 1.18
+  }
+
   function annotateBuildings(fc, selectedDate){
     fc.features.forEach(function(f){
       var sites = f.properties.damage_sites || [];
-      f.properties.currentClass = sites.length ? classAsOf(sites, selectedDate) : null;
+      var cls = sites.length ? classAsOf(sites, selectedDate) : null;
+      f.properties.currentClass = cls;
+      var baseHeight = f.properties.height_m || 11;
+      var frac = (cls != null && RETAIN_FRACTION[cls] !== undefined) ? RETAIN_FRACTION[cls] : 1.0;
+      var jittered = baseHeight * frac * jitterFor(f.properties.bldg_id);
+      f.properties.extrudeHeight = Math.max(jittered, cls != null ? MIN_HEIGHT_DAMAGED : MIN_HEIGHT_STANDING);
     });
     return fc;
   }
@@ -7666,11 +7685,13 @@ buildTabs(); buildLegend(); renderHud();
   function addLayers(){
     var c = cache[state.activeSlug];
     map.addSource('gz-buildings', { type:'geojson', data: annotateBuildings(structuredClone(c.buildings), c.dates[state.idx]) });
-    map.addLayer({ id:'gz-buildings-fill', type:'fill', source:'gz-buildings', paint:{
-      'fill-color':['match',['get','currentClass'],1,CLASS_COLORS[1],2,CLASS_COLORS[2],3,CLASS_COLORS[3],4,CLASS_COLORS[4],'rgba(120,130,145,0.08)'],
-      'fill-opacity':['case',['==',['get','currentClass'],null],0.25,0.85],
+    map.addLayer({ id:'gz-buildings-fill', type:'fill-extrusion', source:'gz-buildings', paint:{
+      'fill-extrusion-color':['match',['get','currentClass'],1,CLASS_COLORS[1],2,CLASS_COLORS[2],3,CLASS_COLORS[3],4,CLASS_COLORS[4],'#8a94a8'],
+      'fill-extrusion-height':['get','extrudeHeight'],
+      'fill-extrusion-base':0,
+      'fill-extrusion-opacity':['case',['==',['get','currentClass'],null],0.55,0.92],
+      'fill-extrusion-vertical-gradient':true,
     }});
-    map.addLayer({ id:'gz-buildings-line', type:'line', source:'gz-buildings', paint:{ 'line-color':'#000', 'line-width':0.3, 'line-opacity':0.4 } });
     map.addSource('gz-unmatched', { type:'geojson', data: annotatePoints(structuredClone(c.unmatched), c.dates[state.idx]) });
     map.addLayer({ id:'gz-unmatched-points', type:'circle', source:'gz-unmatched', paint:{
       'circle-radius':3,
@@ -7679,7 +7700,7 @@ buildTabs(); buildLegend(); renderHud();
     }});
   }
   function removeLayers(){
-    ['gz-buildings-fill','gz-buildings-line','gz-unmatched-points'].forEach(function(id){ if (map.getLayer(id)) map.removeLayer(id); });
+    ['gz-buildings-fill','gz-unmatched-points'].forEach(function(id){ if (map.getLayer(id)) map.removeLayer(id); });
     ['gz-buildings','gz-unmatched'].forEach(function(id){ if (map.getSource(id)) map.removeSource(id); });
   }
   function updateLayers(){
@@ -7774,7 +7795,7 @@ buildTabs(); buildLegend(); renderHud();
       addLayers();
       buildDial();
       updateLayers();
-      map.flyTo({ center:nb.homeView.center, zoom:nb.homeView.zoom, essential:true });
+      map.flyTo({ center:nb.homeView.center, zoom:nb.homeView.zoom, pitch:55, bearing:-17, essential:true });
       setToggleLabel(slug, true, false);
     }
     if (cache[slug]) { goLive(); return; }
@@ -7802,7 +7823,7 @@ buildTabs(); buildLegend(); renderHud();
     document.getElementById('gzDialWrap').classList.remove('active');
     setToggleLabel(state.activeSlug, false, false);
     state.activeSlug = null;
-    if (activeTerritory === 'gaza-strip') { var t = DATA['gaza-strip']; map.flyTo({ center:[t.center.lng,t.center.lat], zoom:8, essential:true }); }
+    if (activeTerritory === 'gaza-strip') { var t = DATA['gaza-strip']; map.flyTo({ center:[t.center.lng,t.center.lat], zoom:8, pitch:0, bearing:0, essential:true }); }
   }
   function switchTo(slug){
     if (state.activeSlug === slug) { deactivate(); return; }
