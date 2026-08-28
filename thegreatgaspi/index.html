@@ -7264,7 +7264,7 @@ function renderHud(){
 
   if(t.zones && t.zones.length){
     html += '<div class="section-label">Administrative zones</div>';
-    html += '<div class="section-blurb">How the territory is formally or informally partitioned, and who answers for each piece — drawn from each perspective\'s own description, so the same ground sometimes appears twice under different names.</div>';
+    html += '<div class="section-blurb">How the territory is formally or informally partitioned, and who answers for each piece.</div>';
     t.zones.forEach(z=>{
       const pct = (typeof z.pct === 'number' && z.pct > 0) ? z.pct : 0;
       html += '<div class="bar-row"><div class="bar-labels"><span>'+z.name+' — '+(z.governing_authority||'data not available')+'</span><span>'+(pct?pct+'%':'—')+'</span></div>';
@@ -7274,7 +7274,7 @@ function renderHud(){
 
   if(m.water && m.water.reports && m.water.reports.length){
     html += '<div class="section-label">Water security</div>';
-    html += '<div class="section-blurb">Who controls the tap. Consumption gaps between populations sharing the same territory are one of the clearest, most measurable forms of leverage in this whole framework — each perspective\'s own read on the numbers, kept separate rather than picked.</div>';
+    html += '<div class="section-blurb">Who controls the tap, and the consumption gap between populations sharing the same territory.</div>';
     m.water.reports.forEach(r=>{
       html += '<div class="water-report"><div class="water-persp">'+r.perspective+'</div><div class="tile-grid">';
       html += statTile(r.population_a, 'Population A per-capita /day', 'warn');
@@ -7285,7 +7285,7 @@ function renderHud(){
   }
 
   html += '<div class="section-label">High ground</div>';
-  html += '<div class="section-blurb">Elevation is a surveillance and defense asset — whoever holds the ridgeline can watch, and defend, everything below it. That\'s why these specific peaks are on the map at all.</div>';
+  html += '<div class="section-blurb">Elevation is a surveillance and defense asset — whoever holds the ridgeline can watch, and defend, everything below it.</div>';
   html += markerRows(t.peaks, CATS[0].color);
 
   html += '<div class="section-label">Checkpoints &amp; mobility</div>';
@@ -7304,7 +7304,7 @@ function renderHud(){
 
   if(t.incidents && t.incidents.length){
     html += '<div class="section-label">Environmental &amp; agricultural degradation</div>';
-    html += '<div class="section-blurb">Documented damage to land, water, or crops. Effect and attribution are kept separate on purpose — the numbers are measured, the cause is each party\'s own account, told in full, not summarized as one side\'s "justification" against another\'s "objection."</div>';
+    html += '<div class="section-blurb">Documented damage to land, water, or crops, with each party\'s own account of the cause.</div>';
     t.incidents.forEach(inc=>{
       const area = (inc.area===undefined||inc.area===null||inc.area==='') ? 'data not available' : inc.area;
       // Incidents don't carry their own point coordinates — fall back to the
@@ -7470,7 +7470,7 @@ buildTabs(); buildLegend(); renderHud();
     if (Array.isArray(d && d.perspectives) && d.perspectives.length) return d.perspectives;
     var raw=(d && d.sub)||'';
     var parts=raw.split(/\s+·\s+/).map(function(x){return x.trim()}).filter(Boolean);
-    if(!parts.length) parts=['Perspective not yet classified'];
+    if(!parts.length) parts=['Perspective'];
     return parts;
   }
 
@@ -7546,15 +7546,13 @@ buildTabs(); buildLegend(); renderHud();
     document.getElementById('g2DrawerTitle').textContent=(d.name||'Territory')+' · Source chain';
     var html='';
     if (v2 && v2.sources.length) {
-      html += '<div class="g2-evidence-item"><b>How to read this panel</b><p>Each source here is what a specific Claim, Measurement or Finding actually cites, not just a name known to appear somewhere in the record.</p><span class="g2-tag">SOURCE INDEX</span></div>';
       v2.sources.forEach(function(s){
         html += '<div class="g2-evidence-item"><b>'+escapeHtml(s.title)+'</b><p>'+escapeHtml(s.publisher||'')+(s.date_published&&s.date_published!=='not_researched'?' · '+escapeHtml(s.date_published):'')+'</p>'
           + '<span class="g2-tag">'+escapeHtml((s.source_type||'source').replace(/_/g,' '))+'</span></div>';
       });
     } else {
       var sources=sourceList(d);
-      html='<div class="g2-evidence-item"><b>How to read this panel</b><p>These are the named sources on record for this territory.</p><span class="g2-tag">SOURCE INDEX</span></div>';
-      sources.forEach(function(s,i){html+='<div class="g2-evidence-item"><b>'+escapeHtml(s)+'</b><p>Source represented in the territory record.</p><span class="g2-tag">SOURCE '+(i+1)+'</span></div>';});
+      sources.forEach(function(s,i){html+='<div class="g2-evidence-item"><b>'+escapeHtml(s)+'</b><span class="g2-tag">SOURCE '+(i+1)+'</span></div>';});
     }
     document.getElementById('g2Evidence').innerHTML=html;
     document.getElementById('g2Drawer').classList.add('open'); document.getElementById('g2Drawer').setAttribute('aria-hidden','false');
