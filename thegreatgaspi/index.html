@@ -124,10 +124,6 @@ body{
   color:var(--cyan); margin:22px 0 4px;
 }
 .section-label:first-of-type{ margin-top:18px; }
-.section-blurb{
-  font-family:var(--font-body); font-size:.78rem; line-height:1.5; color:var(--ink-mute);
-  margin-bottom:10px; max-width:52ch;
-}
 .m-note{ color:var(--ink-mute); font-weight:400; }
 
 .tile-grid{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
@@ -7256,7 +7252,6 @@ function renderHud(){
   let html = '';
 
   html += '<div class="section-label">Territorial control</div>';
-  html += '<div class="section-blurb">Who physically controls how much of the land, and what that leaves for everyone else.</div>';
   html += '<div class="tile-grid">';
   html += attrTile(m.area_sqkm, 'Total area', ' km²');
   html += attrTile(m.food_import_pct, 'Food import dependency', '%', 'warn');
@@ -7264,7 +7259,6 @@ function renderHud(){
 
   if(t.zones && t.zones.length){
     html += '<div class="section-label">Administrative zones</div>';
-    html += '<div class="section-blurb">How the territory is formally or informally partitioned, and who answers for each piece.</div>';
     t.zones.forEach(z=>{
       const pct = (typeof z.pct === 'number' && z.pct > 0) ? z.pct : 0;
       html += '<div class="bar-row"><div class="bar-labels"><span>'+z.name+' — '+(z.governing_authority||'data not available')+'</span><span>'+(pct?pct+'%':'—')+'</span></div>';
@@ -7274,7 +7268,6 @@ function renderHud(){
 
   if(m.water && m.water.reports && m.water.reports.length){
     html += '<div class="section-label">Water security</div>';
-    html += '<div class="section-blurb">Who controls the tap, and the consumption gap between populations sharing the same territory.</div>';
     m.water.reports.forEach(r=>{
       html += '<div class="water-report"><div class="water-persp">'+r.perspective+'</div><div class="tile-grid">';
       html += statTile(r.population_a, 'Population A per-capita /day', 'warn');
@@ -7285,26 +7278,21 @@ function renderHud(){
   }
 
   html += '<div class="section-label">High ground</div>';
-  html += '<div class="section-blurb">Elevation is a surveillance and defense asset — whoever holds the ridgeline can watch, and defend, everything below it.</div>';
   html += markerRows(t.peaks, CATS[0].color);
 
   html += '<div class="section-label">Checkpoints &amp; mobility</div>';
-  html += '<div class="section-blurb">Every crossing is a place where movement — people, goods, medicine — requires someone else\'s permission.</div>';
   html += markerRows(t.checkpoints, CATS[1].color);
 
   html += '<div class="section-label">Water infrastructure</div>';
-  html += '<div class="section-blurb">The physical plumbing behind the water security numbers above — wells, pipelines, treatment plants, and who actually operates each one.</div>';
   html += markerRows(t.water, CATS[2].color);
 
   if(t.barriers && t.barriers.length){
     html += '<div class="section-label">Physical barriers</div>';
-    html += '<div class="section-blurb">Walls, fences, and berms that convert a political boundary into a physical one.</div>';
     html += markerRows(t.barriers, CATS[3].color);
   }
 
   if(t.incidents && t.incidents.length){
     html += '<div class="section-label">Environmental &amp; agricultural degradation</div>';
-    html += '<div class="section-blurb">Documented damage to land, water, or crops, with each party\'s own account of the cause.</div>';
     t.incidents.forEach(inc=>{
       const area = (inc.area===undefined||inc.area===null||inc.area==='') ? 'data not available' : inc.area;
       // Incidents don't carry their own point coordinates — fall back to the
@@ -7324,7 +7312,6 @@ function renderHud(){
 
   if(t.legal && t.legal.length){
     html += '<div class="section-label">Legal framework</div>';
-    html += '<div class="section-blurb">Where the enforced legal system and the locally preferred one diverge, and the specific statutes, orders, or rulings involved.</div>';
     t.legal.forEach(l=>{
       html += '<div class="legal-row"><div class="legal-name">'+l.name+'</div><div class="legal-desc">'+l.desc+'</div>'+
         (l.perspective && l.perspective!=='data not available' ? '<div class="legal-persp">— per '+l.perspective+'</div>' : '')+
@@ -7436,7 +7423,7 @@ buildTabs(); buildLegend(); renderHud();
   <section class="g2-card">
     <div class="g2-kicker">Current territory</div>
     <div class="g2-title" id="g2Territory">West Bank</div>
-    <div class="g2-copy" id="g2Summary">Explore the geographic, legal, hydrological and administrative record without collapsing competing descriptions into one narrative.</div>
+    <div class="g2-copy" id="g2Summary">Explore the geographic, legal, hydrological and administrative record.</div>
     <div class="g2-pills" id="g2Pills"></div>
   </section>
   <section class="g2-card">
@@ -7517,12 +7504,12 @@ buildTabs(); buildLegend(); renderHud();
     document.getElementById('g2Territory').firstChild.textContent=(d.name||activeTerritory)+' ';
     var summaryEl = document.getElementById('g2Summary');
     if (activeTerritory === 'gaza-strip') {
-      summaryEl.innerHTML = 'Explore the geographic, legal, hydrological and administrative record without collapsing competing descriptions into one narrative.<br><br>'
+      summaryEl.innerHTML = 'Explore the geographic, legal, hydrological and administrative record.<br><br>'
         + '<div style="font-family:var(--font-mono);font-size:.6rem;color:var(--ink-mute);letter-spacing:.05em;margin-bottom:4px;">BUILDING-LEVEL DAMAGE OVER TIME — REAL UNOSAT SATELLITE DATA, ON THIS MAP</div>'
         + (typeof window.__gzSummaryHTML === 'function' ? window.__gzSummaryHTML() : '');
       if (typeof window.__gzWireToggle === 'function') window.__gzWireToggle();
     } else {
-      summaryEl.textContent = 'Explore the geographic, legal, hydrological and administrative record without collapsing competing descriptions into one narrative.';
+      summaryEl.textContent = 'Explore the geographic, legal, hydrological and administrative record.';
       if (typeof window.__gzHide === 'function') window.__gzHide();
     }
     document.getElementById('g2ModeLabel').textContent=mode==='all'?'All perspectives':mode==='single'?('Perspective · '+ps[selectedPerspective%ps.length]):'Compare perspectives';
