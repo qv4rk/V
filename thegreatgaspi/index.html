@@ -6965,11 +6965,17 @@ let markers = [];
 // by the site's active theme so a light theme doesn't leave a light HUD
 // panel bolted onto a permanently-dark map underneath it.
 const LIGHT_THEMES = ['paper', 'slate-day'];
+// CARTO's vector basemap doesn't require a key yet, but they've said the
+// same key requirement rolling out to raster tiles is coming to vector
+// too. Sending it now is a no-op until then and avoids a repeat of the
+// raster "API key required" watermark once it goes live.
+const CARTO_KEY = 'cb1_2k17_1_bede5389267bf3ec1322dc36';
 function cartoStyleUrl(){
   const theme = document.documentElement.getAttribute('data-theme') || 'patina';
-  return LIGHT_THEMES.includes(theme)
+  const base = LIGHT_THEMES.includes(theme)
     ? 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json'
     : 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
+  return base + '?api_key=' + CARTO_KEY;
 }
 const map = new maplibregl.Map({
   container: 'map',
