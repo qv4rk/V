@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>GASPI 5.0 — prototype</title>
+<link href="https://unpkg.com/maplibre-gl@4/dist/maplibre-gl.css" rel="stylesheet">
+<script src="https://unpkg.com/maplibre-gl@4/dist/maplibre-gl.js"></script>
+<style>
+:root{
+  --bg:#050608; --ink:#f2ede1; --ink-dim:#b8ae98; --ink-mute:#7a7264;
+  --panel:#0d0f14; --line:rgba(242,237,225,.10);
+  --gold:#c9a84c; --gold-hi:#e8c96d;
+  --a:#4fa3c9;   /* perspective A accent, cool */
+  --b:#c9784f;   /* perspective B accent, warm-red */
+  --font-serif: Georgia, 'Iowan Old Style', 'Times New Roman', serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', 'Cascadia Code', monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-serif);overflow:hidden;-webkit-font-smoothing:antialiased}
+#map{position:fixed;inset:0}
+
+/* ---- startup loading state, shown until the map + core data are ready ---- */
+.boot-loading{
+  position:fixed;inset:0;z-index:50;background:var(--bg);display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-mono);font-size:.72rem;letter-spacing:.12em;color:var(--ink-mute);text-transform:uppercase;
+  transition:opacity .3s ease;
+}
+.boot-loading.done{opacity:0;pointer-events:none}
+
+/* ---- idle wordmark / home link, always present ---- */
+/* top-right, not top-left, so it never collides with .back-btn which
+   occupies the top-left corner once a territory or node is open */
+.wordmark{
+  position:fixed;top:18px;right:24px;z-index:8;font-family:var(--font-mono);font-size:.62rem;letter-spacing:.22em;
+  color:var(--ink-mute);text-transform:uppercase;text-decoration:none;
+  background:rgba(5,6,8,.55);padding:9px 14px;border-radius:2px;backdrop-filter:blur(6px);
+  border:1px solid var(--line);transition:color .15s,border-color .15s;
+}
+.wordmark:hover{color:var(--ink);border-color:var(--ink-mute)}
+
+/* ---- territory pins (idle state) ---- */
+.pin{
+  width:14px;height:14px;border-radius:50%;background:var(--gold);
+  box-shadow:0 0 0 4px rgba(201,168,76,.18), 0 0 18px rgba(201,168,76,.55);
+  cursor:pointer;animation:pulse 2.6s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.35);opacity:.75}}
+.pin-label{
+  position:absolute;left:22px;top:50%;transform:translateY(-50%);white-space:nowrap;
+  font-family:var(--font-mono);font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-dim);
+  text-shadow:0 1px 3px rgba(0,0,0,.9),0 0 8px rgba(0,0,0,.7);
+  pointer-events:none;
+}
+
+/* ---- node (narrative article) pins: smaller, cooler, visually distinct
+   from territory pins so the two kinds of content never get confused ---- */
+.pin-node{
+  width:9px;height:9px;border-radius:50%;background:var(--a);
+  box-shadow:0 0 0 3px rgba(79,163,201,.16), 0 0 12px rgba(79,163,201,.45);
+  cursor:pointer;
+}
+.pin-node-label{
+  position:absolute;left:16px;top:50%;transform:translateY(-50%);white-space:nowrap;
+  font-family:var(--font-serif);font-style:italic;font-size:.66rem;color:var(--ink-mute);
+  text-shadow:0 1px 3px rgba(0,0,0,.9),0 0 8px rgba(0,0,0,.7);
+  pointer-events:none;
+}
+
+/* ---- back control (shown once a territory is open) ---- */
+.back-btn{
+  position:fixed;top:18px;left:24px;z-index:6;display:none;
+  font-family:var(--font-mono);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--ink-dim);background:rgba(5,6,8,.7);border:1px solid var(--line);
+  padding:9px 14px;border-radius:2px;cursor:pointer;backdrop-filter:blur(6px);
+}
+.back-btn.show{display:inline-block}
+.back-btn:hover{color:var(--ink);border-color:var(--ink-mute)}
+
+/* ---- the ONE panel: a bottom sheet, collapsed by default ---- */
+.sheet{
+  position:fixed;left:0;right:0;bottom:0;z-index:7;
+  background:var(--panel);border-top:1px solid var(--line);
+  transform:translateY(calc(100% - 84px));
+  transition:transform .38s cubic-bezier(.2,.8,.2,1);
+  max-height:82vh;display:flex;flex-direction:column;
+  box-shadow:0 -20px 60px rgba(0,0,0,.5);
+}
+.sheet.hidden{transform:translateY(100%);transition:transform .3s ease-in}
+.sheet.open{transform:translateY(0)}
+.sheet-handle{
+  flex:none;padding:16px 24px 14px;cursor:pointer;user-select:none;
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+}
+.sheet-handle-bar{position:absolute;left:50%;top:8px;transform:translateX(-50%);width:36px;height:3px;border-radius:2px;background:var(--line)}
+.sheet-title{font-family:var(--font-serif);font-size:1.3rem;color:var(--ink)}
+.sheet-expand-hint{font-family:var(--font-mono);font-size:.6rem;letter-spacing:.1em;color:var(--ink-mute);text-transform:uppercase}
+
+/* ---- perspective switch: one literal two-position control ---- */
+.persp-switch{
+  flex:none;margin:0 24px 18px;display:flex;border:1px solid var(--line);border-radius:3px;overflow:hidden;
+}
+.persp-btn{
+  flex:1;padding:12px 14px;background:transparent;border:none;color:var(--ink-mute);
+  font-family:var(--font-sans);font-size:.82rem;line-height:1.35;cursor:pointer;text-align:center;
+  transition:background .2s,color .2s;
+}
+.persp-btn+.persp-btn{border-left:1px solid var(--line)}
+.persp-btn.active[data-side="a"]{background:rgba(79,163,201,.14);color:var(--a)}
+.persp-btn.active[data-side="b"]{background:rgba(201,120,79,.14);color:var(--b)}
+
+/* ---- category chips ---- */
+.chip-row{flex:none;display:flex;gap:8px;padding:0 24px 16px;overflow-x:auto;scrollbar-width:none}
+.chip-row::-webkit-scrollbar{display:none}
+.chip{
+  flex:none;font-family:var(--font-mono);font-size:.64rem;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--ink-dim);background:transparent;border:1px solid var(--line);padding:8px 14px;border-radius:999px;cursor:pointer;
+  transition:border-color .15s,color .15s,background .15s;
+}
+.chip.active{color:var(--gold-hi);border-color:var(--gold);background:rgba(201,168,76,.08)}
+.chip:hover:not(.active){border-color:var(--ink-mute);color:var(--ink)}
+
+/* ---- content area: one category at a time ---- */
+.sheet-body{flex:1;overflow-y:auto;padding:4px 24px 32px}
+.sheet-body::-webkit-scrollbar{width:7px}
+.sheet-body::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px}
+.entry{padding:14px 0;border-bottom:1px solid var(--line)}
+.entry:last-child{border-bottom:none}
+.entry-name{font-family:var(--font-sans);font-size:.92rem;color:var(--ink);margin-bottom:5px}
+.entry-body{font-family:var(--font-serif);font-size:.92rem;line-height:1.55;color:var(--ink-dim)}
+.entry-meta{font-family:var(--font-mono);font-size:.6rem;letter-spacing:.04em;color:var(--ink-mute);margin-top:6px}
+.stat-row{display:flex;justify-content:space-between;align-items:baseline;padding:10px 0;border-bottom:1px solid var(--line)}
+.stat-row:last-child{border-bottom:none}
+.stat-label{font-family:var(--font-sans);font-size:.82rem;color:var(--ink-dim)}
+.stat-value{font-family:var(--font-mono);font-size:1rem;color:var(--gold-hi);font-variant-numeric:tabular-nums}
+.empty-note{font-family:var(--font-sans);font-size:.84rem;color:var(--ink-mute);padding:20px 0}
+.legal-subhead{font-family:var(--font-mono);font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-mute);margin:18px 0 8px;padding-top:14px;border-top:1px solid var(--line)}
+.legal-subhead:first-child{margin-top:0;padding-top:0;border-top:none}
+
+/* ---- narrative (node) reading content ---- */
+.node-location{font-family:var(--font-mono);font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;color:var(--a);margin-bottom:16px}
+.node-para{font-family:var(--font-serif);font-size:.98rem;line-height:1.75;color:var(--ink-dim);margin-bottom:16px}
+
+/* ---- Gaza-only: entry point into the damage layer, visually distinct ---- */
+.damage-intro{flex:none;margin:0 24px 10px;font-family:var(--font-mono);font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;color:rgba(201,102,80,.85)}
+.damage-entry-row{flex:none;display:flex;gap:8px;padding:0 24px 18px;overflow-x:auto;scrollbar-width:none}
+.damage-entry-row::-webkit-scrollbar{display:none}
+.damage-chip{
+  flex:none;font-family:var(--font-sans);font-size:.76rem;color:var(--ink-dim);
+  background:rgba(201,102,80,.06);border:1px solid rgba(201,102,80,.3);padding:9px 14px;border-radius:999px;cursor:pointer;
+  transition:border-color .15s,color .15s,background .15s;
+}
+.damage-chip:hover{border-color:rgba(201,102,80,.6);color:var(--ink)}
+
+/* ---- damage mode: separate full-bleed state, its own minimal chrome ---- */
+.damage-mode{position:fixed;inset:0;z-index:20;display:none;pointer-events:none}
+.damage-mode.active{display:block}
+.damage-close{
+  position:fixed;top:18px;right:24px;z-index:21;pointer-events:auto;
+  font-family:var(--font-mono);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--ink-dim);background:rgba(5,6,8,.7);border:1px solid var(--line);
+  padding:9px 14px;border-radius:2px;cursor:pointer;backdrop-filter:blur(6px);
+}
+.damage-switch-row{
+  position:fixed;top:18px;left:24px;right:120px;z-index:21;pointer-events:auto;
+  display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;
+}
+.damage-switch-row::-webkit-scrollbar{display:none}
+.damage-switch-chip{
+  flex:none;font-family:var(--font-mono);font-size:.62rem;letter-spacing:.04em;text-transform:uppercase;
+  color:var(--ink-dim);background:rgba(5,6,8,.7);border:1px solid var(--line);padding:8px 12px;border-radius:999px;cursor:pointer;backdrop-filter:blur(6px);
+}
+.damage-switch-chip.active{color:var(--gold-hi);border-color:var(--gold)}
+.damage-dial-wrap{
+  position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:21;pointer-events:auto;
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+}
+.damage-readout{font-family:var(--font-serif);font-size:1.1rem;color:var(--gold-hi);background:rgba(5,6,8,.85);border:1px solid var(--line);padding:6px 16px;backdrop-filter:blur(8px)}
+#damageDial{width:170px;height:170px;cursor:grab;touch-action:none}
+.dtick{stroke:var(--ink-mute);stroke-width:1.5}
+.dtick.active{stroke:var(--gold);stroke-width:2.5}
+.dring{fill:none;stroke:var(--line);stroke-width:1}
+.dpointer{stroke:var(--gold);stroke-width:2}
+.dhub{fill:var(--gold)}
+.damage-stats{font-family:var(--font-mono);font-size:.6rem;letter-spacing:.03em;color:var(--ink-mute);text-align:center;max-width:280px}
+
+@media(max-width:720px){
+  .sheet{max-height:88vh}
+  .persp-switch,.chip-row,.damage-entry{margin-left:16px;margin-right:16px}
+  .sheet-handle{padding:16px}
+  .sheet-body{padding:4px 16px 28px}
+  .pin-label{font-size:.82rem}
+  .pin-node-label{font-size:.78rem}
+  .wordmark{font-size:.7rem}
+}
+</style>
+</head>
+<body>
+
+<div class="boot-loading" id="bootLoading">Loading GASPI…</div>
+<div id="map"></div>
+<a class="wordmark" href="/" title="Back to feisttech.com">← GASPI</a>
+<div class="back-btn" id="backBtn">← All territories</div>
+
+<div class="sheet hidden" id="sheet">
+  <div class="sheet-handle" id="sheetHandle">
+    <div class="sheet-handle-bar"></div>
+    <div class="sheet-title" id="sheetTitle">—</div>
+    <div class="sheet-expand-hint" id="sheetHint">Tap to expand</div>
+  </div>
+  <div class="persp-switch" id="perspSwitch"></div>
+  <div class="damage-intro" id="damageIntro" style="display:none">Building-level damage over time — real UNOSAT + OpenStreetMap data, by neighborhood</div>
+  <div class="damage-entry-row" id="damageEntryRow" style="display:none"></div>
+  <div class="chip-row" id="chipRow"></div>
+  <div class="sheet-body" id="sheetBody"></div>
+</div>
+
+<div class="damage-mode" id="damageMode">
+  <div class="damage-switch-row" id="damageSwitchRow"></div>
+  <button class="damage-close" id="damageClose">← Back to Gaza</button>
+  <div class="damage-dial-wrap">
+    <div class="damage-readout" id="damageReadout">—</div>
+    <svg id="damageDial" viewBox="0 0 180 180"></svg>
+    <div class="damage-stats" id="damageStats"></div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
