@@ -272,6 +272,7 @@
       <span class="brand-sub">Systems &amp; Research</span>
     </a>
     <nav class="nav-links" id="navLinks">
+      <a href="apps/webapps/tts/reader/index.html">Reading Room</a>
       <a href="#chapters">Chapters</a>
       <a href="#instruments">Instruments</a>
       <a href="hoffect/index.html">Hoffect</a>
@@ -310,6 +311,15 @@
     <p class="section-sub">The working tools built around the archive.</p>
     <div class="tool-grid">
 
+      <a href="apps/webapps/tts/reader/index.html" class="tool-card tool-card--flagship">
+        <span class="tool-icon">📚</span>
+        <h3>The Reading Room <span class="tool-badge">flagship</span></h3>
+        <p>One place to read every FeistTech article — a library of the full archive, multi-voice text-to-speech, RSVP speed-reading, and your own text/PDF uploads, all in one reader that never sends you to a separate page.</p>
+        <div class="tool-links">
+          <a href="apps/webapps/tts/reader/index.html">Enter the Reading Room</a>
+        </div>
+      </a>
+
       <a href="Manifold Atlas.html" class="tool-card tool-card--flagship">
         <span class="tool-icon">🌍</span>
         <h3>The Atlas <span class="tool-badge">flagship</span></h3>
@@ -333,15 +343,6 @@
           <a href="/gaspi5/">Open Prototype</a>
         </div>
       </a>
-
-      <div class="tool-card">
-        <span class="tool-icon">🔊</span>
-        <h3>The Reading Room <span class="tool-badge">+ RSVP mode</span></h3>
-        <p>Multi-voice text-to-speech for articles, markdown, and PDFs, with speaker tags for character voices.</p>
-        <div class="tool-links">
-          <a href="apps/webapps/tts/reader/index.html">Enter the Reading Room</a>
-        </div>
-      </div>
 
       <a href="apps/webapps/solsys.html" class="tool-card">
         <span class="tool-icon">🪐</span>
@@ -367,26 +368,15 @@
         <p>Five-panel Google Trends comparison workspace with saveable, user-defined search presets.</p>
       </a>
 
-      <a href="apps/webapps/methionine-meal-builder/detailed/index.html" class="tool-card">
+      <div class="tool-card">
         <span class="tool-icon">🍽️</span>
-        <h3>Low-Methionine Meal Builder</h3>
-        <p>USDA food search, saveable recipes, and a shopping list for planning low-methionine meals.</p>
-      </a>
-
-    </div>
-  </section>
-
-  <!-- ═══════ Health ═══════ -->
-  <section class="section" id="health">
-    <h2 class="section-title">Health</h2>
-    <p class="section-sub">Daily methionine tracker, large text.</p>
-    <div class="tool-grid">
-
-      <a href="apps/webapps/methionine-meal-builder/accessible/index.html" class="tool-card">
-        <span class="tool-icon">🔆</span>
-        <h3>Daily Tracker</h3>
-        <p>Large-text daily methionine tracker with quick-add foods, voice/barcode lookup, and methioninase logging.</p>
-      </a>
+        <h3>Methionine</h3>
+        <p>USDA food search, saveable recipes, and a shopping list for planning low-methionine meals — plus a large-text daily tracker with quick-add foods, voice/barcode lookup, and methioninase logging.</p>
+        <div class="tool-links">
+          <a href="apps/webapps/methionine-meal-builder/detailed/index.html">Meal Builder</a>
+          <a href="apps/webapps/methionine-meal-builder/accessible/index.html">Daily Tracker</a>
+        </div>
+      </div>
 
     </div>
   </section>
@@ -512,12 +502,16 @@
   shareBtnFooter.addEventListener('click', share);
 
   /* ── Featured dispatch + recent dispatches ──
-     FEATURED_ARTICLE_ID is a manual pin: set it to a node id (e.g.
-     "n06") once "The Veil of Babel" exists in data/events.json, and
-     the hero will pick it up automatically. Until then, the hero
-     falls back to the most recently-dated article in the archive. */
-  var FEATURED_ARTICLE_ID = null;
-
+     Sourced from the Reading Room's own article directory
+     (data/reading-room/), not data/events.json directly, so "read more"
+     sends visitors into the Reading Room (one place to read, per its own
+     library) instead of the standalone articles/*.html pages. Every
+     article there carries a `published` date -- separate from its
+     in-story historical date -- and whichever has the LATEST `published`
+     date is automatically featured here. No manual pin, nothing to edit
+     in this file: add a new article with a later `published` date (see
+     data/reading-room/articles/ for the shape, and manifest.json to
+     register it) and it takes the front-page slot on its own. */
   var MONTHS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
   function fmtDate(d) {
     var y = d.year, era = y < 1 ? ' BCE' : (y < 1000 ? ' CE' : '');
@@ -527,23 +521,30 @@
     if (!s) return '';
     return s.length > n ? s.slice(0, n).replace(/\s+\S*$/, '') + '…' : s;
   }
+  function readingRoomUrl(id) {
+    return 'apps/webapps/tts/reader/index.html?article=' + encodeURIComponent(id);
+  }
 
-  fetch('data/events.json')
+  fetch('data/reading-room/manifest.json')
     .then(function (r) { return r.json(); })
+    .then(function (ids) {
+      if (!ids || !ids.length) throw new Error('empty manifest');
+      return Promise.all(ids.map(function (id) {
+        return fetch('data/reading-room/articles/' + id + '.json').then(function (r) { return r.json(); });
+      }));
+    })
     .then(function (articles) {
       if (!articles || !articles.length) return;
       var sorted = articles.slice().sort(function (a, b) {
-        return (b.date.year - a.date.year) ||
-               ((b.date.month || 1) - (a.date.month || 1)) ||
-               ((b.date.day || 1) - (a.date.day || 1));
+        return (b.published || '').localeCompare(a.published || '');
       });
-      var featured = (FEATURED_ARTICLE_ID && articles.find(function (a) { return a.id === FEATURED_ARTICLE_ID; })) || sorted[0];
+      var featured = sorted[0];
 
       document.getElementById('heroTitle').textContent = featured.title;
       document.getElementById('heroMeta').innerHTML =
         '<span>' + fmtDate(featured.date) + '</span><span>' + ((featured.location && featured.location.name) || '').toUpperCase() + '</span>';
       document.getElementById('heroExcerpt').textContent = featured.excerpt || '';
-      document.getElementById('heroReadMore').href = 'articles/' + featured.id + '.html';
+      document.getElementById('heroReadMore').href = readingRoomUrl(featured.id);
       document.getElementById('hero').classList.add('ready');
 
       var grid = document.getElementById('articleGrid');
@@ -555,7 +556,7 @@
           '<div class="article-date">' + fmtDate(a.date) + '</div>' +
           '<h3 class="article-title">' + a.title + '</h3>' +
           '<p class="article-excerpt">' + trim(a.excerpt || '', 160) + '</p>' +
-          '<a class="read-more" href="articles/' + a.id + '.html">Read More →</a>';
+          '<a class="read-more" href="' + readingRoomUrl(a.id) + '">Read More →</a>';
         grid.appendChild(card);
       });
     })

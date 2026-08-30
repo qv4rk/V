@@ -101,12 +101,25 @@ You shouldn't have come here alone.</pre>
         </div>
     </div>
 
+    <!-- ========== LIBRARY (the article directory -- FeistTech's own
+         articles, loaded straight into the reader below on a tap, never
+         a navigation away from this page) ========== -->
+    <div class="collapsible open" id="libraryPanel">
+        <button class="collapsible-header" onclick="toggleLibrary()">
+            <span>📚 ARTICLE LIBRARY</span>
+            <span class="collapsible-caret">▾</span>
+        </button>
+        <div class="collapsible-body">
+            <div id="libraryList" class="library-list"><div class="library-loading">Loading the library…</div></div>
+        </div>
+    </div>
+
     <!-- ========== INPUT (collapses to a bar after loading; reopen any time
          to make corrections — updating does not reset voice assignments
          or leave this screen) ========== -->
-    <div class="collapsible open" id="inputPanel">
+    <div class="collapsible" id="inputPanel">
         <button class="collapsible-header" onclick="toggleInputPanel()">
-            <span id="inputPanelLabel">📄 LOAD YOUR TEXT</span>
+            <span id="inputPanelLabel">📄 LOAD YOUR OWN TEXT</span>
             <span class="collapsible-caret">▾</span>
         </button>
         <div class="collapsible-body">
