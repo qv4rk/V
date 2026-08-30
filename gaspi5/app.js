@@ -456,7 +456,14 @@
     map.addLayer({ id:'dmg-buildings-fill', type:'fill-extrusion', source:'dmg-buildings', paint:{
       'fill-extrusion-color':['match',['get','currentClass'],1,CLASS_COLORS[1],2,CLASS_COLORS[2],3,CLASS_COLORS[3],4,CLASS_COLORS[4],'#8a94a8'],
       'fill-extrusion-height':['get','extrudeHeight'], 'fill-extrusion-base':0,
-      'fill-extrusion-opacity':['case',['==',['get','currentClass'],null],0.55,0.92],
+      // A data-driven opacity expression (0.55 for undamaged, 0.92 for
+      // classified) made a large share of buildings in every neighborhood
+      // -- the ~60% with no recorded damage_sites -- render as nearly
+      // invisible against the dark basemap on real devices, reported live
+      // as "a lot of neighborhoods aren't showing up." Flat full opacity
+      // renders reliably across devices; the color (gray for undamaged vs.
+      // the real damage-class colors) still carries the same distinction.
+      'fill-extrusion-opacity': 1.0,
       'fill-extrusion-vertical-gradient':true,
     }});
     map.addSource('dmg-unmatched', { type:'geojson', data: annotatePoints(structuredClone(gd.unmatched), d.dates[d.idx]) });
