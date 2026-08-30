@@ -65,10 +65,15 @@ window.onload = () => {
             document.getElementById('hamburgerMenu')?.classList.remove('open');
         }
     });
+    loadLibrary();
     const params = new URLSearchParams(window.location.search);
     const pdfUrl = params.get('pdf');
     if (pdfUrl) {
         loadPDFFromUrl(pdfUrl, params.get('title'));
+    }
+    const articleId = params.get('article');
+    if (articleId) {
+        loadArticleIntoReader(articleId, false);
     }
 };
 
@@ -1118,6 +1123,105 @@ async function loadPDFFromUrl(url, label) {
         alert('Could not load "' + (label || url) + '": ' + e.message);
     }
 }
+
+// ==================== LIBRARY (article directory) ====================
+// Real FeistTech articles, one JSON file per article under
+// data/reading-room/articles/, listed in data/reading-room/manifest.json.
+// Loaded straight into the reader below -- never a page navigation, so a
+// reader can go from "browsing the library" to "listening/reading" without
+// ever leaving the Reading Room. To add a new article: drop a new
+// {id}.json into that folder (see any existing one for the shape) and add
+// its id to manifest.json. Nothing else needs to change -- the homepage's
+// featured-article slot and this library's sort order are both computed
+// from each article's own `published` date, automatically.
+const LIBRARY_BASE = '../../../../data/reading-room/';
+let libraryArticles = {}; // id -> full article object, cached once fetched
+let libraryManifestLoaded = false;
+
+function fmtLibraryDate(iso) {
+    if (!iso) return '';
+    const d = new Date(iso + 'T00:00:00Z');
+    if (isNaN(d)) return iso;
+    return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' });
+}
+
+async function loadLibrary() {
+    const list = document.getElementById('libraryList');
+    try {
+        const manifestRes = await fetch(LIBRARY_BASE + 'manifest.json');
+        if (!manifestRes.ok) throw new Error('HTTP ' + manifestRes.status);
+        const ids = await manifestRes.json();
+        const articles = await Promise.all(ids.map(async (id) => {
+            const r = await fetch(LIBRARY_BASE + 'articles/' + id + '.json');
+            if (!r.ok) throw new Error('article ' + id + ': HTTP ' + r.status);
+            return r.json();
+        }));
+        articles.forEach(a => { libraryArticles[a.id] = a; });
+        libraryManifestLoaded = true;
+        renderLibrary(articles);
+    } catch(e) {
+        console.error('Library load error:', e);
+        list.innerHTML = '<div class="library-loading">Could not load the article library: ' + e.message + '</div>';
+    }
+}
+
+function renderLibrary(articles) {
+    const list = document.getElementById('libraryList');
+    if (!articles.length) { list.innerHTML = '<div class="library-loading">No articles yet.</div>'; return; }
+    const sorted = articles.slice().sort((a, b) => (b.published || '').localeCompare(a.published || ''));
+    list.innerHTML = '';
+    sorted.forEach(a => {
+        const btn = document.createElement('button');
+        btn.className = 'library-item';
+        btn.dataset.articleId = a.id;
+        btn.innerHTML =
+            '<div class="library-item-date">' + fmtLibraryDate(a.published) + '</div>' +
+            '<div class="library-item-title">' + escapeLibraryHtml(a.title) + '</div>' +
+            '<div class="library-item-excerpt">' + escapeLibraryHtml(a.excerpt || '') + '</div>';
+        btn.onclick = () => loadArticleIntoReader(a.id, true);
+        list.appendChild(btn);
+    });
+}
+
+function escapeLibraryHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+async function loadArticleIntoReader(id, pushState) {
+    closeAllPanels();
+    let article = libraryArticles[id];
+    if (!article) {
+        showTTSStatus('⏳ Fetching article...', 0);
+        try {
+            const r = await fetch(LIBRARY_BASE + 'articles/' + id + '.json');
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            article = await r.json();
+            libraryArticles[id] = article;
+        } catch(e) {
+            hideTTSStatus();
+            alert('Could not load that article: ' + e.message);
+            return;
+        }
+        hideTTSStatus();
+    }
+    const text = article.content || '';
+    detectSpkrs(text);
+    const parsed = parseTextWithSpkrs(text);
+    const html = renderParsedSegments(parsed);
+    initReader(html);
+    const label_el = document.getElementById('inputPanelLabel');
+    if (label_el) label_el.textContent = '📄 ' + article.title;
+    document.querySelectorAll('.library-item').forEach(el => {
+        el.classList.toggle('active', el.dataset.articleId === id);
+    });
+    if (pushState && history.pushState) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('article', id);
+        history.pushState({ articleId: id }, '', url);
+    }
+}
+
+function toggleLibrary() { document.getElementById('libraryPanel').classList.toggle('open'); }
 
 function initReader(html, isResume=false) {
     if(!html) return;

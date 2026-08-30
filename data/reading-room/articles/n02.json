@@ -1,0 +1,29 @@
+{
+  "id": "n02",
+  "title": "The Fiscal Hinge: Opium, the Bengal Monopoly, and the Liquidity of Empire",
+  "published": "2026-03-01",
+  "date": {
+    "year": 1839,
+    "month": 6,
+    "day": 15
+  },
+  "location": {
+    "lat": 22.5726,
+    "lon": 88.3639,
+    "name": "Calcutta & Lintin Island"
+  },
+  "excerpt": "A silver shortage in London gets solved by an opium monopoly in Bengal. The Company never touches the smuggling itself — it just auctions the product and lets the risk, and the profit, pass to someone else's hands before it crosses into China.",
+  "content": "By the late eighteenth century, the East India Company had a problem with its own appetite. Tea, silk, and porcelain bought in China had to be paid for in silver, and silver was draining out of London faster than the Company could replace it. In 1773, Governor-General Warren Hastings answered that problem by declaring opium a state monopoly in Bengal. In 1797, the Company tightened its grip further, replacing a looser contractor system with two salaried Opium Agents, one at Patna and one at Ghazipur, who controlled cultivation directly.\n\nPeasants didn't choose to grow poppy the way a farmer chooses a crop. They were locked into it through cash advances they had no real way to refuse — money paid up front against a harvest not yet planted, the same structure that would later bind a peasant in Ein al-Zeitun to a merchant's ledger in Beirut. Once the harvest came in, the opium went to the government factories at Patna and Ghazipur, was pressed into cakes, and shipped down the Ganges to Calcutta — not for export, but for auction.\n\nThe auction was the hinge the whole system turned on. China had banned opium imports outright. The Company couldn't be seen shipping a banned narcotic into a country it depended on for tea. So it sold the chests, openly and legally, to private merchants in Calcutta, and let those merchants carry the risk — and the profit — of getting the cargo past Chinese law. By 1800, smuggled chests numbered around 4,000 a year. By 1831, the figure was near 20,000. By 1839, on the eve of the war that finally answered it, the number had passed 40,000.\n\nThe silver that had been draining toward Beijing reversed direction. Every chest sold at Lintin Island brought silver back into circuits that fed the Bengal treasury and, downstream, the Company's books in London. The farmer in Bihar who'd planted poppy instead of food never saw a coin of it beyond the advance that had trapped him into planting in the first place.",
+  "tags": [
+    "debt-bondage",
+    "state-monopoly",
+    "auction-laundering",
+    "silver-extraction",
+    "addiction-economy",
+    "resource-extraction",
+    "monopoly",
+    "british-empire",
+    "east-india-company",
+    "bihar-farmers"
+  ]
+}
