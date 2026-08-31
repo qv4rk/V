@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Direct Stroke of an All-Wise Providence: Trevelyan, Skibbereen, and the Quarter-Acre Clause, 1846-1847 · The Atlas</title>
+<meta name="description" content="A Treasury official writes that the famine is Providence's cure for Irish overpopulation. Two months later a Cork magistrate finds six people, alive, in a locked cottage, mistaken for corpses. Eight months after that, Parliament writes the doctrine into law: anyone holding more than a quarter acre gets no relief at all.">
+<meta name="robots" content="index, follow">
+<meta property="og:title" content="The Direct Stroke of an All-Wise Providence: Trevelyan, Skibbereen, and the Quarter-Acre Clause, 1846-1847">
+<meta property="og:description" content="A Treasury official writes that the famine is Providence's cure for Irish overpopulation. Two months later a Cork magistrate finds six people, alive, in a locked cottage, mistaken for corpses. Eight months after that, Parliament writes the doctrine into law: anyone holding more than a quarter acre gets no relief at all.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://feisttech.com/articles/bt04.html">
+<meta property="article:published_time" content="1846-10-09">
+<link rel="canonical" href="https://feisttech.com/articles/bt04.html">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #050810;
+  --bg2: #0a0c14;
+  --primary: #00e5ff;
+  --gold: #c9a84c;
+  --gold-dim: rgba(201,168,76,.3);
+  --ink: #ddd5c0;
+  --ink-dim: #8a7e6a;
+  --ink-mute: #3a3228;
+  --border: rgba(0,229,255,.12);
+  --panel: rgba(5,8,16,.96);
+  --reading-bg: rgba(0,229,255,.07);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 18px;
+  line-height: 1.8;
+  min-height: 100vh;
+}
+
+/* ── Nav ── */
+.site-nav {
+  position: sticky; top: 0; z-index: 50;
+  background: rgba(5,8,16,.97);
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: 10px 18px;
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+}
+.nav-btn {
+  font-family: 'Space Mono', monospace;
+  font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--ink-dim); text-decoration: none;
+  background: transparent; border: 1px solid var(--gold-dim);
+  padding: 6px 12px; border-radius: 2px; cursor: pointer;
+  transition: color .2s, border-color .2s;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.nav-btn:hover { color: var(--gold); border-color: var(--gold); }
+.nav-btn.atlas { border-color: rgba(0,229,255,.25); color: rgba(0,229,255,.7); }
+.nav-btn.atlas:hover { border-color: var(--primary); color: var(--primary); }
+.nav-spacer { flex: 1; min-width: 8px; }
+
+/* ── Language switcher ── */
+.lang-switch {
+  max-width: 720px; margin: 0 auto; padding: 10px 1.5rem 0;
+  font-family: 'Space Mono', monospace;
+  font-size: 9px; letter-spacing: 1px; text-transform: uppercase;
+  color: var(--ink-mute);
+}
+.lang-switch a.lang-link { color: var(--gold); text-decoration: none; }
+.lang-switch a.lang-link:hover { text-decoration: underline; }
+.lang-switch .lang-current { color: var(--ink); }
+
+/* ── Article ── */
+article {
+  max-width: 720px; margin: 0 auto;
+  padding: 3rem 1.5rem 120px;
+}
+.article-meta {
+  font-family: 'Space Mono', monospace;
+  font-size: 8px; letter-spacing: 3px; text-transform: uppercase;
+  color: var(--ink-dim); margin-bottom: 1rem;
+}
+.article-tag {
+  display: inline-block;
+  background: rgba(201,168,76,.08);
+  border: 1px solid var(--gold-dim);
+  color: var(--gold); padding: 2px 8px; border-radius: 2px;
+  font-size: 8px; letter-spacing: 2px; text-transform: uppercase;
+  font-family: 'Space Mono', monospace;
+  margin: 0 4px 4px 0;
+}
+.article-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(1.7rem, 5vw, 2.5rem);
+  font-weight: 600; line-height: 1.25;
+  color: var(--ink); margin: 1rem 0 1.5rem;
+}
+.article-excerpt {
+  font-size: 1.1rem; line-height: 1.65;
+  color: var(--ink-dim); font-style: italic;
+  border-left: 3px solid rgba(201,168,76,.4);
+  padding: 0.5rem 1rem; margin-bottom: 2.5rem;
+}
+/* Content paragraphs — clickable for TTS */
+#article-content p {
+  margin-bottom: 1.4em;
+  padding: 0.35rem 0.6rem;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background .15s;
+  border-left: 3px solid transparent;
+}
+#article-content p:hover { background: rgba(255,255,255,.025); }
+#article-content p.reading {
+  background: var(--reading-bg);
+  border-left-color: var(--primary);
+}
+#article-content h1, #article-content h2, #article-content h3 {
+  font-family: 'Cormorant Garamond', serif;
+  margin: 2.5rem 0 0.75rem; font-weight: 600; line-height: 1.3;
+}
+#article-content h1 { font-size: 1.9rem; }
+#article-content h2 { font-size: 1.5rem; color: var(--gold); }
+#article-content h3 { font-size: 1.2rem; color: var(--ink-dim); }
+#article-content strong { color: var(--ink); }
+#article-content em { font-style: italic; color: var(--ink-dim); }
+#article-content code { font-family: 'Space Mono', monospace; font-size: .82em; background: rgba(255,255,255,.05); padding: 1px 5px; border-radius: 2px; }
+
+/* ── Works Cited (outside main, never TTS-read) ── */
+#works-cited {
+  max-width: 720px; margin: 0 auto 6rem;
+  padding: 2rem 1.5rem;
+  border-top: 1px solid rgba(255,255,255,.06);
+}
+#works-cited h2 {
+  font-family: 'Space Mono', monospace;
+  font-size: 8px; letter-spacing: 3px; text-transform: uppercase;
+  color: var(--ink-mute); margin-bottom: 1.25rem;
+}
+#works-cited ol { padding-left: 1.5rem; }
+#works-cited li { font-size: .82rem; color: var(--ink-dim); line-height: 1.7; margin-bottom: .75rem; }
+#works-cited li a { color: var(--ink-dim); }
+
+/* ── TTS Bar ── */
+#tts-bar {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+  background: rgba(5,8,16,.98);
+  border-top: 1px solid var(--border);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  padding: 10px 14px;
+  display: flex; align-items: center; gap: 6px; flex-wrap: nowrap;
+  padding-bottom: max(10px, env(safe-area-inset-bottom, 0px));
+}
+.tts-btn {
+  background: transparent;
+  border: 1px solid var(--gold-dim);
+  color: var(--ink-dim);
+  width: 36px; height: 36px;
+  border-radius: 2px; cursor: pointer; font-size: 13px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: color .2s, border-color .2s, background .2s;
+}
+.tts-btn:hover { color: var(--gold); border-color: var(--gold); }
+.tts-btn.active { background: rgba(201,168,76,.12); color: var(--gold); border-color: var(--gold); }
+#tts-progress {
+  flex: 1; font-family: 'Space Mono', monospace;
+  font-size: 8px; letter-spacing: 1px; color: var(--ink-dim);
+  text-align: center; min-width: 50px;
+}
+#tts-voice, #tts-speed {
+  background: var(--bg2); color: var(--ink-dim);
+  border: 1px solid var(--gold-dim); border-radius: 2px;
+  font-family: 'Space Mono', monospace; font-size: 8px;
+  letter-spacing: 1px; padding: 4px 6px; cursor: pointer;
+}
+#tts-voice { max-width: 130px; flex: 1 1 80px; }
+#tts-speed { width: 68px; flex-shrink: 0; }
+
+/* ── RSVP Overlay ── */
+#rsvp-overlay {
+  display: none;
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(2,4,10,.98);
+  flex-direction: column; align-items: center; justify-content: center;
+  gap: 1.5rem; padding: 2rem;
+}
+#rsvp-word {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(2.5rem, 10vw, 5rem);
+  color: var(--ink); text-align: center; min-height: 1.3em;
+  letter-spacing: -.01em;
+}
+#rsvp-wpm-display {
+  font-family: 'Space Mono', monospace;
+  font-size: 9px; letter-spacing: 3px; color: var(--ink-dim);
+}
+.rsvp-btns { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+
+/* Mobile */
+@media (max-width: 600px) {
+  .site-nav { padding: 8px 12px; }
+  article { padding: 2rem 1rem 110px; }
+  #tts-bar { flex-wrap: wrap; }
+  #tts-voice { display: none; }
+}
+</style>
+</head>
+<body>
+
+<nav class="site-nav">
+  <a href="../index.html" class="nav-btn">← Home</a>
+  <a href="../Manifold%20Atlas.html#node-bt04" class="nav-btn atlas">◆ View on Atlas</a>
+  <span class="nav-spacer"></span>
+  <button class="nav-btn" onclick="launchRSVP()">⚡ RSVP</button>
+</nav>
+<div class="lang-switch">Read in: <span class="lang-current">English</span></div>
+<article>
+  <div class="article-meta">TREASURY RELIEF DOCTRINE &amp; THE GREGORY CLAUSE · 1846-1847 · Whitehall, London &amp; Skibbereen, County Cork</div>
+  <span class="article-tag">providentialism</span><span class="article-tag">theology-as-policy</span><span class="article-tag">document-as-weapon</span><span class="article-tag">eviction</span><span class="article-tag">moral-hazard</span><span class="article-tag">laissez-faire</span><span class="article-tag">christianity</span><span class="article-tag">named-testimony</span>
+  <h1 class="article-title">The Direct Stroke of an All-Wise Providence: Trevelyan, Skibbereen, and the Quarter-Acre Clause, 1846-1847</h1>
+  <blockquote class="article-excerpt">A Treasury official writes that the famine is Providence's cure for Irish overpopulation. Two months later a Cork magistrate finds six people, alive, in a locked cottage, mistaken for corpses. Eight months after that, Parliament writes the doctrine into law: anyone holding more than a quarter acre gets no relief at all.</blockquote>
+  <div id="article-content">
+<p>On October 9, 1846, Charles Trevelyan, Assistant Secretary to the Treasury and the man Lord John Russell's government had put in charge of Irish relief, wrote a letter to Thomas Spring-Rice, Lord Monteagle, at his estate of Mount Trenchard in County Limerick. Monteagle had written asking what more the government intended to do. Trevelyan's answer laid out, in full and with no apparent sense that he was saying anything extreme, the doctrine that would govern the crisis for the rest of its course: "It forms no part of the functions of government to provide supplies of food or to increase the productive powers of the land." The condition of a community, he continued, depended on the efforts each member of it made in his own private and individual capacity, and government's proper role was only to protect merchant and agriculturist alike in the free exercise of their trades, never to enter those trades itself. Then, of the blight specifically, in the sentence that would outlive every other line he ever wrote: he hoped he was not guilty of irreverence in thinking that, the overpopulation of Ireland being altogether beyond the power of man to correct, "the cure has been applied by the direct stroke of an all-wise Providence, in a manner as unexpected and as unthought of as it is likely to be effectual."</p>
+<p>Trevelyan meant this. Cecil Woodham-Smith, whose history of the famine remains the standard account, described him as a man of powerful mind, scrupulous and upright character, and remarkable insensitivity — not a cynic dressing cruelty in theology, but a sincere evangelical who read the blight as a genuine act of divine correction, and who therefore understood restraint, not intervention, as the morally serious response. The letter to Monteagle was not a private indulgence. It was policy, stated plainly to a landlord who had asked a direct question and received a direct theological answer.</p>
+<p>Two months and six days later, on December 15, 1846, a Cork magistrate named Nicholas Cummins went to see for himself what the doctrine looked like on the ground. He traveled to South Reen, a townland on the eastern side of Castlehaven Harbour in the parish of Myross, near Skibbereen, bringing as much bread as five men could carry because he already expected to find people hungry. What he found instead was a hamlet that appeared deserted. He went into the cottages to find out why, and in the first one, he later wrote to the Duke of Wellington in a letter he also sent to the Times, he found six people — "famished and ghastly skeletons, to all appearances dead" — huddled together on filthy straw under what looked like a single ragged horse-cloth, legs bare above the knee. He approached in horror, and it was only a low moaning that told him they were alive: four children, a woman, and what had once been a man, all in fever. Within minutes he was surrounded by some two hundred more people in the same condition, most of them delirious from hunger or disease. His letter, published in the Times on December 24, 1846, put a specific, witnessed, undeniable human scene under the doctrine Trevelyan had committed to paper in October — not as rebuttal, since Cummins never claimed to be arguing with Treasury policy, only reporting what a magistrate had actually seen when he went to look.</p>
+<p>The doctrine did not soften after Cummins's letter reached London. If anything, the machinery built on it tightened. By June 1847 the government had shifted the entire remaining relief effort onto the amended Poor Law, and a member of Parliament named William Gregory attached to that year's Poor Law Extension Act the clause that would carry his name into every subsequent history of the famine: no occupier of more than a quarter acre of land could receive any relief whatsoever, whether inside the workhouse or out of it. On paper it was a technical eligibility rule. In practice, for a family holding even a small plot, it created exactly one legal path to survival — give up the land entirely, in writing, to the landlord — before a workhouse bed or an ounce of relief meal could be had. Landlords facing their own poor-rate liability on every holding under four pounds' rental value had every financial incentive to accept the surrender and see that the vacated cottage could never be reoccupied; hired men known across the country as the crowbar brigade went from townland to townland pulling down roofs and walls the same day a family walked out, so there would be nothing left to walk back to.</p>
+<p>No one who voted for the Poor Law Extension Act in the summer of 1847 needed to have read Cummins's letter or stood in South Reen to write a clause with that effect, any more than Trevelyan needed to have visited Skibbereen to compose his letter to Monteagle in October. The clause did what it did through its own plain wording, applied uniformly and without malice toward any particular family, exactly the way the free-trade tariff schedule fifty years earlier had emptied the Liberties without a single soldier being ordered to close a loom. The doctrine Trevelyan set down in a private letter to a Limerick landlord became, within nine months, the operating law of the land — and every family it touched from that point on had one further decision already made for them by the clause itself: whether to die on the holding they refused to surrender, or leave it and take their chances on a ship.</p>
+
+  </div>
+</article>
+
+<!-- Works Cited — outside <article>, skipped by TTS engine -->
+<section id="works-cited">
+<h2>Works Cited</h2>
+<ol>
+<li>"October 9, 1846 - English Noble Charles Trevelyan Shuts Down Irish Famine Relief." Legal Legacy (full text of Trevelyan's letter to Lord Monteagle, Mount Trenchard, Oct 9 1846). <a href="https://legallegacy.wordpress.com/2017/10/09/october-9-1846-english-noble-charles-trevelyan-shuts-down-irish-famine-relief/" target="_blank" rel="noopener">https://legallegacy.wordpress.com/2017/10/09/october-9-1846-english-noble-charles-trevelyan-shuts-down-irish-famine-relief/</a></li>
+<li>"An Gorta Mor." Joe Pellegrino, Irish History Since 1850 (Trevelyan's "direct stroke of an all-wise Providence" quote and later statements; Woodham-Smith characterization). <a href="https://jpellegrino.com/teaching/irishhistory/02-angortamor.html" target="_blank" rel="noopener">https://jpellegrino.com/teaching/irishhistory/02-angortamor.html</a></li>
+<li>"Letter from Nicholas Cummins to the Duke of Wellington, 1846." The Tree Sentinels (full text of Cummins's Dec 17 1846 letter, South Reen/Myross location). <a href="http://treesentinels.com/letter-from-nicholas-cummins-to-duke-wellington/" target="_blank" rel="noopener">http://treesentinels.com/letter-from-nicholas-cummins-to-duke-wellington/</a></li>
+<li>"On This Day: 24th December 1846: Letter to the Times re the Starvation in Skibbereen." Gript (publication date and circumstances of the Cummins letter). <a href="https://gript.ie/on-this-day-24th-december-1846-letter-to-the-times-re-the-starvation-in-skibbereen-2/" target="_blank" rel="noopener">https://gript.ie/on-this-day-24th-december-1846-letter-to-the-times-re-the-starvation-in-skibbereen-2/</a></li>
+<li>"Voices of An Gorta Mor: Eyewitness Accounts of the Famine." Irish Memorial (Cummins quotation, Gregory Clause context). <a href="https://irishmemorial.org/voices-of-an-gorta-mor/" target="_blank" rel="noopener">https://irishmemorial.org/voices-of-an-gorta-mor/</a></li>
+<li>"Poor Law Amendment Act of 1847 and the Gregory Clause." Encyclopedia.com (Gregory Clause text, quarter-acre eligibility rule, June 1847 passage).</li>
+<li>Deep-research famine synthesis and Structural Metamorphosis Pillar 1 (uploaded research; crowbar brigade eviction practice, poor-rate liability under four pounds rental value).</li>
+</ol>
+</section>
+
+<!-- RSVP Overlay -->
+<div id="rsvp-overlay">
+  <div id="rsvp-word">—</div>
+  <div id="rsvp-wpm-display">300 WPM</div>
+  <div class="rsvp-btns">
+    <button class="nav-btn" onclick="rsvpAdjust(-50)">− Slower</button>
+    <button class="nav-btn" id="rsvp-toggle" onclick="rsvpToggle()">⏸ Pause</button>
+    <button class="nav-btn" onclick="stopRSVP()">✕ Close</button>
+    <button class="nav-btn" onclick="rsvpAdjust(50)">+ Faster</button>
+  </div>
+</div>
+
+<!-- TTS Control Bar -->
+<div id="tts-bar">
+  <button class="tts-btn" onclick="ttsStep(-1)" title="Previous">◀</button>
+  <button class="tts-btn" id="tts-play" onclick="ttsToggle()" title="Play">▶</button>
+  <button class="tts-btn" onclick="ttsStep(1)" title="Next">▶▶</button>
+  <button class="tts-btn" onclick="ttsStop()" title="Stop">■</button>
+  <div id="tts-progress">— / —</div>
+  <select id="tts-voice" onchange="voiceChange()"></select>
+  <select id="tts-speed" onchange="speedChange()">
+    <option value="0.7">0.7×</option>
+    <option value="0.85">0.85×</option>
+    <option value="1.0" selected>1.0×</option>
+    <option value="1.2">1.2×</option>
+    <option value="1.5">1.5×</option>
+    <option value="1.8">1.8×</option>
+  </select>
+</div>
+
+<script>
+// ── TTS (Web Speech API — no CDN) ────────────────────────────────────────────
+const segs = Array.from(document.querySelectorAll('#article-content p'));
+let cur = -1, playing = false, rate = 1.0, voice = null;
+const synth = window.speechSynthesis;
+
+segs.forEach((p, i) => p.addEventListener('click', () => { ttsStop(); _speakFrom(i); }));
+
+function _loadVoices() {
+  if (!synth) return;
+  const vs = synth.getVoices().filter(v => v.lang && v.lang.startsWith('en'));
+  const sel = document.getElementById('tts-voice');
+  sel.innerHTML = '';
+  vs.forEach((v, i) => {
+    const o = document.createElement('option');
+    o.value = i;
+    o.textContent = v.name.slice(0, 22);
+    if (v.default) { o.selected = true; voice = v; }
+    sel.appendChild(o);
+  });
+  if (!voice && vs.length) voice = vs[0];
+}
+if (synth) { synth.onvoiceschanged = _loadVoices; _loadVoices(); }
+
+function voiceChange() {
+  const vs = synth.getVoices().filter(v => v.lang && v.lang.startsWith('en'));
+  voice = vs[+document.getElementById('tts-voice').value] || null;
+}
+function speedChange() { rate = +document.getElementById('tts-speed').value; }
+
+function _speakFrom(idx) {
+  if (!synth || idx < 0 || idx >= segs.length) return;
+  synth.cancel();
+  cur = idx; playing = true;
+  _say(idx);
+}
+
+function _say(idx) {
+  if (!synth || !playing || idx < 0 || idx >= segs.length) return;
+  cur = idx;
+  _highlight(idx);
+  const u = new SpeechSynthesisUtterance(segs[idx].innerText);
+  u.rate = rate;
+  if (voice) u.voice = voice;
+  u.onend = () => { if (playing && idx + 1 < segs.length) _say(idx + 1); else { playing = false; _ui(); } };
+  u.onerror = () => { playing = false; _ui(); };
+  synth.speak(u);
+  _ui();
+}
+
+function ttsToggle() {
+  if (!synth) return;
+  if (playing) { synth.pause(); playing = false; }
+  else if (synth.paused) { synth.resume(); playing = true; }
+  else _speakFrom(cur < 0 ? 0 : cur);
+  _ui();
+}
+
+function ttsStep(dir) {
+  const next = Math.max(0, Math.min(segs.length - 1, (cur < 0 ? 0 : cur) + dir));
+  ttsStop(); _speakFrom(next);
+}
+
+function ttsStop() {
+  if (synth) synth.cancel();
+  playing = false; cur = -1;
+  segs.forEach(s => s.classList.remove('reading'));
+  _ui();
+}
+
+function _highlight(idx) {
+  segs.forEach((s, i) => s.classList.toggle('reading', i === idx));
+  if (segs[idx]) segs[idx].scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function _ui() {
+  document.getElementById('tts-play').textContent = (playing && !synth.paused) ? '⏸' : '▶';
+  document.getElementById('tts-play').classList.toggle('active', playing);
+  document.getElementById('tts-progress').textContent =
+    (cur < 0 ? '—' : cur + 1) + ' / ' + segs.length;
+}
+
+// ── RSVP ─────────────────────────────────────────────────────────────────────
+let rWords = [], rIdx = 0, rTimer = null, rRunning = false, rWpm = 300;
+
+function launchRSVP() {
+  ttsStop();
+  rWords = segs.map(p => p.innerText).join(' ').split(/\s+/).filter(Boolean);
+  rIdx = 0; rRunning = true;
+  document.getElementById('rsvp-overlay').style.display = 'flex';
+  document.getElementById('rsvp-toggle').textContent = '⏸ Pause';
+  _rTick();
+}
+
+function _rTick() {
+  if (!rRunning) return;
+  if (rIdx >= rWords.length) { stopRSVP(); return; }
+  document.getElementById('rsvp-word').textContent = rWords[rIdx++];
+  rTimer = setTimeout(_rTick, 60000 / rWpm);
+}
+
+function rsvpToggle() {
+  rRunning = !rRunning;
+  document.getElementById('rsvp-toggle').textContent = rRunning ? '⏸ Pause' : '▶ Resume';
+  if (rRunning) _rTick();
+}
+
+function stopRSVP() {
+  rRunning = false; clearTimeout(rTimer);
+  document.getElementById('rsvp-overlay').style.display = 'none';
+}
+
+function rsvpAdjust(delta) {
+  rWpm = Math.max(60, Math.min(1200, rWpm + delta));
+  document.getElementById('rsvp-wpm-display').textContent = rWpm + ' WPM';
+}
+
+// Init
+_ui();
+</script>
+</body>
+</html>
