@@ -281,6 +281,7 @@ article {
 }
 #works-cited ol { padding-left: 1.5rem; }
 #works-cited li { font-size: .82rem; color: var(--ink-dim); line-height: 1.7; margin-bottom: .75rem; }
+#works-cited li a { color: var(--ink-dim); }
 
 /* ── TTS Bar ── */
 #tts-bar {
@@ -546,10 +547,27 @@ def render_lang_switcher(eid, family):
 
 
 def render_works_cited(references):
+    """
+    Each reference is either a plain string, or a {title, url} dict for a
+    real clickable citation link. Title and URL are escaped separately so
+    the link itself can never be broken or injected by either field --
+    references never carry raw HTML in the source frontmatter.
+    """
     if not references:
         return ''
-    items = ''.join(f'<li>{escape_html_attr(r)}</li>' for r in references)
-    return f'<h2>Works Cited</h2><ol>{items}</ol>'
+    items = []
+    for r in references:
+        if isinstance(r, dict):
+            title = escape_html_attr(r.get('title', ''))
+            url = r.get('url')
+            if url:
+                url_attr = escape_html_attr(url)
+                items.append(f'<li>{title} <a href="{url_attr}" target="_blank" rel="noopener">{url_attr}</a></li>')
+            else:
+                items.append(f'<li>{title}</li>')
+        else:
+            items.append(f'<li>{escape_html_attr(r)}</li>')
+    return '<h2>Works Cited</h2><ol>' + ''.join(items) + '</ol>'
 
 
 def escape_html_attr(s):
