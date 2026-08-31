@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Curator Who Saw It Coming: Blight, Corn, and the Fall of a Government, 1845-1846 · The Atlas</title>
+<meta name="description" content="A Dublin botanist correctly diagnoses the blight and predicts famine within days of first seeing it. The government that could have used his warning takes two months to appoint a commission, and the prime minister who moves fastest against his own party's interests is out of office within ten months of the discovery.">
+<meta name="robots" content="index, follow">
+<meta property="og:title" content="The Curator Who Saw It Coming: Blight, Corn, and the Fall of a Government, 1845-1846">
+<meta property="og:description" content="A Dublin botanist correctly diagnoses the blight and predicts famine within days of first seeing it. The government that could have used his warning takes two months to appoint a commission, and the prime minister who moves fastest against his own party's interests is out of office within ten months of the discovery.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://feisttech.com/articles/bt03.html">
+<meta property="article:published_time" content="1845-08-20">
+<link rel="canonical" href="https://feisttech.com/articles/bt03.html">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #050810;
+  --bg2: #0a0c14;
+  --primary: #00e5ff;
+  --gold: #c9a84c;
+  --gold-dim: rgba(201,168,76,.3);
+  --ink: #ddd5c0;
+  --ink-dim: #8a7e6a;
+  --ink-mute: #3a3228;
+  --border: rgba(0,229,255,.12);
+  --panel: rgba(5,8,16,.96);
+  --reading-bg: rgba(0,229,255,.07);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 18px;
+  line-height: 1.8;
+  min-height: 100vh;
+}
+
+/* ── Nav ── */
+.site-nav {
+  position: sticky; top: 0; z-index: 50;
+  background: rgba(5,8,16,.97);
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: 10px 18px;
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+}
+.nav-btn {
+  font-family: 'Space Mono', monospace;
+  font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--ink-dim); text-decoration: none;
+  background: transparent; border: 1px solid var(--gold-dim);
+  padding: 6px 12px; border-radius: 2px; cursor: pointer;
+  transition: color .2s, border-color .2s;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.nav-btn:hover { color: var(--gold); border-color: var(--gold); }
+.nav-btn.atlas { border-color: rgba(0,229,255,.25); color: rgba(0,229,255,.7); }
+.nav-btn.atlas:hover { border-color: var(--primary); color: var(--primary); }
+.nav-spacer { flex: 1; min-width: 8px; }
+
+/* ── Language switcher ── */
+.lang-switch {
+  max-width: 720px; margin: 0 auto; padding: 10px 1.5rem 0;
+  font-family: 'Space Mono', monospace;
+  font-size: 9px; letter-spacing: 1px; text-transform: uppercase;
+  color: var(--ink-mute);
+}
+.lang-switch a.lang-link { color: var(--gold); text-decoration: none; }
+.lang-switch a.lang-link:hover { text-decoration: underline; }
+.lang-switch .lang-current { color: var(--ink); }
+
+/* ── Article ── */
+article {
+  max-width: 720px; margin: 0 auto;
+  padding: 3rem 1.5rem 120px;
+}
+.article-meta {
+  font-family: 'Space Mono', monospace;
+  font-size: 8px; letter-spacing: 3px; text-transform: uppercase;
+  color: var(--ink-dim); margin-bottom: 1rem;
+}
+.article-tag {
+  display: inline-block;
+  background: rgba(201,168,76,.08);
+  border: 1px solid var(--gold-dim);
+  color: var(--gold); padding: 2px 8px; border-radius: 2px;
+  font-size: 8px; letter-spacing: 2px; text-transform: uppercase;
+  font-family: 'Space Mono', monospace;
+  margin: 0 4px 4px 0;
+}
+.article-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(1.7rem, 5vw, 2.5rem);
+  font-weight: 600; line-height: 1.25;
+  color: var(--ink); margin: 1rem 0 1.5rem;
+}
+.article-excerpt {
+  font-size: 1.1rem; line-height: 1.65;
+  color: var(--ink-dim); font-style: italic;
+  border-left: 3px solid rgba(201,168,76,.4);
+  padding: 0.5rem 1rem; margin-bottom: 2.5rem;
+}
+/* Content paragraphs — clickable for TTS */
+#article-content p {
+  margin-bottom: 1.4em;
+  padding: 0.35rem 0.6rem;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background .15s;
+  border-left: 3px solid transparent;
+}
+#article-content p:hover { background: rgba(255,255,255,.025); }
+#article-content p.reading {
+  background: var(--reading-bg);
+  border-left-color: var(--primary);
+}
+#article-content h1, #article-content h2, #article-content h3 {
+  font-family: 'Cormorant Garamond', serif;
+  margin: 2.5rem 0 0.75rem; font-weight: 600; line-height: 1.3;
+}
+#article-content h1 { font-size: 1.9rem; }
+#article-content h2 { font-size: 1.5rem; color: var(--gold); }
+#article-content h3 { font-size: 1.2rem; color: var(--ink-dim); }
+#article-content strong { color: var(--ink); }
+#article-content em { font-style: italic; color: var(--ink-dim); }
+#article-content code { font-family: 'Space Mono', monospace; font-size: .82em; background: rgba(255,255,255,.05); padding: 1px 5px; border-radius: 2px; }
+
+/* ── Works Cited (outside main, never TTS-read) ── */
+#works-cited {
+  max-width: 720px; margin: 0 auto 6rem;
+  padding: 2rem 1.5rem;
+  border-top: 1px solid rgba(255,255,255,.06);
+}
+#works-cited h2 {
+  font-family: 'Space Mono', monospace;
+  font-size: 8px; letter-spacing: 3px; text-transform: uppercase;
+  color: var(--ink-mute); margin-bottom: 1.25rem;
+}
+#works-cited ol { padding-left: 1.5rem; }
+#works-cited li { font-size: .82rem; color: var(--ink-dim); line-height: 1.7; margin-bottom: .75rem; }
+#works-cited li a { color: var(--ink-dim); }
+
+/* ── TTS Bar ── */
+#tts-bar {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+  background: rgba(5,8,16,.98);
+  border-top: 1px solid var(--border);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  padding: 10px 14px;
+  display: flex; align-items: center; gap: 6px; flex-wrap: nowrap;
+  padding-bottom: max(10px, env(safe-area-inset-bottom, 0px));
+}
+.tts-btn {
+  background: transparent;
+  border: 1px solid var(--gold-dim);
+  color: var(--ink-dim);
+  width: 36px; height: 36px;
+  border-radius: 2px; cursor: pointer; font-size: 13px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: color .2s, border-color .2s, background .2s;
+}
+.tts-btn:hover { color: var(--gold); border-color: var(--gold); }
+.tts-btn.active { background: rgba(201,168,76,.12); color: var(--gold); border-color: var(--gold); }
+#tts-progress {
+  flex: 1; font-family: 'Space Mono', monospace;
+  font-size: 8px; letter-spacing: 1px; color: var(--ink-dim);
+  text-align: center; min-width: 50px;
+}
+#tts-voice, #tts-speed {
+  background: var(--bg2); color: var(--ink-dim);
+  border: 1px solid var(--gold-dim); border-radius: 2px;
+  font-family: 'Space Mono', monospace; font-size: 8px;
+  letter-spacing: 1px; padding: 4px 6px; cursor: pointer;
+}
+#tts-voice { max-width: 130px; flex: 1 1 80px; }
+#tts-speed { width: 68px; flex-shrink: 0; }
+
+/* ── RSVP Overlay ── */
+#rsvp-overlay {
+  display: none;
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(2,4,10,.98);
+  flex-direction: column; align-items: center; justify-content: center;
+  gap: 1.5rem; padding: 2rem;
+}
+#rsvp-word {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(2.5rem, 10vw, 5rem);
+  color: var(--ink); text-align: center; min-height: 1.3em;
+  letter-spacing: -.01em;
+}
+#rsvp-wpm-display {
+  font-family: 'Space Mono', monospace;
+  font-size: 9px; letter-spacing: 3px; color: var(--ink-dim);
+}
+.rsvp-btns { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+
+/* Mobile */
+@media (max-width: 600px) {
+  .site-nav { padding: 8px 12px; }
+  article { padding: 2rem 1rem 110px; }
+  #tts-bar { flex-wrap: wrap; }
+  #tts-voice { display: none; }
+}
+</style>
+</head>
+<body>
+
+<nav class="site-nav">
+  <a href="../index.html" class="nav-btn">← Home</a>
+  <a href="../Manifold%20Atlas.html#node-bt03" class="nav-btn atlas">◆ View on Atlas</a>
+  <span class="nav-spacer"></span>
+  <button class="nav-btn" onclick="launchRSVP()">⚡ RSVP</button>
+</nav>
+<div class="lang-switch">Read in: <span class="lang-current">English</span></div>
+<article>
+  <div class="article-meta">BLIGHT DISCOVERY & THE FALL OF A GOVERNMENT · 1845-1846 · Glasnevin, Dublin &amp; Westminster, London</div>
+  <span class="article-tag">famine</span><span class="article-tag">scientific-inquiry</span><span class="article-tag">whitehall</span><span class="article-tag">treasury</span><span class="article-tag">corn-laws</span><span class="article-tag">cabinet-crisis</span><span class="article-tag">institution-eats-its-own</span><span class="article-tag">providentialism</span>
+  <h1 class="article-title">The Curator Who Saw It Coming: Blight, Corn, and the Fall of a Government, 1845-1846</h1>
+  <blockquote class="article-excerpt">A Dublin botanist correctly diagnoses the blight and predicts famine within days of first seeing it. The government that could have used his warning takes two months to appoint a commission, and the prime minister who moves fastest against his own party's interests is out of office within ten months of the discovery.</blockquote>
+  <div id="article-content">
+<p>On August 20, 1845, David Moore, curator of the Royal Dublin Society's Botanic Gardens at Glasnevin, noticed something wrong with the potato plants growing under his own care. He recognized it immediately for what it was, or close enough — a disease, not weather damage, not soil exhaustion — and he said so at once, predicting to colleagues that the coming failure of the crop would mean famine in Ireland. He was not a politician making a rhetorical point. He was a working botanist looking at leaves in his own garden, three weeks before the disease had spread far enough for most of the country to notice it at all.</p>
+<p>Moore kept working the problem after that first observation. He corresponded with the English mycologist Miles Berkeley, sent specimens, and correctly identified the cause as a fungus rather than an atmospheric or electrical phenomenon — a genuine piece of scientific reasoning ahead of most of his contemporaries, some of whom blamed railway vapor, industrial smoke, or divine judgment on Irish moral failings. He came close to a cure and did not quite reach one; there was, in truth, no fungicide in 1845 capable of stopping Phytophthora infestans once it had taken a field, so "narrowly missing the remedy" meant coming closer than anyone else to a problem that had no full solution yet regardless. What Moore had, from the first week, was the diagnosis and the forecast. What he did not have was any office that made either one matter to the government deciding what to do next.</p>
+<p>That government moved on its own clock. Robert Peel's cabinet appointed a Scientific Commission in October — Robert Kane and Lyon Playfair resident in the investigation, John Lindley visiting briefly from London — two months after Moore had already told anyone who would listen what was happening and what it would mean. The Commission reported on November 15 that roughly half the Irish potato crop had already been destroyed. A Relief Commission held its first meeting in Dublin five days later, on November 20. Between Moore's garden and a functioning relief apparatus in the capital sat exactly three months of the ordinary machinery of government proceeding at the ordinary pace of government, while the disease it was investigating did not wait for it.</p>
+<p>Peel did not wait either, at least not publicly. In November 1845, without informing Parliament and reportedly without bringing his full cabinet into the decision beforehand, he arranged — through the merchant house Baring Brothers — the secret purchase of roughly £100,000 worth of American Indian corn, to be shipped to Ireland and sold at cost through the Relief Commission once it existed. The secrecy was itself the point: an announced government purchase on that scale would have driven grain prices up before a single sack reached an Irish port, and alarmed the private merchants whose ordinary trade the relief plan still depended on operating undisturbed. It was a quietly competent piece of crisis management. It was also, if looked at squarely, an admission that the market Peel's own party existed to defend could not simply be trusted, unassisted, with the thing it was being asked to do.</p>
+<p>The corn purchase solved a supply problem. It did nothing about the deeper one, which was that Peel believed — correctly, in the narrow economic sense — that Ireland needed grain to be cheap, and grain could not be reliably cheap while the Corn Laws kept a protective tariff on imports for the benefit of British landowners, many of them the same rural gentry who made up his own party's base. In December 1845 he tried and failed to carry his cabinet on repeal, resigned as Prime Minister on December 11, watched Lord John Russell fail to assemble a Whig government in his place, and returned to office within weeks — now committed, by the shape of his own failed resignation, to forcing repeal through regardless of what it cost the Conservative Party that had put him there.</p>
+<p>He forced it through over five months of parliamentary combat, much of it conducted by Benjamin Disraeli, who treated Peel's reversal as a betrayal of the landed interest in terms sharp enough that the two men's mutual contempt became one of the defining personal rivalries of the era. The bill passed the Commons on its third reading on May 15, 1846, and the House of Lords, persuaded by the Duke of Wellington that a government defeat on the issue would be worse than repeal itself, passed it the same night that a separate piece of Peel's own legislation — an Irish Coercion Bill, granting the authorities in Ireland emergency police powers — was voted down in the Commons by a combination of Whigs, Radicals, and the same protectionist Conservatives Peel had just spent the spring defeating on corn. It was not a coincidence in the ordinary sense. It was retaliation, timed to land in the same week as the larger victory it could not otherwise touch. Peel resigned as Prime Minister on June 29, 1846, ten months and nine days after David Moore first noticed something wrong with the potatoes at Glasnevin.</p>
+<p>Moore stayed exactly where he had been the whole time, in the gardens at Glasnevin, publishing his continuing observations on the disease in the Irish Farmers' Gazette and the Gardeners' Chronicle through the following year, correct about the fungus, correct about the famine, holding no post that let either fact reach the men who would spend 1846 and 1847 deciding what Ireland was and was not owed. Peel, who had moved with more speed and more practical improvisation than either his own party or the economic orthodoxy of his era strictly required of him, left office having spent the whole of his remaining political capital on a change to a tariff schedule — genuinely necessary, and genuinely not the same thing as feeding anyone. The apparatus he had built in his final ten months — the secret corn purchase, the Relief Commission, the willingness to bend the rule when the rule was killing people — passed intact into the hands of Lord John Russell's incoming government, and into the hands of a Treasury official named Charles Trevelyan, who had a very different and very sincerely held idea of what that apparatus was for.</p>
+
+  </div>
+</article>
+
+<!-- Works Cited — outside <article>, skipped by TTS engine -->
+<section id="works-cited">
+<h2>Works Cited</h2>
+<ol>
+<li>"History." National Botanic Gardens of Ireland (David Moore's Aug 20, 1845 discovery and famine prediction at Glasnevin). <a href="https://www.botanicgardens.ie/glasnevin/history/" target="_blank" rel="noopener">https://www.botanicgardens.ie/glasnevin/history/</a></li>
+<li>"History of the Irish Potato." World Potato Congress 2022 (Moore's Aug 20, 1845 identification, Gardener's Chronicle reports). <a href="https://wpc2022ireland.com/history-of-the-potato/" target="_blank" rel="noopener">https://wpc2022ireland.com/history-of-the-potato/</a></li>
+<li>Nelson, E.C. "The Potato Late Blight Pathogen in Ireland, 1846: Reconnecting Irish Specimens with the Moore-Berkeley Correspondence." Archives of Natural History (Scientific Commission members Kane, Playfair, Lindley; Nov 1845 report). <a href="https://ristainolab.cals.ncsu.edu/files/2015/07/Nelson-The-Potato-Late-Blight-pathogen-in-Ireland-1846-reconnecting-Irish-specimens.pdf" target="_blank" rel="noopener">https://ristainolab.cals.ncsu.edu/files/2015/07/Nelson-The-Potato-Late-Blight-pathogen-in-Ireland-1846-reconnecting-Irish-specimens.pdf</a></li>
+<li>"1845 in Ireland." Wikipedia (Scientific Commission report Nov 15, Relief Commission first meeting Nov 20, 1845). <a href="https://en.wikipedia.org/wiki/1845_in_Ireland" target="_blank" rel="noopener">https://en.wikipedia.org/wiki/1845_in_Ireland</a></li>
+<li>"Corn Laws." New World Encyclopedia (Corn Law repeal timeline, Irish Coercion Bill defeat June 25/26 1846, Peel's June 29 resignation and resignation speech). <a href="https://www.newworldencyclopedia.org/entry/Corn_Laws" target="_blank" rel="noopener">https://www.newworldencyclopedia.org/entry/Corn_Laws</a></li>
+<li>"The Campaign for the Repeal of the Corn Laws." The Victorian Web (Dec 1845 cabinet resignation and return, Disraeli's opposition, Coercion Bill defeat). <a href="https://www.victorianweb.org/history/cornlaws2.html" target="_blank" rel="noopener">https://www.victorianweb.org/history/cornlaws2.html</a></li>
+<li>"How the Corn Laws Split the Ruling Class." Socialist Worker (Dec 11 1845 resignation, Russell's failed attempt to form government, Peel's return). <a href="https://socialistworker.co.uk/in-depth/how-the-corn-laws-split-the-ruling-class/" target="_blank" rel="noopener">https://socialistworker.co.uk/in-depth/how-the-corn-laws-split-the-ruling-class/</a></li>
+</ol>
+</section>
+
+<!-- RSVP Overlay -->
+<div id="rsvp-overlay">
+  <div id="rsvp-word">—</div>
+  <div id="rsvp-wpm-display">300 WPM</div>
+  <div class="rsvp-btns">
+    <button class="nav-btn" onclick="rsvpAdjust(-50)">− Slower</button>
+    <button class="nav-btn" id="rsvp-toggle" onclick="rsvpToggle()">⏸ Pause</button>
+    <button class="nav-btn" onclick="stopRSVP()">✕ Close</button>
+    <button class="nav-btn" onclick="rsvpAdjust(50)">+ Faster</button>
+  </div>
+</div>
+
+<!-- TTS Control Bar -->
+<div id="tts-bar">
+  <button class="tts-btn" onclick="ttsStep(-1)" title="Previous">◀</button>
+  <button class="tts-btn" id="tts-play" onclick="ttsToggle()" title="Play">▶</button>
+  <button class="tts-btn" onclick="ttsStep(1)" title="Next">▶▶</button>
+  <button class="tts-btn" onclick="ttsStop()" title="Stop">■</button>
+  <div id="tts-progress">— / —</div>
+  <select id="tts-voice" onchange="voiceChange()"></select>
+  <select id="tts-speed" onchange="speedChange()">
+    <option value="0.7">0.7×</option>
+    <option value="0.85">0.85×</option>
+    <option value="1.0" selected>1.0×</option>
+    <option value="1.2">1.2×</option>
+    <option value="1.5">1.5×</option>
+    <option value="1.8">1.8×</option>
+  </select>
+</div>
+
+<script>
+// ── TTS (Web Speech API — no CDN) ────────────────────────────────────────────
+const segs = Array.from(document.querySelectorAll('#article-content p'));
+let cur = -1, playing = false, rate = 1.0, voice = null;
+const synth = window.speechSynthesis;
+
+segs.forEach((p, i) => p.addEventListener('click', () => { ttsStop(); _speakFrom(i); }));
+
+function _loadVoices() {
+  if (!synth) return;
+  const vs = synth.getVoices().filter(v => v.lang && v.lang.startsWith('en'));
+  const sel = document.getElementById('tts-voice');
+  sel.innerHTML = '';
+  vs.forEach((v, i) => {
+    const o = document.createElement('option');
+    o.value = i;
+    o.textContent = v.name.slice(0, 22);
+    if (v.default) { o.selected = true; voice = v; }
+    sel.appendChild(o);
+  });
+  if (!voice && vs.length) voice = vs[0];
+}
+if (synth) { synth.onvoiceschanged = _loadVoices; _loadVoices(); }
+
+function voiceChange() {
+  const vs = synth.getVoices().filter(v => v.lang && v.lang.startsWith('en'));
+  voice = vs[+document.getElementById('tts-voice').value] || null;
+}
+function speedChange() { rate = +document.getElementById('tts-speed').value; }
+
+function _speakFrom(idx) {
+  if (!synth || idx < 0 || idx >= segs.length) return;
+  synth.cancel();
+  cur = idx; playing = true;
+  _say(idx);
+}
+
+function _say(idx) {
+  if (!synth || !playing || idx < 0 || idx >= segs.length) return;
+  cur = idx;
+  _highlight(idx);
+  const u = new SpeechSynthesisUtterance(segs[idx].innerText);
+  u.rate = rate;
+  if (voice) u.voice = voice;
+  u.onend = () => { if (playing && idx + 1 < segs.length) _say(idx + 1); else { playing = false; _ui(); } };
+  u.onerror = () => { playing = false; _ui(); };
+  synth.speak(u);
+  _ui();
+}
+
+function ttsToggle() {
+  if (!synth) return;
+  if (playing) { synth.pause(); playing = false; }
+  else if (synth.paused) { synth.resume(); playing = true; }
+  else _speakFrom(cur < 0 ? 0 : cur);
+  _ui();
+}
+
+function ttsStep(dir) {
+  const next = Math.max(0, Math.min(segs.length - 1, (cur < 0 ? 0 : cur) + dir));
+  ttsStop(); _speakFrom(next);
+}
+
+function ttsStop() {
+  if (synth) synth.cancel();
+  playing = false; cur = -1;
+  segs.forEach(s => s.classList.remove('reading'));
+  _ui();
+}
+
+function _highlight(idx) {
+  segs.forEach((s, i) => s.classList.toggle('reading', i === idx));
+  if (segs[idx]) segs[idx].scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function _ui() {
+  document.getElementById('tts-play').textContent = (playing && !synth.paused) ? '⏸' : '▶';
+  document.getElementById('tts-play').classList.toggle('active', playing);
+  document.getElementById('tts-progress').textContent =
+    (cur < 0 ? '—' : cur + 1) + ' / ' + segs.length;
+}
+
+// ── RSVP ─────────────────────────────────────────────────────────────────────
+let rWords = [], rIdx = 0, rTimer = null, rRunning = false, rWpm = 300;
+
+function launchRSVP() {
+  ttsStop();
+  rWords = segs.map(p => p.innerText).join(' ').split(/\s+/).filter(Boolean);
+  rIdx = 0; rRunning = true;
+  document.getElementById('rsvp-overlay').style.display = 'flex';
+  document.getElementById('rsvp-toggle').textContent = '⏸ Pause';
+  _rTick();
+}
+
+function _rTick() {
+  if (!rRunning) return;
+  if (rIdx >= rWords.length) { stopRSVP(); return; }
+  document.getElementById('rsvp-word').textContent = rWords[rIdx++];
+  rTimer = setTimeout(_rTick, 60000 / rWpm);
+}
+
+function rsvpToggle() {
+  rRunning = !rRunning;
+  document.getElementById('rsvp-toggle').textContent = rRunning ? '⏸ Pause' : '▶ Resume';
+  if (rRunning) _rTick();
+}
+
+function stopRSVP() {
+  rRunning = false; clearTimeout(rTimer);
+  document.getElementById('rsvp-overlay').style.display = 'none';
+}
+
+function rsvpAdjust(delta) {
+  rWpm = Math.max(60, Math.min(1200, rWpm + delta));
+  document.getElementById('rsvp-wpm-display').textContent = rWpm + ' WPM';
+}
+
+// Init
+_ui();
+</script>
+</body>
+</html>
