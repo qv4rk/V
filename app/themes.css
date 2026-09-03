@@ -106,7 +106,10 @@ body::after {
    ATLAS (Earth + dial-as-corner)
    ════════════════════════════════════════════════ */
 #atlas { background:var(--earth-bg); }
-#earth-canvas { position:absolute; inset:0; width:100%; height:100%; cursor:grab; }
+/* touch-action:none hands every touch gesture on the globe to our own
+   JS (drag-to-rotate, pinch-to-zoom in app/earth.js) instead of letting
+   the browser's default page pinch-zoom hijack it. */
+#earth-canvas { position:absolute; inset:0; width:100%; height:100%; cursor:grab; touch-action:none; }
 #earth-canvas.dragging { cursor:grabbing; }
 
 /* ── Persistent hamburger nav ──
@@ -342,7 +345,9 @@ body::after {
   position:relative;
 }
 .dossier .top .close {
-  position:absolute; top:18px; right:22px;
+  /* Flows inline as the last button in the TTS/Reader/Close row (see
+     Manifold Atlas.html) -- it used to be the row's only button and was
+     absolutely positioned, which now overlaps the buttons added beside it. */
   background:transparent; border:none; color:var(--ink-dim);
   font-size:18px; transition:color .2s;
 }
@@ -360,17 +365,21 @@ body::after {
   color:var(--ink-mute); letter-spacing:1.5px;
 }
 .dossier .meta-line span b { color:var(--ink); font-weight:400; }
-.dossier .excerpt {
-  margin-top:14px; font-family:'Cormorant Garamond',serif;
-  font-size:16px; line-height:1.55; color:var(--ink-dim);
-  font-style:italic;
-}
 
 .dossier .body {
   flex:1; overflow-y:auto;
   padding:24px 30px 90px;
   font-family:'Cormorant Garamond',serif;
   font-size:16px; line-height:1.78; color:var(--ink);
+}
+/* Excerpt now lives as the first item in the scrollable body (see
+   _renderDossier in atlas.js) rather than the fixed header, so a long
+   excerpt or title doesn't eat most of the screen before the article
+   itself is even reachable on a phone. */
+.dossier .body .doss-excerpt {
+  font-size:16px; line-height:1.55; color:var(--ink-dim);
+  font-style:italic; margin-bottom:18px;
+  padding-bottom:16px; border-bottom:1px solid var(--panel-edge);
 }
 .dossier .body h1 {
   font-family:'Cinzel',serif; font-size:15px; letter-spacing:.3em;
@@ -521,4 +530,15 @@ body::after {
   .theme-picker .lbl { display:none; }
   .view-tabs button { padding:7px 10px; font-size:8px; letter-spacing:1.5px; }
   .brand { font-size:10px; letter-spacing:.2em; }
+
+  /* Dossier: the fixed chrome around the scrollable article body (header,
+     prev/next bar, connections footer) needs to stay small on a phone --
+     otherwise it can eat most of the screen before the article text is
+     even reachable. */
+  .dossier .top { padding:14px 18px 12px; }
+  .dossier .doss-title { font-size:19px; margin-bottom:8px; }
+  .dossier .meta-line { gap:10px; }
+  .dossier .doss-nav { padding:6px 18px; }
+  .dossier .body { padding:16px 18px 60px; }
+  .dossier .connections { padding:12px 18px 16px; }
 }
