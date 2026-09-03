@@ -339,8 +339,13 @@ body::after {
   box-shadow:-22px 0 60px rgba(0,0,0,.45);
 }
 .dossier.on { transform:translateX(0); }
+/* Every size in the dossier chrome below is a clamp() against dvh/vw
+   instead of a flat px value, so the split between "fixed chrome" and
+   "scrollable article" stays sane continuously across the whole range
+   of real screens -- an 800x600 window, a phone, a 65" 16K monitor --
+   rather than jumping between two hardcoded states at one breakpoint. */
 .dossier .top {
-  padding:24px 30px 20px;
+  padding:clamp(10px,2.6dvh,24px) clamp(14px,4vw,30px) clamp(8px,2dvh,20px);
   border-bottom:1px solid var(--panel-edge);
   position:relative;
 }
@@ -357,29 +362,29 @@ body::after {
   margin-bottom:4px; text-transform:uppercase;
 }
 .dossier .doss-title {
-  font-family:'Cinzel',serif; font-size:24px; letter-spacing:.1em;
-  color:var(--accent); line-height:1.25; margin-bottom:14px;
+  font-family:'Cinzel',serif; font-size:clamp(16px,3.2dvh,24px); letter-spacing:.1em;
+  color:var(--accent); line-height:1.25; margin-bottom:clamp(6px,1.6dvh,14px);
 }
 .dossier .meta-line {
-  display:flex; gap:18px; flex-wrap:wrap; font-size:9px;
+  display:flex; gap:clamp(8px,2vw,18px); flex-wrap:wrap; font-size:clamp(9px,1.1dvh,11px);
   color:var(--ink-mute); letter-spacing:1.5px;
 }
 .dossier .meta-line span b { color:var(--ink); font-weight:400; }
 
 .dossier .body {
   flex:1; overflow-y:auto;
-  padding:24px 30px 90px;
+  padding:clamp(12px,2.8dvh,24px) clamp(14px,4vw,30px) clamp(50px,8dvh,90px);
   font-family:'Cormorant Garamond',serif;
   font-size:16px; line-height:1.78; color:var(--ink);
 }
 /* Excerpt now lives as the first item in the scrollable body (see
    _renderDossier in atlas.js) rather than the fixed header, so a long
    excerpt or title doesn't eat most of the screen before the article
-   itself is even reachable on a phone. */
+   itself is even reachable on a small screen. */
 .dossier .body .doss-excerpt {
   font-size:16px; line-height:1.55; color:var(--ink-dim);
-  font-style:italic; margin-bottom:18px;
-  padding-bottom:16px; border-bottom:1px solid var(--panel-edge);
+  font-style:italic; margin-bottom:clamp(12px,2dvh,18px);
+  padding-bottom:clamp(10px,1.8dvh,16px); border-bottom:1px solid var(--panel-edge);
 }
 .dossier .body h1 {
   font-family:'Cinzel',serif; font-size:15px; letter-spacing:.3em;
@@ -393,7 +398,7 @@ body::after {
 .dossier .body p::first-letter { color:var(--accent); }
 
 .dossier .connections {
-  padding:18px 30px 24px;
+  padding:clamp(10px,2.2dvh,18px) clamp(14px,4vw,30px) clamp(12px,2.8dvh,24px);
   border-top:1px solid var(--panel-edge);
   background:var(--bg-soft);
 }
@@ -417,7 +422,7 @@ body::after {
 
 .dossier .doss-nav {
   display:flex; align-items:center; justify-content:space-between; gap:10px;
-  padding:9px 30px;
+  padding:clamp(5px,1.1dvh,9px) clamp(14px,4vw,30px);
   border-bottom:1px solid var(--panel-edge);
   background:var(--bg-soft);
 }
@@ -530,15 +535,4 @@ body::after {
   .theme-picker .lbl { display:none; }
   .view-tabs button { padding:7px 10px; font-size:8px; letter-spacing:1.5px; }
   .brand { font-size:10px; letter-spacing:.2em; }
-
-  /* Dossier: the fixed chrome around the scrollable article body (header,
-     prev/next bar, connections footer) needs to stay small on a phone --
-     otherwise it can eat most of the screen before the article text is
-     even reachable. */
-  .dossier .top { padding:14px 18px 12px; }
-  .dossier .doss-title { font-size:19px; margin-bottom:8px; }
-  .dossier .meta-line { gap:10px; }
-  .dossier .doss-nav { padding:6px 18px; }
-  .dossier .body { padding:16px 18px 60px; }
-  .dossier .connections { padding:12px 18px 16px; }
 }
