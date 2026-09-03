@@ -267,14 +267,14 @@
     "title": "Hyde Resigns, Dundalk, 1915",
     "source": "manifold",
     "date": {
-      "year": 1887,
-      "month": 11,
-      "day": 9
+      "year": 1915,
+      "month": 7,
+      "day": 29
     },
     "location": {
-      "lat": 52.6795,
-      "lon": -7.8069,
-      "name": "Hayes's Commercial Hotel, Thurles, County Tipperary"
+      "lat": 54.0019,
+      "lon": -6.4058,
+      "name": "Dundalk ard-fheis venue, County Louth"
     },
     "type": "GAA and Gaelic League IRB infiltration",
     "nodeColor": "#6b8e5a",
@@ -325,13 +325,13 @@
     "source": "manifold",
     "date": {
       "year": 1914,
-      "month": 3,
-      "day": 20
+      "month": 7,
+      "day": 26
     },
     "location": {
-      "lat": 53.1594,
-      "lon": -6.8231,
-      "name": "The Curragh Camp, County Kildare"
+      "lat": 53.3889,
+      "lon": -6.0658,
+      "name": "Howth Harbour, County Dublin"
     },
     "type": "Curragh mutiny and gun-running",
     "nodeColor": "#6b8e5a",
@@ -439,13 +439,13 @@
     "source": "manifold",
     "date": {
       "year": 1920,
-      "month": 9,
-      "day": 20
+      "month": 11,
+      "day": 21
     },
     "location": {
-      "lat": 53.6106,
-      "lon": -6.1817,
-      "name": "Balbriggan, County Dublin"
+      "lat": 53.3607,
+      "lon": -6.2512,
+      "name": "Croke Park, Dublin"
     },
     "type": "Black and Tan reprisals",
     "nodeColor": "#6b8e5a",
@@ -900,14 +900,14 @@
     "title": "Warnier's Sentence, 1873",
     "source": "manifold",
     "date": {
-      "year": 1849,
+      "year": 1873,
       "month": 7,
-      "day": 28
+      "day": 26
     },
     "location": {
-      "lat": 53.3505,
-      "lon": -6.2733,
-      "name": "14 Henrietta Street, Dublin"
+      "lat": 36.7538,
+      "lon": 3.0588,
+      "name": "Algiers, French Algeria"
     },
     "type": "Comparative land registration, 1849-1873",
     "nodeColor": "#a67041",
