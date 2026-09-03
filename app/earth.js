@@ -14,6 +14,7 @@ window.MA = window.MA || {};
   'use strict';
 
   const COASTLINE_URL = 'https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/land-110m.json';
+  const MIN_ZOOM = 0.7, MAX_ZOOM = 6;
 
   // Major annual meteor showers — real active windows (month/day, no year:
   // they recur every year). Intensity is decorative, not a literal ZHR sim,
@@ -38,6 +39,8 @@ window.MA = window.MA || {};
       this.W = 0; this.H = 0;
       this.rotation = [12, -10, 0]; // [lambda, phi, gamma]
       this.scale = 0;               // computed in resize
+      this.zoom = 1;                 // multiplier on top of the base scale
+      this._pinch = null;            // {dist0, zoom0} while a 2-finger touch is active
       this.spin = true;
       this.spinRate = 0.005;        // deg/frame — gentle ambient drift
       this.spinVel = 0;             // flick momentum (deg/frame, lambda)
@@ -92,10 +95,15 @@ window.MA = window.MA || {};
     _buildProjection() {
       this.proj = d3.geoOrthographic()
         .translate([this.W/2, this.H/2])
-        .scale(this.scale)
+        .scale(this.scale * this.zoom)
         .clipAngle(90)
         .rotate(this.rotation);
       this.path = d3.geoPath(this.proj, this.ctx);
+    }
+
+    setZoom(z) {
+      this.zoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, z));
+      this._buildProjection();
     }
 
     _bind() {
@@ -132,9 +140,22 @@ window.MA = window.MA || {};
         this.dragging = false; this.dragLast = null;
         c.classList.remove('dragging');
       });
+      // Mouse wheel / trackpad: zoom the globe in place.
+      c.addEventListener('wheel', e => {
+        e.preventDefault();
+        this.setZoom(this.zoom * (1 - e.deltaY * 0.0015));
+        this.spin = false;
+      }, { passive:false });
+
       // Touch
+      const pinchDist = (t0, t1) => Math.hypot(t0.clientX - t1.clientX, t0.clientY - t1.clientY);
       c.addEventListener('touchstart', e => {
-        if (e.touches.length === 1) {
+        if (e.touches.length === 2) {
+          // A second finger landed -- switch from rotate to pinch-zoom.
+          this.dragging = false; this.dragLast = null;
+          this._pinch = { dist0: pinchDist(e.touches[0], e.touches[1]), zoom0: this.zoom };
+        } else if (e.touches.length === 1) {
+          this._pinch = null;
           this.dragging = true;
           const t = e.touches[0];
           this.dragLast  = [t.clientX, t.clientY];
@@ -142,14 +163,19 @@ window.MA = window.MA || {};
         }
       }, { passive:true });
       c.addEventListener('touchmove', e => {
-        if (this.dragging && e.touches.length === 1) {
+        if (e.touches.length === 2 && this._pinch) {
+          e.preventDefault();
+          const d = pinchDist(e.touches[0], e.touches[1]);
+          this.setZoom(this._pinch.zoom0 * (d / this._pinch.dist0));
+          this.spin = false;
+        } else if (this.dragging && e.touches.length === 1) {
           e.preventDefault();
           const t = e.touches[0];
           moveHandler(t.clientX, t.clientY);
         }
       }, { passive:false });
       c.addEventListener('touchend', e => {
-        if (this.dragging && this.dragStart && e.changedTouches.length) {
+        if (this.dragging && this.dragStart && e.changedTouches.length && e.touches.length === 0) {
           const t = e.changedTouches[0];
           const moved = Math.hypot(
             t.clientX - this.dragStart[0],
@@ -157,7 +183,17 @@ window.MA = window.MA || {};
           );
           if (moved < 8) this._clickTest(t.clientX, t.clientY);
         }
-        this.dragging = false; this.dragLast = null;
+        this._pinch = null;
+        if (e.touches.length === 1) {
+          // Lifted one of two fingers -- resume single-finger rotation
+          // from the finger still down, instead of dropping the gesture.
+          const t = e.touches[0];
+          this.dragging = true;
+          this.dragLast  = [t.clientX, t.clientY];
+          this.dragStart = [t.clientX, t.clientY];
+        } else {
+          this.dragging = false; this.dragLast = null;
+        }
       });
     }
 

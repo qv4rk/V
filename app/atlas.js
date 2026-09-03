@@ -660,9 +660,15 @@ window.MA = window.MA || {};
         <span>LOCATION · <b>${(art.location.name||'').toUpperCase()}</b></span>
         <span>COORDS · <b>${art.location.lat.toFixed(2)}, ${art.location.lon.toFixed(2)}</b></span>
       `;
-      root.querySelector('.excerpt').textContent = art.excerpt || '';
+      // The excerpt scrolls away with the body instead of sitting in the
+      // fixed header -- on a phone screen the header alone (buttons +
+      // title + meta + excerpt) could eat over half the viewport, leaving
+      // almost nothing for the article itself.
       const bodyEl = root.querySelector('.body');
-      bodyEl.innerHTML = mdToHtml(art.content || '');
+      const excerptHtml = art.excerpt
+        ? `<p class="doss-excerpt">${art.excerpt.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</p>`
+        : '';
+      bodyEl.innerHTML = excerptHtml + mdToHtml(art.content || '');
       // Article link
       if (art.article_url) {
         const link = document.createElement('a');
