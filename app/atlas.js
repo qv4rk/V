@@ -699,8 +699,9 @@ window.MA = window.MA || {};
         connHead.textContent = 'NO LINKED ARTICLES';
       }
 
-      // Scroll dossier body to top
-      root.querySelector('.body').scrollTop = 0;
+      // Scroll dossier back to top (the .dossier-scroll wrapper is the
+      // actual overflow container now -- .body itself no longer scrolls).
+      root.querySelector('.dossier-scroll').scrollTop = 0;
     }
 
     /* ── Master time setter ── */

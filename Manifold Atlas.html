@@ -211,7 +211,11 @@
     <div class="nt-loc">—</div>
   </div>
 
-  <!-- Dossier panel -->
+  <!-- Dossier panel — only the buttons + title are truly fixed; every
+       other section (classification, date/location, the article itself,
+       linked articles, prev/next) scrolls together in .dossier-scroll,
+       so the fixed chrome stays small on every screen size instead of
+       claiming a flat 50% of it regardless of how little is actually in it. -->
   <aside class="dossier" id="dossier">
     <div class="top">
       <div style="display:flex;justify-content:flex-end;gap:6px;margin-bottom:10px;">
@@ -219,19 +223,21 @@
       <button id="doss-reader" title="Open in FeistTech Reader" style="background:transparent;border:1px solid var(--panel-edge);color:var(--ink-dim);padding:4px 10px;cursor:pointer;font-size:11px;font-family:inherit;border-radius:2px;letter-spacing:1px;">READER</button>
       <button class="close" id="doss-close">✕</button>
     </div>
-      <div class="classification">—</div>
       <div class="doss-title">—</div>
+    </div>
+    <div class="dossier-scroll scroll">
+      <div class="classification">—</div>
       <div class="meta-line">—</div>
-    </div>
-    <div class="doss-nav">
-      <button class="doss-nav-btn" id="doss-prev" title="Previous in this reading trail">◄ PREV</button>
-      <span class="doss-nav-label" id="doss-nav-label">—</span>
-      <button class="doss-nav-btn" id="doss-next" title="Next in this reading trail">NEXT ►</button>
-    </div>
-    <div class="body scroll"></div>
-    <div class="connections">
-      <div class="conn-head">—</div>
-      <div class="conn-chips"></div>
+      <div class="body"></div>
+      <div class="connections">
+        <div class="conn-head">—</div>
+        <div class="conn-chips"></div>
+      </div>
+      <div class="doss-nav">
+        <button class="doss-nav-btn" id="doss-prev" title="Previous in this reading trail">◄ PREV</button>
+        <span class="doss-nav-label" id="doss-nav-label">—</span>
+        <button class="doss-nav-btn" id="doss-next" title="Next in this reading trail">NEXT ►</button>
+      </div>
     </div>
   </aside>
 
