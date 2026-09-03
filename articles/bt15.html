@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Croke Park, 21 November 1920 · The Atlas</title>
+<meta name="description" content="A barber is bayoneted and shot in the street he'd lived on for years. A city center burns for a night while firemen's hoses are cut. Two boys are shot from a wall and a tree watching a football match, and a bride-to-be is buried, six days early, in the dress she meant to marry in.">
+<meta name="robots" content="index, follow">
+<meta property="og:title" content="Croke Park, 21 November 1920">
+<meta property="og:description" content="A barber is bayoneted and shot in the street he'd lived on for years. A city center burns for a night while firemen's hoses are cut. Two boys are shot from a wall and a tree watching a football match, and a bride-to-be is buried, six days early, in the dress she meant to marry in.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://feisttech.com/articles/bt15.html">
+<meta property="article:published_time" content="1920-09-20">
+<link rel="canonical" href="https://feisttech.com/articles/bt15.html">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #050810;
+  --bg2: #0a0c14;
+  --primary: #00e5ff;
+  --gold: #c9a84c;
+  --gold-dim: rgba(201,168,76,.3);
+  --ink: #ddd5c0;
+  --ink-dim: #8a7e6a;
+  --ink-mute: #3a3228;
+  --border: rgba(0,229,255,.12);
+  --panel: rgba(5,8,16,.96);
+  --reading-bg: rgba(0,229,255,.07);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 18px;
+  line-height: 1.8;
+  min-height: 100vh;
+}
+
+/* ── Nav ── */
+.site-nav {
+  position: sticky; top: 0; z-index: 50;
+  background: rgba(5,8,16,.97);
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: 10px 18px;
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+}
+.nav-btn {
+  font-family: 'Space Mono', monospace;
+  font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--ink-dim); text-decoration: none;
+  background: transparent; border: 1px solid var(--gold-dim);
+  padding: 6px 12px; border-radius: 2px; cursor: pointer;
+  transition: color .2s, border-color .2s;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.nav-btn:hover { color: var(--gold); border-color: var(--gold); }
+.nav-btn.atlas { border-color: rgba(0,229,255,.25); color: rgba(0,229,255,.7); }
+.nav-btn.atlas:hover { border-color: var(--primary); color: var(--primary); }
+.nav-spacer { flex: 1; min-width: 8px; }
+
+/* ── Language switcher ── */
+.lang-switch {
+  max-width: 720px; margin: 0 auto; padding: 10px 1.5rem 0;
+  font-family: 'Space Mono', monospace;
+  font-size: 9px; letter-spacing: 1px; text-transform: uppercase;
+  color: var(--ink-mute);
+}
+.lang-switch a.lang-link { color: var(--gold); text-decoration: none; }
+.lang-switch a.lang-link:hover { text-decoration: underline; }
+.lang-switch .lang-current { color: var(--ink); }
+
+/* ── Article ── */
+article {
+  max-width: 720px; margin: 0 auto;
+  padding: 3rem 1.5rem 120px;
+}
+.article-meta {
+  font-family: 'Space Mono', monospace;
+  font-size: 8px; letter-spacing: 3px; text-transform: uppercase;
+  color: var(--ink-dim); margin-bottom: 1rem;
+}
+.article-tag {
+  display: inline-block;
+  background: rgba(201,168,76,.08);
+  border: 1px solid var(--gold-dim);
+  color: var(--gold); padding: 2px 8px; border-radius: 2px;
+  font-size: 8px; letter-spacing: 2px; text-transform: uppercase;
+  font-family: 'Space Mono', monospace;
+  margin: 0 4px 4px 0;
+}
+.article-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(1.7rem, 5vw, 2.5rem);
+  font-weight: 600; line-height: 1.25;
+  color: var(--ink); margin: 1rem 0 1.5rem;
+}
+.article-excerpt {
+  font-size: 1.1rem; line-height: 1.65;
+  color: var(--ink-dim); font-style: italic;
+  border-left: 3px solid rgba(201,168,76,.4);
+  padding: 0.5rem 1rem; margin-bottom: 2.5rem;
+}
+/* Content paragraphs — clickable for TTS */
+#article-content p {
+  margin-bottom: 1.4em;
+  padding: 0.35rem 0.6rem;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background .15s;
+  border-left: 3px solid transparent;
+}
+#article-content p:hover { background: rgba(255,255,255,.025); }
+#article-content p.reading {
+  background: var(--reading-bg);
+  border-left-color: var(--primary);
+}
+#article-content h1, #article-content h2, #article-content h3 {
+  font-family: 'Cormorant Garamond', serif;
+  margin: 2.5rem 0 0.75rem; font-weight: 600; line-height: 1.3;
+}
+#article-content h1 { font-size: 1.9rem; }
+#article-content h2 { font-size: 1.5rem; color: var(--gold); }
+#article-content h3 { font-size: 1.2rem; color: var(--ink-dim); }
+#article-content strong { color: var(--ink); }
+#article-content em { font-style: italic; color: var(--ink-dim); }
+#article-content code { font-family: 'Space Mono', monospace; font-size: .82em; background: rgba(255,255,255,.05); padding: 1px 5px; border-radius: 2px; }
+
+/* ── Works Cited (outside main, never TTS-read) ── */
+#works-cited {
+  max-width: 720px; margin: 0 auto 6rem;
+  padding: 2rem 1.5rem;
+  border-top: 1px solid rgba(255,255,255,.06);
+}
+#works-cited h2 {
+  font-family: 'Space Mono', monospace;
+  font-size: 8px; letter-spacing: 3px; text-transform: uppercase;
+  color: var(--ink-mute); margin-bottom: 1.25rem;
+}
+#works-cited ol { padding-left: 1.5rem; }
+#works-cited li { font-size: .82rem; color: var(--ink-dim); line-height: 1.7; margin-bottom: .75rem; }
+#works-cited li a { color: var(--ink-dim); }
+
+/* ── TTS Bar ── */
+#tts-bar {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+  background: rgba(5,8,16,.98);
+  border-top: 1px solid var(--border);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  padding: 10px 14px;
+  display: flex; align-items: center; gap: 6px; flex-wrap: nowrap;
+  padding-bottom: max(10px, env(safe-area-inset-bottom, 0px));
+}
+.tts-btn {
+  background: transparent;
+  border: 1px solid var(--gold-dim);
+  color: var(--ink-dim);
+  width: 36px; height: 36px;
+  border-radius: 2px; cursor: pointer; font-size: 13px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: color .2s, border-color .2s, background .2s;
+}
+.tts-btn:hover { color: var(--gold); border-color: var(--gold); }
+.tts-btn.active { background: rgba(201,168,76,.12); color: var(--gold); border-color: var(--gold); }
+#tts-progress {
+  flex: 1; font-family: 'Space Mono', monospace;
+  font-size: 8px; letter-spacing: 1px; color: var(--ink-dim);
+  text-align: center; min-width: 50px;
+}
+#tts-voice, #tts-speed {
+  background: var(--bg2); color: var(--ink-dim);
+  border: 1px solid var(--gold-dim); border-radius: 2px;
+  font-family: 'Space Mono', monospace; font-size: 8px;
+  letter-spacing: 1px; padding: 4px 6px; cursor: pointer;
+}
+#tts-voice { max-width: 130px; flex: 1 1 80px; }
+#tts-speed { width: 68px; flex-shrink: 0; }
+
+/* ── RSVP Overlay ── */
+#rsvp-overlay {
+  display: none;
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(2,4,10,.98);
+  flex-direction: column; align-items: center; justify-content: center;
+  gap: 1.5rem; padding: 2rem;
+}
+#rsvp-word {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(2.5rem, 10vw, 5rem);
+  color: var(--ink); text-align: center; min-height: 1.3em;
+  letter-spacing: -.01em;
+}
+#rsvp-wpm-display {
+  font-family: 'Space Mono', monospace;
+  font-size: 9px; letter-spacing: 3px; color: var(--ink-dim);
+}
+.rsvp-btns { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+
+/* Mobile */
+@media (max-width: 600px) {
+  .site-nav { padding: 8px 12px; }
+  article { padding: 2rem 1rem 110px; }
+  #tts-bar { flex-wrap: wrap; }
+  #tts-voice { display: none; }
+}
+</style>
+</head>
+<body>
+
+<nav class="site-nav">
+  <a href="../index.html" class="nav-btn">← Home</a>
+  <a href="../Manifold%20Atlas.html#node-bt15" class="nav-btn atlas">◆ View on Atlas</a>
+  <span class="nav-spacer"></span>
+  <button class="nav-btn" onclick="launchRSVP()">⚡ RSVP</button>
+</nav>
+
+<article>
+  <div class="article-meta">BLACK AND TAN REPRISALS · 20 SEP 1920 · Balbriggan, County Dublin</div>
+  <span class="article-tag">reprisal-burning</span><span class="article-tag">civilian-casualties</span><span class="article-tag">extrajudicial-killing</span><span class="article-tag">press-coverage</span><span class="article-tag">economic-warfare</span>
+  <h1 class="article-title">Croke Park, 21 November 1920</h1>
+  <blockquote class="article-excerpt">A barber is bayoneted and shot in the street he'd lived on for years. A city center burns for a night while firemen's hoses are cut. Two boys are shot from a wall and a tree watching a football match, and a bride-to-be is buried, six days early, in the dress she meant to marry in.</blockquote>
+  <div id="article-content">
+<p>On the evening of September 20, 1920, RIC Head Constable Peter Burke and his brother, Sergeant Michael Burke, stopped into Smyth's public house in Balbriggan, a small town on the North Dublin coast, on their way back to the Black and Tan depot at Gormanston Camp. An argument broke out, local police were called, and in the confusion an IRA unit that happened to be nearby opened fire — an unplanned, spur-of-the-moment shooting, by most accounts, rather than a sanctioned operation. Peter Burke died of his wounds. Within the hour, 100 to 150 Black and Tans arrived from Gormanston in a convoy of lorries and spent the night burning the town.</p>
+<p>They set fire to Deeds, Templar &amp; Co's hosiery factory and burned or wrecked somewhere between twenty-five and fifty-four houses, concentrated on Clonard Street, along with four public houses. Families fled into the surrounding fields in their nightclothes and stayed there through the cold; a later Labour Party commission of inquiry recorded that two women died of exposure, two more suffered miscarriages, and four babies already sick with measles died as a result of being driven out of their homes. Two local men, Séamus Lawless and Seán Gibbons, were pulled from their houses, beaten with rifle butts, bayoneted, and shot dead in the street, their bodies left where they fell. Lawless was forty-seven, a barber, married with eight children ranging from eighteen months to nineteen years old. Gibbons was twenty-six and helped his mother run the family's small dairy business. Neither had any confirmed connection to the shooting that triggered the reprisal. When the British Chief Secretary for Ireland, Hamar Greenwood, was asked about Balbriggan in the House of Commons a month later, he told the chamber he had yet to find "one authenticated case of a member of this Auxiliary Division being accused of anything but the highest conduct characteristic of them."</p>
+<p>Balbriggan was not an isolated escalation. Reprisal burnings of this kind became a recurring feature of the autumn of 1920, and the pattern reached Cork on the night of December 11, culminating in a fire that gutted much of the city center along Patrick Street, destroyed City Hall and the Carnegie Library, and left, by later estimates, some forty businesses in ashes. Firemen who arrived to fight the blaze had their hoses cut. Auxiliary cadets were seen looting shops even as the flames spread, and some were later photographed wearing pieces of burnt cork pinned to their caps, a black joke about the city they had just set on fire.</p>
+<p>Eleven days later, on the morning of November 21, Michael Collins's Squad carried out coordinated assassinations across Dublin, killing a group of British intelligence officers in their beds. That afternoon, a Gaelic football challenge match between Dublin and Tipperary went ahead at Croke Park as scheduled, drawing a crowd of roughly ten thousand despite the morning's violence. About ten minutes into the game, an aircraft circled the ground twice and fired a signal flare, and a mixed force of RIC, Auxiliaries, and soldiers stormed the entrances and opened fire into the crowd. Fourteen people were killed, including Michael Hogan, the Tipperary team's captain and an IRA volunteer, shot in the back as he tried to get clear. Among the other thirteen were three children — ten-year-old Jerome O'Leary, shot through the head as he sat watching from a wall behind the goal, and eleven-year-old William Robinson, shot from the tree he had climbed to see over the crowd. Jane Boyle, twenty-six, had come to the match with her fiancé, Daniel Byron; the two of them were due to be married that Friday. She was shot dead outside the ground and, six days before her wedding day, was buried in the dress she had meant to wear to it.</p>
+  </div>
+</article>
+
+<!-- Works Cited — outside <article>, skipped by TTS engine -->
+<section id="works-cited">
+<h2>Works Cited</h2><ol><li>&quot;Sack of Balbriggan.&quot; Wikipedia (Sept 20 1920 sequence, Burke brothers, 100-150 Black and Tans from Gormanston). <a href="https://en.wikipedia.org/wiki/Sack_of_Balbriggan" target="_blank" rel="noopener">https://en.wikipedia.org/wiki/Sack_of_Balbriggan</a></li><li>&quot;The Sack of Balbriggan and British Reprisals in Ireland in Autumn 1920.&quot; The Irish Story (Labour Commission report on deaths from exposure/miscarriage/measles, hosiery factory, twenty-five houses and seven businesses burned). <a href="https://www.theirishstory.com/2020/10/14/the-sack-of-balbriggan-and-british-reprisals-in-ireland-in-autumn-1920/" target="_blank" rel="noopener">https://www.theirishstory.com/2020/10/14/the-sack-of-balbriggan-and-british-reprisals-in-ireland-in-autumn-1920/</a></li><li>&quot;The Sack of Balbriggan — Night of Violence Leaves Town Destroyed and Three Dead.&quot; Century Ireland, RTÉ (Lawless and Gibbons's ages, families, occupations). <a href="https://www.rte.ie/centuryireland/articles/the-sack-of-balbriggan-night-of-violence-leaves-town-destroyed" target="_blank" rel="noopener">https://www.rte.ie/centuryireland/articles/the-sack-of-balbriggan-night-of-violence-leaves-town-destroyed</a></li><li>&quot;The Burning of Balbriggan.&quot; An Phoblacht (Hamar Greenwood's House of Commons statement, Oct 20 1920). <a href="https://anphoblacht.com/contents/199" target="_blank" rel="noopener">https://anphoblacht.com/contents/199</a></li><li>&quot;Burning of Cork.&quot; Wikipedia (Dec 11 1920, City Hall and Carnegie Library, cut fire hoses, Auxiliary looting and burnt-cork cap badges).</li><li>&quot;Bloody Sunday 1920: The 32 Killed at Home, at Croke Park, in Dublin Castle.&quot; The Irish Times (Michael Hogan, Tom Ryan, Daniel Carroll, Tom Hogan, Jane Boyle and Daniel Byron's engagement). <a href="https://www.irishtimes.com/culture/heritage/bloody-sunday-1920-the-32-killed-at-home-at-croke-park-in-dublin-castle-1.4415860" target="_blank" rel="noopener">https://www.irishtimes.com/culture/heritage/bloody-sunday-1920-the-32-killed-at-home-at-croke-park-in-dublin-castle-1.4415860</a></li><li>&quot;Bloody Sunday 1920: 14 Shot Dead in Croke Park.&quot; Gript (full victim list including Jerome O'Leary, William Robinson, John William Scott, ten-thousand-strong crowd, signal flare). <a href="https://gript.ie/bloody-sunday-1920-three-children-amongst-the-dead-shot-in-croke-park-2/" target="_blank" rel="noopener">https://gript.ie/bloody-sunday-1920-three-children-amongst-the-dead-shot-in-croke-park-2/</a></li><li>&quot;Bloody Sunday, State Violence and Legitimacy.&quot; Ancient Order of Hibernians (O'Leary and Robinson's specific circumstances — wall and tree — Lloyd George's &quot;murder by the throat&quot; remark).</li></ol>
+</section>
+
+<!-- RSVP Overlay -->
+<div id="rsvp-overlay">
+  <div id="rsvp-word">—</div>
+  <div id="rsvp-wpm-display">300 WPM</div>
+  <div class="rsvp-btns">
+    <button class="nav-btn" onclick="rsvpAdjust(-50)">− Slower</button>
+    <button class="nav-btn" id="rsvp-toggle" onclick="rsvpToggle()">⏸ Pause</button>
+    <button class="nav-btn" onclick="stopRSVP()">✕ Close</button>
+    <button class="nav-btn" onclick="rsvpAdjust(50)">+ Faster</button>
+  </div>
+</div>
+
+<!-- TTS Control Bar -->
+<div id="tts-bar">
+  <button class="tts-btn" onclick="ttsStep(-1)" title="Previous">◀</button>
+  <button class="tts-btn" id="tts-play" onclick="ttsToggle()" title="Play">▶</button>
+  <button class="tts-btn" onclick="ttsStep(1)" title="Next">▶▶</button>
+  <button class="tts-btn" onclick="ttsStop()" title="Stop">■</button>
+  <div id="tts-progress">— / —</div>
+  <select id="tts-voice" onchange="voiceChange()"></select>
+  <select id="tts-speed" onchange="speedChange()">
+    <option value="0.7">0.7×</option>
+    <option value="0.85">0.85×</option>
+    <option value="1.0" selected>1.0×</option>
+    <option value="1.2">1.2×</option>
+    <option value="1.5">1.5×</option>
+    <option value="1.8">1.8×</option>
+  </select>
+</div>
+
+<script>
+// ── TTS (Web Speech API — no CDN) ────────────────────────────────────────────
+const segs = Array.from(document.querySelectorAll('#article-content p'));
+let cur = -1, playing = false, rate = 1.0, voice = null;
+const synth = window.speechSynthesis;
+
+segs.forEach((p, i) => p.addEventListener('click', () => { ttsStop(); _speakFrom(i); }));
+
+function _loadVoices() {
+  if (!synth) return;
+  const vs = synth.getVoices().filter(v => v.lang && v.lang.startsWith('en'));
+  const sel = document.getElementById('tts-voice');
+  sel.innerHTML = '';
+  vs.forEach((v, i) => {
+    const o = document.createElement('option');
+    o.value = i;
+    o.textContent = v.name.slice(0, 22);
+    if (v.default) { o.selected = true; voice = v; }
+    sel.appendChild(o);
+  });
+  if (!voice && vs.length) voice = vs[0];
+}
+if (synth) { synth.onvoiceschanged = _loadVoices; _loadVoices(); }
+
+function voiceChange() {
+  const vs = synth.getVoices().filter(v => v.lang && v.lang.startsWith('en'));
+  voice = vs[+document.getElementById('tts-voice').value] || null;
+}
+function speedChange() { rate = +document.getElementById('tts-speed').value; }
+
+function _speakFrom(idx) {
+  if (!synth || idx < 0 || idx >= segs.length) return;
+  synth.cancel();
+  cur = idx; playing = true;
+  _say(idx);
+}
+
+function _say(idx) {
+  if (!synth || !playing || idx < 0 || idx >= segs.length) return;
+  cur = idx;
+  _highlight(idx);
+  const u = new SpeechSynthesisUtterance(segs[idx].innerText);
+  u.rate = rate;
+  if (voice) u.voice = voice;
+  u.onend = () => { if (playing && idx + 1 < segs.length) _say(idx + 1); else { playing = false; _ui(); } };
+  u.onerror = () => { playing = false; _ui(); };
+  synth.speak(u);
+  _ui();
+}
+
+function ttsToggle() {
+  if (!synth) return;
+  if (playing) { synth.pause(); playing = false; }
+  else if (synth.paused) { synth.resume(); playing = true; }
+  else _speakFrom(cur < 0 ? 0 : cur);
+  _ui();
+}
+
+function ttsStep(dir) {
+  const next = Math.max(0, Math.min(segs.length - 1, (cur < 0 ? 0 : cur) + dir));
+  ttsStop(); _speakFrom(next);
+}
+
+function ttsStop() {
+  if (synth) synth.cancel();
+  playing = false; cur = -1;
+  segs.forEach(s => s.classList.remove('reading'));
+  _ui();
+}
+
+function _highlight(idx) {
+  segs.forEach((s, i) => s.classList.toggle('reading', i === idx));
+  if (segs[idx]) segs[idx].scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function _ui() {
+  document.getElementById('tts-play').textContent = (playing && !synth.paused) ? '⏸' : '▶';
+  document.getElementById('tts-play').classList.toggle('active', playing);
+  document.getElementById('tts-progress').textContent =
+    (cur < 0 ? '—' : cur + 1) + ' / ' + segs.length;
+}
+
+// ── RSVP ─────────────────────────────────────────────────────────────────────
+let rWords = [], rIdx = 0, rTimer = null, rRunning = false, rWpm = 300;
+
+function launchRSVP() {
+  ttsStop();
+  rWords = segs.map(p => p.innerText).join(' ').split(/\s+/).filter(Boolean);
+  rIdx = 0; rRunning = true;
+  document.getElementById('rsvp-overlay').style.display = 'flex';
+  document.getElementById('rsvp-toggle').textContent = '⏸ Pause';
+  _rTick();
+}
+
+function _rTick() {
+  if (!rRunning) return;
+  if (rIdx >= rWords.length) { stopRSVP(); return; }
+  document.getElementById('rsvp-word').textContent = rWords[rIdx++];
+  rTimer = setTimeout(_rTick, 60000 / rWpm);
+}
+
+function rsvpToggle() {
+  rRunning = !rRunning;
+  document.getElementById('rsvp-toggle').textContent = rRunning ? '⏸ Pause' : '▶ Resume';
+  if (rRunning) _rTick();
+}
+
+function stopRSVP() {
+  rRunning = false; clearTimeout(rTimer);
+  document.getElementById('rsvp-overlay').style.display = 'none';
+}
+
+function rsvpAdjust(delta) {
+  rWpm = Math.max(60, Math.min(1200, rWpm + delta));
+  document.getElementById('rsvp-wpm-display').textContent = rWpm + ' WPM';
+}
+
+// Init
+_ui();
+</script>
+</body>
+</html>
