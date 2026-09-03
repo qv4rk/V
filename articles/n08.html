@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Warnier's Sentence, 1873 · The Atlas</title>
+<meta name="description" content="A French colonial lawmaker justifies stripping Algerian families of their land by pointing to the Ottomans as precedent. Ireland had already done the same thing under a different name in 1849. Japan does it to itself in 1873 specifically to avoid having it done to them. Four governments, three empires, one legal technology, inside a twenty-four-year window.">
+<meta name="robots" content="index, follow">
+<meta property="og:title" content="Warnier's Sentence, 1873">
+<meta property="og:description" content="A French colonial lawmaker justifies stripping Algerian families of their land by pointing to the Ottomans as precedent. Ireland had already done the same thing under a different name in 1849. Japan does it to itself in 1873 specifically to avoid having it done to them. Four governments, three empires, one legal technology, inside a twenty-four-year window.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://feisttech.com/articles/n08.html">
+<meta property="article:published_time" content="1849-07-28">
+<link rel="canonical" href="https://feisttech.com/articles/n08.html">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #050810;
+  --bg2: #0a0c14;
+  --primary: #00e5ff;
+  --gold: #c9a84c;
+  --gold-dim: rgba(201,168,76,.3);
+  --ink: #ddd5c0;
+  --ink-dim: #8a7e6a;
+  --ink-mute: #3a3228;
+  --border: rgba(0,229,255,.12);
+  --panel: rgba(5,8,16,.96);
+  --reading-bg: rgba(0,229,255,.07);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 18px;
+  line-height: 1.8;
+  min-height: 100vh;
+}
+
+/* ── Nav ── */
+.site-nav {
+  position: sticky; top: 0; z-index: 50;
+  background: rgba(5,8,16,.97);
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: 10px 18px;
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+}
+.nav-btn {
+  font-family: 'Space Mono', monospace;
+  font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--ink-dim); text-decoration: none;
+  background: transparent; border: 1px solid var(--gold-dim);
+  padding: 6px 12px; border-radius: 2px; cursor: pointer;
+  transition: color .2s, border-color .2s;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.nav-btn:hover { color: var(--gold); border-color: var(--gold); }
+.nav-btn.atlas { border-color: rgba(0,229,255,.25); color: rgba(0,229,255,.7); }
+.nav-btn.atlas:hover { border-color: var(--primary); color: var(--primary); }
+.nav-spacer { flex: 1; min-width: 8px; }
+
+/* ── Language switcher ── */
+.lang-switch {
+  max-width: 720px; margin: 0 auto; padding: 10px 1.5rem 0;
+  font-family: 'Space Mono', monospace;
+  font-size: 9px; letter-spacing: 1px; text-transform: uppercase;
+  color: var(--ink-mute);
+}
+.lang-switch a.lang-link { color: var(--gold); text-decoration: none; }
+.lang-switch a.lang-link:hover { text-decoration: underline; }
+.lang-switch .lang-current { color: var(--ink); }
+
+/* ── Article ── */
+article {
+  max-width: 720px; margin: 0 auto;
+  padding: 3rem 1.5rem 120px;
+}
+.article-meta {
+  font-family: 'Space Mono', monospace;
+  font-size: 8px; letter-spacing: 3px; text-transform: uppercase;
+  color: var(--ink-dim); margin-bottom: 1rem;
+}
+.article-tag {
+  display: inline-block;
+  background: rgba(201,168,76,.08);
+  border: 1px solid var(--gold-dim);
+  color: var(--gold); padding: 2px 8px; border-radius: 2px;
+  font-size: 8px; letter-spacing: 2px; text-transform: uppercase;
+  font-family: 'Space Mono', monospace;
+  margin: 0 4px 4px 0;
+}
+.article-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(1.7rem, 5vw, 2.5rem);
+  font-weight: 600; line-height: 1.25;
+  color: var(--ink); margin: 1rem 0 1.5rem;
+}
+.article-excerpt {
+  font-size: 1.1rem; line-height: 1.65;
+  color: var(--ink-dim); font-style: italic;
+  border-left: 3px solid rgba(201,168,76,.4);
+  padding: 0.5rem 1rem; margin-bottom: 2.5rem;
+}
+/* Content paragraphs — clickable for TTS */
+#article-content p {
+  margin-bottom: 1.4em;
+  padding: 0.35rem 0.6rem;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background .15s;
+  border-left: 3px solid transparent;
+}
+#article-content p:hover { background: rgba(255,255,255,.025); }
+#article-content p.reading {
+  background: var(--reading-bg);
+  border-left-color: var(--primary);
+}
+#article-content h1, #article-content h2, #article-content h3 {
+  font-family: 'Cormorant Garamond', serif;
+  margin: 2.5rem 0 0.75rem; font-weight: 600; line-height: 1.3;
+}
+#article-content h1 { font-size: 1.9rem; }
+#article-content h2 { font-size: 1.5rem; color: var(--gold); }
+#article-content h3 { font-size: 1.2rem; color: var(--ink-dim); }
+#article-content strong { color: var(--ink); }
+#article-content em { font-style: italic; color: var(--ink-dim); }
+#article-content code { font-family: 'Space Mono', monospace; font-size: .82em; background: rgba(255,255,255,.05); padding: 1px 5px; border-radius: 2px; }
+
+/* ── Works Cited (outside main, never TTS-read) ── */
+#works-cited {
+  max-width: 720px; margin: 0 auto 6rem;
+  padding: 2rem 1.5rem;
+  border-top: 1px solid rgba(255,255,255,.06);
+}
+#works-cited h2 {
+  font-family: 'Space Mono', monospace;
+  font-size: 8px; letter-spacing: 3px; text-transform: uppercase;
+  color: var(--ink-mute); margin-bottom: 1.25rem;
+}
+#works-cited ol { padding-left: 1.5rem; }
+#works-cited li { font-size: .82rem; color: var(--ink-dim); line-height: 1.7; margin-bottom: .75rem; }
+#works-cited li a { color: var(--ink-dim); }
+
+/* ── TTS Bar ── */
+#tts-bar {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+  background: rgba(5,8,16,.98);
+  border-top: 1px solid var(--border);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  padding: 10px 14px;
+  display: flex; align-items: center; gap: 6px; flex-wrap: nowrap;
+  padding-bottom: max(10px, env(safe-area-inset-bottom, 0px));
+}
+.tts-btn {
+  background: transparent;
+  border: 1px solid var(--gold-dim);
+  color: var(--ink-dim);
+  width: 36px; height: 36px;
+  border-radius: 2px; cursor: pointer; font-size: 13px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: color .2s, border-color .2s, background .2s;
+}
+.tts-btn:hover { color: var(--gold); border-color: var(--gold); }
+.tts-btn.active { background: rgba(201,168,76,.12); color: var(--gold); border-color: var(--gold); }
+#tts-progress {
+  flex: 1; font-family: 'Space Mono', monospace;
+  font-size: 8px; letter-spacing: 1px; color: var(--ink-dim);
+  text-align: center; min-width: 50px;
+}
+#tts-voice, #tts-speed {
+  background: var(--bg2); color: var(--ink-dim);
+  border: 1px solid var(--gold-dim); border-radius: 2px;
+  font-family: 'Space Mono', monospace; font-size: 8px;
+  letter-spacing: 1px; padding: 4px 6px; cursor: pointer;
+}
+#tts-voice { max-width: 130px; flex: 1 1 80px; }
+#tts-speed { width: 68px; flex-shrink: 0; }
+
+/* ── RSVP Overlay ── */
+#rsvp-overlay {
+  display: none;
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(2,4,10,.98);
+  flex-direction: column; align-items: center; justify-content: center;
+  gap: 1.5rem; padding: 2rem;
+}
+#rsvp-word {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(2.5rem, 10vw, 5rem);
+  color: var(--ink); text-align: center; min-height: 1.3em;
+  letter-spacing: -.01em;
+}
+#rsvp-wpm-display {
+  font-family: 'Space Mono', monospace;
+  font-size: 9px; letter-spacing: 3px; color: var(--ink-dim);
+}
+.rsvp-btns { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+
+/* Mobile */
+@media (max-width: 600px) {
+  .site-nav { padding: 8px 12px; }
+  article { padding: 2rem 1rem 110px; }
+  #tts-bar { flex-wrap: wrap; }
+  #tts-voice { display: none; }
+}
+</style>
+</head>
+<body>
+
+<nav class="site-nav">
+  <a href="../index.html" class="nav-btn">← Home</a>
+  <a href="../Manifold%20Atlas.html#node-n08" class="nav-btn atlas">◆ View on Atlas</a>
+  <span class="nav-spacer"></span>
+  <button class="nav-btn" onclick="launchRSVP()">⚡ RSVP</button>
+</nav>
+
+<article>
+  <div class="article-meta">COMPARATIVE LAND REGISTRATION, 1849-1873 · 28 JUL 1849 · 14 Henrietta Street, Dublin</div>
+  <span class="article-tag">land-registration</span><span class="article-tag">financialization</span><span class="article-tag">imported-method</span><span class="article-tag">absentee-ownership</span><span class="article-tag">theology-as-policy</span>
+  <h1 class="article-title">Warnier's Sentence, 1873</h1>
+  <blockquote class="article-excerpt">A French colonial lawmaker justifies stripping Algerian families of their land by pointing to the Ottomans as precedent. Ireland had already done the same thing under a different name in 1849. Japan does it to itself in 1873 specifically to avoid having it done to them. Four governments, three empires, one legal technology, inside a twenty-four-year window.</blockquote>
+  <div id="article-content">
+<p>In 1873, campaigning to seize Algerian land for French settlers displaced by the loss of Alsace-Lorraine, the French deputy Auguste Warnier wrote to Governor Louis de Gueydon with an argument he did not bother to soften: the French should simply take the land they needed, he said, because "that is what the Turks did. The indigenes… are used to it." Warnier meant it as reassurance. He was pointing to the Ottoman Empire's own 1858 Land Code as a precedent that made his own law — the one that would strip Algerian families of communally held land through a mechanism called forced licitation — look like nothing more than what a modernizing state was simply expected to do to its land tenure sooner or later. He was more right than he knew, and not for the reason he thought. Between 1849 and 1873, four governments on three continents took customary, communal, or tribal land and converted it into individually titled, registrable, mortgageable private property, using four different legal instruments built for four different stated purposes. What they were actually building, in every case, was collateral.</p>
+<p>Ireland went first. The Incumbered Estates Act of 1849 let creditors force the sale of debt-ridden Irish estates through a purpose-built court, wiping every entail and customary tenant arrangement off the title the moment it changed hands. A Glasgow timber merchant named Allan Pollok used exactly that mechanism to buy 25,234 acres of Galway and Roscommon out from under bankrupt gentry families and clear the tenants already living on it. Ireland was under direct British rule; Westminster simply legislated the tenure system it wanted into existence, the same way it would later do with the Torrens title system in South Australia that same decade. No negotiation with anyone was required, because no one Irish or Australian had a seat at the table to negotiate from.</p>
+<p>The Ottoman Empire had a seat at the table and used it under duress. Crushed by war debt after the Crimean War and pressured by European creditors and by the British ambassador Stratford Canning specifically, the Sublime Porte turned to its own jurists rather than foreign drafters — the 1858 Land Code was written by an Ottoman commission that included the scholar Ahmed Cevdet Pasha, who had spent over a decade as juridical adviser to the reforming grand vizier Mustafa Reşid Pasha and would later lead the drafting of the empire's civil code. The Code required registration of miri land, the largest category of Ottoman farmland, into individually held tapu deeds — nominally to fix tax and conscription records, in practice creating exactly the kind of transferable title a state drowning in foreign debt needed its land to become. Canning's fingerprints on the surrounding politics are documented rather than inferred: in November 1856, with reform legislation moving through the same institutions, he had Grand Vizier Âli Pasha removed from office specifically to install his own longtime friend Reşid Pasha in his place — a British ambassador reshuffling the Ottoman government's top office at the precise moment its reform program was being finalized. Canning did not need anyone to explain to him what registered land title was worth to a creditor. His own first cousin, George Canning, first Baron Garvagh, held an Irish peerage built on roughly 15,400 acres across Cavan, Down, and Londonderry — carved directly out of the same landlord-title system Ireland's own Encumbered Estates Act had just formalized nine years earlier, close enough to the family that a County Cavan village still carries the Canning name.</p>
+<p>Japan took the opposite route to the same legal result, and it did so precisely to avoid Canning's kind of pressure landing on Tokyo the way it had landed on Constantinople. The Meiji government's 1873 Chiso Kaisei abolished feudal domain tenure outright and issued private land certificates directly to farmers, replacing a variable rice-yield tax with a fixed three-percent cash levy on land value. The reform's own architects were explicit about why: they had watched what British financial and military pressure did to Qing China in the Opium Wars a generation earlier, and moved to centralize state revenue and build a modern army before any foreign power got the chance to impose the same terms on Japan that had just been imposed, one way or another, on Ireland and the Ottomans both. Defensive modernization was still a response to the same pressure. It simply arrived before the demand did.</p>
+<p>Algeria was the version with no defensive posture available to it at all, because Algeria was not negotiating anything — it was occupied territory, and Warnier's law was written by the occupier for the occupier's own settlers. The Warnier Law of July 26, 1873, subordinated all Algerian land to the French Civil Code and weaponized one clause in particular: Article 815, the ordinary French inheritance rule that no one can be forced to remain in joint ownership. Algerian melk land was held collectively, often by dozens of family members at once; a European speculator needed only to buy one relative's fractional share, invoke Article 815 in a French court, and force the entire estate to a public auction — a licitation — that the remaining family, already impoverished by colonial taxation, could rarely afford to win. It was the identical mechanism Pollok had used in Galway a generation earlier, run through a different clause of a different code, on land whose owners had no colonial court of appeal and no metropolitan parliament to petition.</p>
+<p>Four governments, one legal technology, twenty-four years. None of them needed to copy the others' paperwork, because none of them were solving a paperwork problem. Mid-century sovereign and imperial debt needed land that could be pledged, sold, and enforced in a court, and customary tenure — Irish tenancy, Ottoman miri, Japanese domain land, Algerian melk and arch — could not be borrowed against no matter how functional it had kept the people living on it for centuries. Warnier told Governor de Gueydon he was only doing what the Turks had done. He was closer to the truth than his own letter intended: he was doing what everyone with debts to service and land that wouldn't yet answer to a bank was doing, in Dublin, in Constantinople, and, whether or not Tokyo ever heard his name, in Tokyo too.</p>
+  </div>
+</article>
+
+<!-- Works Cited — outside <article>, skipped by TTS engine -->
+<section id="works-cited">
+<h2>Works Cited</h2><ol><li>&quot;Alsace in Algeria and the Notion of 'Failure' in Settler Political Culture, c. 1870-1960.&quot; The Historical Journal, Cambridge Core (Warnier's letter to Governor de Gueydon, &quot;That is what the Turks did&quot; quotation in full context). <a href="https://www.cambridge.org/core/journals/historical-journal/article/alsace-in-algeria-and-the-notion-of-failure-in-settler-political-culture-c-18701960/214067339B70A12A4E2E1A4572BCF618" target="_blank" rel="noopener">https://www.cambridge.org/core/journals/historical-journal/article/alsace-in-algeria-and-the-notion-of-failure-in-settler-political-culture-c-18701960/214067339B70A12A4E2E1A4572BCF618</a></li><li>&quot;Warnier Law.&quot; Encyclopedia.com (Article 815, licitation mechanics, French Civil Code subordination, July 26 1873 passage). <a href="https://www.encyclopedia.com/humanities/encyclopedias-almanacs-transcripts-and-maps/warnier-law" target="_blank" rel="noopener">https://www.encyclopedia.com/humanities/encyclopedias-almanacs-transcripts-and-maps/warnier-law</a></li><li>&quot;Auguste Warnier.&quot; Wikipedia (biographical background, land reform advocacy, Alsace-Lorraine resettlement campaign).</li><li>&quot;A Stable Converted Into a Courtroom: Allan Pollok and the Encumbered Estates, 1849-1858.&quot; The Atlas, bt06 (Pollok's 25,234-acre purchase, Encumbered Estates Court mechanics — this site's own prior sourcing).</li><li>&quot;Land Code of 1858.&quot; Encyclopedia.com (Ahmed Cevdet Pasha's role on the drafting commission, Tanzimat administrative and fiscal motives for the Code). <a href="https://www.encyclopedia.com/humanities/encyclopedias-almanacs-transcripts-and-maps/land-code-1858" target="_blank" rel="noopener">https://www.encyclopedia.com/humanities/encyclopedias-almanacs-transcripts-and-maps/land-code-1858</a></li><li>&quot;Ahmed Cevdet Pasha.&quot; Encyclopaedia Britannica (juridical adviser to Grand Vizier Mustafa Reşid Pasha 1846-58, later Mecelle codification work). <a href="https://www.britannica.com/biography/Ahmed-Cevdet-Pasa" target="_blank" rel="noopener">https://www.britannica.com/biography/Ahmed-Cevdet-Pasa</a></li><li>&quot;The Doorman's Son Who Saved the Empire.&quot; Cornucopia Magazine (Stratford Canning's Nov 1856 removal of Âli Pasha to install Reşid Pasha, documented decades-long personal association). <a href="https://www.cornucopia.net/magazine/articles/the-doormans-son-who-saved-the-empire/" target="_blank" rel="noopener">https://www.cornucopia.net/magazine/articles/the-doormans-son-who-saved-the-empire/</a></li><li>&quot;Canning (Garvagh).&quot; Landed Estates Database, University of Galway (George Canning, 1st Baron Garvagh's Cavan/Down/Londonderry acreage, Canningstown place-name). <a href="https://landedestates.ie/estate/4160" target="_blank" rel="noopener">https://landedestates.ie/estate/4160</a></li><li>&quot;Land Tax Reform (Japan, 1873).&quot; Grokipedia (Chiso Kaisei mechanics, fixed 3 percent cash tax, Meiji leadership's explicit fear of the Opium Wars precedent).</li></ol>
+</section>
+
+<!-- RSVP Overlay -->
+<div id="rsvp-overlay">
+  <div id="rsvp-word">—</div>
+  <div id="rsvp-wpm-display">300 WPM</div>
+  <div class="rsvp-btns">
+    <button class="nav-btn" onclick="rsvpAdjust(-50)">− Slower</button>
+    <button class="nav-btn" id="rsvp-toggle" onclick="rsvpToggle()">⏸ Pause</button>
+    <button class="nav-btn" onclick="stopRSVP()">✕ Close</button>
+    <button class="nav-btn" onclick="rsvpAdjust(50)">+ Faster</button>
+  </div>
+</div>
+
+<!-- TTS Control Bar -->
+<div id="tts-bar">
+  <button class="tts-btn" onclick="ttsStep(-1)" title="Previous">◀</button>
+  <button class="tts-btn" id="tts-play" onclick="ttsToggle()" title="Play">▶</button>
+  <button class="tts-btn" onclick="ttsStep(1)" title="Next">▶▶</button>
+  <button class="tts-btn" onclick="ttsStop()" title="Stop">■</button>
+  <div id="tts-progress">— / —</div>
+  <select id="tts-voice" onchange="voiceChange()"></select>
+  <select id="tts-speed" onchange="speedChange()">
+    <option value="0.7">0.7×</option>
+    <option value="0.85">0.85×</option>
+    <option value="1.0" selected>1.0×</option>
+    <option value="1.2">1.2×</option>
+    <option value="1.5">1.5×</option>
+    <option value="1.8">1.8×</option>
+  </select>
+</div>
+
+<script>
+// ── TTS (Web Speech API — no CDN) ────────────────────────────────────────────
+const segs = Array.from(document.querySelectorAll('#article-content p'));
+let cur = -1, playing = false, rate = 1.0, voice = null;
+const synth = window.speechSynthesis;
+
+segs.forEach((p, i) => p.addEventListener('click', () => { ttsStop(); _speakFrom(i); }));
+
+function _loadVoices() {
+  if (!synth) return;
+  const vs = synth.getVoices().filter(v => v.lang && v.lang.startsWith('en'));
+  const sel = document.getElementById('tts-voice');
+  sel.innerHTML = '';
+  vs.forEach((v, i) => {
+    const o = document.createElement('option');
+    o.value = i;
+    o.textContent = v.name.slice(0, 22);
+    if (v.default) { o.selected = true; voice = v; }
+    sel.appendChild(o);
+  });
+  if (!voice && vs.length) voice = vs[0];
+}
+if (synth) { synth.onvoiceschanged = _loadVoices; _loadVoices(); }
+
+function voiceChange() {
+  const vs = synth.getVoices().filter(v => v.lang && v.lang.startsWith('en'));
+  voice = vs[+document.getElementById('tts-voice').value] || null;
+}
+function speedChange() { rate = +document.getElementById('tts-speed').value; }
+
+function _speakFrom(idx) {
+  if (!synth || idx < 0 || idx >= segs.length) return;
+  synth.cancel();
+  cur = idx; playing = true;
+  _say(idx);
+}
+
+function _say(idx) {
+  if (!synth || !playing || idx < 0 || idx >= segs.length) return;
+  cur = idx;
+  _highlight(idx);
+  const u = new SpeechSynthesisUtterance(segs[idx].innerText);
+  u.rate = rate;
+  if (voice) u.voice = voice;
+  u.onend = () => { if (playing && idx + 1 < segs.length) _say(idx + 1); else { playing = false; _ui(); } };
+  u.onerror = () => { playing = false; _ui(); };
+  synth.speak(u);
+  _ui();
+}
+
+function ttsToggle() {
+  if (!synth) return;
+  if (playing) { synth.pause(); playing = false; }
+  else if (synth.paused) { synth.resume(); playing = true; }
+  else _speakFrom(cur < 0 ? 0 : cur);
+  _ui();
+}
+
+function ttsStep(dir) {
+  const next = Math.max(0, Math.min(segs.length - 1, (cur < 0 ? 0 : cur) + dir));
+  ttsStop(); _speakFrom(next);
+}
+
+function ttsStop() {
+  if (synth) synth.cancel();
+  playing = false; cur = -1;
+  segs.forEach(s => s.classList.remove('reading'));
+  _ui();
+}
+
+function _highlight(idx) {
+  segs.forEach((s, i) => s.classList.toggle('reading', i === idx));
+  if (segs[idx]) segs[idx].scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function _ui() {
+  document.getElementById('tts-play').textContent = (playing && !synth.paused) ? '⏸' : '▶';
+  document.getElementById('tts-play').classList.toggle('active', playing);
+  document.getElementById('tts-progress').textContent =
+    (cur < 0 ? '—' : cur + 1) + ' / ' + segs.length;
+}
+
+// ── RSVP ─────────────────────────────────────────────────────────────────────
+let rWords = [], rIdx = 0, rTimer = null, rRunning = false, rWpm = 300;
+
+function launchRSVP() {
+  ttsStop();
+  rWords = segs.map(p => p.innerText).join(' ').split(/\s+/).filter(Boolean);
+  rIdx = 0; rRunning = true;
+  document.getElementById('rsvp-overlay').style.display = 'flex';
+  document.getElementById('rsvp-toggle').textContent = '⏸ Pause';
+  _rTick();
+}
+
+function _rTick() {
+  if (!rRunning) return;
+  if (rIdx >= rWords.length) { stopRSVP(); return; }
+  document.getElementById('rsvp-word').textContent = rWords[rIdx++];
+  rTimer = setTimeout(_rTick, 60000 / rWpm);
+}
+
+function rsvpToggle() {
+  rRunning = !rRunning;
+  document.getElementById('rsvp-toggle').textContent = rRunning ? '⏸ Pause' : '▶ Resume';
+  if (rRunning) _rTick();
+}
+
+function stopRSVP() {
+  rRunning = false; clearTimeout(rTimer);
+  document.getElementById('rsvp-overlay').style.display = 'none';
+}
+
+function rsvpAdjust(delta) {
+  rWpm = Math.max(60, Math.min(1200, rWpm + delta));
+  document.getElementById('rsvp-wpm-display').textContent = rWpm + ' WPM';
+}
+
+// Init
+_ui();
+</script>
+</body>
+</html>
