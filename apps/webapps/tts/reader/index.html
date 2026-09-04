@@ -6,6 +6,7 @@
     <title>The Reading Room — FeistTech</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto+Mono:wght@300;400&family=Merriweather:wght@300;700&family=Cinzel:wght@400;700&family=Cormorant+Garamond:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/leather-skin.css">
     <script src="../../../../app/theme-switcher.js"></script>
     <script src="../../../../app/veil-theme.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -164,6 +165,7 @@ You shouldn't have come here alone.</pre>
                         <button class="hb-item" id="saveChapterBtn" onclick="closeAllPanels();saveCurrentChapterAudio();">🎵 Save this chapter (MP3)</button>
                         <button class="hb-item" id="saveAllBtn" onclick="closeAllPanels();saveAllChaptersAudio();">🎶 Save all chapters (MP3)</button>
                         <button class="hb-item" id="hamburgerVoicesBtn" style="display:none;" onclick="togglePanel()">🎙 Voice settings</button>
+                        <button class="hb-item" id="leatherSkinToggle" onclick="window.LeatherSkin.toggle();">📖 Leather-Bound Skin: Off</button>
                     </div>
                 </div>
                 <select id="chapterSelect" onchange="jumpToChapter(this.value)"></select>
@@ -280,6 +282,7 @@ You shouldn't have come here alone.</pre>
 </script>
 
 <script src="js/reader.js"></script>
+<script src="js/leather-skin.js"></script>
 
 <!-- ========== DEBUGGER ========== -->
 <div id="uni-debug-icon" onclick="toggleDebugPanel()" title="Debugger" style="position:fixed;bottom:10px;left:10px;width:44px;height:44px;background:#ff0055;color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;z-index:999999;box-shadow:0 4px 10px rgba(0,0,0,0.5);border:2px solid white;">🐛</div>

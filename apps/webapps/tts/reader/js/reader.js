@@ -871,7 +871,15 @@ function highlight(seg) {
     document.querySelectorAll('.reading').forEach(e => e.classList.remove('reading'));
     if(seg && seg.element) {
         seg.element.classList.add('reading');
-        seg.element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // In the leather-bound skin the element lives inside a paginated
+        // leaf rather than a scrolling column -- turn to its page instead
+        // of scrolling to it. window.LeatherSkin is a no-op when that
+        // skin isn't active (see js/leather-skin.js).
+        if (window.LeatherSkin && window.LeatherSkin.getSkin() === 'leather') {
+            window.LeatherSkin.gotoSegment(seg);
+        } else {
+            seg.element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
     }
     updateProgress();
 }
@@ -1237,6 +1245,11 @@ function initReader(html, isResume=false) {
     renderVoiceMapping();
     saveState();
     collapseInputPanel();
+    // New content just replaced #storyContainer's children outright, so any
+    // leather-bound leaves built from the previous article's elements are
+    // now stale -- rebuild pagination from the fresh DOM. No-op in the
+    // standard skin (window.LeatherSkin is always loaded, see index.html).
+    if (window.LeatherSkin) window.LeatherSkin.refresh();
 }
 
 function processContent() {
