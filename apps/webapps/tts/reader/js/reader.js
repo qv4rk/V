@@ -298,12 +298,15 @@ function renderVoiceMapping() {
 
     renderCharRow(spkrs);
 
-    // 5 or fewer speakers: the inline row above the transport bar is the
-    // primary way to assign voices, so there's no need for a hamburger
-    // entry into the sliding panel too. More than 5: the panel is the only
-    // way to reach everyone, so surface it in the hamburger.
+    // #settingsPanel (opened by this button) holds the speed and volume
+    // sliders as well as per-character voice assignment -- it used to be
+    // hidden whenever there were 5 or fewer speakers on the theory that
+    // the inline char-row above the transport bar covered voice
+    // assignment on its own. It doesn't cover speed/volume at all, so
+    // that left no way to reach them on the (overwhelmingly common)
+    // single-narrator article. Always show it.
     const hbVoicesBtn = document.getElementById('hamburgerVoicesBtn');
-    if(hbVoicesBtn) hbVoicesBtn.style.display = spkrs.length > 5 ? '' : 'none';
+    if(hbVoicesBtn) hbVoicesBtn.style.display = '';
 }
 
 function renderCharRow(spkrs) {
