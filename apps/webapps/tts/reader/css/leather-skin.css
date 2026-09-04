@@ -1,0 +1,198 @@
+/* ─────────────────────────────────────────────────────────────
+   LEATHER-BOUND READER SKIN
+   An additive skin, not a replacement: everything here is gated
+   behind [data-reader-skin="leather"] on <html>. With that attribute
+   absent (or "standard"), the reader looks and behaves exactly as it
+   always has -- this file changes nothing in that case.
+
+   Layout: the real #storyContainer (built and driven entirely by the
+   existing reader.js parsing/TTS/segment engine, untouched) is hidden;
+   its <h2>/<p> elements are the SAME DOM nodes, physically moved (not
+   cloned) into single-page "leaves" built by js/leather-skin.js, so
+   every existing click-to-seek handler and TTS highlight target still
+   works unmodified. Switching back to the standard skin moves every
+   node back to its exact original position.
+   ───────────────────────────────────────────────────────────── */
+
+[data-reader-skin="leather"] {
+  --leather-bg: #2b1c12;
+  --leather-bg-2: #3a2717;
+  --page: #f2e6c9;
+  --page-shadow: #d9c79f;
+  --page-ink: #2a2016;
+  --page-ink-dim: #6b5c42;
+  --gilt: #b8862f;
+  --gilt-bright: #d9a84c;
+  --spine: #1a1109;
+}
+
+/* Hide the live-scrolling standard view; it's still fully built and
+   updated by reader.js, just not rendered while the leather leaf is on
+   screen. */
+[data-reader-skin="leather"] #storyContainer.leather-source {
+  position: absolute;
+  width: 1px; height: 1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  white-space: nowrap;
+}
+
+[data-reader-skin="leather"] .container {
+  background: var(--leather-bg);
+  background-image:
+    radial-gradient(ellipse at 50% -10%, rgba(255,255,255,0.05), transparent 55%),
+    repeating-linear-gradient(115deg, rgba(0,0,0,0.06) 0px, rgba(0,0,0,0.06) 2px, transparent 2px, transparent 5px);
+  padding: clamp(16px, 3.5vh, 40px) clamp(10px, 3vw, 28px);
+  min-height: calc(100vh - 1px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.leather-book {
+  position: relative;
+  /* vw, not a % of .container -- .container's own width isn't always
+     definite (it can sit inside a flex ancestor without stretch), and a
+     percentage width silently resolves to 0 against an indefinite
+     containing block. Same fix already used by the Atlas dossier
+     panel (app/themes.css .dossier { width:min(540px,92vw); }). */
+  width: min(720px, 92vw);
+  height: min(78vh, 860px);
+  perspective: 2400px;
+}
+
+/* The closed-book "cover" glimpsed behind the open page on wide
+   screens -- a strip of tooled leather down each side. */
+.leather-book::before,
+.leather-book::after {
+  content: "";
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 26px;
+  background: linear-gradient(90deg, var(--spine), var(--leather-bg-2));
+  border-radius: 4px;
+  box-shadow: inset 0 0 18px rgba(0,0,0,0.6);
+}
+.leather-book::before { left: -14px; }
+.leather-book::after  { right: -14px; }
+
+.leather-leaf {
+  position: absolute;
+  inset: 0;
+  background: var(--page);
+  background-image:
+    radial-gradient(ellipse at 20% 15%, rgba(255,255,255,0.35), transparent 40%),
+    radial-gradient(ellipse at 85% 90%, rgba(0,0,0,0.06), transparent 45%);
+  border-radius: 3px 10px 10px 3px;
+  box-shadow:
+    0 18px 50px rgba(0,0,0,0.55),
+    inset 0 0 0 1px rgba(0,0,0,0.06),
+    inset -10px 0 24px -14px rgba(0,0,0,0.35);
+  color: var(--page-ink);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transform-origin: left center;
+  backface-visibility: hidden;
+  transition: transform 0.62s cubic-bezier(.4,.1,.2,1), box-shadow 0.62s;
+}
+/* Spine edge shading -- the "gutter" of the open book */
+.leather-leaf::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 0; bottom: 0; width: 40px;
+  background: linear-gradient(90deg, rgba(0,0,0,0.28), transparent);
+  pointer-events: none;
+}
+
+.leather-leaf.turning-next { transform: rotateY(-146deg); box-shadow: 0 18px 60px rgba(0,0,0,0.7); }
+.leather-leaf.turning-prev { transform: rotateY(146deg); box-shadow: 0 18px 60px rgba(0,0,0,0.7); }
+.leather-leaf.incoming { transform: rotateY(0deg); }
+
+.leather-leaf-inner {
+  flex: 1;
+  overflow: hidden;
+  padding: clamp(28px, 6%, 56px) clamp(24px, 7%, 52px) clamp(20px, 4%, 36px);
+  font-family: 'Cormorant Garamond', var(--font-read, serif);
+}
+.leather-leaf-inner .chapter h2 {
+  font-family: 'Cinzel', var(--font-head, serif);
+  color: var(--gilt);
+  text-align: center;
+  font-size: clamp(1rem, 2.6vh, 1.3rem);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin: 0 0 1.1em;
+  padding-bottom: 0.6em;
+  border-bottom: 1px solid rgba(107,92,66,0.35);
+}
+.leather-leaf-inner .chapter-content p {
+  font-size: clamp(1rem, 2.3vh, 1.16rem);
+  line-height: 1.75;
+  margin: 0 0 1.1em;
+  color: var(--page-ink);
+  cursor: pointer;
+  border-radius: 3px;
+  transition: background 0.2s;
+}
+.leather-leaf-inner .chapter-content p:hover { background: rgba(184,134,47,0.08); }
+.leather-leaf-inner .chapter-content p::first-letter {
+  color: var(--gilt);
+  font-family: 'Cinzel', serif;
+}
+.leather-leaf-inner .chapter-content p.reading {
+  background: rgba(184,134,47,0.16) !important;
+  box-shadow: inset 3px 0 0 var(--gilt);
+}
+
+.leather-folio {
+  position: absolute;
+  bottom: 10px; left: 0; right: 0;
+  text-align: center;
+  font-family: var(--font-body, monospace);
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  color: var(--page-ink-dim);
+  text-transform: uppercase;
+}
+
+/* Page-turn hit zones: click the outer thirds of the book to flip,
+   same gesture as a physical page corner. */
+.leather-turn-zone {
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 15%;
+  z-index: 5;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+.leather-turn-zone.prev { left: 0; }
+.leather-turn-zone.next { right: 0; }
+.leather-turn-zone:hover { background: linear-gradient(90deg, rgba(0,0,0,0.05), transparent); }
+.leather-turn-zone.next:hover { background: linear-gradient(-90deg, rgba(0,0,0,0.05), transparent); }
+.leather-turn-zone:disabled { cursor: default; pointer-events: none; }
+
+.leather-controls {
+  position: absolute;
+  top: -46px; left: 0; right: 0;
+  display: flex; align-items: center; justify-content: space-between;
+  font-family: var(--font-body, monospace);
+  color: #cbb888;
+  font-size: 0.72rem; letter-spacing: 0.08em;
+}
+.leather-controls button {
+  background: transparent; border: 1px solid rgba(216,196,142,0.35);
+  color: #d8c48e; border-radius: 3px; padding: 5px 12px;
+  font: inherit; cursor: pointer; transition: 0.15s;
+}
+.leather-controls button:hover:not(:disabled) { border-color: var(--gilt-bright); color: var(--gilt-bright); }
+.leather-controls button:disabled { opacity: 0.3; cursor: default; }
+
+/* Skin toggle & everything outside the book (nav, transport bar) keeps
+   the site's normal chrome -- only the reading surface itself changes. */
+@media (max-width: 640px) {
+  .leather-book { height: min(76vh, 700px); }
+  .leather-controls { top: -40px; }
+}
