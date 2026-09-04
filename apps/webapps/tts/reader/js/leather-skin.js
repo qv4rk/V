@@ -50,15 +50,37 @@
 
   function toggle() { setSkin(state.skin === 'leather' ? 'standard' : 'leather'); }
 
-  // Rebuild pagination from scratch -- called whenever new article
-  // content is loaded into #storyContainer while leather skin is on.
+  function restoreMovedNodes() {
+    // Same restore used by teardown(): put every moved node back where it
+    // came from, in reverse move order so each `next` sibling is still
+    // valid. When the caller is "a fresh article just loaded", the
+    // recorded parents are the OLD article's now-detached wrapper
+    // elements -- reinserting into a detached subtree is a harmless
+    // no-op on the live page, so this is always safe to call first.
+    for (var i = state.moveLog.length - 1; i >= 0; i--) {
+      var m = state.moveLog[i];
+      if (m.parent) m.parent.insertBefore(m.node, m.next);
+    }
+    state.moveLog = [];
+  }
+
+  // Rebuild pagination from scratch -- called whenever new article content
+  // is loaded into #storyContainer, or the viewport actually changes size,
+  // while the leather skin is on. Tries to keep showing whichever segment
+  // was on screen before the rebuild (a real resize/rotation shouldn't
+  // silently kick the reader back to page 1).
   function refresh() {
     if (state.skin !== 'leather') return;
-    teardownLeaves();       // drop old leaves, WITHOUT restoring nodes to storyContainer's
-                             // pre-leather position (that position is stale now anyway --
-                             // this is a fresh article, not a return to standard skin)
-    state.moveLog = [];
+    var anchor = (state.pages[state.current] && state.pages[state.current].els[0]) || null;
+    restoreMovedNodes();     // #storyContainer must hold real flow elements
+                              // again before flowElements() can find any
+    teardownLeaves();
     paginate();
+    if (anchor) {
+      for (var i = 0; i < state.pages.length; i++) {
+        if (state.pages[i].els.indexOf(anchor) !== -1) { state.current = i; showPageInstant(i); break; }
+      }
+    }
   }
 
   function flowElements(container) {
@@ -261,20 +283,27 @@
   }
 
   function teardown() {
-    // Restore every moved node to its exact original parent + position,
-    // in reverse move order so each `next` sibling reference is still valid.
-    for (var i = state.moveLog.length - 1; i >= 0; i--) {
-      var m = state.moveLog[i];
-      if (m.parent) m.parent.insertBefore(m.node, m.next);
-    }
-    state.moveLog = [];
+    restoreMovedNodes();
     teardownLeaves();
     var source = document.getElementById('storyContainer');
     if (source) source.classList.remove('leather-source');
   }
 
+  // Mobile browsers fire `resize` when the address bar collapses or
+  // expands during an ordinary scroll -- that changes innerHeight, not
+  // width, dozens of times a second while scrolling. Rebuilding the whole
+  // paginated book on every one of those (rather than on an actual resize
+  // or rotation) was what made pages intermittently collapse mid-scroll.
+  // Only react to real width changes, and debounce so a drag-resize on
+  // desktop doesn't rebuild on every intermediate frame either.
+  var lastWidth = window.innerWidth;
+  var resizeTimer = null;
   window.addEventListener('resize', function () {
-    if (state.skin === 'leather') refresh();
+    if (state.skin !== 'leather') return;
+    if (window.innerWidth === lastWidth) return;
+    lastWidth = window.innerWidth;
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(refresh, 250);
   });
 
   window.LeatherSkin = {
