@@ -638,7 +638,7 @@
   },
   {
     "id": "n02",
-    "title": "The Fiscal Hinge: Opium, the Bengal Monopoly, and the Liquidity of Empire",
+    "title": "The Opium Auction",
     "source": "manifold",
     "date": {
       "year": 1839,
@@ -648,7 +648,7 @@
     "location": {
       "lat": 22.5726,
       "lon": 88.3639,
-      "name": "Calcutta & Lintin Island"
+      "name": "Patna & Canton"
     },
     "type": "British East India Company",
     "nodeColor": "#a67041",
@@ -663,14 +663,15 @@
       "monopoly",
       "british-empire",
       "east-india-company",
-      "bihar-farmers"
+      "bihar-farmers",
+      "hong-merchants"
     ],
     "connections": [
       "n03",
       "n04"
     ],
-    "excerpt": "A silver shortage in London gets solved by an opium monopoly in Bengal. The Company never touches the smuggling itself — it just auctions the product and lets the risk, and the profit, pass to someone else's hands before it crosses into China.",
-    "content": "By the late eighteenth century, the East India Company had a problem with its own appetite. Tea, silk, and porcelain bought in China had to be paid for in silver, and silver was draining out of London faster than the Company could replace it. In 1773, Governor-General Warren Hastings answered that problem by declaring opium a state monopoly in Bengal. In 1797, the Company tightened its grip further, replacing a looser contractor system with two salaried Opium Agents, one at Patna and one at Ghazipur, who controlled cultivation directly.\n\nPeasants didn't choose to grow poppy the way a farmer chooses a crop. They were locked into it through cash advances they had no real way to refuse — money paid up front against a harvest not yet planted, the same structure that would later bind a peasant in Ein al-Zeitun to a merchant's ledger in Beirut. Once the harvest came in, the opium went to the government factories at Patna and Ghazipur, was pressed into cakes, and shipped down the Ganges to Calcutta — not for export, but for auction.\n\nThe auction was the hinge the whole system turned on. China had banned opium imports outright. The Company couldn't be seen shipping a banned narcotic into a country it depended on for tea. So it sold the chests, openly and legally, to private merchants in Calcutta, and let those merchants carry the risk — and the profit — of getting the cargo past Chinese law. By 1800, smuggled chests numbered around 4,000 a year. By 1831, the figure was near 20,000. By 1839, on the eve of the war that finally answered it, the number had passed 40,000.\n\nThe silver that had been draining toward Beijing reversed direction. Every chest sold at Lintin Island brought silver back into circuits that fed the Bengal treasury and, downstream, the Company's books in London. The farmer in Bihar who'd planted poppy instead of food never saw a coin of it beyond the advance that had trapped him into planting in the first place.",
+    "excerpt": "A peasant in Bihar did not plant poppy because the harvest would make him rich. He planted it because the money had already arrived. The same shape turns up later on a different ledger: a peasant in Ein al-Zeitun bound to a merchant's book in Beirut before the olives are on the tree. Different empire. Same hinge.",
+    "content": "A peasant in Bihar did not plant poppy because the harvest would make him rich. He planted it because the money had already arrived. The dadni came before the seed. Cash in the hand, seed in the ground, tax paid on a crop that was not yet a plant. After that the field was not his in any sense that mattered. The same shape turns up later on a different ledger: a peasant in عين الزيتون ʿAyn al-Zaytūn bound to a merchant's book in Beirut before the olives are on the tree. Advance against a harvest that has not happened. Different empire. Same hinge.\n\nLondon had a tea problem. Canton — 广州 Guǎngzhōu — sold leaf, silk, porcelain. Canton took silver. The silver left Britain faster than the Treasury could put it back. In 1773 Warren Hastings made opium a Company monopoly in Bengal. By 1797 two salaried Opium Agents sat at Patna and Ghazipur and watched the fields themselves. Agents and tax farmers issued the advances. Seed, tools, land tax. At harvest the raw juice went to the government factories at a price the Company set. Fail the crop, try grain again, and the advance became a debt that ate the next season. The household stayed.\n\nThe factories were brick and large. Workers kneaded gum, rolled it into balls, rack-dried it, packed it into mango-wood chests of about a hundred and forty pounds. What it cost to make a chest had nothing to do with what the chest would fetch once it left the river. That gap was the point.\n\nThe Company could not ship the chests into China. The Qing ban was on the books, and the legal tea trade with the court was the charter the Company could not risk. So the chests went to Calcutta and went under the hammer. Private merchants bought them. Country traders. Jardine, Matheson & Co. and the rest. The Company took clean money in Bengal. The agency houses took the chests and the law. Four thousand chests a year around 1800. Near fifteen thousand in the 1820s. Past forty thousand by 1839.\n\nCanton received them at the 公行 Gōngháng, the Cohong. 十三行 Shísān Háng — Thirteen Factories. Licensed 行商 hángshāng. Under the 保商 bǎoshāng rule a Hong merchant stood personal surety for a foreign ship: duties, conduct, whatever the crew did that the yamen decided to notice. Squeeze from above — 报效 bàoxiào, the donations that were not donations, birthday levies, military levies, sums that did not wait for a good year. Squeeze from below — 商欠 shāngqiàn, the foreign debts he had guaranteed because the system required a Chinese name on the paper.\n\n蔡世文 Cài Shìwén, 伍浩官 style Munqua, of the 万和行 Wànhé Háng, ate other men's bankruptcies until there was nothing left to eat. In 1796, facing prosecution and abandoned by the English houses he had covered, he killed himself. 卢观恒 Lú Guānhéng, Mowqua, of the 广利行 Guǎnglì Háng, underwrote cotton and tea until the family's money froze into land and then dissolved after the war. 伍秉鉴 Wǔ Bǐngjiàn, Howqua, of the 怡和行 Yíhé Háng, was called the richest man alive. American railroads. European paper. It did not matter. In 1817 an American ship under his guarantee was caught with opium. The fine was 160,000 taels. Fifty times the seized cargo. Between 1773 and 1835 the Canton merchants handed more than five million taels to the treasury in forced levies.\n\n怡和行 Yíhé Háng is Howqua's house. 怡和洋行 Yíhé Yángháng is Jardine, Matheson. Same two characters in English mouths. Different books.\n\n林则徐 Lín Zéxú, December 1839, memorial to 道光 Dàoguāng, after the 琪华馆 Qíhuá Guǎn bust in Macao: 夷六土四 yí liù tǔ sì. Foreigners six parts. Locals four. The hulks sat at 伶仃 Língdīng. Armed. Offshore. Sixty percent of the gross in silver without a foot on the mud. The boatmen, the clerks, the inland men split forty and carried the statute. Risk down. Profit up.\n\nThe silver did not go home in the hold. It went into the Company's Canton treasury. Bills of exchange, payable in London, came out. The same silver, still in the vault, bought the tea and the silk. Indian labor into Chinese habit. Chinese silver into London paper. London paper into British tea. No ingot had to cross twice.\n\nLin arrived in Canton in 1839, took twenty thousand British chests, and put them in lime at 虎门 Hǔmén. The circuit broke. Jardine went to London with maps and a plan for the river. April 1840, Commons. Palmerston called it free trade and the defense of property. Gladstone, thirty, Tory backbencher:\n\n\"A war more unjust in its origin, a war more calculated to cover this country with permanent disgrace, I do not know, and have not read of.\"\n\nThree days. 271 to 262. Nine votes. The gunboats left for the Pearl.",
     "article_url": "articles/n02.html",
     "empire": "British East India Company",
     "mechanism": [
@@ -682,7 +683,7 @@
   },
   {
     "id": "n03",
-    "title": "The Yaokou and the Fast Crabs: Distribution Inside China, 1821-1839",
+    "title": "Fast Crabs",
     "source": "manifold",
     "date": {
       "year": 1839,
@@ -692,7 +693,7 @@
     "location": {
       "lat": 22.1987,
       "lon": 113.5439,
-      "name": "Lingdingyang & Pearl River Delta"
+      "name": "Lintin Island & Pearl River Delta"
     },
     "type": "Qing China / British smuggling networks",
     "nodeColor": "#a67041",
@@ -708,14 +709,16 @@
       "british-empire",
       "qing-dynasty",
       "chinese-workers",
-      "tanka"
+      "tanka",
+      "silver-extraction",
+      "state-corruption"
     ],
     "connections": [
       "n02",
       "n04"
     ],
-    "excerpt": "What the Calcutta auction made legal on the Indian side had to become illegal again the moment it crossed into Chinese water — and a whole armed distribution economy grew up to manage that seam.",
-    "content": "What the Calcutta auction made legal on the Indian side had to become illegal again the moment it touched Chinese water, and a whole distribution economy grew up around that seam. After an 1821 crackdown on opium stockpiled at Macau, the trade shifted to receiving ships anchored off Lintin Island. Chinese wholesale buyers rowed out, paid silver, and carried the chests inland in fast, heavily armed boats — fast crabs, sometimes called scrambling dragons — built to outrun the government's water patrols. Many of the men crewing them were Tanka boat people who had fished those waters for generations and found that one successful run paid more than months of honest work.\n\n[NEEDS VERIFICATION PASS: the specific organizers, guild names, and individual smugglers named in some accounts of this network — figures running storage operations, clan networks turning ancestral halls into hidden warehouses — require a dedicated, sourced check before being presented as documented fact, the same standard applied to the named revolt leaders in n01.]\n\nWhat's solid without that pass: the mechanism. Sons were being pulled into a trade that paid better than fishing or farming ever had. The capital that built the boats, paid the bribes, and bought the silence of the customs officers wasn't raised on Chinese soil. It had already passed through the Calcutta auction once. The risk that followed it inland — the boats, the gunfire, the executions when Lin Zexu's crackdown finally came — was paid by the people swimming closest to where the blood was already in the water.",
+    "excerpt": "What Calcutta had made legal on the Indian side had to become illegal again the moment it touched Chinese water. The whole inland economy grew in that seam — and the network did not hide from the state. It rented it.",
+    "content": "In 1821 the yamen cleared 黄埔 Huángpǔ and 澳门 Àomén of the foreign opium ships. The trade did not stop. It moved to water the forts could not reach.\n\n伶仃 Língdīng. A rock in the outer mouth of the Pearl. Winter on the island. Typhoon months in the lee at 急水门 Jíshuǐmén or Hong Kong. The agency houses stripped ocean rigging off large hulls and left them there. 趸船 dǔnchuán. Receiving ships. Cannon. Mercenary crews. Chests stacked in the dark. The drug sat in the grey water. The cash sat in Canton. Two books. Same firm.\n\nWhat Calcutta had made legal on the Indian side had to become illegal again the moment it touched Chinese water. The whole inland economy grew in that seam.\n\nUnder the hulks, inland, the 窑口 yáokǒu. Wholesale dens in the river maze. 花地 Huādì, Flower Reach, just outside the city walls, was the one everyone named. 西关 Xīguān held the dens the city already knew how to find. Money shop in front. Ledger in the back. Orders in. Paper chits out. Bribes paid. Credit extended. The bosses were Chinese and they were not small men.\n\nBetween hulk and den ran the boats. 快蟹 kuàixiè — Fast Crabs. Also 扒龙 pālóng — scrambling dragons, in the mouths that watched them leave the reach. The larger ones were 蜈蚣船 wúgōngchuán, Centipede Boats. Eighty to a hundred feet. Fifty, sixty oars. A hundred men if the job was heavy. Long hull, shallow draft, speed no patrol junk could hold in the creeks. Iron wire or rattan along the gunwales so a musket ball died and a boarding party did not arrive. Swivel guns at the ends. 抬枪 táiqiāng. Firelocks.\n\nThe oars belonged to the 疍家 Dànjiā. Tanka. Boat people. Barred from land, barred from the examinations, known to every tide in the delta and welcome in none of the villages on the bank. One clean run paid more than months of nets. The syndicates paid them little against that math and put them where the shot was. They took it. There was not another wage that fit the skill.\n\nThe network did not hide from the state. It rented the state. 规银 guīyín. Protection silver. Village clerk to customs post to the navy. 韩肇庆 Hán Zhàoqìng, Guangdong Navy sub-commander, wrote the cleanest version of the contract. His junks did not chase the Crabs. They walked them upriver. Five to ten dollars a chest. For Beijing he staged the victories: empty boxes, rotten hulls, a report of seizure. The court made him general. The cut on every chest that entered the river stayed with him.\n\nThe capital that built the boats and bought the silence had already gone through the Calcutta hammer once. The risk that followed it inland — the gunfire, the rope when 林则徐 Lín Zéxú finally closed his hand — sat with the men swimming closest to where the blood was already in the water.\n\nSilver left the country in chests of habit. The empire ran two metals. Copper cash in the market — grain, wages, a hoe. Silver taels on the tax roll. 纹银 wényín. Sycee. As the Lintin trade thickened, silver thinned. 银贵钱贱 yín guì qián jiàn. Silver dear. Copper cheap.\n\nEarly 1800s: a thousand 文 wén bought a tael. Late 1830s, 江苏 Jiāngsū, 浙江 Zhèjiāng, 广东 Guǎngdōng: sixteen hundred to two thousand. The land tax on the magistrate's paper did not move. The farmer sold rice for copper and bought silver to pay. The same field cost him twice. Default. Land to the moneylender. Collectors with force. Villages that answered with force. Tax risings. Societies that did not love the Qing.\n\nThe Fast Crabs were already through the estuary before a British gunboat found the forts at 虎门 Hǔmén.",
     "article_url": "articles/n03.html",
     "empire": "Qing China / British smuggling networks",
     "mechanism": [
@@ -727,7 +730,7 @@
   },
   {
     "id": "n04",
-    "title": "Poppies, Clans, and Smoke: Domestic Cultivation and Terminal Consumption in China, 1820s-1839",
+    "title": "Poppies Inland",
     "source": "manifold",
     "date": {
       "year": 1839,
@@ -737,7 +740,7 @@
     "location": {
       "lat": 25.0454,
       "lon": 102.7091,
-      "name": "Yunnan borderlands & Guangzhou Xiguan"
+      "name": "Yunnan & Sichuan"
     },
     "type": "Qing China",
     "nodeColor": "#a67041",
@@ -745,24 +748,25 @@
     "tags": [
       "addiction-economy",
       "domestic-cultivation",
-      "clan-networks",
+      "bureaucratic-capture",
       "displacement",
       "resource-extraction",
       "qing-dynasty",
-      "chinese-peasants"
+      "chinese-peasants",
+      "informal-taxation"
     ],
     "connections": [
       "n02",
       "n03"
     ],
-    "excerpt": "Once the habit took root, it didn't need foreign ships anymore. Domestic poppy fields in Yunnan and smoke dens in Guangzhou's Xiguan district show the same economy running on local soil, local hands, local family networks.",
-    "content": "[NEEDS VERIFICATION PASS: this node's claims about specific clan names (He and Liang of Panyu's Jiaotang Division), the precise red-flag inscription, and the characterization of smoke-den demographics in Guangzhou's Xiguan district require independent sourcing before publication — see verification note on n03.]\n\nWhat is independently well-documented: domestic poppy cultivation did spread inland over the 1820s and 1830s, particularly into Yunnan and Sichuan, as the habit became profitable enough that growing food crops lost out to growing poppy in some districts. Lin Zexu's 1839 crackdown, including the destruction of opium stocks at Humen, is extensively documented and targeted both the foreign supply chain and domestic trafficking and consumption alike.\n\nThe pattern repeats from the coast inland: a habit that started as an import becomes, within a generation, something grown, processed, and consumed entirely on Chinese soil, by Chinese hands — while the capital that had originally primed the market, and the silver it had already extracted on the way in, never had to be local at all.",
+    "excerpt": "What landed at Lintin as a foreign cargo became, inside a generation, a crop. 废粮种烟 — abandon grain, plant smoke. A yamen with two failures to choose between invented a third: a fee schedule. The prohibition office became the protection office.",
+    "content": "What landed at Lintin as a foreign cargo became, inside a generation, a crop. Yunnan's high valleys. Sichuan's river basins. The poppy stopped being an import and started being the thing that paid.\n\nTwo grades owned the inland trade. 云土 Yúntǔ — Yunnan earth. Altitude, rich soil, a smoothness that could stand next to Patna. 川土 Chuāntǔ — Sichuan earth. Dozens of counties in the Red Basin. Worse leaf, more of it, cheaper.\n\nThe gazetteers used the same four characters until the phrase itself became a kind of weather report. 废粮种烟 fèi liáng zhòng yān — abandon grain, plant smoke. The 坝子 bàzi, the irrigated valley floors that had fed the Southwest, went under white and purple blossom. A surplus region started buying rice. Bad weather on the leftover grain fields did the rest.\n\nConfucian commerce had a rule for this and it was not subtle. 义利之辨 yì lì zhī biàn — the distinction between righteousness and profit. Wealth was supposed to come through 以义取利 yǐ yì qǔ lì: profit taken under right. Decades later Yan Fu, putting Adam Smith into Chinese, reached for 母财 mǔ cái for capital. Mother-wealth. A word that still sounded like something that fed a household.\n\nThe mountain trails did not use that word.\n\n正月, Daoguang 21 — January 1841 — Qīng Shílù 清实录. An armed syndicate on the roads between 顺庆 Shùnqìng and 宁远 Níngyuǎn in Sichuan met imperial troops sent to break them. They did not bother with a cover name. The banner was eight characters:\n\n将本求利，舍命取财\nJiāng běn qiú lì, shě mìng qǔ cái\nUse the stake to seek profit. Risk life to take wealth.\n\n本 běn here is the outlay — cash turned into guns, hired men, cargo the statute forbade. 利 lì is stripped of the old obligation. 舍命 shě mìng is the cost line: their lives, the soldiers', whoever stood on the path. The Shílù recorded the slogan because it was already a public sentence. No one in those hills was translating Smith.\n\nConsumption followed rank.\n\nGentry, officials, merchants sat in 花烟间 huāyān jiān — flower-smoke rooms — carved pipes, silver lamps, the habit dressed as leisure. Brothels ran the same furniture.\n\nPorters, boatmen, chair-bearers, coolies drank 笼头水 lóngtóu shuǐ — cage-water: dregs and pipe scrapings boiled back into a dark cup. Not leisure. A few hours off the pain. Wages gone. Households after that.\n\nThe yamen in the interior had two failures and chose a third. Pull the plants and the villages whose year now lived in the poppy rose. Leave them and the district missed its grain quota and its silver quota both. So the clerks invented a fee schedule. Fines. Inspection money. 土药厘 tǔyào lí — native-drug likin — levied on the grower and the den. Pocketed, or poured into the hole in the local books. The prohibition office became the protection office.\n\nLin was still at the coast trying to stop the foreign chests. Behind him the interior was already in flower.",
     "article_url": "articles/n04.html",
     "empire": "Qing China",
     "mechanism": [
       "domestic-cultivation",
       "addiction-economy",
-      "clan-networks"
+      "bureaucratic-capture"
     ]
   },
   {

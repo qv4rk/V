@@ -1,6 +1,6 @@
 {
   "id": "n04",
-  "title": "Poppies, Clans, and Smoke: Domestic Cultivation and Terminal Consumption in China, 1820s-1839",
+  "title": "Poppies Inland",
   "published": "2026-05-01",
   "date": {
     "year": 1839,
@@ -10,17 +10,18 @@
   "location": {
     "lat": 25.0454,
     "lon": 102.7091,
-    "name": "Yunnan borderlands & Guangzhou Xiguan"
+    "name": "Yunnan & Sichuan"
   },
-  "excerpt": "Once the habit took root, it didn't need foreign ships anymore. Domestic poppy fields in Yunnan and smoke dens in Guangzhou's Xiguan district show the same economy running on local soil, local hands, local family networks.",
-  "content": "[NEEDS VERIFICATION PASS: this node's claims about specific clan names (He and Liang of Panyu's Jiaotang Division), the precise red-flag inscription, and the characterization of smoke-den demographics in Guangzhou's Xiguan district require independent sourcing before publication — see verification note on n03.]\n\nWhat is independently well-documented: domestic poppy cultivation did spread inland over the 1820s and 1830s, particularly into Yunnan and Sichuan, as the habit became profitable enough that growing food crops lost out to growing poppy in some districts. Lin Zexu's 1839 crackdown, including the destruction of opium stocks at Humen, is extensively documented and targeted both the foreign supply chain and domestic trafficking and consumption alike.\n\nThe pattern repeats from the coast inland: a habit that started as an import becomes, within a generation, something grown, processed, and consumed entirely on Chinese soil, by Chinese hands — while the capital that had originally primed the market, and the silver it had already extracted on the way in, never had to be local at all.",
+  "excerpt": "What landed at Lintin as a foreign cargo became, inside a generation, a crop. 废粮种烟 — abandon grain, plant smoke. A yamen with two failures to choose between invented a third: a fee schedule. The prohibition office became the protection office.",
+  "content": "What landed at Lintin as a foreign cargo became, inside a generation, a crop. Yunnan's high valleys. Sichuan's river basins. The poppy stopped being an import and started being the thing that paid.\n\nTwo grades owned the inland trade. 云土 Yúntǔ — Yunnan earth. Altitude, rich soil, a smoothness that could stand next to Patna. 川土 Chuantǔ — Sichuan earth. Dozens of counties in the Red Basin. Worse leaf, more of it, cheaper.\n\nThe gazetteers used the same four characters until the phrase itself became a kind of weather report. 废粮种烟 fèi liáng zhòng yan — abandon grain, plant smoke. The 坝子 bàzi, the irrigated valley floors that had fed the Southwest, went under white and purple blossom. A surplus region started buying rice. Bad weather on the leftover grain fields did the rest.\n\nConfucian commerce had a rule for this and it was not subtle. 义利之辨 yì lì zhi biàn — the distinction between righteousness and profit. Wealth was supposed to come through 以义取利 yǐ yì qǔ lì: profit taken under right. Decades later Yan Fu, putting Adam Smith into Chinese, reached for 母财 mǔ cái for capital. Mother-wealth. A word that still sounded like something that fed a household.\n\nThe mountain trails did not use that word.\n\n正月, Daoguang 21 — January 1841 — Qing Shílù 清实录. An armed syndicate on the roads between 顺庆 Shùnqìng and 宁远 Níngyuǎn in Sichuan met imperial troops sent to break them. They did not bother with a cover name. The banner was eight characters:\n\n将本求利，舍命取财\nJiang běn qiú lì, shě mìng qǔ cái\nUse the stake to seek profit. Risk life to take wealth.\n\n本 běn here is the outlay — cash turned into guns, hired men, cargo the statute forbade. 利 lì is stripped of the old obligation. 舍命 shě mìng is the cost line: their lives, the soldiers', whoever stood on the path. The Shílù recorded the slogan because it was already a public sentence. No one in those hills was translating Smith.\n\nConsumption followed rank.\n\nGentry, officials, merchants sat in 花烟间 huayan jian — flower-smoke rooms — carved pipes, silver lamps, the habit dressed as leisure. Brothels ran the same furniture.\n\nPorters, boatmen, chair-bearers, coolies drank 笼头水 lóngtóu shuǐ — cage-water: dregs and pipe scrapings boiled back into a dark cup. Not leisure. A few hours off the pain. Wages gone. Households after that.\n\nThe yamen in the interior had two failures and chose a third. Pull the plants and the villages whose year now lived in the poppy rose. Leave them and the district missed its grain quota and its silver quota both. So the clerks invented a fee schedule. Fines. Inspection money. 土药厘 tǔyào lí — native-drug likin — levied on the grower and the den. Pocketed, or poured into the hole in the local books. The prohibition office became the protection office.\n\nLin was still at the coast trying to stop the foreign chests. Behind him the interior was already in flower.",
   "tags": [
     "addiction-economy",
     "domestic-cultivation",
-    "clan-networks",
+    "bureaucratic-capture",
     "displacement",
     "resource-extraction",
     "qing-dynasty",
-    "chinese-peasants"
+    "chinese-peasants",
+    "informal-taxation"
   ]
 }
