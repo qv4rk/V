@@ -170,7 +170,13 @@
             </div>
             <input type="file" id="fileInput" accept=".txt,.html,.md" hidden onchange="handleFileSelect(this)">
             <input type="file" id="pdfInput" accept=".pdf" hidden onchange="handlePDFSelect(this)">
-            <textarea id="pasteArea" class="text-input-area" placeholder="Or paste text here..."></textarea>
+            <textarea id="pasteArea" class="text-input-area" placeholder="Or paste text here...
+
+The detective stepped into the rain.
+[SPKR: Alice|ARIA]
+I've been waiting for you.
+[SPKR: Bob|GUY]
+You shouldn't have come here alone."></textarea>
             <button class="btn-large" id="loadBtn" onclick="loadFromPaste()">⚡ INITIALIZE READER</button>
         </div>
     </div>
@@ -299,12 +305,13 @@
                 <div class="step-body" style="font-size:0.8rem;">
                     <p style="margin:0 0 0.5rem;">Add character voices by tagging dialogue lines:</p>
                     <pre style="background:rgba(0,0,0,0.4);padding:0.75rem;border-radius:6px;color:#ccc;overflow-x:auto;font-size:0.78rem;line-height:1.7;">The detective stepped into the rain.
-[SPKR: Alice]
+[SPKR: Alice|ARIA]
 I've been waiting for you.
 She smiled, but her eyes were cold.
-[SPKR: Bob]
+[SPKR: Bob|GUY]
 You shouldn't have come here alone.</pre>
-                    <p style="margin:0.5rem 0 0;color:#888;">Everything without a tag is read by <em>Narrator</em>. Each unique speaker name becomes its own character with its own voice.</p>
+                    <p style="margin:0.5rem 0 0;color:#888;">Everything without a tag is read by <em>Narrator</em>. Each unique speaker name becomes its own character with its own voice, auto-assigned unless you say otherwise.</p>
+                    <p style="margin:0.5rem 0 0;color:#888;">Attach a <strong style="color:var(--primary);">voice card</strong> the first time a character speaks — <code>[SPKR: Name|CARD]</code> — and that voice is locked in right away instead of picked later from a dropdown. See <a href="../edge-voices.json" target="_blank" style="color:var(--primary);">edge-voices.json</a> for the full card list (ARIA, GUY, SONIA, RYAN…). You can still preview/override any voice manually in the Studio panel.</p>
                     <div style="margin-top:0.75rem; display:flex; gap:1rem; flex-wrap:wrap; font-size:0.75rem; color:#666;">
                         <span><span class="kbd">Space</span> play/pause</span>
                         <span><span class="kbd">→</span> next segment</span>

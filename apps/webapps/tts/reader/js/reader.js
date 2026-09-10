@@ -449,9 +449,30 @@ function detectChapterBreak(line) {
     return /^(={3,}|-{3,}|#{1,3}\s)/.test(line);
 }
 
+// --- VOICE CARDS (static shorthand -> Edge TTS ShortName, so a character's
+// voice can be assigned right in the manuscript the first time they speak
+// -- [SPKR: Alice|ARIA] -- instead of picking it from a dropdown every
+// time. See apps/webapps/tts/edge-voices.json for the full card list.
+// Manual override/preview in the Studio panel still works exactly as
+// before; this only fills in voiceMapping when it's still unset. ---
+let cardMap = {};
+fetch('../edge-voices.json').then(r => r.json()).then(list => {
+    list.forEach(v => { cardMap[v.card.toUpperCase()] = v.shortName; });
+}).catch(e => console.warn('edge-voices.json not loaded', e));
+
+function resolveCard(token) {
+    if(!token) return null;
+    const t = token.trim();
+    return cardMap[t.toUpperCase()] || t; // fall back to a literal ShortName if pasted directly
+}
+
 function detectSpkrs(text) {
-    const matches = text.matchAll(/\[SPKR:\s*([^\]]+)\]/gi);
-    for(const match of matches) detectedSpkrs.add(match[1].trim());
+    const matches = text.matchAll(/\[SPKR:\s*([^\|\]]+?)\s*(?:\|\s*([^\]]+))?\]/gi);
+    for(const match of matches) {
+        const name = match[1].trim();
+        detectedSpkrs.add(name);
+        if(match[2] && !voiceMapping[name]) voiceMapping[name] = resolveCard(match[2]);
+    }
 }
 
 function parseTextWithSpkrs(text) {
@@ -468,10 +489,11 @@ function parseTextWithSpkrs(text) {
             chapterTitle = line.replace(/^#{1,3}\s*/, '').replace(/^[=\-]+$/, '').trim() || null;
             return;
         }
-        const spkrMatch = line.match(/\[SPKR:\s*([^\]]+)\]/i);
+        const spkrMatch = line.match(/\[SPKR:\s*([^\|\]]+?)\s*(?:\|\s*([^\]]+))?\]/i);
         if(spkrMatch) {
             currentSpkr = spkrMatch[1].trim();
             detectedSpkrs.add(currentSpkr);
+            if(spkrMatch[2] && !voiceMapping[currentSpkr]) voiceMapping[currentSpkr] = resolveCard(spkrMatch[2]);
             line = line.replace(/\[SPKR:\s*[^\]]+\]/i, '').trim();
         }
         if(line) {
