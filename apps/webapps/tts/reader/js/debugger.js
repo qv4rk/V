@@ -12,7 +12,14 @@
         div.innerHTML=`<span style="color:#555">[${time}]</span> <span style="float:right;color:#444;font-size:0.9em">${lineInfo}</span><strong style="color:${colors[type]||'#ccc'}">${type.toUpperCase()}:</strong> ${String(message).replace(/</g,'&lt;')} <span style="color:#777">${fd}</span>`;
         content.appendChild(div);content.scrollTop=content.scrollHeight;
         logs.push(`[${time}][${type.toUpperCase()}] ${message} ${fd} (${lineInfo})`);
-        if(type==='error'){document.getElementById('uni-debug-panel').style.display='flex';document.getElementById('uni-debug-icon').style.background='#f00';}
+        // No permanent floating icon anymore (Ctrl+Shift+D / the Studio
+        // panel's "Developer logs" link opens this instead) -- an actual
+        // error still auto-opens the panel, and lights a small dot next to
+        // the Studio header button rather than forcing itself onscreen.
+        if(type==='error'){
+            document.getElementById('uni-debug-panel').style.display='flex';
+            document.getElementById('studioErrorDot')?.removeAttribute('hidden');
+        }
     }
     window.debugLog=(a,d)=>addLog('info',a,d);
     window.onerror=(msg,url,line,col,error)=>{addLog('error',msg,`L:${line}`);return false;};
@@ -21,8 +28,15 @@
     console.log=(...a)=>{ol.apply(console,a);addLog('info',a.join(' '));};
     console.warn=(...a)=>{ow.apply(console,a);addLog('warn',a.join(' '));};
     console.error=(...a)=>{oe.apply(console,a);addLog('error',a.join(' '));};
-    window.toggleDebugPanel=()=>{const p=document.getElementById('uni-debug-panel');p.style.display=p.style.display==='flex'?'none':'flex';};
-    window.clearDebugLog=()=>{content.innerHTML='';logs.length=0;document.getElementById('uni-debug-icon').style.background='#ff0055';};
+    window.toggleDebugPanel=()=>{
+        const p=document.getElementById('uni-debug-panel');
+        p.style.display=p.style.display==='flex'?'none':'flex';
+        document.getElementById('studioErrorDot')?.setAttribute('hidden','');
+    };
+    window.clearDebugLog=()=>{content.innerHTML='';logs.length=0;document.getElementById('studioErrorDot')?.setAttribute('hidden','');};
+    document.addEventListener('keydown', e => {
+        if(e.shiftKey && (e.ctrlKey||e.metaKey) && e.code==='KeyD'){ e.preventDefault(); window.toggleDebugPanel(); }
+    });
     window.copyDebugReport=()=>{
         const report='=== FeistTech Reader v10 Debug Report ===\n'+new Date().toISOString()+'\n\n'+logs.join('\n');
         navigator.clipboard.writeText(report).then(()=>{

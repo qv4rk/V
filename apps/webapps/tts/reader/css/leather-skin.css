@@ -69,10 +69,14 @@
 /* Surfaces style.css hardcodes rather than building from the variables
    above (it predates this skin) -- explicit overrides so they read as
    part of the same page instead of black cutouts in it. */
-[data-reader-skin="leather"] .nav { background: rgba(238,229,210,0.94); }
-[data-reader-skin="leather"] .hamburger-menu,
+[data-reader-skin="leather"] .app-header,
+[data-reader-skin="leather"] .command-deck { background: rgba(238,229,210,0.94); }
 [data-reader-skin="leather"] .panel,
-[data-reader-skin="leather"] .panel-header { background: rgba(246,239,221,0.98); }
+[data-reader-skin="leather"] .panel-header,
+[data-reader-skin="leather"] #libraryPanel.drawer,
+[data-reader-skin="leather"] .modal-card,
+[data-reader-skin="leather"] .speed-popover,
+[data-reader-skin="leather"] .export-popover { background: rgba(246,239,221,0.98); }
 [data-reader-skin="leather"] .library-item,
 [data-reader-skin="leather"] .upload-box,
 [data-reader-skin="leather"] .char-card,
@@ -80,7 +84,11 @@
 [data-reader-skin="leather"] .text-input-area,
 [data-reader-skin="leather"] .btn,
 [data-reader-skin="leather"] #chapterSelect,
-[data-reader-skin="leather"] .voice-trigger { background: var(--recess-2); color: var(--text-main); }
+[data-reader-skin="leather"] .voice-trigger,
+[data-reader-skin="leather"] .nav-btn,
+[data-reader-skin="leather"] .speed-pill,
+[data-reader-skin="leather"] .deck-action-btn,
+[data-reader-skin="leather"] .speaker-chip { background: var(--recess-2); color: var(--text-main); }
 [data-reader-skin="leather"] #ttsStatus { background: rgba(246,239,221,0.96); color: var(--text-main); }
 
 /* Hide the live-scrolling standard view; it's still fully built and

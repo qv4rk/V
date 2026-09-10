@@ -59,12 +59,6 @@ window.onload = () => {
         expandHelp();
         localStorage.setItem('feist_visited', '1');
     }
-    document.addEventListener('click', (e) => {
-        const wrap = document.querySelector('.hamburger-wrap');
-        if(wrap && !wrap.contains(e.target)) {
-            document.getElementById('hamburgerMenu')?.classList.remove('open');
-        }
-    });
     loadLibrary();
     const params = new URLSearchParams(window.location.search);
     const pdfUrl = params.get('pdf');
@@ -839,6 +833,7 @@ async function previewVoice(voiceName, spkr) {
 function onSpeedChange(v) {
     settings.speed = parseFloat(v);
     document.getElementById('speedVal').innerText = parseFloat(v).toFixed(1) + 'x';
+    syncDeckSpeedControls();
     saveState();
 }
 function onVolumeChange(v) {
@@ -847,6 +842,65 @@ function onVolumeChange(v) {
     audioPlayer.volume = settings.volume;
     saveState();
 }
+
+// ==================== COMMAND DECK ====================
+// Quick-access speed pill/popover + speaker chip + export menu docked at
+// the bottom of the screen, so the most-used controls during playback
+// never require opening the Studio panel. All of it reads/writes the same
+// `settings`/`voiceMapping` state the Studio panel already does -- this is
+// a second set of controls over that state, not a separate copy of it.
+function currentDeckSpkr() {
+    return (segments[currentSegmentIndex] && segments[currentSegmentIndex].spkr) || 'narrator';
+}
+
+function updateDeckSpeakerChip(seg) {
+    const icon = document.getElementById('deckSpeakerIcon');
+    const label = document.getElementById('deckSpeakerLabel');
+    if(!icon || !label) return;
+    const spkr = (seg && seg.spkr) || 'narrator';
+    icon.innerText = spkr === 'narrator' ? '📖' : '💬';
+    label.innerText = spkr === 'narrator' ? 'Narrator' : spkr;
+}
+
+function syncDeckSpeedControls() {
+    const pill = document.getElementById('speedPill');
+    const deckSlider = document.getElementById('speedSliderDeck');
+    if(pill) pill.innerText = parseFloat(settings.speed).toFixed(2).replace(/0$/,'').replace(/\.$/,'.0') + '×';
+    if(deckSlider) deckSlider.value = settings.speed;
+    document.querySelectorAll('#speedPresets button').forEach(b => {
+        b.classList.toggle('active', Math.abs(parseFloat(b.dataset.speed) - settings.speed) < 0.001);
+    });
+    const studioSlider = document.getElementById('speedSlider');
+    if(studioSlider) studioSlider.value = settings.speed;
+}
+
+function setQuickSpeed(v) {
+    onSpeedChange(v);
+}
+
+function toggleSpeedPopover() {
+    const pop = document.getElementById('speedPopover');
+    const wasOpen = pop.classList.contains('open');
+    closeAllPopovers();
+    if(!wasOpen) pop.classList.add('open');
+}
+
+function toggleExportPopover() {
+    const pop = document.getElementById('exportPopover');
+    const wasOpen = pop.classList.contains('open');
+    closeAllPopovers();
+    if(!wasOpen) pop.classList.add('open');
+}
+
+function closeAllPopovers() {
+    document.getElementById('speedPopover')?.classList.remove('open');
+    document.getElementById('exportPopover')?.classList.remove('open');
+}
+
+document.addEventListener('click', (e) => {
+    if(!e.target.closest('.speed-wrap')) document.getElementById('speedPopover')?.classList.remove('open');
+    if(!e.target.closest('.export-dropdown-wrap')) document.getElementById('exportPopover')?.classList.remove('open');
+});
 
 // ==================== MEDIA SESSION ====================
 function updateMediaSession(seg) {
@@ -880,11 +934,22 @@ function highlight(seg) {
         // skin isn't active (see js/leather-skin.js).
         if (window.LeatherSkin && window.LeatherSkin.getSkin() === 'leather') {
             window.LeatherSkin.gotoSegment(seg);
-        } else {
+        } else if (!anyDrawerOpen()) {
+            // Don't yank the page out from under someone auditioning a
+            // voice or reading the library/help -- only autoscroll while
+            // nothing is open over the text.
             seg.element.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
     }
+    updateDeckSpeakerChip(seg);
     updateProgress();
+}
+
+function anyDrawerOpen() {
+    return ['settingsPanel','savePanel','libraryPanel','inputPanel','helpPanel'].some(id => {
+        const el = document.getElementById(id);
+        return el && el.classList.contains('open');
+    });
 }
 
 // ==================== KEYBOARD ====================
@@ -972,6 +1037,7 @@ function resumeSession() {
     document.getElementById('speedVal').innerText = parseFloat(settings.speed).toFixed(1) + 'x';
     document.getElementById('volumeSlider').value = settings.volume || 1;
     document.getElementById('volumeVal').innerText = Math.round((settings.volume || 1) * 100) + '%';
+    syncDeckSpeedControls();
     initReader(c, true);
     if(p) {
         currentSegmentIndex = Math.max(0, parseInt(p));
@@ -1282,20 +1348,14 @@ function populateChapters() {
     });
 }
 
-// Only one of {settings panel, save panel, hamburger menu} may be open at
-// once — they used to be independently toggled and would silently stack,
-// so opening one never actually brought it in front of another.
+// Only one of {settings panel, save panel} may be open at once — they used
+// to be independently toggled and would silently stack, so opening one
+// never actually brought it in front of another. (The hamburger menu this
+// used to also close is gone -- its items are now header buttons and the
+// Studio panel's footer links.)
 function closeAllPanels() {
     document.getElementById('settingsPanel').classList.remove('open');
     document.getElementById('savePanel').style.right = '-460px';
-    document.getElementById('hamburgerMenu').classList.remove('open');
-}
-
-function toggleHamburger() {
-    const menu = document.getElementById('hamburgerMenu');
-    const wasOpen = menu.classList.contains('open');
-    closeAllPanels();
-    if(!wasOpen) menu.classList.add('open');
 }
 
 function togglePanel() {
@@ -1308,14 +1368,48 @@ function togglePanel() {
 // Clears the currently loaded story so a new one can be typed/pasted in,
 // without leaving this page. The reader stays on one screen the whole
 // time — this just empties it and reopens the text panel.
+// Kept in sync with the launchpad markup #storyContainer ships with on
+// first paint (index.html) -- startNewStory() below has to rebuild the
+// same structure (including #resumeBanner) since it's wiping and
+// replacing #storyContainer's children outright, not just hiding them.
+const EMPTY_STATE_HTML = `
+<div class="intake-launchpad" id="intakeLaunchpad">
+    <h2>Welcome to the Reading Room</h2>
+    <p class="launchpad-sub">Multi-voice neural text-to-speech engine</p>
+    <div class="launchpad-grid">
+        <button class="launch-card" onclick="toggleLibrary()">
+            <span class="icon">📚</span>
+            <strong>Article Library</strong>
+            <p>Browse curated FeistTech essays</p>
+        </button>
+        <button class="launch-card" onclick="toggleInputPanel()">
+            <span class="icon">📄</span>
+            <strong>Paste / Script</strong>
+            <p>Type or paste text tagged with [SPKR: Name]</p>
+        </button>
+        <button class="launch-card" onclick="toggleInputPanel()">
+            <span class="icon">📕</span>
+            <strong>Upload Doc</strong>
+            <p>PDF or TXT, parsed right in your browser</p>
+        </button>
+    </div>
+    <div id="resumeBanner">
+        <div class="resume-info">
+            <strong>SESSION RESTORED</strong>
+            <span id="resumeDetail">Continue where you left off?</span>
+        </div>
+        <button class="btn" style="background:#00ff41;color:#000;border:none;flex-shrink:0;" onclick="resumeSession()">RESUME ▶</button>
+    </div>
+</div>`;
+
 function startNewStory() {
-    if(!confirm('Start a new story? Your current position is saved and can be resumed later from the input panel.')) return;
+    if(!confirm('Start a new story? Your current position is saved and can be resumed later from the Load panel.')) return;
     saveState();
     stopPlayback();
     segments = [];
     currentSegmentIndex = 0;
     detectedSpkrs = new Set(['narrator']);
-    document.getElementById('storyContainer').innerHTML = '<p class="empty-state">Load some text above to begin.</p>';
+    document.getElementById('storyContainer').innerHTML = EMPTY_STATE_HTML;
     populateChapters();
     renderVoiceMapping();
     document.getElementById('resumeBanner').classList.add('visible');
@@ -1324,7 +1418,12 @@ function startNewStory() {
 
 // ==================== COLLAPSIBLE PANELS (help + text input) ====================
 function toggleInputPanel() { document.getElementById('inputPanel').classList.toggle('open'); }
-function expandInputPanel() { document.getElementById('inputPanel').classList.add('open'); }
+// #resumeBanner now lives inside the always-visible empty-state launchpad
+// (see #storyContainer's initial markup) rather than inside this modal, so
+// there's no panel left to force open just to reveal it -- this is now a
+// no-op, kept only so its two existing call sites (checkPersistence,
+// startNewStory) don't need to change.
+function expandInputPanel() {}
 function collapseInputPanel() {
     document.getElementById('inputPanel').classList.remove('open');
     const label = document.getElementById('inputPanelLabel');

@@ -7,6 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto+Mono:wght@300;400&family=Merriweather:wght@300;700&family=Cinzel:wght@400;700&family=Cormorant+Garamond:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/leather-skin.css">
+    <link rel="stylesheet" href="css/command-deck.css">
     <script src="../../../../app/theme-switcher.js"></script>
     <script src="../../../../app/veil-theme.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -18,20 +19,232 @@
 
 <div id="app-container">
 
-    <div class="site-nav">
-        <a href="../../../../index.html" class="site-back">← FEISTTECH</a>
-        <span class="site-brand">THE READING ROOM · MULTI-VOICE IMMERSIVE ENGINE</span>
-        <span id="themeSwitcherMount" style="margin-left:auto;"></span>
+    <!-- ========== SLIM HEADER ========== -->
+    <header class="app-header">
+        <div class="header-left">
+            <a href="../../../../index.html" class="brand-back">← FEISTTECH</a>
+            <span class="brand-title" id="inputPanelLabel">THE READING ROOM</span>
+        </div>
+        <div class="header-center">
+            <select id="chapterSelect" onchange="jumpToChapter(this.value)"></select>
+        </div>
+        <div class="header-right">
+            <button class="nav-btn" onclick="toggleLibrary()" title="Article Library">📚 Library</button>
+            <button class="nav-btn" onclick="toggleInputPanel()" title="Load your own text">📄 Load</button>
+            <button class="nav-btn btn-icon" onclick="togglePanel()" title="Voice &amp; playback settings">
+                🎛<span id="studioErrorDot" class="studio-error-dot" hidden></span>
+            </button>
+            <button class="nav-btn btn-icon" onclick="toggleHelp()" title="Help">❓</button>
+            <span id="themeSwitcherMount"></span>
+        </div>
+    </header>
+
+    <!-- ========== READER (always on screen; content replaces the launchpad below once loaded) ========== -->
+    <div id="readerView">
+        <div class="char-row" id="charRow"></div>
+        <div class="container">
+            <main id="storyContainer">
+                <div class="intake-launchpad" id="intakeLaunchpad">
+                    <h2>Welcome to the Reading Room</h2>
+                    <p class="launchpad-sub">Multi-voice neural text-to-speech engine</p>
+                    <div class="launchpad-grid">
+                        <button class="launch-card" onclick="toggleLibrary()">
+                            <span class="icon">📚</span>
+                            <strong>Article Library</strong>
+                            <p>Browse curated FeistTech essays</p>
+                        </button>
+                        <button class="launch-card" onclick="toggleInputPanel()">
+                            <span class="icon">📄</span>
+                            <strong>Paste / Script</strong>
+                            <p>Type or paste text tagged with [SPKR: Name]</p>
+                        </button>
+                        <button class="launch-card" onclick="toggleInputPanel()">
+                            <span class="icon">📕</span>
+                            <strong>Upload Doc</strong>
+                            <p>PDF or TXT, parsed right in your browser</p>
+                        </button>
+                    </div>
+                    <div id="resumeBanner">
+                        <div class="resume-info">
+                            <strong>SESSION RESTORED</strong>
+                            <span id="resumeDetail">Continue where you left off?</span>
+                        </div>
+                        <button class="btn" style="background:#00ff41;color:#000;border:none;flex-shrink:0;" onclick="resumeSession()">RESUME ▶</button>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+</div>
+
+<!-- ========== FIXED BOTTOM COMMAND DECK ========== -->
+<footer class="command-deck">
+    <div class="deck-scrub-wrap" title="Progress">
+        <div id="progressBar"></div>
+    </div>
+    <div class="deck-body">
+        <div class="deck-speaker">
+            <button class="speaker-chip" id="deckSpeakerChip" onclick="openVoicePicker(currentDeckSpkr())" title="Change this character's voice">
+                <span id="deckSpeakerIcon">📖</span>
+                <span id="deckSpeakerLabel">Narrator</span>
+                <span class="sc-caret">▾</span>
+            </button>
+        </div>
+
+        <div class="deck-transport">
+            <button class="btn btn-icon" onclick="skipSegment(-1)" title="Previous">⏮</button>
+            <button class="btn btn-play" id="playBtn" onclick="togglePlay()">▶ PLAY</button>
+            <button class="btn btn-icon" onclick="stopPlayback()" title="Stop">⏹</button>
+            <button class="btn btn-icon" onclick="skipSegment(1)" title="Next">⏭</button>
+
+            <div class="speed-wrap">
+                <button class="speed-pill" id="speedPill" onclick="toggleSpeedPopover()">1.0×</button>
+                <div class="speed-popover" id="speedPopover">
+                    <div class="speed-presets" id="speedPresets">
+                        <button data-speed="0.75" onclick="setQuickSpeed(0.75);closeAllPopovers();">0.75×</button>
+                        <button data-speed="1.0" onclick="setQuickSpeed(1.0);closeAllPopovers();">1.0×</button>
+                        <button data-speed="1.25" onclick="setQuickSpeed(1.25);closeAllPopovers();">1.25×</button>
+                        <button data-speed="1.5" onclick="setQuickSpeed(1.5);closeAllPopovers();">1.5×</button>
+                        <button data-speed="2.0" onclick="setQuickSpeed(2.0);closeAllPopovers();">2.0×</button>
+                    </div>
+                    <input type="range" min="0.5" max="3.0" step="0.1" value="1" id="speedSliderDeck" oninput="setQuickSpeed(this.value)">
+                </div>
+            </div>
+        </div>
+
+        <div class="deck-actions">
+            <button class="deck-action-btn" onclick="openRsvp()" title="RSVP speed-read">👁 RSVP</button>
+            <div class="export-dropdown-wrap">
+                <button class="deck-action-btn" onclick="toggleExportPopover()">📥 Export ▾</button>
+                <div class="export-popover" id="exportPopover">
+                    <button id="saveChapterBtn" onclick="closeAllPopovers();saveCurrentChapterAudio();">🎵 Save this chapter (MP3)</button>
+                    <button id="saveAllBtn" onclick="closeAllPopovers();saveAllChaptersAudio();">🎶 Save all chapters (MP3)</button>
+                    <button onclick="closeAllPopovers();saveToDisk();">⬇ Export offline HTML</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- ========== LIBRARY DRAWER (slides from the left) ========== -->
+<div class="collapsible drawer" id="libraryPanel">
+    <button class="collapsible-header" onclick="toggleLibrary()">
+        <span>📚 ARTICLE LIBRARY</span>
+        <span class="collapsible-caret">▾</span>
+    </button>
+    <div class="drawer-header">
+        <span>📚 ARTICLE LIBRARY</span>
+        <button onclick="toggleLibrary()" class="btn">✕</button>
+    </div>
+    <div class="collapsible-body">
+        <div id="libraryList" class="library-list"><div class="library-loading">Loading the library…</div></div>
+    </div>
+</div>
+
+<!-- ========== LOAD CONTENT MODAL ========== -->
+<div class="collapsible modal" id="inputPanel" onclick="if(event.target===this) toggleInputPanel();">
+    <div class="modal-card">
+        <button class="collapsible-header" onclick="toggleInputPanel()">
+            <span id="inputPanelLabelInner">📄 LOAD YOUR OWN TEXT</span>
+            <span class="collapsible-caret">▾</span>
+        </button>
+        <div class="modal-header">
+            <span class="modal-header-title">📄 LOAD CONTENT</span>
+            <div style="display:flex; gap:0.5rem; align-items:center;">
+                <button class="btn" style="background:rgba(255,65,54,0.12); border-color:#ff4136; color:#ff8478;" onclick="startNewStory()" title="Clear the current story">🗑 Clear</button>
+                <button onclick="toggleInputPanel()" class="btn">✕</button>
+            </div>
+        </div>
+        <div class="collapsible-body modal-body">
+            <div class="upload-row">
+                <div class="upload-box" onclick="document.getElementById('fileInput').click()">
+                    <div class="icon">📄</div>
+                    <strong>TEXT / MD</strong>
+                    <div style="font-size:0.7rem;color:#666;margin-top:4px;">.txt .md .html</div>
+                </div>
+                <div class="upload-box" onclick="document.getElementById('pdfInput').click()">
+                    <div class="icon">📕</div>
+                    <strong>PDF</strong>
+                    <div style="font-size:0.7rem;color:#666;margin-top:4px;">auto-extracted</div>
+                </div>
+            </div>
+            <input type="file" id="fileInput" accept=".txt,.html,.md" hidden onchange="handleFileSelect(this)">
+            <input type="file" id="pdfInput" accept=".pdf" hidden onchange="handlePDFSelect(this)">
+            <textarea id="pasteArea" class="text-input-area" placeholder="Or paste text here..."></textarea>
+            <button class="btn-large" id="loadBtn" onclick="loadFromPaste()">⚡ INITIALIZE READER</button>
+        </div>
+    </div>
+</div>
+
+<!-- ========== VOICE / PLAYBACK SETTINGS (STUDIO) PANEL ========== -->
+<div class="panel" id="settingsPanel">
+    <div class="panel-header">
+        <span class="panel-header-title">🎛 STUDIO — VOICE &amp; PLAYBACK</span>
+        <button onclick="togglePanel()" class="btn">✕</button>
     </div>
 
-    <!-- ========== HELP (auto-expands once on a visitor's first visit,
-         collapsed after that — reopen any time from the ❓ hamburger item) ========== -->
-    <div class="collapsible" id="helpPanel">
+    <div class="panel-section">
+        <div class="panel-section-title">Playback</div>
+        <div class="slider-row">
+            <span class="slider-label">SPEED</span>
+            <input type="range" min="0.5" max="3.0" step="0.1" value="1" id="speedSlider" oninput="onSpeedChange(this.value)">
+            <span class="slider-val" id="speedVal">1.0x</span>
+        </div>
+        <div class="slider-row">
+            <span class="slider-label">VOLUME</span>
+            <input type="range" min="0" max="1" step="0.05" value="1" id="volumeSlider" oninput="onVolumeChange(this.value)">
+            <span class="slider-val" id="volumeVal">100%</span>
+        </div>
+    </div>
+
+    <div class="panel-section">
+        <div class="panel-section-title">Engine</div>
+        <div id="engineStatus"></div>
+    </div>
+
+    <div class="panel-section">
+        <div class="panel-section-title">Character Voices</div>
+        <div style="font-size:0.72rem;color:#555;margin-bottom:0.6rem;">▶ = preview · dot color = working status</div>
+        <div id="voiceMappingContainer"></div>
+    </div>
+
+    <div class="panel-section">
+        <div class="panel-section-title">Appearance</div>
+        <button class="btn" style="width:100%;" id="leatherSkinToggle" onclick="window.LeatherSkin.toggle();">📖 Leather-Bound Skin: Off</button>
+    </div>
+
+    <div class="studio-footer-links">
+        <button onclick="closeAllPanels();openSavePanel();">💾 Save / load slots</button>
+        <button onclick="closeAllPanels();openRsvp();">👁 RSVP speed-read</button>
+        <button onclick="toggleDebugPanel()">🐞 Developer logs (Ctrl+Shift+D)</button>
+    </div>
+</div>
+
+<!-- ========== SAVE SLOTS PANEL ========== -->
+<div class="panel" id="savePanel" style="right:-460px;">
+    <div class="panel-header">
+        <span class="panel-header-title">💾 SAVE SLOTS</span>
+        <button onclick="closeSavePanel()" class="btn">✕</button>
+    </div>
+    <div style="padding:1rem 1.2rem;">
+        <button class="btn" style="width:100%;margin-bottom:1rem;" onclick="saveToSlot()">+ SAVE CURRENT POSITION</button>
+        <div id="saveSlotsContainer"></div>
+        <p style="color:#444;font-size:0.72rem;margin-top:1rem;">Up to 10 save slots. Stored in your browser's local storage — specific to this browser on this device.</p>
+    </div>
+</div>
+
+<!-- ========== HELP MODAL ========== -->
+<div class="collapsible modal" id="helpPanel" onclick="if(event.target===this) toggleHelp();">
+    <div class="modal-card">
         <button class="collapsible-header" onclick="toggleHelp()">
             <span>❓ HOW TO GET PREMIUM VOICES &amp; FORMAT YOUR TEXT</span>
             <span class="collapsible-caret">▾</span>
         </button>
-        <div class="collapsible-body">
+        <div class="modal-header">
+            <span class="modal-header-title">❓ HOW TO GET PREMIUM VOICES &amp; FORMAT YOUR TEXT</span>
+            <button onclick="toggleHelp()" class="btn">✕</button>
+        </div>
+        <div class="collapsible-body modal-body">
             <!-- Edge TTS unlock -->
             <div class="step-card s1">
                 <div class="step-header">
@@ -101,139 +314,6 @@ You shouldn't have come here alone.</pre>
             </div>
         </div>
     </div>
-
-    <!-- ========== LIBRARY (the article directory -- FeistTech's own
-         articles, loaded straight into the reader below on a tap, never
-         a navigation away from this page) ========== -->
-    <div class="collapsible open" id="libraryPanel">
-        <button class="collapsible-header" onclick="toggleLibrary()">
-            <span>📚 ARTICLE LIBRARY</span>
-            <span class="collapsible-caret">▾</span>
-        </button>
-        <div class="collapsible-body">
-            <div id="libraryList" class="library-list"><div class="library-loading">Loading the library…</div></div>
-        </div>
-    </div>
-
-    <!-- ========== INPUT (collapses to a bar after loading; reopen any time
-         to make corrections — updating does not reset voice assignments
-         or leave this screen) ========== -->
-    <div class="collapsible" id="inputPanel">
-        <button class="collapsible-header" onclick="toggleInputPanel()">
-            <span id="inputPanelLabel">📄 LOAD YOUR OWN TEXT</span>
-            <span class="collapsible-caret">▾</span>
-        </button>
-        <div class="collapsible-body">
-            <div id="resumeBanner">
-                <div class="resume-info">
-                    <strong>SESSION RESTORED</strong>
-                    <span id="resumeDetail">Continue where you left off?</span>
-                </div>
-                <button class="btn" style="background:#00ff41;color:#000;border:none;flex-shrink:0;" onclick="resumeSession()">RESUME ▶</button>
-            </div>
-            <div class="upload-row">
-                <div class="upload-box" onclick="document.getElementById('fileInput').click()">
-                    <div class="icon">📄</div>
-                    <strong>TEXT / MD</strong>
-                    <div style="font-size:0.7rem;color:#666;margin-top:4px;">.txt .md .html</div>
-                </div>
-                <div class="upload-box" onclick="document.getElementById('pdfInput').click()">
-                    <div class="icon">📕</div>
-                    <strong>PDF</strong>
-                    <div style="font-size:0.7rem;color:#666;margin-top:4px;">auto-extracted</div>
-                </div>
-            </div>
-            <input type="file" id="fileInput" accept=".txt,.html,.md" hidden onchange="handleFileSelect(this)">
-            <input type="file" id="pdfInput" accept=".pdf" hidden onchange="handlePDFSelect(this)">
-            <textarea id="pasteArea" class="text-input-area" placeholder="Or paste text here..."></textarea>
-            <button class="btn-large" id="loadBtn" onclick="loadFromPaste()">⚡ INITIALIZE READER</button>
-        </div>
-    </div>
-
-    <!-- ========== READER (always on screen; empty until text is loaded) ========== -->
-    <div id="readerView">
-        <nav class="nav">
-            <div class="nav-row nav-row-main">
-                <div class="hamburger-wrap">
-                    <button class="btn btn-icon" id="hamburgerBtn" onclick="toggleHamburger()" title="Menu">☰</button>
-                    <div class="hamburger-menu" id="hamburgerMenu">
-                        <button class="hb-item" onclick="closeAllPanels();startNewStory();">🗑 Clear / start new</button>
-                        <button class="hb-item" onclick="closeAllPanels();expandHelp();">❓ Help</button>
-                        <button class="hb-item" onclick="closeAllPanels();openRsvp();">👁 RSVP speed-read</button>
-                        <button class="hb-item" onclick="openSavePanel()">💾 Save / load slots</button>
-                        <button class="hb-item" onclick="closeAllPanels();saveToDisk();">⬇ Export HTML</button>
-                        <button class="hb-item" id="saveChapterBtn" onclick="closeAllPanels();saveCurrentChapterAudio();">🎵 Save this chapter (MP3)</button>
-                        <button class="hb-item" id="saveAllBtn" onclick="closeAllPanels();saveAllChaptersAudio();">🎶 Save all chapters (MP3)</button>
-                        <button class="hb-item" id="hamburgerVoicesBtn" style="display:none;" onclick="togglePanel()">🎙 Voice settings</button>
-                        <button class="hb-item" id="leatherSkinToggle" onclick="window.LeatherSkin.toggle();">📖 Leather-Bound Skin: Off</button>
-                    </div>
-                </div>
-                <select id="chapterSelect" onchange="jumpToChapter(this.value)"></select>
-                <div class="nav-right-spacer"></div>
-            </div>
-            <div class="char-row" id="charRow"></div>
-            <div class="nav-row nav-row-transport">
-                <div class="ctrl-bar">
-                    <button class="btn btn-icon" onclick="skipSegment(-1)" title="Previous">⏮</button>
-                    <button class="btn btn-play" id="playBtn" onclick="togglePlay()">▶ PLAY</button>
-                    <button class="btn btn-icon" onclick="stopPlayback()" title="Stop">⏹</button>
-                    <button class="btn btn-icon" onclick="skipSegment(1)" title="Next">⏭</button>
-                </div>
-            </div>
-            <div class="progress-wrap">
-                <div id="progressBar"></div>
-            </div>
-        </nav>
-        <div class="container">
-            <main id="storyContainer"><p class="empty-state">Load some text above to begin.</p></main>
-        </div>
-    </div>
-</div>
-
-<!-- ========== VOICE PANEL ========== -->
-<div class="panel" id="settingsPanel">
-    <div class="panel-header">
-        <span class="panel-header-title">🎙 VOICE SETTINGS</span>
-        <button onclick="togglePanel()" class="btn">✕</button>
-    </div>
-
-    <div class="panel-section">
-        <div class="panel-section-title">Playback</div>
-        <div class="slider-row">
-            <span class="slider-label">SPEED</span>
-            <input type="range" min="0.5" max="3.0" step="0.1" value="1" id="speedSlider" oninput="onSpeedChange(this.value)">
-            <span class="slider-val" id="speedVal">1.0x</span>
-        </div>
-        <div class="slider-row">
-            <span class="slider-label">VOLUME</span>
-            <input type="range" min="0" max="1" step="0.05" value="1" id="volumeSlider" oninput="onVolumeChange(this.value)">
-            <span class="slider-val" id="volumeVal">100%</span>
-        </div>
-    </div>
-
-    <div class="panel-section">
-        <div class="panel-section-title">Engine</div>
-        <div id="engineStatus"></div>
-    </div>
-
-    <div class="panel-section">
-        <div class="panel-section-title">Character Voices</div>
-        <div style="font-size:0.72rem;color:#555;margin-bottom:0.6rem;">▶ = preview · dot color = working status</div>
-        <div id="voiceMappingContainer"></div>
-    </div>
-</div>
-
-<!-- ========== SAVE SLOTS PANEL ========== -->
-<div class="panel" id="savePanel" style="right:-460px;">
-    <div class="panel-header">
-        <span class="panel-header-title">💾 SAVE SLOTS</span>
-        <button onclick="closeSavePanel()" class="btn">✕</button>
-    </div>
-    <div style="padding:1rem 1.2rem;">
-        <button class="btn" style="width:100%;margin-bottom:1rem;" onclick="saveToSlot()">+ SAVE CURRENT POSITION</button>
-        <div id="saveSlotsContainer"></div>
-        <p style="color:#444;font-size:0.72rem;margin-top:1rem;">Up to 10 save slots. Stored in your browser's local storage — specific to this browser on this device.</p>
-    </div>
 </div>
 
 <div id="ttsStatus">
@@ -241,7 +321,7 @@ You shouldn't have come here alone.</pre>
     <div id="ttsStatusText"></div>
 </div>
 
-<!-- ========== VOICE PICKER (shared by inline char row + sliding panel) ========== -->
+<!-- ========== VOICE PICKER (shared by command-deck chip + Studio panel) ========== -->
 <div class="voice-picker-backdrop" id="voicePickerBackdrop" onclick="closeVoicePicker()"></div>
 <div class="voice-picker" id="voicePicker">
     <div class="vp-header">
@@ -284,9 +364,10 @@ You shouldn't have come here alone.</pre>
 <script src="js/reader.js"></script>
 <script src="js/leather-skin.js"></script>
 
-<!-- ========== DEBUGGER ========== -->
-<div id="uni-debug-icon" onclick="toggleDebugPanel()" title="Debugger" style="position:fixed;bottom:10px;left:10px;width:44px;height:44px;background:#ff0055;color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;z-index:999999;box-shadow:0 4px 10px rgba(0,0,0,0.5);border:2px solid white;">🐛</div>
-<div id="uni-debug-panel" style="display:none;position:fixed;bottom:60px;left:10px;width:min(90vw,560px);height:280px;background:rgba(13,13,13,0.97);border:1px solid #333;border-radius:8px;z-index:999999;box-shadow:0 10px 30px rgba(0,0,0,0.8);flex-direction:column;font-family:monospace;backdrop-filter:blur(10px);">
+<!-- ========== DEBUGGER (hidden by default -- Ctrl+Shift+D, or the
+     "Developer logs" link in the Studio panel, opens it; it still
+     auto-opens on an actual error) ========== -->
+<div id="uni-debug-panel" style="display:none;position:fixed;bottom:calc(var(--deck-h) + 10px);left:10px;width:min(90vw,560px);height:280px;background:rgba(13,13,13,0.97);border:1px solid #333;border-radius:8px;z-index:999999;box-shadow:0 10px 30px rgba(0,0,0,0.8);flex-direction:column;font-family:monospace;backdrop-filter:blur(10px);">
     <div style="background:#222;padding:7px 12px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #333;color:#fff;font-size:11px;border-radius:8px 8px 0 0;">
         <span>⚙ LIVE DEBUGGER</span>
         <div style="display:flex;gap:4px;">
