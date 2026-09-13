@@ -352,6 +352,7 @@ body {
 /* Quick add grid */
 .quickGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; margin-bottom: 1rem; }
 @media (max-width: 420px) { .quickGrid { grid-template-columns: 1fr; } }
+.picksHint { font-size: 0.85rem; color: var(--ink-dim); line-height: 1.5; margin: -0.4rem 0 1rem; }
 .quickTile { display: flex; flex-direction: column; }
 .quickBtn {
   min-height: 60px;

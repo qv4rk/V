@@ -23,6 +23,20 @@
     'Sweet potato, baked', 'Applesauce', 'Grapes', 'Carrots, cooked'
   ];
 
+  // Non-meat proteins conventionally used in low-methionine diets because
+  // methionine tends to be their most limiting amino acid relative to
+  // protein content — legumes and wheat gluten in particular carry
+  // noticeably less methionine per gram of protein than meat, egg, or
+  // dairy. That's a well-established property of these food categories,
+  // not a specific mg claim — like DEFAULT_QUICKADD, every number still
+  // comes from a live USDA lookup with its own measured/estimate badge,
+  // never a value baked into this list.
+  const PROTEIN_LOW_MET_PICKS = [
+    'Tofu, firm', 'Tempeh', 'Edamame, cooked', 'Lentils, cooked',
+    'Black beans, cooked', 'Chickpeas, cooked', 'Seitan',
+    'Peanut butter', 'Quinoa, cooked', 'Hummus'
+  ];
+
   // Log storage is date-partitioned ({ '2026-09-13': [items...] }), same
   // shape as METHIO_KEY, so a patient can review or correct a past day
   // without it bleeding into today's total. `log` is always a live
@@ -681,10 +695,14 @@
     return note;
   }
 
-  function renderQuickAdd() {
-    const grid = document.getElementById('quickGrid');
+  // Shared by Quick Add and the High-Protein/Low-Methionine picks — both
+  // are just a curated list of plain food names that resolve to a real
+  // USDA record through the exact same path (and the exact same
+  // mismatch-catching match note) as everything else in the app.
+  function renderFoodShortcutGrid(gridId, foodNames) {
+    const grid = document.getElementById(gridId);
     grid.innerHTML = '';
-    quickAddFoods.forEach(name => {
+    foodNames.forEach(name => {
       const tile = document.createElement('div');
       tile.className = 'quickTile';
 
@@ -737,6 +755,12 @@
       tile.appendChild(btn);
       grid.appendChild(tile);
     });
+  }
+  function renderQuickAdd() {
+    renderFoodShortcutGrid('quickGrid', quickAddFoods);
+  }
+  function renderProteinPicks() {
+    renderFoodShortcutGrid('proteinPicksGrid', PROTEIN_LOW_MET_PICKS);
   }
 
   // ── Search (photo cards) ──
@@ -1086,6 +1110,7 @@
     return [
       { icon: '🔢', title: 'Your Daily Total', text: `This big number shows how much methionine you've eaten today. Green means safe, yellow means getting close, red means you're over your limit.${capLine} This app never guesses that number for you — it has to come from your care team.` },
       { icon: '🍽️', title: 'Quick Add', text: 'Tap any food button below to pick a portion, then tap Add.' },
+      { icon: '🌱', title: 'High-Protein, Low-Methionine Picks', text: 'Right below Quick Add is a shortcut list of non-meat proteins (tofu, lentils, seitan, and the like) that tend to carry less methionine per gram of protein than meat, egg, or dairy — a fast way to reach for something that helps your protein goal without spending much of your methionine budget.' },
       { icon: '↩️', title: 'Made A Mistake?', text: 'Tap "Undo Last Add" any time to remove the food you just added.' },
       { icon: '📅', title: 'Catching Up On A Missed Day', text: 'Life happens — if you didn\'t get to log at the time, use ◀ / ▶ or pick a date to go back and catalog what you actually ate that day. Food and methioninase are tracked separately per day, so a past day is never mixed into today\'s total. A banner reminds you which day you\'re logging for.' },
       { icon: '🔍', title: "Can't Find Your Food?", text: 'Use Search to type it in, say it out loud, or scan a barcode. Each result shows a photo, whether the methionine number is lab-measured or a rough guess, and portion buttons. If a quick-add food matches the wrong item (like a raw entry for something you cooked), a "Not this? Search instead" link lets you fix it before adding.' },
@@ -1302,6 +1327,7 @@
     renderAll();
     renderDayBar();
     renderQuickAdd();
+    renderProteinPicks();
     renderMethio();
     wireVoice();
     wireScan();
