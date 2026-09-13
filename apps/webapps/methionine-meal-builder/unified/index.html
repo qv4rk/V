@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Methionine Tracker — Unified (Experimental)</title>
+<meta name="description" content="Combined search-with-photos and large-text daily tracker, in one adaptive layout: two columns on desktop, stacked with a bottom nav on mobile.">
+<link rel="stylesheet" href="../css/unified.css">
+<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+</head>
+<body>
+
+<header class="topBar">
+  <a href="../index.html" class="backLink">← Tracker Home</a>
+  <h1>Methionine Tracker</h1>
+  <span class="experimentBadge">Experimental — feedback wanted</span>
+  <button type="button" class="helpFab" id="btnHelp" aria-label="How to use this">❓</button>
+</header>
+
+<main class="layout">
+
+  <!-- LEFT / TOP pane: finding and adding food -->
+  <section class="pane paneIntake" id="paneSearch">
+
+    <div class="card">
+      <div class="cardHeaderRow">
+        <h2>Quick Add</h2>
+        <button type="button" class="iconEditBtn" id="btnEditQuickAdd" aria-label="Edit quick-add foods">✏️</button>
+      </div>
+      <div class="quickGrid" id="quickGrid"></div>
+    </div>
+
+    <div class="card">
+      <h2>Search For A Food</h2>
+      <div id="scanReader" class="scanReader" hidden></div>
+      <form id="searchForm" class="searchRow">
+        <span class="searchIcon">🔍</span>
+        <input type="text" id="searchInput" placeholder="Search food or ingredient…">
+        <button type="button" class="iconBtn" id="btnMic" title="Voice input" aria-label="Search by voice">🎤</button>
+        <button type="button" class="iconBtn" id="btnScan" title="Scan barcode" aria-label="Scan a barcode">📷</button>
+        <button type="submit" class="bigBtn compact">Go</button>
+      </form>
+      <div class="searchStatus" id="searchStatus"></div>
+      <div class="resultsList" id="resultsList"></div>
+    </div>
+
+  </section>
+
+  <!-- RIGHT / BOTTOM pane: daily budget, log, medication -->
+  <section class="pane paneBudget" id="paneLog">
+
+    <div class="totalCard">
+      <div class="statusPill safe" id="statusPill">SAFE</div>
+      <div class="bigTotal safe" id="bigTotal">0<span class="bigTotalUnit"> / 150 mg</span></div>
+      <div class="bigBar"><div class="bigBarFill" id="bigBarFill" style="width:0%"></div></div>
+      <div class="bigSubline" id="bigSubline">0 mg used today · 150 mg still safe to eat</div>
+      <div class="estimateWarning" id="estimateWarning" hidden>⚠️ This total includes rough guesses (marked ~) for foods with no lab-measured methionine — not all of this number is verified.</div>
+
+      <div id="capEditRow">
+        <button type="button" class="editCapLink" id="btnEditCap">Change daily limit</button>
+        <span class="capLockedNote" id="capLockedNote" hidden>🔒 Daily limit set by care team</span>
+      </div>
+      <div id="capEditFormWrap" hidden>
+        <form id="capEditForm" class="capEditForm">
+          <input type="number" inputmode="decimal" id="capEditInput" min="1" step="1">
+          <button type="submit" class="bigBtn compact">Save</button>
+          <button type="button" class="linkBtn" id="btnCapCancel">Cancel</button>
+        </form>
+      </div>
+
+      <div class="totalActions" style="margin-top:0.9rem;">
+        <button type="button" class="bigBtn secondary" id="btnReadAloud">🔊 Read Total Aloud</button>
+        <button type="button" class="bigBtn secondary" id="btnUndo" disabled>↩️ Undo Last Add</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>What's Been Logged Today</h2>
+      <div class="itemList" id="itemList"></div>
+    </div>
+
+    <div class="card" id="paneMeds">
+      <h2>Methioninase Today</h2>
+      <div class="methioStatus" id="methioStatus" hidden></div>
+      <button type="button" class="linkBtn" id="btnMethioEdit" hidden>✏️ Edit today's entry</button>
+      <div class="methioButtons" id="methioButtons">
+        <button type="button" class="bigBtn yes" id="btnMethioYes">✅ Yes, took it</button>
+        <button type="button" class="bigBtn no" id="btnMethioNo">❌ No, not today</button>
+      </div>
+      <form class="methioDetails" id="methioDetails" hidden>
+        <label>Time
+          <input type="text" id="methioTime" placeholder="e.g. 8:00 AM">
+        </label>
+        <label>Amount
+          <input type="text" id="methioAmount" placeholder="e.g. 1 dose">
+        </label>
+        <label>Notes
+          <textarea id="methioNotes" rows="2" placeholder="Optional notes"></textarea>
+        </label>
+        <button type="submit" class="bigBtn" id="btnMethioSave">Save</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <div class="actionRow">
+        <button type="button" class="bigBtn compact" id="btnFeedback">📧 Feedback</button>
+        <button type="button" class="bigBtn compact secondary" id="btnShare">📤 Share</button>
+      </div>
+      <button type="button" class="linkBtn" id="btnMoreOptions">More options (print, copy)</button>
+      <div class="moreOptions" id="moreOptions" hidden>
+        <button type="button" class="bigBtn secondary fullWidth" id="btnPrint">🖨️ Print Today's Log</button>
+        <button type="button" class="bigBtn secondary fullWidth" id="btnCopy" style="margin-bottom:0;">📋 Copy Summary</button>
+      </div>
+    </div>
+
+    <div class="disclaimer">
+      ⚠️ This tool helps track numbers only. It does not give medical advice. Always follow your doctor's instructions. Methioninase and diet changes should only be done under medical supervision.
+    </div>
+
+  </section>
+
+</main>
+
+<nav class="bottomNav" aria-label="Jump to section">
+  <a href="#paneSearch">🔍<span>Search</span></a>
+  <a href="#paneLog">📋<span>Log</span></a>
+  <a href="#paneMeds">💊<span>Meds</span></a>
+</nav>
+
+<div class="toast" id="toast" hidden></div>
+
+<div class="modalOverlay" id="editOverlay" hidden>
+  <div class="modal" role="dialog" aria-labelledby="editTitle">
+    <h2 id="editTitle">Edit Quick-Add Foods</h2>
+    <p>Set this list to match what's actually approved for daily use.</p>
+    <div class="editFoodList" id="editFoodList"></div>
+    <button type="button" class="linkBtn" id="btnAddFoodRow">+ Add another food</button>
+    <div class="modalActions">
+      <button type="button" class="bigBtn secondary" id="btnCancelEdit">Cancel</button>
+      <button type="button" class="bigBtn" id="btnSaveEdit">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="modalOverlay" id="tutorialOverlay" hidden>
+  <div class="modal tutorialModal" role="dialog" aria-labelledby="tutorialTitle">
+    <div class="tutorialProgress" id="tutorialProgress">Step 1 of 6</div>
+    <div class="tutorialIcon" id="tutorialIcon">🔢</div>
+    <h2 id="tutorialTitle">Your Daily Total</h2>
+    <p id="tutorialText"></p>
+    <div class="tutorialDots" id="tutorialDots"></div>
+    <div class="tutorialNav">
+      <button type="button" class="bigBtn secondary" id="btnTutorialBack">Back</button>
+      <button type="button" class="linkBtn" id="btnTutorialSkip">Skip</button>
+      <button type="button" class="bigBtn" id="btnTutorialNext">Next</button>
+    </div>
+  </div>
+</div>
+
+<script src="../js/usda.js"></script>
+<script src="../js/openfoodfacts.js"></script>
+<script>
+  window.UNIFIED_CONFIG = {
+    storagePrefix: 'unified_',
+    defaultCap: 150,
+    lockCap: false
+  };
+</script>
+<script src="../js/unified.js"></script>
+</body>
+</html>
