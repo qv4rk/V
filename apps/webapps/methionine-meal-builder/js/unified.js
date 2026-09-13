@@ -296,21 +296,38 @@
   // toward today's total. Never lets viewDate go past today — logging
   // the future isn't a thing. ──
   function renderDayBar() {
+    const isToday = viewDate === todayISO();
     const label = document.getElementById('dayLabel');
     if (label) label.textContent = formatDayLabel(viewDate);
     const next = document.getElementById('btnNextDay');
     if (next) next.disabled = viewDate >= todayISO();
+    const picker = document.getElementById('dayPicker');
+    if (picker) { picker.value = viewDate; picker.max = todayISO(); }
     const jump = document.getElementById('btnJumpToday');
-    if (jump) jump.hidden = viewDate === todayISO();
+    if (jump) jump.hidden = isToday;
     const heading = document.getElementById('logHeading');
-    if (heading) heading.textContent = viewDate === todayISO()
+    // "What's Logged" (not "What WAS Logged") deliberately — this stays
+    // an editable catalog for a past day, not a read-only history view,
+    // since patients need to be able to fill in a day they missed.
+    if (heading) heading.textContent = isToday
       ? "What's Been Logged Today"
-      : `What Was Logged — ${formatDayLabel(viewDate)}`;
+      : `What's Logged — ${formatDayLabel(viewDate)}`;
+    const banner = document.getElementById('loggingForBanner');
+    if (banner) banner.hidden = isToday;
+    const bannerDate = document.getElementById('loggingForDate');
+    if (bannerDate) bannerDate.textContent = formatDayLabel(viewDate);
   }
   function goToDay(iso) {
     if (iso > todayISO()) return;
     viewDate = iso;
-    log = logByDay[viewDate] || (logByDay[viewDate] = []);
+    // Deliberately NOT logByDay[viewDate] = log here — just browsing to a
+    // day (e.g. tapping ◀ a few times to find the right one to catalog)
+    // must not plant a permanent empty entry for every day passed
+    // through. addFoodToLog attaches the array via setLog() only when
+    // something is actually added, so an unvisited-but-browsed day never
+    // shows up in the compliance summary as a hollow "0 mg, Not logged"
+    // day.
+    log = logByDay[viewDate] || [];
     lastAction = null; // undo history doesn't carry across days
     renderAll();
     renderDayBar();
@@ -383,7 +400,11 @@
         cys,
         fullNutrients: []
       };
-      log.push(item);
+      // setLog (not log.push) so the very first add to a freshly-browsed
+      // day actually attaches its array into logByDay — until now, log
+      // may just be the disposable [] fallback from goToDay, and pushing
+      // onto it directly would silently lose the item on save.
+      setLog(log.concat(item));
       lastAction = { id: item.id, delta: null, wasNew: true };
     }
     saveLog();
@@ -863,7 +884,13 @@
   // longitudinal report to a dietitian instead of one day at a time. ──
   function allLoggedDates() {
     const methio = loadMethio();
-    return Array.from(new Set([...Object.keys(logByDay), ...Object.keys(methio)])).sort();
+    // Only days with an actual item or methioninase entry count — a day
+    // that was merely browsed through (e.g. tapping ◀ a few times
+    // looking for the right day) must not appear in the compliance
+    // summary as a hollow "0 mg, Not logged" day and drag down the
+    // average.
+    const daysWithFood = Object.keys(logByDay).filter(d => logByDay[d] && logByDay[d].length > 0);
+    return Array.from(new Set([...daysWithFood, ...Object.keys(methio)])).sort();
   }
   function buildComplianceSummaryText() {
     const dates = allLoggedDates();
@@ -958,7 +985,7 @@
       { icon: '🔢', title: 'Your Daily Total', text: `This big number shows how much methionine you've eaten today. Green means safe, yellow means getting close, red means you're over your limit.${capLine}` },
       { icon: '🍽️', title: 'Quick Add', text: 'Tap any food button below to pick a portion, then tap Add.' },
       { icon: '↩️', title: 'Made A Mistake?', text: 'Tap "Undo Last Add" any time to remove the food you just added.' },
-      { icon: '📅', title: 'Other Days', text: 'Use the ◀ / ▶ arrows above your daily total to review or fix a previous day. Food and methioninase are both tracked separately per day, so today\'s total is never mixed with an earlier one.' },
+      { icon: '📅', title: 'Catching Up On A Missed Day', text: 'Life happens — if you didn\'t get to log at the time, use ◀ / ▶ or pick a date to go back and catalog what you actually ate that day. Food and methioninase are tracked separately per day, so a past day is never mixed into today\'s total. A banner reminds you which day you\'re logging for.' },
       { icon: '🔍', title: "Can't Find Your Food?", text: 'Use Search to type it in, say it out loud, or scan a barcode. Each result shows a photo, whether the methionine number is lab-measured or a rough guess, and portion buttons. If a quick-add food matches the wrong item (like a raw entry for something you cooked), a "Not this? Search instead" link lets you fix it before adding.' },
       { icon: '🧪', title: 'Total Sulfur Amino Acids', text: 'Under your methionine total, a second line adds Cystine in as well (Met + Cys). Cystine intake affects how your body processes methionine, so your care team may want that combined number too.' },
       { icon: '💊', title: 'Methioninase', text: 'If you take methioninase, tap Yes or No each day to keep a record of it, with the time, meal, and dose if you want.' },
@@ -1135,6 +1162,10 @@
     document.getElementById('btnPrevDay').addEventListener('click', () => switchDay(-1));
     document.getElementById('btnNextDay').addEventListener('click', () => switchDay(1));
     document.getElementById('btnJumpToday').addEventListener('click', jumpToToday);
+    document.getElementById('btnLoggingForToday').addEventListener('click', jumpToToday);
+    document.getElementById('dayPicker').addEventListener('change', e => {
+      if (e.target.value) goToDay(e.target.value);
+    });
 
     document.getElementById('btnUndo').addEventListener('click', undoLast);
     document.getElementById('btnReadAloud').addEventListener('click', readTotalAloud);

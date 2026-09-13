@@ -22,6 +22,11 @@
   <!-- LEFT / TOP pane: finding and adding food -->
   <section class="pane paneIntake" id="paneSearch">
 
+    <div class="loggingForBanner" id="loggingForBanner" hidden>
+      📅 Catching up on a past day — you're logging for <strong id="loggingForDate"></strong>, not today.
+      <button type="button" class="linkBtn inline" id="btnLoggingForToday">Back to Today</button>
+    </div>
+
     <div class="card">
       <div class="cardHeaderRow">
         <h2>Quick Add</h2>
@@ -53,8 +58,10 @@
       <button type="button" class="dayNavBtn" id="btnPrevDay" aria-label="Previous day">◀</button>
       <span class="dayLabel" id="dayLabel">Today</span>
       <button type="button" class="dayNavBtn" id="btnNextDay" aria-label="Next day">▶</button>
+      <input type="date" class="dayPicker" id="dayPicker" aria-label="Jump to a specific day to catalog or review">
       <button type="button" class="linkBtn inline" id="btnJumpToday" hidden>Jump to Today</button>
     </div>
+    <p class="dayBarHint">Behind on logging? Use ◀ or pick a date to catalog an earlier day — it's saved separately from today.</p>
 
     <div class="totalCard">
       <div class="statusPill safe" id="statusPill">SAFE</div>
