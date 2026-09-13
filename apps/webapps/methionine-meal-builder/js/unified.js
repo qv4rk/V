@@ -144,6 +144,13 @@
     return match ? match[1] : '🍽️';
   }
   const CARD_PHOTOS = [
+    // Must come before the generic /broccoli/i entry below: broccoli
+    // raab is a different (bitter, leafy) vegetable, not a crown of
+    // broccoli, and showing the crown-broccoli stock photo on a raab
+    // card visually confirms a mismatch a patient has no way to catch.
+    // null here means "no dedicated photo" — falls through to the
+    // generic icon+text placeholder instead of a misleading real photo.
+    [/raab/i, null],
     [/sweet potato/i, FOOD_IMG + 'sweet_potato.png'],
     [/ground beef/i, FOOD_IMG + 'ground_beef.png'],
     [/black bean/i, FOOD_IMG + 'black_beans.png'],
@@ -483,15 +490,41 @@
   // before falling back to data-type quality. Ranking by data type alone
   // could silently swap "White rice, cooked" for a raw entry just
   // because it happened to be the top Foundation-tier hit for the same
-  // search text — this is what actually prevents that, not a badge. ──
+  // search text — this is what actually prevents that, not a badge.
+  //
+  // Plain word-overlap alone isn't enough, though: "apple" vs USDA's
+  // "Apples, raw, without skin" scores zero on an exact string match
+  // (singular vs plural), while "Apple, candied" — a different food —
+  // matches exactly and wins outright. And "Broccoli raab, cooked" ties
+  // plain "Broccoli, cooked, boiled, drained" on overlap alone, since
+  // overlap never penalizes an extra qualifier the query didn't ask for.
+  // A crude trailing-"s" normalization plus an explicit penalty for
+  // known "this is actually a different food" qualifiers fixes both
+  // without a real stemmer. ──
   const STOPWORDS = new Set(['and', 'the', 'with', 'in', 'of', 'or']);
+  const OFF_TARGET_WORDS = [
+    'raab', 'candied', 'juice', 'jam', 'jelly', 'syrup', 'pickled',
+    'dried', 'cider', 'sauce', 'puree', 'smoothie', 'chips', 'pie', 'cake'
+  ];
+  function normalizeWord(w) {
+    return w.length > 3 && w.endsWith('s') ? w.slice(0, -1) : w;
+  }
   function significantWords(text) {
     return (text || '').toLowerCase().replace(/[(),]/g, ' ').split(/\s+/)
-      .filter(w => w.length > 2 && !STOPWORDS.has(w));
+      .filter(w => w.length > 2 && !STOPWORDS.has(w))
+      .map(normalizeWord);
   }
   function matchScore(queryWords, description) {
     const descWords = new Set(significantWords(description));
     return queryWords.reduce((hits, w) => hits + (descWords.has(w) ? 1 : 0), 0);
+  }
+  // Penalize (rather than exclude) an off-target qualifier so it can
+  // still show up in manual search results, just not win the auto-pick
+  // — unless the patient actually typed that word themselves.
+  function offTargetPenalty(queryWords, description) {
+    const d = (description || '').toLowerCase();
+    return OFF_TARGET_WORDS.reduce((penalty, w) =>
+      penalty + (d.includes(w) && !queryWords.includes(normalizeWord(w)) ? 5 : 0), 0);
   }
   function dataTypeRank(dataType) {
     if (dataType === 'Foundation') return 0;
@@ -502,7 +535,11 @@
   function rankFoodResults(query, results) {
     const queryWords = significantWords(query);
     return results
-      .map(f => ({ f, score: matchScore(queryWords, f.description), dt: dataTypeRank(f.dataType) }))
+      .map(f => ({
+        f,
+        score: matchScore(queryWords, f.description) - offTargetPenalty(queryWords, f.description),
+        dt: dataTypeRank(f.dataType)
+      }))
       .sort((a, b) => (b.score - a.score) || (a.dt - b.dt))
       .map(x => x.f);
   }
