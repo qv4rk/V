@@ -143,6 +143,34 @@ body {
 }
 .iconEditBtn:hover { border-color: var(--accent); }
 
+/* Day switcher — browse a previous day without mixing it into today's
+   total. Sits above the total card so it's clear which day everything
+   below (total, log, methioninase) belongs to. */
+.dayBar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.7rem;
+  margin-bottom: 0.8rem;
+  flex-wrap: wrap;
+}
+.dayNavBtn {
+  min-height: 40px;
+  min-width: 40px;
+  padding: 6px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--edge);
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.dayNavBtn:hover { border-color: var(--accent); }
+.dayNavBtn:disabled { opacity: 0.4; cursor: default; }
+.dayLabel { font-size: 1.05rem; font-weight: 800; color: var(--ink); min-width: 90px; text-align: center; }
+.linkBtn.inline { display: inline; width: auto; padding: 0 0 0 4px; font-size: 0.88rem; }
+
 /* Big total */
 .totalCard {
   background: var(--panel);
@@ -177,7 +205,11 @@ body {
 .bigBarFill.caution { background: var(--caution); }
 .bigBarFill.over { background: var(--over); }
 
-.bigSubline { font-size: 1rem; color: var(--ink-dim); margin-bottom: 1rem; }
+.bigSubline { font-size: 1rem; color: var(--ink-dim); margin-bottom: 0.4rem; }
+.macroLine { font-size: 0.92rem; color: var(--ink-dim); margin-bottom: 0.4rem; }
+.macroLine[hidden] { display: none; }
+.sulfurLine { font-size: 0.92rem; color: var(--ink-dim); font-weight: 700; margin-bottom: 1rem; }
+.sulfurLine[hidden] { display: none; }
 .editCapLink { font-size: 0.95rem; color: var(--accent); background: none; border: none; text-decoration: underline; cursor: pointer; padding: 4px; font-family: inherit; }
 .capLockedNote { font-size: 0.95rem; color: var(--ink-dim); font-weight: 700; }
 .capEditForm { display: flex; gap: 0.6rem; align-items: center; justify-content: center; flex-wrap: wrap; }
@@ -425,6 +457,17 @@ body {
 }
 .chipAddBtn { border-radius: 10px; }
 
+/* Shown after a quick-add name resolves to a specific USDA record, so a
+   wrong match (raw instead of cooked, etc.) is visible and fixable
+   before it's ever added. */
+.quickMatchNote {
+  font-size: 0.85rem;
+  color: var(--ink-dim);
+  padding: 0.5rem 0.9rem 0;
+}
+.quickTile .quickMatchNote { padding: 0.5rem 0 0; }
+.quickMatchNote strong { color: var(--ink); }
+
 /* Methioninase */
 .methioStatus { font-size: 1.02rem; font-weight: 700; margin-bottom: 0.9rem; padding: 10px 14px; border-radius: 10px; background: var(--bg-soft); }
 .methioStatus.logged-yes { background: var(--safe-bg); color: var(--safe); }
@@ -435,7 +478,7 @@ body {
 .methioDetails { margin-top: 1rem; display: flex; flex-direction: column; gap: 0.7rem; }
 .methioDetails[hidden] { display: none; }
 .methioDetails label { font-size: 0.92rem; font-weight: 700; display: flex; flex-direction: column; gap: 0.3rem; }
-.methioDetails input, .methioDetails textarea {
+.methioDetails input, .methioDetails select, .methioDetails textarea {
   font-size: 1rem;
   padding: 10px 12px;
   border-radius: 10px;
@@ -562,7 +605,12 @@ body {
 .tutorialNav .linkBtn { flex: none; margin-top: 0; width: auto; padding: 8px 6px; }
 
 @media print {
-  .topBar, .totalActions, .bottomNav, .card:has(#searchForm), .card:has(#btnMethioYes), .card:has(#btnPrint), .disclaimer { display: none !important; }
+  /* The Methioninase card itself stays — its status line is exactly what
+     a clinician needs on the printed page — only its interactive Yes/No
+     and edit controls disappear. Previously the whole card was hidden,
+     so methioninase adherence never actually reached a printed log. */
+  .topBar, .totalActions, .bottomNav, .dayBar, .card:has(#searchForm), .card:has(#btnPrint), .disclaimer,
+  #methioButtons, #btnMethioEdit { display: none !important; }
   body { background: white; }
   .card, .totalCard { border: 1px solid #999; box-shadow: none; }
   .layout { display: block; }

@@ -21,6 +21,13 @@
     'Sweet potato, baked', 'Applesauce', 'Grapes', 'Carrots, cooked'
   ];
 
+  // Log storage is date-partitioned ({ '2026-09-13': [items...] }), same
+  // shape as METHIO_KEY, so a patient can review or correct a past day
+  // without it bleeding into today's total. `log` is always a live
+  // reference to logByDay[viewDate] — setLog() keeps that in sync on any
+  // reassignment (filter/pop return a new array).
+  let logByDay = {};
+  let viewDate = null; // set in loadState(); an ISO date, never in the future
   let log = [];
   let dailyCap = CONFIG.defaultCap || 150;
   let quickAddFoods = DEFAULT_QUICKADD.slice();
@@ -31,9 +38,42 @@
   function todayISO() {
     return new Date().toISOString().slice(0, 10);
   }
+  function addDaysISO(iso, delta) {
+    const d = new Date(iso + 'T00:00:00');
+    d.setDate(d.getDate() + delta);
+    return d.toISOString().slice(0, 10);
+  }
+  function dayPhrase() {
+    if (viewDate === todayISO()) return 'today';
+    if (viewDate === addDaysISO(todayISO(), -1)) return 'yesterday';
+    return `on ${formatDayLabel(viewDate)}`;
+  }
+  function formatDayLabel(iso) {
+    const today = todayISO();
+    if (iso === today) return 'Today';
+    if (iso === addDaysISO(today, -1)) return 'Yesterday';
+    const d = new Date(iso + 'T00:00:00');
+    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: d.getFullYear() === new Date().getFullYear() ? undefined : 'numeric' });
+  }
+  function setLog(newArr) {
+    log = newArr;
+    logByDay[viewDate] = newArr;
+  }
 
   function loadState() {
-    try { log = JSON.parse(localStorage.getItem(LOG_KEY) || '[]'); } catch (e) { log = []; }
+    viewDate = todayISO();
+    try {
+      const raw = JSON.parse(localStorage.getItem(LOG_KEY) || 'null');
+      if (Array.isArray(raw)) {
+        // Pre-multi-day format: one flat array with no date attached.
+        // Migrate it onto today rather than discarding it.
+        logByDay = raw.length ? { [viewDate]: raw } : {};
+      } else {
+        logByDay = raw && typeof raw === 'object' ? raw : {};
+      }
+    } catch (e) { logByDay = {}; }
+    log = logByDay[viewDate] || (logByDay[viewDate] = []);
+
     const cap = parseFloat(localStorage.getItem(CAP_KEY));
     if (!isNaN(cap) && cap > 0) dailyCap = cap;
     try {
@@ -43,7 +83,7 @@
     try { quickAddCache = JSON.parse(localStorage.getItem(QUICKADD_CACHE_KEY) || '{}'); } catch (e) { quickAddCache = {}; }
   }
   function saveLog() {
-    try { localStorage.setItem(LOG_KEY, JSON.stringify(log)); } catch (e) {}
+    try { localStorage.setItem(LOG_KEY, JSON.stringify(logByDay)); } catch (e) {}
   }
   function saveCap() {
     try { localStorage.setItem(CAP_KEY, String(dailyCap)); } catch (e) {}
@@ -104,6 +144,13 @@
     return match ? match[1] : '🍽️';
   }
   const CARD_PHOTOS = [
+    // Must come before the generic /broccoli/i entry below: broccoli
+    // raab is a different (bitter, leafy) vegetable, not a crown of
+    // broccoli, and showing the crown-broccoli stock photo on a raab
+    // card visually confirms a mismatch a patient has no way to catch.
+    // null here means "no dedicated photo" — falls through to the
+    // generic icon+text placeholder instead of a misleading real photo.
+    [/raab/i, null],
     [/sweet potato/i, FOOD_IMG + 'sweet_potato.png'],
     [/ground beef/i, FOOD_IMG + 'ground_beef.png'],
     [/black bean/i, FOOD_IMG + 'black_beans.png'],
@@ -160,6 +207,18 @@
   function totalMet() {
     return log.reduce((sum, i) => sum + (i.met || 0), 0);
   }
+  function totalField(field) {
+    return log.reduce((sum, i) => sum + (i[field] || 0), 0);
+  }
+  // Cystine has no estimate heuristic (unlike methionine) — only real
+  // USDA measurements count, so this total is honestly incomplete
+  // whenever hasAnyCysMissing() is true, rather than silently guessing.
+  function totalCys() {
+    return log.reduce((sum, i) => sum + (i.cys || 0), 0);
+  }
+  function hasAnyCysMissing() {
+    return log.some(i => (i.cys === null || i.cys === undefined));
+  }
 
   // Rough guesses stay IN the total rather than being silently excluded
   // — leaving out an unknown number would make the total look lower
@@ -201,12 +260,67 @@
     fill.className = 'bigBarFill' + (status !== 'safe' ? ' ' + status : '');
 
     document.getElementById('bigSubline').textContent =
-      `${fmt(total)} mg used today · ${fmt(remaining)} mg still safe to eat`;
+      `${fmt(total)} mg used ${dayPhrase()} · ${fmt(remaining)} mg still safe to eat`;
+
+    const macroLine = document.getElementById('macroLine');
+    if (macroLine) {
+      if (log.length) {
+        macroLine.hidden = false;
+        macroLine.textContent =
+          `${fmt(totalField('cal'))} kcal · ${fmt(totalField('protein'))} g protein · ` +
+          `${fmt(totalField('fat'))} g fat · ${fmt(totalField('carbs'))} g carbs`;
+      } else {
+        macroLine.hidden = true;
+      }
+    }
+
+    const sulfurLine = document.getElementById('sulfurLine');
+    if (sulfurLine) {
+      if (log.length) {
+        sulfurLine.hidden = false;
+        const sulfurTotal = total + totalCys();
+        sulfurLine.textContent = `Total sulfur amino acids (Met + Cys): ${fmt(sulfurTotal)} mg` +
+          (hasAnyCysMissing() ? ' — incomplete, cystine not measured for every item' : '');
+      } else {
+        sulfurLine.hidden = true;
+      }
+    }
 
     const warn = document.getElementById('estimateWarning');
     if (warn) warn.hidden = !hasEstimatedContribution();
 
     document.getElementById('btnUndo').disabled = log.length === 0;
+  }
+
+  // ── Day switcher: browse/correct a previous day without it counting
+  // toward today's total. Never lets viewDate go past today — logging
+  // the future isn't a thing. ──
+  function renderDayBar() {
+    const label = document.getElementById('dayLabel');
+    if (label) label.textContent = formatDayLabel(viewDate);
+    const next = document.getElementById('btnNextDay');
+    if (next) next.disabled = viewDate >= todayISO();
+    const jump = document.getElementById('btnJumpToday');
+    if (jump) jump.hidden = viewDate === todayISO();
+    const heading = document.getElementById('logHeading');
+    if (heading) heading.textContent = viewDate === todayISO()
+      ? "What's Been Logged Today"
+      : `What Was Logged — ${formatDayLabel(viewDate)}`;
+  }
+  function goToDay(iso) {
+    if (iso > todayISO()) return;
+    viewDate = iso;
+    log = logByDay[viewDate] || (logByDay[viewDate] = []);
+    lastAction = null; // undo history doesn't carry across days
+    renderAll();
+    renderDayBar();
+    renderMethio();
+  }
+  function switchDay(deltaDays) {
+    goToDay(addDaysISO(viewDate, deltaDays));
+  }
+  function jumpToToday() {
+    goToDay(todayISO());
   }
 
   // ── Toast ──
@@ -228,6 +342,11 @@
     const metEstimated = !hasMet;
     const metPer100 = hasMet ? n.methionine : estimateMethionine(n.protein, food.description);
     const met = metPer100 !== null ? metPer100 * scale : null;
+    // No estimate heuristic for cystine (nutrient 505) — only a real USDA
+    // measurement counts, so this stays null (excluded, not guessed) far
+    // more often than methionine does.
+    const hasCys = n.cystine !== null && n.cystine !== undefined;
+    const cys = hasCys ? n.cystine * scale : null;
     const before = totalMet();
 
     const delta = {
@@ -236,7 +355,8 @@
       protein: n.protein !== null ? n.protein * scale : 0,
       fat: n.fat !== null ? n.fat * scale : 0,
       carbs: n.carbs !== null ? n.carbs * scale : 0,
-      met: met !== null ? met : 0
+      met: met !== null ? met : 0,
+      cys: cys !== null ? cys : 0
     };
 
     const existing = log.find(i => i.name === food.description && i.metEstimated === metEstimated);
@@ -247,6 +367,7 @@
       existing.fat = (existing.fat || 0) + delta.fat;
       existing.carbs = (existing.carbs || 0) + delta.carbs;
       existing.met = (existing.met === null && met === null) ? null : (existing.met || 0) + delta.met;
+      existing.cys = (existing.cys === null && cys === null) ? null : (existing.cys || 0) + delta.cys;
       lastAction = { id: existing.id, delta, wasNew: false };
     } else {
       const item = {
@@ -259,6 +380,7 @@
         carbs: n.carbs !== null ? n.carbs * scale : null,
         met,
         metEstimated,
+        cys,
         fullNutrients: []
       };
       log.push(item);
@@ -275,7 +397,9 @@
   function undoLast() {
     if (!log.length) return;
     if (!lastAction) {
-      const removed = log.pop();
+      const arr = log.slice();
+      const removed = arr.pop();
+      setLog(arr);
       saveLog();
       renderAll();
       if (removed) showToast(`Removed ${removed.name}.`, null);
@@ -287,7 +411,7 @@
     if (!item) { renderAll(); return; }
     const name = item.name;
     if (wasNew) {
-      log = log.filter(i => i.id !== id);
+      setLog(log.filter(i => i.id !== id));
     } else {
       item.grams -= delta.grams;
       item.cal -= delta.cal;
@@ -295,7 +419,8 @@
       item.fat -= delta.fat;
       item.carbs -= delta.carbs;
       if (item.met !== null) item.met -= delta.met;
-      if (item.grams <= 0) log = log.filter(i => i.id !== id);
+      if (item.cys !== null) item.cys -= delta.cys;
+      if (item.grams <= 0) setLog(log.filter(i => i.id !== id));
     }
     saveLog();
     renderAll();
@@ -303,7 +428,7 @@
   }
 
   function removeItem(id) {
-    log = log.filter(i => i.id !== id);
+    setLog(log.filter(i => i.id !== id));
     if (lastAction && lastAction.id === id) lastAction = null;
     saveLog();
     renderAll();
@@ -360,6 +485,65 @@
     return wrap;
   }
 
+  // ── Result ranking: prefer a record whose description actually backs
+  // up the query's words (esp. a prep state like "cooked"/"raw"/"baked")
+  // before falling back to data-type quality. Ranking by data type alone
+  // could silently swap "White rice, cooked" for a raw entry just
+  // because it happened to be the top Foundation-tier hit for the same
+  // search text — this is what actually prevents that, not a badge.
+  //
+  // Plain word-overlap alone isn't enough, though: "apple" vs USDA's
+  // "Apples, raw, without skin" scores zero on an exact string match
+  // (singular vs plural), while "Apple, candied" — a different food —
+  // matches exactly and wins outright. And "Broccoli raab, cooked" ties
+  // plain "Broccoli, cooked, boiled, drained" on overlap alone, since
+  // overlap never penalizes an extra qualifier the query didn't ask for.
+  // A crude trailing-"s" normalization plus an explicit penalty for
+  // known "this is actually a different food" qualifiers fixes both
+  // without a real stemmer. ──
+  const STOPWORDS = new Set(['and', 'the', 'with', 'in', 'of', 'or']);
+  const OFF_TARGET_WORDS = [
+    'raab', 'candied', 'juice', 'jam', 'jelly', 'syrup', 'pickled',
+    'dried', 'cider', 'sauce', 'puree', 'smoothie', 'chips', 'pie', 'cake'
+  ];
+  function normalizeWord(w) {
+    return w.length > 3 && w.endsWith('s') ? w.slice(0, -1) : w;
+  }
+  function significantWords(text) {
+    return (text || '').toLowerCase().replace(/[(),]/g, ' ').split(/\s+/)
+      .filter(w => w.length > 2 && !STOPWORDS.has(w))
+      .map(normalizeWord);
+  }
+  function matchScore(queryWords, description) {
+    const descWords = new Set(significantWords(description));
+    return queryWords.reduce((hits, w) => hits + (descWords.has(w) ? 1 : 0), 0);
+  }
+  // Penalize (rather than exclude) an off-target qualifier so it can
+  // still show up in manual search results, just not win the auto-pick
+  // — unless the patient actually typed that word themselves.
+  function offTargetPenalty(queryWords, description) {
+    const d = (description || '').toLowerCase();
+    return OFF_TARGET_WORDS.reduce((penalty, w) =>
+      penalty + (d.includes(w) && !queryWords.includes(normalizeWord(w)) ? 5 : 0), 0);
+  }
+  function dataTypeRank(dataType) {
+    if (dataType === 'Foundation') return 0;
+    if (dataType === 'SR Legacy') return 1;
+    if (dataType === 'Survey (FNDDS)') return 2;
+    return 3;
+  }
+  function rankFoodResults(query, results) {
+    const queryWords = significantWords(query);
+    return results
+      .map(f => ({
+        f,
+        score: matchScore(queryWords, f.description) - offTargetPenalty(queryWords, f.description),
+        dt: dataTypeRank(f.dataType)
+      }))
+      .sort((a, b) => (b.score - a.score) || (a.dt - b.dt))
+      .map(x => x.f);
+  }
+
   // ── Quick add: resolve a plain food name to a real USDA record once,
   // then cache it so repeat taps don't need the network. ──
   async function resolveFood(name) {
@@ -367,17 +551,30 @@
     if (quickAddCache[key]) return quickAddCache[key];
     const results = await window.USDA.searchFoods(name, 10);
     if (!results.length) return null;
-    const rank = f => {
-      if (f.dataType === 'Foundation') return 0;
-      if (f.dataType === 'SR Legacy') return 1;
-      if (f.dataType === 'Survey (FNDDS)') return 2;
-      return 3;
-    };
-    results.sort((a, b) => rank(a) - rank(b));
-    const best = results[0];
+    const best = rankFoodResults(name, results)[0];
     quickAddCache[key] = best;
     saveQuickAddCache();
     return best;
+  }
+
+  // Shown after a quick-add name resolves, so a mismatch (e.g. "White
+  // rice, cooked" silently resolving to a raw entry) is visible and
+  // fixable before it's ever added, not discovered later from a wrong
+  // number. Never commits anything by itself.
+  function buildMatchNote(originalName, food, onSearchInstead) {
+    const note = document.createElement('div');
+    note.className = 'quickMatchNote';
+    note.appendChild(document.createTextNode('Matched: '));
+    const strong = document.createElement('strong');
+    strong.textContent = food.description;
+    note.appendChild(strong);
+    const notThis = document.createElement('button');
+    notThis.type = 'button';
+    notThis.className = 'linkBtn inline';
+    notThis.textContent = 'Not this? Search instead';
+    notThis.addEventListener('click', onSearchInstead);
+    note.appendChild(notThis);
+    return note;
   }
 
   function renderQuickAdd() {
@@ -395,7 +592,12 @@
 
       btn.addEventListener('click', async () => {
         const existingPicker = tile.querySelector('.portionChips');
-        if (existingPicker) { existingPicker.remove(); return; }
+        if (existingPicker) {
+          existingPicker.remove();
+          const existingNote = tile.querySelector('.quickMatchNote');
+          if (existingNote) existingNote.remove();
+          return;
+        }
 
         if (!resolvedFood) {
           btn.disabled = true;
@@ -412,10 +614,20 @@
           showToast(`Couldn't find "${name}" — try Search instead.`, 'over');
           return;
         }
-        tile.appendChild(buildPortionPicker(resolvedFood, () => {
+        const cleanup = () => {
           const picker = tile.querySelector('.portionChips');
           if (picker) picker.remove();
+          const note = tile.querySelector('.quickMatchNote');
+          if (note) note.remove();
+        };
+        tile.appendChild(buildMatchNote(name, resolvedFood, () => {
+          cleanup();
+          const input = document.getElementById('searchInput');
+          input.value = name;
+          runSearch();
+          input.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }));
+        tile.appendChild(buildPortionPicker(resolvedFood, cleanup));
       });
 
       tile.appendChild(btn);
@@ -495,7 +707,11 @@
           } catch (e) {}
         }
       } else {
-        results = await window.USDA.searchFoods(raw, 8);
+        // Fetch a few extra past the 8 we show, then rerank by how well
+        // each description actually matches the typed words (not just
+        // USDA's own relevance order) before trimming — otherwise a
+        // "cooked" search could show a raw entry above the cooked one.
+        results = rankFoodResults(raw, await window.USDA.searchFoods(raw, 12));
       }
 
       if (!results.length) {
@@ -511,22 +727,25 @@
     }
   }
 
-  // ── Today's item list ──
+  // ── Selected day's item list ──
   function renderItemList() {
     const container = document.getElementById('itemList');
     container.innerHTML = '';
     if (!log.length) {
-      container.innerHTML = '<div class="emptyNote">Nothing logged yet today.</div>';
+      container.innerHTML = `<div class="emptyNote">Nothing logged ${dayPhrase()}.</div>`;
       return;
     }
     log.forEach(item => {
       const row = document.createElement('div');
       row.className = 'itemRow';
       const metText = item.met === null ? '?' : (item.metEstimated ? '<span class="metEstimated">⚠️ ~' + fmt(item.met) + '</span>' : fmt(item.met));
+      const macroBits = [];
+      if (item.cal !== null && item.cal !== undefined) macroBits.push(fmt(item.cal) + ' kcal');
+      if (item.protein !== null && item.protein !== undefined) macroBits.push(fmt(item.protein) + 'g protein');
       row.innerHTML = `
         <span>
           <span class="iName">${item.name}</span><br>
-          <span class="iMeta">${item.grams != null ? fmt(item.grams) + ' g · ' : ''}${metText} mg methionine</span>
+          <span class="iMeta">${item.grams != null ? fmt(item.grams) + ' g · ' : ''}${metText} mg methionine${macroBits.length ? ' · ' + macroBits.join(' · ') : ''}</span>
         </span>
         <button type="button" class="rmBtn" title="Remove">×</button>
       `;
@@ -535,10 +754,10 @@
     });
   }
 
-  // ── Methioninase ──
+  // ── Methioninase (tracked per viewDate, same as the food log) ──
   function renderMethio() {
     const all = loadMethio();
-    const entry = all[todayISO()];
+    const entry = all[viewDate];
     const statusEl = document.getElementById('methioStatus');
     const buttonsRow = document.getElementById('methioButtons');
     const editLink = document.getElementById('btnMethioEdit');
@@ -551,24 +770,26 @@
       statusEl.hidden = false;
       buttonsRow.hidden = true;
       editLink.hidden = false;
+      const mealNote = entry.meal ? ` (${entry.meal})` : '';
       if (entry.took) {
-        statusEl.textContent = '✅ Took methioninase today' + (entry.time ? ` at ${entry.time}` : '');
+        statusEl.textContent = `✅ Took methioninase ${dayPhrase()}` + (entry.time ? ` at ${entry.time}` : '') + mealNote;
         statusEl.className = 'methioStatus logged-yes';
       } else {
-        statusEl.textContent = '❌ Not taken today';
+        statusEl.textContent = `❌ Not taken ${dayPhrase()}`;
         statusEl.className = 'methioStatus logged-no';
       }
     }
     document.getElementById('methioTime').value = entry ? (entry.time || '') : '';
     document.getElementById('methioAmount').value = entry ? (entry.amount || '') : '';
+    document.getElementById('methioMeal').value = entry ? (entry.meal || '') : '';
     document.getElementById('methioNotes').value = entry ? (entry.notes || '') : '';
     document.getElementById('methioDetails').hidden = true;
   }
 
   function setMethio(took) {
     const all = loadMethio();
-    const existing = all[todayISO()] || {};
-    all[todayISO()] = Object.assign({}, existing, { took, loggedAt: Date.now() });
+    const existing = all[viewDate] || {};
+    all[viewDate] = Object.assign({}, existing, { took, loggedAt: Date.now() });
     saveMethio(all);
     renderMethio();
     if (took) document.getElementById('methioDetails').hidden = false;
@@ -577,10 +798,11 @@
   function saveMethioDetails(e) {
     if (e) e.preventDefault();
     const all = loadMethio();
-    const existing = all[todayISO()] || { took: true };
-    all[todayISO()] = Object.assign({}, existing, {
+    const existing = all[viewDate] || { took: true };
+    all[viewDate] = Object.assign({}, existing, {
       time: document.getElementById('methioTime').value.trim(),
       amount: document.getElementById('methioAmount').value.trim(),
+      meal: document.getElementById('methioMeal').value,
       notes: document.getElementById('methioNotes').value.trim(),
       loggedAt: Date.now()
     });
@@ -595,33 +817,87 @@
     const total = totalMet();
     const status = statusFor(total);
     const remaining = Math.max(0, dailyCap - total);
-    const text = `${fmt(total)} milligrams used today, out of ${fmt(dailyCap)}. ${fmt(remaining)} milligrams still safe to eat. Status: ${statusLabel(status)}.`;
+    const text = `${fmt(total)} milligrams used ${dayPhrase()}, out of ${fmt(dailyCap)}. ${fmt(remaining)} milligrams still safe to eat. Status: ${statusLabel(status)}.`;
     const utter = new SpeechSynthesisUtterance(text);
     utter.rate = 0.9;
     window.speechSynthesis.cancel();
     window.speechSynthesis.speak(utter);
   }
 
-  // ── Share ──
+  // ── Share ── One day's full nutrition, not just methionine — a
+  // dietitian assessing cachexia/caloric-adequacy risk needs calories and
+  // protein just as much as the methionine number, and both were already
+  // being computed and stored per item without ever reaching this export.
   function buildSummaryText() {
     const total = totalMet();
+    const sulfurTotal = total + totalCys();
     const lines = [];
-    lines.push(`Methionine log — ${todayISO()}`);
-    lines.push(`Total: ${fmt(total)} / ${fmt(dailyCap)} mg (${statusLabel(statusFor(total))})`);
+    lines.push(`Methionine log — ${viewDate}${viewDate === todayISO() ? ' (Today)' : ''}`);
+    lines.push(`Methionine: ${fmt(total)} / ${fmt(dailyCap)} mg (${statusLabel(statusFor(total))})`);
+    lines.push(`Total sulfur amino acids (Met + Cys): ${fmt(sulfurTotal)} mg` + (hasAnyCysMissing() ? ' (incomplete — cystine not measured for every item)' : ''));
+    lines.push(`Calories: ${fmt(totalField('cal'))} kcal · Protein: ${fmt(totalField('protein'))} g · Fat: ${fmt(totalField('fat'))} g · Carbs: ${fmt(totalField('carbs'))} g`);
     lines.push('');
     if (log.length) {
       log.forEach(item => {
         const metText = item.met === null ? '?' : (item.metEstimated ? '~' + fmt(item.met) + ' (unverified guess, not measured)' : fmt(item.met));
-        lines.push(`- ${item.name} (${item.grams != null ? fmt(item.grams) + 'g' : 'n/a'}): ${metText} mg`);
+        const macroBits = [];
+        if (item.cal !== null && item.cal !== undefined) macroBits.push(fmt(item.cal) + ' kcal');
+        if (item.protein !== null && item.protein !== undefined) macroBits.push(fmt(item.protein) + 'g protein');
+        lines.push(`- ${item.name} (${item.grams != null ? fmt(item.grams) + 'g' : 'n/a'}): ${metText} mg methionine${macroBits.length ? ', ' + macroBits.join(', ') : ''}`);
       });
     } else {
       lines.push('(nothing logged)');
     }
     const all = loadMethio();
-    const entry = all[todayISO()];
+    const entry = all[viewDate];
     lines.push('');
-    lines.push('Methioninase: ' + (entry ? (entry.took ? 'Yes' + (entry.time ? ` at ${entry.time}` : '') : 'No') : 'Not logged'));
+    lines.push('Methioninase: ' + (entry
+      ? (entry.took ? 'Yes' + (entry.time ? ` at ${entry.time}` : '') + (entry.meal ? ` (${entry.meal})` : '') + (entry.amount ? ` — ${entry.amount}` : '') : 'No')
+      : 'Not logged'));
     if (entry && entry.notes) lines.push('Notes: ' + entry.notes);
+    return lines.join('\n');
+  }
+
+  // ── Multi-day clinical compliance summary: every day that has either
+  // food or methioninase logged, so a patient can actually hand a
+  // longitudinal report to a dietitian instead of one day at a time. ──
+  function allLoggedDates() {
+    const methio = loadMethio();
+    return Array.from(new Set([...Object.keys(logByDay), ...Object.keys(methio)])).sort();
+  }
+  function buildComplianceSummaryText() {
+    const dates = allLoggedDates();
+    const methio = loadMethio();
+    const lines = [];
+    lines.push('CLINICAL COMPLIANCE SUMMARY — Methionine Restriction Log');
+    lines.push(`Generated ${new Date().toLocaleString()}`);
+    lines.push(`Daily methionine ceiling: ${fmt(dailyCap)} mg`);
+    lines.push('');
+    if (!dates.length) {
+      lines.push('(no days logged yet)');
+      return lines.join('\n');
+    }
+    lines.push('Date         Methionine    Status               Calories    Protein   Methioninase');
+    let sumMet = 0, withinLimitDays = 0, tookDays = 0;
+    dates.forEach(d => {
+      const items = logByDay[d] || [];
+      const met = items.reduce((s, i) => s + (i.met || 0), 0);
+      const cal = items.reduce((s, i) => s + (i.cal || 0), 0);
+      const protein = items.reduce((s, i) => s + (i.protein || 0), 0);
+      const status = statusFor(met);
+      const entry = methio[d];
+      sumMet += met;
+      if (status !== 'over') withinLimitDays++;
+      if (entry && entry.took) tookDays++;
+      const methioCell = entry ? (entry.took ? 'Yes' + (entry.time ? ` @${entry.time}` : '') : 'No') : 'Not logged';
+      lines.push(
+        `${d}   ${(fmt(met) + ' mg').padStart(10)}   ${statusLabel(status).padEnd(20)} ${(fmt(cal) + ' kcal').padStart(10)}  ${(fmt(protein) + 'g').padStart(7)}   ${methioCell}`
+      );
+    });
+    lines.push('');
+    lines.push(`Average methionine: ${fmt(sumMet / dates.length)} mg/day across ${dates.length} day(s) logged`);
+    lines.push(`Days within limit: ${withinLimitDays} / ${dates.length}`);
+    lines.push(`Methioninase taken: ${tookDays} / ${dates.length} day(s) logged`);
     return lines.join('\n');
   }
 
@@ -635,11 +911,21 @@
     }
   }
 
+  async function copyComplianceSummary() {
+    const text = buildComplianceSummaryText();
+    try {
+      await navigator.clipboard.writeText(text);
+      showToast('Compliance summary copied.', null);
+    } catch (e) {
+      alert(text);
+    }
+  }
+
   async function shareSummary() {
     const text = buildSummaryText();
     if (navigator.share) {
       try {
-        await navigator.share({ title: 'Methionine Log — ' + todayISO(), text });
+        await navigator.share({ title: 'Methionine Log — ' + viewDate, text });
         return;
       } catch (e) {
         if (e && e.name === 'AbortError') return; // user closed the share sheet
@@ -672,9 +958,11 @@
       { icon: '🔢', title: 'Your Daily Total', text: `This big number shows how much methionine you've eaten today. Green means safe, yellow means getting close, red means you're over your limit.${capLine}` },
       { icon: '🍽️', title: 'Quick Add', text: 'Tap any food button below to pick a portion, then tap Add.' },
       { icon: '↩️', title: 'Made A Mistake?', text: 'Tap "Undo Last Add" any time to remove the food you just added.' },
-      { icon: '🔍', title: "Can't Find Your Food?", text: 'Use Search to type it in, say it out loud, or scan a barcode. Each result shows a photo, whether the methionine number is lab-measured or a rough guess, and portion buttons.' },
-      { icon: '💊', title: 'Methioninase', text: 'If you take methioninase, tap Yes or No each day to keep a record of it.' },
-      { icon: '📤', title: 'Sharing Your Log', text: 'Use Send Feedback, Share, or Print any time to send today\'s log to your care team.' }
+      { icon: '📅', title: 'Other Days', text: 'Use the ◀ / ▶ arrows above your daily total to review or fix a previous day. Food and methioninase are both tracked separately per day, so today\'s total is never mixed with an earlier one.' },
+      { icon: '🔍', title: "Can't Find Your Food?", text: 'Use Search to type it in, say it out loud, or scan a barcode. Each result shows a photo, whether the methionine number is lab-measured or a rough guess, and portion buttons. If a quick-add food matches the wrong item (like a raw entry for something you cooked), a "Not this? Search instead" link lets you fix it before adding.' },
+      { icon: '🧪', title: 'Total Sulfur Amino Acids', text: 'Under your methionine total, a second line adds Cystine in as well (Met + Cys). Cystine intake affects how your body processes methionine, so your care team may want that combined number too.' },
+      { icon: '💊', title: 'Methioninase', text: 'If you take methioninase, tap Yes or No each day to keep a record of it, with the time, meal, and dose if you want.' },
+      { icon: '📤', title: 'Sharing Your Log', text: 'Use Send Feedback, Share, or Print any time to send today\'s log to your care team. "Copy Compliance Summary" builds a multi-day report across every day you\'ve logged.' }
     ];
   }
   function renderTutorialStep() {
@@ -838,10 +1126,15 @@
   function init() {
     loadState();
     renderAll();
+    renderDayBar();
     renderQuickAdd();
     renderMethio();
     wireVoice();
     wireScan();
+
+    document.getElementById('btnPrevDay').addEventListener('click', () => switchDay(-1));
+    document.getElementById('btnNextDay').addEventListener('click', () => switchDay(1));
+    document.getElementById('btnJumpToday').addEventListener('click', jumpToToday);
 
     document.getElementById('btnUndo').addEventListener('click', undoLast);
     document.getElementById('btnReadAloud').addEventListener('click', readTotalAloud);
@@ -872,7 +1165,7 @@
       document.getElementById('methioDetails').hidden = false;
     });
     document.getElementById('methioDetails').addEventListener('submit', saveMethioDetails);
-    ['methioTime', 'methioAmount', 'methioNotes'].forEach(id => {
+    ['methioTime', 'methioAmount', 'methioMeal', 'methioNotes'].forEach(id => {
       document.getElementById(id).addEventListener('focus', () => {
         setTimeout(() => {
           const btn = document.getElementById('btnMethioSave');
@@ -889,6 +1182,7 @@
     });
     document.getElementById('btnPrint').addEventListener('click', () => window.print());
     document.getElementById('btnCopy').addEventListener('click', copySummary);
+    document.getElementById('btnCopyCompliance').addEventListener('click', copyComplianceSummary);
 
     document.getElementById('btnEditQuickAdd').addEventListener('click', openEditQuickAdd);
     document.getElementById('btnAddFoodRow').addEventListener('click', () => {

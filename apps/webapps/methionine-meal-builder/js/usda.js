@@ -18,7 +18,13 @@ window.USDA = (function () {
     protein: '203',
     fat: '204',
     carbs: '205',
-    methionine: '506'
+    methionine: '506',
+    // Cystine, not methionine's own number — tracked alongside it so the
+    // app can show Total Sulfur Amino Acids (Met + Cys). Methionine is
+    // metabolized through homocysteine to cysteine/cystine, so dietary
+    // cystine affects how much methionine-restriction headroom a patient
+    // actually has; clinicians managing sulfur amino acid intake want both.
+    cystine: '505'
   };
 
   async function fetchWithRotation(buildUrl) {
@@ -59,7 +65,7 @@ window.USDA = (function () {
   }
 
   function extractNutrients(foodNutrients) {
-    const out = { energy: null, protein: null, fat: null, carbs: null, methionine: null };
+    const out = { energy: null, protein: null, fat: null, carbs: null, methionine: null, cystine: null };
     (foodNutrients || []).forEach(fn => {
       const number = fn.nutrientNumber !== undefined ? fn.nutrientNumber : (fn.nutrient && fn.nutrient.number);
       if (number === undefined || number === null) return;
@@ -67,7 +73,7 @@ window.USDA = (function () {
       const unit = fn.unitName !== undefined ? fn.unitName : (fn.nutrient && fn.nutrient.unitName);
       for (const key in NUTRIENT_NUMBERS) {
         if (String(number) === NUTRIENT_NUMBERS[key]) {
-          out[key] = key === 'methionine' ? toMg(value, unit) : value;
+          out[key] = (key === 'methionine' || key === 'cystine') ? toMg(value, unit) : value;
         }
       }
     });
