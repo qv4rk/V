@@ -235,8 +235,38 @@ body {
 .bigSubline { font-size: 1rem; color: var(--ink-dim); margin-bottom: 0.4rem; }
 .macroLine { font-size: 0.92rem; color: var(--ink-dim); margin-bottom: 0.4rem; }
 .macroLine[hidden] { display: none; }
-.sulfurLine { font-size: 0.92rem; color: var(--ink-dim); font-weight: 700; margin-bottom: 1rem; }
+.sulfurLine { font-size: 0.92rem; color: var(--ink-dim); font-weight: 700; margin-bottom: 0.6rem; }
 .sulfurLine[hidden] { display: none; }
+
+/* Protein/calorie adequacy — a FLOOR to watch (enough to avoid
+   cachexia/muscle wasting), the opposite sense from the methionine
+   ceiling above it, so it deliberately doesn't reuse bigBar's "more is
+   worse" styling even though it borrows the same safe/caution/over
+   color tokens (green = at or above goal here, not "under the limit"). */
+.adequacyBlock { margin-bottom: 0.6rem; text-align: left; }
+.adequacyBlock[hidden] { display: none; }
+.adequacyRow { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.5rem; }
+.adequacyRow[hidden] { display: none; }
+.adequacyLabel { font-size: 0.85rem; font-weight: 700; color: var(--ink-dim); width: 58px; flex: none; text-align: right; }
+.adequacyBar { flex: 1; height: 12px; border-radius: 6px; background: var(--bg-soft); overflow: hidden; }
+.adequacyFill { height: 100%; width: 0%; background: var(--over); transition: width 0.25s ease, background-color 0.25s ease; }
+.adequacyFill.good { background: var(--safe); }
+.adequacyFill.watch { background: var(--caution); }
+.adequacyValue { font-size: 0.82rem; font-weight: 700; color: var(--ink-dim); width: 84px; flex: none; }
+
+.goalsEditForm { display: flex; flex-direction: column; gap: 0.7rem; margin-bottom: 1rem; text-align: left; }
+.goalsEditForm label { font-size: 0.88rem; font-weight: 700; color: var(--ink-dim); display: flex; flex-direction: column; gap: 0.3rem; }
+.goalsEditForm input {
+  font-size: 1rem;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--edge);
+  font-family: inherit;
+  font-weight: 400;
+  color: var(--ink);
+}
+.goalsEditActions { display: flex; gap: 0.7rem; align-items: center; justify-content: center; }
+#goalsEditFormWrap[hidden] { display: none; }
 .editCapLink { font-size: 0.95rem; color: var(--accent); background: none; border: none; text-decoration: underline; cursor: pointer; padding: 4px; font-family: inherit; }
 .capLockedNote { font-size: 0.95rem; color: var(--ink-dim); font-weight: 700; }
 .capEditForm { display: flex; gap: 0.6rem; align-items: center; justify-content: center; flex-wrap: wrap; }
@@ -496,6 +526,18 @@ body {
 .quickMatchNote strong { color: var(--ink); }
 
 /* Methioninase */
+.methioTip {
+  font-size: 0.85rem;
+  color: var(--ink-dim);
+  background: var(--bg-soft);
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin: 0 0 1rem;
+  line-height: 1.5;
+}
+.doseRow { display: flex; gap: 0.5rem; }
+.doseRow input { flex: 1 1 90px; min-width: 0; }
+.doseRow select { flex: 1 1 110px; min-width: 0; }
 .methioStatus { font-size: 1.02rem; font-weight: 700; margin-bottom: 0.9rem; padding: 10px 14px; border-radius: 10px; background: var(--bg-soft); }
 .methioStatus.logged-yes { background: var(--safe-bg); color: var(--safe); }
 .methioStatus.logged-no { background: var(--bg-soft); color: var(--ink-dim); }
@@ -637,7 +679,7 @@ body {
      and edit controls disappear. Previously the whole card was hidden,
      so methioninase adherence never actually reached a printed log. */
   .topBar, .totalActions, .bottomNav, .dayBar, .dayBarHint, .loggingForBanner, .card:has(#searchForm), .card:has(#btnPrint), .disclaimer,
-  #methioButtons, #btnMethioEdit { display: none !important; }
+  #methioButtons, #btnMethioEdit, #btnEditCap, #btnSetGoals, #btnEditGoals, #goalsEditFormWrap { display: none !important; }
   body { background: white; }
   .card, .totalCard { border: 1px solid #999; box-shadow: none; }
   .layout { display: block; }

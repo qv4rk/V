@@ -10,6 +10,8 @@
 
   const LOG_KEY = KEY_PREFIX + 'feisttech_met_daily_log';
   const CAP_KEY = KEY_PREFIX + 'feisttech_met_daily_cap';
+  const PROTEIN_GOAL_KEY = KEY_PREFIX + 'feisttech_met_protein_goal';
+  const CALORIE_GOAL_KEY = KEY_PREFIX + 'feisttech_met_calorie_goal';
   const QUICKADD_KEY = KEY_PREFIX + 'feisttech_met_accessible_quickadd';
   const QUICKADD_CACHE_KEY = KEY_PREFIX + 'feisttech_met_accessible_quickadd_cache';
   const METHIO_KEY = KEY_PREFIX + 'feisttech_met_methioninase_log';
@@ -29,7 +31,20 @@
   let logByDay = {};
   let viewDate = null; // set in loadState(); an ISO date, never in the future
   let log = [];
-  let dailyCap = CONFIG.defaultCap || 150;
+  // No silent default: a methionine ceiling is a number that comes from
+  // an oncologist/dietitian, not a guess this app should make for a
+  // patient. Stays null (shown as "no limit set", onboarding prompts for
+  // it) until the patient enters one — unless a care team has locked a
+  // specific value in via CONFIG, in which case that's authoritative and
+  // there's nothing to ask.
+  let dailyCap = CONFIG.lockCap ? (CONFIG.defaultCap || 150) : null;
+  // Protein/calorie goals are a floor, not a ceiling — watched to catch
+  // cachexia/muscle-wasting risk, not to restrict intake. Also null
+  // until set; unlike dailyCap there's no onboarding gate for these,
+  // since they're a secondary safety net rather than the core number
+  // the whole tracker exists to enforce.
+  let proteinGoal = null;
+  let calorieGoal = null;
   let quickAddFoods = DEFAULT_QUICKADD.slice();
   let quickAddCache = {};
   let lastAction = null; // { id, delta, wasNew } — what "Undo Last Add" should reverse
@@ -76,6 +91,10 @@
 
     const cap = parseFloat(localStorage.getItem(CAP_KEY));
     if (!isNaN(cap) && cap > 0) dailyCap = cap;
+    const pGoal = parseFloat(localStorage.getItem(PROTEIN_GOAL_KEY));
+    if (!isNaN(pGoal) && pGoal > 0) proteinGoal = pGoal;
+    const cGoal = parseFloat(localStorage.getItem(CALORIE_GOAL_KEY));
+    if (!isNaN(cGoal) && cGoal > 0) calorieGoal = cGoal;
     try {
       const saved = JSON.parse(localStorage.getItem(QUICKADD_KEY) || 'null');
       if (Array.isArray(saved) && saved.length) quickAddFoods = saved;
@@ -87,6 +106,12 @@
   }
   function saveCap() {
     try { localStorage.setItem(CAP_KEY, String(dailyCap)); } catch (e) {}
+  }
+  function saveProteinGoal() {
+    try { localStorage.setItem(PROTEIN_GOAL_KEY, String(proteinGoal)); } catch (e) {}
+  }
+  function saveCalorieGoal() {
+    try { localStorage.setItem(CALORIE_GOAL_KEY, String(calorieGoal)); } catch (e) {}
   }
   function saveQuickAdd() {
     try { localStorage.setItem(QUICKADD_KEY, JSON.stringify(quickAddFoods)); } catch (e) {}
@@ -104,6 +129,9 @@
   function fmt(n) {
     if (n === null || n === undefined) return '—';
     return Math.round(n * 10) / 10;
+  }
+  function capText() {
+    return dailyCap === null || dailyCap === undefined ? 'not set yet' : `${fmt(dailyCap)} mg`;
   }
   function newId(prefix) {
     return prefix + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
@@ -230,6 +258,7 @@
   }
 
   function statusFor(total) {
+    if (dailyCap === null || dailyCap === undefined) return 'unset';
     if (dailyCap <= 0) return 'safe';
     const pct = total / dailyCap;
     if (pct > 1) return 'over';
@@ -237,30 +266,48 @@
     return 'safe';
   }
   function statusLabel(status) {
+    if (status === 'unset') return 'No daily limit set yet';
     return status === 'safe' ? 'Safe' : (status === 'caution' ? 'Close to the limit' : 'Over the limit');
+  }
+  // Protein/calorie adequacy is a FLOOR — 'good' at or above goal is the
+  // safe end, 'low' well under goal is the end that risks cachexia. Kept
+  // distinct from statusFor's ceiling-style names so the sense is never
+  // ambiguous in code (an adequacy 'over' would misleadingly read like
+  // "too much protein", which is not the risk being watched here).
+  function adequacyStatus(actual, goal) {
+    if (!goal) return null;
+    const pct = actual / goal;
+    if (pct >= 1) return 'good';
+    if (pct >= 0.7) return 'watch';
+    return 'low';
   }
 
   // ── Big total ──
   function renderTotal() {
     const total = totalMet();
     const status = statusFor(total);
-    const remaining = Math.max(0, dailyCap - total);
+    const hasCap = dailyCap !== null && dailyCap !== undefined;
+    const remaining = hasCap ? Math.max(0, dailyCap - total) : null;
 
     const pill = document.getElementById('statusPill');
     pill.className = 'statusPill ' + status;
-    pill.textContent = status === 'safe' ? 'SAFE' : (status === 'caution' ? 'CLOSE TO LIMIT' : 'OVER LIMIT');
+    pill.textContent = status === 'unset' ? 'SET YOUR LIMIT'
+      : status === 'safe' ? 'SAFE' : (status === 'caution' ? 'CLOSE TO LIMIT' : 'OVER LIMIT');
 
     const big = document.getElementById('bigTotal');
     big.className = 'bigTotal ' + status;
-    big.innerHTML = fmt(total) + '<span class="bigTotalUnit"> / ' + fmt(dailyCap) + ' mg</span>';
+    big.innerHTML = fmt(total) + '<span class="bigTotalUnit"> / ' + (hasCap ? fmt(dailyCap) + ' mg' : ' no limit set') + '</span>';
 
-    const pct = dailyCap > 0 ? Math.min(100, (total / dailyCap) * 100) : 0;
+    const pct = hasCap && dailyCap > 0 ? Math.min(100, (total / dailyCap) * 100) : 0;
     const fill = document.getElementById('bigBarFill');
     fill.style.width = pct + '%';
-    fill.className = 'bigBarFill' + (status !== 'safe' ? ' ' + status : '');
+    fill.className = 'bigBarFill' + (status !== 'safe' && status !== 'unset' ? ' ' + status : '');
 
-    document.getElementById('bigSubline').textContent =
-      `${fmt(total)} mg used ${dayPhrase()} · ${fmt(remaining)} mg still safe to eat`;
+    document.getElementById('bigSubline').textContent = hasCap
+      ? `${fmt(total)} mg used ${dayPhrase()} · ${fmt(remaining)} mg still safe to eat`
+      : `${fmt(total)} mg used ${dayPhrase()} · set a daily limit below to see how much is safe to eat`;
+
+    document.getElementById('btnEditCap').textContent = hasCap ? 'Change daily limit' : 'Set your daily limit';
 
     const macroLine = document.getElementById('macroLine');
     if (macroLine) {
@@ -290,6 +337,42 @@
     if (warn) warn.hidden = !hasEstimatedContribution();
 
     document.getElementById('btnUndo').disabled = log.length === 0;
+    renderAdequacy();
+  }
+
+  // ── Protein/calorie adequacy meters — a floor to watch, not a ceiling
+  // to enforce, so a patient restricting methionine doesn't end up
+  // under-eating overall and risking cachexia/muscle wasting. Off by
+  // default (no goal, no meter, no false confidence) until a goal is
+  // actually set. ──
+  function renderAdequacy() {
+    const hasProteinGoal = !!proteinGoal;
+    const hasCalorieGoal = !!calorieGoal;
+    const hasAnyGoal = hasProteinGoal || hasCalorieGoal;
+
+    document.getElementById('btnSetGoals').hidden = hasAnyGoal;
+    document.getElementById('btnEditGoals').hidden = !hasAnyGoal;
+    document.getElementById('adequacyBlock').hidden = !hasAnyGoal || !log.length;
+
+    const proteinRow = document.getElementById('proteinRow');
+    proteinRow.hidden = !hasProteinGoal;
+    if (hasProteinGoal) {
+      const protein = totalField('protein');
+      const status = adequacyStatus(protein, proteinGoal);
+      document.getElementById('proteinValue').textContent = `${fmt(protein)} / ${fmt(proteinGoal)} g`;
+      document.getElementById('proteinFill').style.width = Math.min(100, (protein / proteinGoal) * 100) + '%';
+      document.getElementById('proteinFill').className = 'adequacyFill ' + status;
+    }
+
+    const calorieRow = document.getElementById('calorieRow');
+    calorieRow.hidden = !hasCalorieGoal;
+    if (hasCalorieGoal) {
+      const cal = totalField('cal');
+      const status = adequacyStatus(cal, calorieGoal);
+      document.getElementById('calorieValue').textContent = `${fmt(cal)} / ${fmt(calorieGoal)} kcal`;
+      document.getElementById('calorieFill').style.width = Math.min(100, (cal / calorieGoal) * 100) + '%';
+      document.getElementById('calorieFill').className = 'adequacyFill ' + status;
+    }
   }
 
   // ── Day switcher: browse/correct a previous day without it counting
@@ -775,6 +858,20 @@
     });
   }
 
+  // Dose is stored as structured {doseQty, doseUnit} now, not free text —
+  // easier to read back cleanly in exports. Older entries saved before
+  // this only have `amount` (free text like "250 units / 1 capsule");
+  // this falls back to that so nothing already logged looks blank.
+  // There is deliberately no calculation anywhere that uses this number
+  // — Hoffman himself describes methioninase timing/dosing as guidance,
+  // not a hard science, so this app records it rather than computing
+  // anything from it.
+  function doseText(entry) {
+    if (!entry) return '';
+    if (entry.doseQty) return `${fmt(entry.doseQty)} ${entry.doseUnit || ''}`.trim();
+    return entry.amount || '';
+  }
+
   // ── Methioninase (tracked per viewDate, same as the food log) ──
   function renderMethio() {
     const all = loadMethio();
@@ -792,8 +889,9 @@
       buttonsRow.hidden = true;
       editLink.hidden = false;
       const mealNote = entry.meal ? ` (${entry.meal})` : '';
+      const dose = doseText(entry);
       if (entry.took) {
-        statusEl.textContent = `✅ Took methioninase ${dayPhrase()}` + (entry.time ? ` at ${entry.time}` : '') + mealNote;
+        statusEl.textContent = `✅ Took methioninase ${dayPhrase()}` + (entry.time ? ` at ${entry.time}` : '') + mealNote + (dose ? ` — ${dose}` : '');
         statusEl.className = 'methioStatus logged-yes';
       } else {
         statusEl.textContent = `❌ Not taken ${dayPhrase()}`;
@@ -801,7 +899,8 @@
       }
     }
     document.getElementById('methioTime').value = entry ? (entry.time || '') : '';
-    document.getElementById('methioAmount').value = entry ? (entry.amount || '') : '';
+    document.getElementById('methioDoseQty').value = entry && entry.doseQty ? entry.doseQty : '';
+    document.getElementById('methioDoseUnit').value = entry && entry.doseUnit ? entry.doseUnit : 'capsules';
     document.getElementById('methioMeal').value = entry ? (entry.meal || '') : '';
     document.getElementById('methioNotes').value = entry ? (entry.notes || '') : '';
     document.getElementById('methioDetails').hidden = true;
@@ -820,9 +919,11 @@
     if (e) e.preventDefault();
     const all = loadMethio();
     const existing = all[viewDate] || { took: true };
+    const doseQty = parseFloat(document.getElementById('methioDoseQty').value);
     all[viewDate] = Object.assign({}, existing, {
       time: document.getElementById('methioTime').value.trim(),
-      amount: document.getElementById('methioAmount').value.trim(),
+      doseQty: isNaN(doseQty) ? null : doseQty,
+      doseUnit: document.getElementById('methioDoseUnit').value,
       meal: document.getElementById('methioMeal').value,
       notes: document.getElementById('methioNotes').value.trim(),
       loggedAt: Date.now()
@@ -836,9 +937,10 @@
   function readTotalAloud() {
     if (!('speechSynthesis' in window)) { showToast('Voice reading is not supported on this device.', 'over'); return; }
     const total = totalMet();
-    const status = statusFor(total);
-    const remaining = Math.max(0, dailyCap - total);
-    const text = `${fmt(total)} milligrams used ${dayPhrase()}, out of ${fmt(dailyCap)}. ${fmt(remaining)} milligrams still safe to eat. Status: ${statusLabel(status)}.`;
+    const hasCap = dailyCap !== null && dailyCap !== undefined;
+    const text = hasCap
+      ? `${fmt(total)} milligrams used ${dayPhrase()}, out of ${fmt(dailyCap)}. ${fmt(Math.max(0, dailyCap - total))} milligrams still safe to eat. Status: ${statusLabel(statusFor(total))}.`
+      : `${fmt(total)} milligrams used ${dayPhrase()}. You haven't set a daily limit yet.`;
     const utter = new SpeechSynthesisUtterance(text);
     utter.rate = 0.9;
     window.speechSynthesis.cancel();
@@ -854,7 +956,7 @@
     const sulfurTotal = total + totalCys();
     const lines = [];
     lines.push(`Methionine log — ${viewDate}${viewDate === todayISO() ? ' (Today)' : ''}`);
-    lines.push(`Methionine: ${fmt(total)} / ${fmt(dailyCap)} mg (${statusLabel(statusFor(total))})`);
+    lines.push(`Methionine: ${fmt(total)} mg / ceiling ${capText()} (${statusLabel(statusFor(total))})`);
     lines.push(`Total sulfur amino acids (Met + Cys): ${fmt(sulfurTotal)} mg` + (hasAnyCysMissing() ? ' (incomplete — cystine not measured for every item)' : ''));
     lines.push(`Calories: ${fmt(totalField('cal'))} kcal · Protein: ${fmt(totalField('protein'))} g · Fat: ${fmt(totalField('fat'))} g · Carbs: ${fmt(totalField('carbs'))} g`);
     lines.push('');
@@ -873,7 +975,7 @@
     const entry = all[viewDate];
     lines.push('');
     lines.push('Methioninase: ' + (entry
-      ? (entry.took ? 'Yes' + (entry.time ? ` at ${entry.time}` : '') + (entry.meal ? ` (${entry.meal})` : '') + (entry.amount ? ` — ${entry.amount}` : '') : 'No')
+      ? (entry.took ? 'Yes' + (entry.time ? ` at ${entry.time}` : '') + (entry.meal ? ` (${entry.meal})` : '') + (doseText(entry) ? ` — ${doseText(entry)}` : '') : 'No')
       : 'Not logged'));
     if (entry && entry.notes) lines.push('Notes: ' + entry.notes);
     return lines.join('\n');
@@ -898,7 +1000,7 @@
     const lines = [];
     lines.push('CLINICAL COMPLIANCE SUMMARY — Methionine Restriction Log');
     lines.push(`Generated ${new Date().toLocaleString()}`);
-    lines.push(`Daily methionine ceiling: ${fmt(dailyCap)} mg`);
+    lines.push(`Daily methionine ceiling: ${capText()}`);
     lines.push('');
     if (!dates.length) {
       lines.push('(no days logged yet)');
@@ -980,15 +1082,16 @@
   function tutorialSteps() {
     const capLine = CONFIG.lockCap
       ? ' Your daily limit is set by your care team.'
-      : ' Tap "Change daily limit" if that number ever needs to change.';
+      : ' You set this number yourself when you first opened the tracker — tap "Change daily limit" if it ever needs to change.';
     return [
-      { icon: '🔢', title: 'Your Daily Total', text: `This big number shows how much methionine you've eaten today. Green means safe, yellow means getting close, red means you're over your limit.${capLine}` },
+      { icon: '🔢', title: 'Your Daily Total', text: `This big number shows how much methionine you've eaten today. Green means safe, yellow means getting close, red means you're over your limit.${capLine} This app never guesses that number for you — it has to come from your care team.` },
       { icon: '🍽️', title: 'Quick Add', text: 'Tap any food button below to pick a portion, then tap Add.' },
       { icon: '↩️', title: 'Made A Mistake?', text: 'Tap "Undo Last Add" any time to remove the food you just added.' },
       { icon: '📅', title: 'Catching Up On A Missed Day', text: 'Life happens — if you didn\'t get to log at the time, use ◀ / ▶ or pick a date to go back and catalog what you actually ate that day. Food and methioninase are tracked separately per day, so a past day is never mixed into today\'s total. A banner reminds you which day you\'re logging for.' },
       { icon: '🔍', title: "Can't Find Your Food?", text: 'Use Search to type it in, say it out loud, or scan a barcode. Each result shows a photo, whether the methionine number is lab-measured or a rough guess, and portion buttons. If a quick-add food matches the wrong item (like a raw entry for something you cooked), a "Not this? Search instead" link lets you fix it before adding.' },
       { icon: '🧪', title: 'Total Sulfur Amino Acids', text: 'Under your methionine total, a second line adds Cystine in as well (Met + Cys). Cystine intake affects how your body processes methionine, so your care team may want that combined number too.' },
-      { icon: '💊', title: 'Methioninase', text: 'If you take methioninase, tap Yes or No each day to keep a record of it, with the time, meal, and dose if you want.' },
+      { icon: '💪', title: 'Watching For Cachexia Risk', text: 'Restricting methionine can mean under-eating overall if you\'re not careful. Tap "Set a protein/calorie goal" under your daily total to get a second pair of meters — green means you\'ve hit that day\'s protein or calorie goal, red means you\'re falling short and should flag it to your care team.' },
+      { icon: '💊', title: 'Methioninase', text: 'Tap Yes or No each day to keep a record of it, with the time, meal, and a dose quantity if you want. A note in that section shares Dr. Hoffman\'s own guidance on timing — but the app doesn\'t calculate anything from the dose, since he\'s said himself this isn\'t an exact science.' },
       { icon: '📤', title: 'Sharing Your Log', text: 'Use Send Feedback, Share, or Print any time to send today\'s log to your care team. "Copy Compliance Summary" builds a multi-day report across every day you\'ve logged.' }
     ];
   }
@@ -1032,7 +1135,7 @@
 
   // ── Cap editing ──
   function openCapEdit() {
-    document.getElementById('capEditInput').value = dailyCap;
+    document.getElementById('capEditInput').value = dailyCap === null ? '' : dailyCap;
     document.getElementById('capEditRow').hidden = true;
     document.getElementById('capEditFormWrap').hidden = false;
     document.getElementById('capEditInput').focus();
@@ -1046,6 +1149,50 @@
     const num = parseFloat(document.getElementById('capEditInput').value);
     if (!isNaN(num) && num > 0) { dailyCap = num; saveCap(); renderAll(); }
     closeCapEdit();
+  }
+
+  // ── First-run onboarding: the methionine ceiling is a number that has
+  // to come from the patient's own care team, so it starts blank (see
+  // `dailyCap` above) and this prompts for it once, on first load, only
+  // when nothing's been set and no care team has locked one in already. ──
+  function maybeShowOnboarding() {
+    if (CONFIG.lockCap) return; // care team's value is already authoritative
+    if (dailyCap !== null) return; // already set on a previous visit
+    document.getElementById('onboardCapInput').value = '';
+    document.getElementById('onboardOverlay').hidden = false;
+    document.getElementById('onboardCapInput').focus();
+  }
+  function saveOnboardCap() {
+    const num = parseFloat(document.getElementById('onboardCapInput').value);
+    if (!isNaN(num) && num > 0) { dailyCap = num; saveCap(); renderAll(); }
+    document.getElementById('onboardOverlay').hidden = true;
+  }
+
+  // ── Protein/calorie goal editing — same shape as cap editing, but for
+  // a floor to watch rather than a ceiling to enforce. Either field can
+  // be left blank; only the ones actually filled in get a meter. ──
+  function openGoalsEdit() {
+    document.getElementById('proteinGoalInput').value = proteinGoal || '';
+    document.getElementById('calorieGoalInput').value = calorieGoal || '';
+    document.getElementById('btnSetGoals').hidden = true;
+    document.getElementById('btnEditGoals').hidden = true;
+    document.getElementById('goalsEditFormWrap').hidden = false;
+    document.getElementById('proteinGoalInput').focus();
+  }
+  function closeGoalsEdit() {
+    document.getElementById('goalsEditFormWrap').hidden = true;
+    renderAdequacy();
+  }
+  function saveGoalsEdit(e) {
+    if (e) e.preventDefault();
+    const pNum = parseFloat(document.getElementById('proteinGoalInput').value);
+    proteinGoal = (!isNaN(pNum) && pNum > 0) ? pNum : null;
+    saveProteinGoal();
+    const cNum = parseFloat(document.getElementById('calorieGoalInput').value);
+    calorieGoal = (!isNaN(cNum) && cNum > 0) ? cNum : null;
+    saveCalorieGoal();
+    renderAll();
+    closeGoalsEdit();
   }
 
   // ── Quick-add editing: one row per food, edit/remove in place ──
@@ -1177,6 +1324,20 @@
       document.getElementById('capEditForm').addEventListener('submit', saveCapEdit);
       document.getElementById('btnCapCancel').addEventListener('click', closeCapEdit);
     }
+    document.getElementById('btnOnboardSave').addEventListener('click', saveOnboardCap);
+    document.getElementById('btnOnboardSkip').addEventListener('click', () => {
+      document.getElementById('onboardOverlay').hidden = true;
+    });
+    document.getElementById('onboardForm').addEventListener('submit', e => {
+      e.preventDefault();
+      saveOnboardCap();
+    });
+    maybeShowOnboarding();
+
+    document.getElementById('btnSetGoals').addEventListener('click', openGoalsEdit);
+    document.getElementById('btnEditGoals').addEventListener('click', openGoalsEdit);
+    document.getElementById('goalsEditForm').addEventListener('submit', saveGoalsEdit);
+    document.getElementById('btnGoalsCancel').addEventListener('click', closeGoalsEdit);
 
     document.getElementById('searchForm').addEventListener('submit', e => {
       e.preventDefault();
@@ -1196,7 +1357,7 @@
       document.getElementById('methioDetails').hidden = false;
     });
     document.getElementById('methioDetails').addEventListener('submit', saveMethioDetails);
-    ['methioTime', 'methioAmount', 'methioMeal', 'methioNotes'].forEach(id => {
+    ['methioTime', 'methioDoseQty', 'methioDoseUnit', 'methioMeal', 'methioNotes'].forEach(id => {
       document.getElementById(id).addEventListener('focus', () => {
         setTimeout(() => {
           const btn = document.getElementById('btnMethioSave');

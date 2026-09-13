@@ -72,8 +72,37 @@
       <div class="sulfurLine" id="sulfurLine" hidden></div>
       <div class="estimateWarning" id="estimateWarning" hidden>⚠️ This total includes rough guesses (marked ~) for foods with no lab-measured methionine — not all of this number is verified.</div>
 
+      <div class="adequacyBlock" id="adequacyBlock" hidden>
+        <div class="adequacyRow" id="proteinRow" hidden>
+          <span class="adequacyLabel">Protein</span>
+          <div class="adequacyBar"><div class="adequacyFill" id="proteinFill"></div></div>
+          <span class="adequacyValue" id="proteinValue"></span>
+        </div>
+        <div class="adequacyRow" id="calorieRow" hidden>
+          <span class="adequacyLabel">Calories</span>
+          <div class="adequacyBar"><div class="adequacyFill" id="calorieFill"></div></div>
+          <span class="adequacyValue" id="calorieValue"></span>
+        </div>
+      </div>
+      <button type="button" class="linkBtn inline" id="btnEditGoals" hidden>Change protein/calorie goals</button>
+      <button type="button" class="linkBtn inline" id="btnSetGoals" hidden>Set a protein/calorie goal (watch for cachexia risk)</button>
+      <div id="goalsEditFormWrap" hidden>
+        <form id="goalsEditForm" class="goalsEditForm">
+          <label>Daily protein goal (g) — ask your care team
+            <input type="number" inputmode="decimal" id="proteinGoalInput" min="1" step="1" placeholder="e.g. 60">
+          </label>
+          <label>Daily calorie goal (kcal)
+            <input type="number" inputmode="decimal" id="calorieGoalInput" min="1" step="1" placeholder="e.g. 1600">
+          </label>
+          <div class="goalsEditActions">
+            <button type="submit" class="bigBtn compact">Save</button>
+            <button type="button" class="linkBtn" id="btnGoalsCancel">Cancel</button>
+          </div>
+        </form>
+      </div>
+
       <div id="capEditRow">
-        <button type="button" class="editCapLink" id="btnEditCap">Change daily limit</button>
+        <button type="button" class="editCapLink" id="btnEditCap">Set your daily limit</button>
         <span class="capLockedNote" id="capLockedNote" hidden>🔒 Daily limit set by care team</span>
       </div>
       <div id="capEditFormWrap" hidden>
@@ -97,6 +126,7 @@
 
     <div class="card" id="paneMeds">
       <h2>Methioninase Today</h2>
+      <p class="methioTip">💡 Guidance shared by Dr. Hoffman: methioninase is typically taken about 20–30 minutes after a meal that includes protein. Exact timing and dosing aren't an exact science — this is general guidance, not a calculation this app makes for you. Always follow your care team's instructions.</p>
       <div class="methioStatus" id="methioStatus" hidden></div>
       <button type="button" class="linkBtn" id="btnMethioEdit" hidden>✏️ Edit today's entry</button>
       <div class="methioButtons" id="methioButtons">
@@ -107,8 +137,17 @@
         <label>Time
           <input type="text" id="methioTime" placeholder="e.g. 8:00 AM">
         </label>
-        <label>Amount
-          <input type="text" id="methioAmount" placeholder="e.g. 250 units / 1 capsule">
+        <label>Dose quantity
+          <div class="doseRow">
+            <input type="number" id="methioDoseQty" min="0" step="any" placeholder="e.g. 2">
+            <select id="methioDoseUnit">
+              <option value="capsules">capsules</option>
+              <option value="tablets">tablets</option>
+              <option value="mg">mg</option>
+              <option value="units">units</option>
+              <option value="other">other</option>
+            </select>
+          </div>
         </label>
         <label>With which meal?
           <select id="methioMeal">
@@ -154,6 +193,21 @@
 </nav>
 
 <div class="toast" id="toast" hidden></div>
+
+<div class="modalOverlay" id="onboardOverlay" hidden>
+  <div class="modal" role="dialog" aria-labelledby="onboardTitle">
+    <h2 id="onboardTitle">What's your daily methionine goal?</h2>
+    <p>This tracker doesn't guess a number for you. Ask your oncologist or dietitian what daily methionine ceiling they've set for your protocol, then enter it here — you can change it any time.</p>
+    <form id="onboardForm" class="capEditForm" style="justify-content:flex-start;">
+      <input type="number" inputmode="decimal" id="onboardCapInput" min="1" step="1" placeholder="e.g. 200" autofocus>
+      <span style="font-weight:700;">mg / day</span>
+    </form>
+    <div class="modalActions">
+      <button type="button" class="linkBtn" id="btnOnboardSkip">Not sure yet — ask me later</button>
+      <button type="button" class="bigBtn" id="btnOnboardSave">Save</button>
+    </div>
+  </div>
+</div>
 
 <div class="modalOverlay" id="editOverlay" hidden>
   <div class="modal" role="dialog" aria-labelledby="editTitle">
