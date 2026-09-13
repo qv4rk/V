@@ -38,7 +38,8 @@ window.OpenFoodFacts = (function () {
         protein: num(n['proteins_100g']),
         fat: num(n['fat_100g']),
         carbs: num(n['carbohydrates_100g']),
-        methionine: null // essentially never present in OFF data
+        methionine: null, // essentially never present in OFF data
+        cystine: null
       },
       fullNutrients: [],
       sourceUrl: `https://world.openfoodfacts.org/product/${digits}`
