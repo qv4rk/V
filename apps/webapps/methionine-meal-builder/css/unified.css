@@ -41,6 +41,21 @@ body {
   flex-wrap: wrap;
   gap: 0.6rem 0.8rem;
 }
+
+/* Sticky (not auto-dismissing like .toast) — a failed save is not a
+   one-off event to flash and forget, it means nothing entered since is
+   being kept at all, so this stays up for the rest of the visit. */
+.storageWarning {
+  background: var(--over-bg);
+  color: var(--over);
+  font-weight: 700;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  padding: 12px 1.2rem;
+  text-align: center;
+  border-bottom: 2px solid var(--over);
+}
+.storageWarning[hidden] { display: none; }
 .backLink {
   color: var(--accent);
   text-decoration: none;
@@ -216,10 +231,12 @@ body {
   padding: 8px 22px;
   border-radius: 999px;
   margin-bottom: 0.8rem;
+  border: 2px solid currentColor;
 }
 .statusPill.safe { background: var(--safe-bg); color: var(--safe); }
 .statusPill.caution { background: var(--caution-bg); color: var(--caution); }
 .statusPill.over { background: var(--over-bg); color: var(--over); }
+.statusPill.unset { background: var(--bg-soft); color: var(--ink-dim); }
 
 .bigTotal { font-size: 3.8rem; font-weight: 800; line-height: 1; color: var(--ink); }
 .bigTotal.safe { color: var(--safe); }
@@ -227,7 +244,7 @@ body {
 .bigTotal.over { color: var(--over); }
 .bigTotalUnit { font-size: 1.6rem; font-weight: 700; color: var(--ink-dim); }
 
-.bigBar { height: 24px; border-radius: 12px; background: var(--bg-soft); overflow: hidden; margin: 1.1rem 0 0.7rem; }
+.bigBar { height: 24px; border-radius: 12px; background: var(--bg-soft); overflow: hidden; margin: 1.1rem 0 0.7rem; border: 1px solid var(--edge); }
 .bigBarFill { height: 100%; background: var(--safe); transition: width 0.25s ease, background-color 0.25s ease; }
 .bigBarFill.caution { background: var(--caution); }
 .bigBarFill.over { background: var(--over); }
@@ -248,7 +265,7 @@ body {
 .adequacyRow { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.5rem; }
 .adequacyRow[hidden] { display: none; }
 .adequacyLabel { font-size: 0.85rem; font-weight: 700; color: var(--ink-dim); width: 58px; flex: none; text-align: right; }
-.adequacyBar { flex: 1; height: 12px; border-radius: 6px; background: var(--bg-soft); overflow: hidden; }
+.adequacyBar { flex: 1; height: 12px; border-radius: 6px; background: var(--bg-soft); overflow: hidden; border: 1px solid var(--edge); }
 .adequacyFill { height: 100%; width: 0%; background: var(--over); transition: width 0.25s ease, background-color 0.25s ease; }
 .adequacyFill.good { background: var(--safe); }
 .adequacyFill.watch { background: var(--caution); }
@@ -342,6 +359,7 @@ body {
   box-shadow: 0 8px 24px rgba(0,0,0,0.25);
   z-index: 80;
   text-align: center;
+  border: 2px solid #ffffff;
 }
 @media (min-width: 768px) { .toast { bottom: 1.2rem; } }
 .toast[hidden] { display: none; }
@@ -467,6 +485,7 @@ body {
   padding: 3px 9px;
   border-radius: 12px;
   max-width: 100%;
+  border: 1px solid currentColor;
 }
 .metaBadge.measured { background: var(--safe-bg); color: var(--safe); }
 .metaBadge.estimated { background: var(--caution-bg); color: var(--caution); }
@@ -679,9 +698,30 @@ body {
      a clinician needs on the printed page — only its interactive Yes/No
      and edit controls disappear. Previously the whole card was hidden,
      so methioninase adherence never actually reached a printed log. */
-  .topBar, .totalActions, .bottomNav, .dayBar, .dayBarHint, .loggingForBanner, .card:has(#searchForm), .card:has(#btnPrint), .disclaimer,
+  .topBar, .totalActions, .bottomNav, .dayBar, .dayBarHint, .loggingForBanner, .storageWarning, .card:has(#searchForm), .card:has(#btnPrint), .card:has(#btnExportSave), .disclaimer,
   #methioButtons, #btnMethioEdit, #btnEditCap, #btnSetGoals, #btnEditGoals, #goalsEditFormWrap { display: none !important; }
   body { background: white; }
   .card, .totalCard { border: 1px solid #999; box-shadow: none; }
   .layout { display: block; }
+}
+
+/* ── Windows High Contrast / forced-colors mode ──
+   By default the browser flattens every custom background/border color
+   down to the user's own 2-3 chosen system colors. That's exactly right
+   for plain buttons and text — every .bigBtn/.chip/.dtBadge/.rmBtn etc.
+   already has an explicit `border`, so it survives as a clearly bounded
+   shape either way. A handful of elements exist specifically to carry
+   real information through color — the SAFE/CAUTION/OVER status, the
+   daily-limit and adequacy bars, and which portion chip is selected —
+   and for those, flattening doesn't just look different, it deletes
+   information (or, for the status pill and progress bar specifically,
+   made them vanish entirely because they had no border to fall back on
+   once their background color was gone). This exempts just those
+   elements from the flattening — paired above with an explicit border
+   on each so they stay visible either way — rather than fighting the
+   OS setting everywhere else. */
+@media (forced-colors: active) {
+  .statusPill, .bigBarFill, .adequacyFill, .toast, .metaBadge, .chip.active {
+    forced-color-adjust: none;
+  }
 }

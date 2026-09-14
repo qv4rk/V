@@ -20,7 +20,7 @@
   // with whatever the care team has actually approved via "Edit This List".
   const DEFAULT_QUICKADD = [
     'Apple', 'Banana', 'White rice, cooked', 'Broccoli, cooked',
-    'Sweet potato, baked', 'Applesauce', 'Grapes', 'Carrots, cooked'
+    'Baked potato', 'Applesauce', 'Grapes', 'Carrots, cooked'
   ];
 
   // Non-meat proteins conventionally used in low-methionine diets because
@@ -89,6 +89,49 @@
     logByDay[viewDate] = newArr;
   }
 
+  // ── Storage health: every save below used to swallow a failed
+  // localStorage write with a bare `catch (e) {}`, so on a browser that
+  // blocks storage for this site (blocked cookies/site data, Incognito,
+  // or — the single most common desktop-Chrome case — the page opened
+  // as a local file:// instead of through the real web address) nothing
+  // ever persisted and there was no way to tell why. safeSet() surfaces
+  // that as a visible, sticky warning instead of failing silently. ──
+  let storageWarned = false;
+  function showStorageWarning(message) {
+    if (storageWarned) return; // don't stack repeat warnings for the same session
+    storageWarned = true;
+    const el = document.getElementById('storageWarning');
+    if (!el) return;
+    el.textContent = '⚠️ ' + message;
+    el.hidden = false;
+  }
+  function safeSet(key, value) {
+    try {
+      localStorage.setItem(key, value);
+      return true;
+    } catch (e) {
+      showStorageWarning('Your changes aren\'t being saved on this device. This browser is blocking storage for this site — check that cookies/site data aren\'t blocked and that you\'re not in Incognito/Private Browsing. Use "Export Save File" below to back up what you\'ve entered manually until this is fixed.');
+      return false;
+    }
+  }
+  function checkStoragePersistence() {
+    if (window.location.protocol === 'file:') {
+      showStorageWarning('This page was opened as a local file, not through a real web address. Chrome (and most browsers) block saving between visits for local files — open it via https://... instead of double-clicking the file, or nothing you enter will be there next time.');
+      return false;
+    }
+    try {
+      const testKey = KEY_PREFIX + '__storage_test__';
+      localStorage.setItem(testKey, '1');
+      const ok = localStorage.getItem(testKey) === '1';
+      localStorage.removeItem(testKey);
+      if (!ok) throw new Error('readback mismatch');
+      return true;
+    } catch (e) {
+      showStorageWarning('This browser isn\'t saving data between visits for this site. Check that cookies/site data aren\'t blocked, and that you\'re not in Incognito/Private Browsing — both stop this tracker from remembering anything after you close the tab.');
+      return false;
+    }
+  }
+
   function loadState() {
     viewDate = todayISO();
     try {
@@ -103,12 +146,14 @@
     } catch (e) { logByDay = {}; }
     log = logByDay[viewDate] || (logByDay[viewDate] = []);
 
-    const cap = parseFloat(localStorage.getItem(CAP_KEY));
-    if (!isNaN(cap) && cap > 0) dailyCap = cap;
-    const pGoal = parseFloat(localStorage.getItem(PROTEIN_GOAL_KEY));
-    if (!isNaN(pGoal) && pGoal > 0) proteinGoal = pGoal;
-    const cGoal = parseFloat(localStorage.getItem(CALORIE_GOAL_KEY));
-    if (!isNaN(cGoal) && cGoal > 0) calorieGoal = cGoal;
+    try {
+      const cap = parseFloat(localStorage.getItem(CAP_KEY));
+      if (!isNaN(cap) && cap > 0) dailyCap = cap;
+      const pGoal = parseFloat(localStorage.getItem(PROTEIN_GOAL_KEY));
+      if (!isNaN(pGoal) && pGoal > 0) proteinGoal = pGoal;
+      const cGoal = parseFloat(localStorage.getItem(CALORIE_GOAL_KEY));
+      if (!isNaN(cGoal) && cGoal > 0) calorieGoal = cGoal;
+    } catch (e) {}
     try {
       const saved = JSON.parse(localStorage.getItem(QUICKADD_KEY) || 'null');
       if (Array.isArray(saved) && saved.length) quickAddFoods = saved;
@@ -116,28 +161,28 @@
     try { quickAddCache = JSON.parse(localStorage.getItem(QUICKADD_CACHE_KEY) || '{}'); } catch (e) { quickAddCache = {}; }
   }
   function saveLog() {
-    try { localStorage.setItem(LOG_KEY, JSON.stringify(logByDay)); } catch (e) {}
+    safeSet(LOG_KEY, JSON.stringify(logByDay));
   }
   function saveCap() {
-    try { localStorage.setItem(CAP_KEY, String(dailyCap)); } catch (e) {}
+    safeSet(CAP_KEY, String(dailyCap));
   }
   function saveProteinGoal() {
-    try { localStorage.setItem(PROTEIN_GOAL_KEY, String(proteinGoal)); } catch (e) {}
+    safeSet(PROTEIN_GOAL_KEY, String(proteinGoal));
   }
   function saveCalorieGoal() {
-    try { localStorage.setItem(CALORIE_GOAL_KEY, String(calorieGoal)); } catch (e) {}
+    safeSet(CALORIE_GOAL_KEY, String(calorieGoal));
   }
   function saveQuickAdd() {
-    try { localStorage.setItem(QUICKADD_KEY, JSON.stringify(quickAddFoods)); } catch (e) {}
+    safeSet(QUICKADD_KEY, JSON.stringify(quickAddFoods));
   }
   function saveQuickAddCache() {
-    try { localStorage.setItem(QUICKADD_CACHE_KEY, JSON.stringify(quickAddCache)); } catch (e) {}
+    safeSet(QUICKADD_CACHE_KEY, JSON.stringify(quickAddCache));
   }
   function loadMethio() {
     try { return JSON.parse(localStorage.getItem(METHIO_KEY) || '{}'); } catch (e) { return {}; }
   }
   function saveMethio(all) {
-    try { localStorage.setItem(METHIO_KEY, JSON.stringify(all)); } catch (e) {}
+    safeSet(METHIO_KEY, JSON.stringify(all));
   }
 
   function fmt(n) {
@@ -622,7 +667,12 @@
   const STOPWORDS = new Set(['and', 'the', 'with', 'in', 'of', 'or']);
   const OFF_TARGET_WORDS = [
     'raab', 'candied', 'juice', 'jam', 'jelly', 'syrup', 'pickled',
-    'dried', 'cider', 'sauce', 'puree', 'smoothie', 'chips', 'pie', 'cake'
+    'dried', 'cider', 'sauce', 'puree', 'smoothie', 'chips', 'pie', 'cake',
+    // "Baked potato" and "Sweet potato, baked" would otherwise tie on
+    // plain word overlap ("potato"/"baked" both present in either) — but
+    // they're different plants, so a plain potato search shouldn't
+    // silently resolve to sweet potato (or vice versa).
+    'sweet'
   ];
   function normalizeWord(w) {
     return w.length > 3 && w.endsWith('s') ? w.slice(0, -1) : w;
@@ -1074,6 +1124,82 @@
     }
   }
 
+  // ── Backup & Transfer save file — separate on purpose from Copy
+  // Summary / Compliance Summary above: those are one-way, human-
+  // readable text for a clinician. This is machine-readable JSON meant
+  // to round-trip — moving a patient's full state to a new device, or
+  // letting whoever manages the data on their own device hand back an
+  // updated file the patient can import and actually see. ──
+  const SAVE_FILE_VERSION = 1;
+  function buildSaveFileData() {
+    return {
+      saveFileVersion: SAVE_FILE_VERSION,
+      exportedAt: new Date().toISOString(),
+      dailyCap,
+      proteinGoal,
+      calorieGoal,
+      quickAddFoods,
+      logByDay,
+      methio: loadMethio()
+    };
+  }
+  function exportSaveFile() {
+    const data = buildSaveFileData();
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `methionine-tracker-save-${todayISO()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    showToast('Save file downloaded.', null);
+  }
+  function applyImportedData(data) {
+    if (!data || typeof data !== 'object') {
+      showToast('That file isn\'t a valid save file.', 'over');
+      return;
+    }
+    logByDay = (data.logByDay && typeof data.logByDay === 'object') ? data.logByDay : {};
+    saveLog();
+    saveMethio((data.methio && typeof data.methio === 'object') ? data.methio : {});
+    dailyCap = (typeof data.dailyCap === 'number' && data.dailyCap > 0) ? data.dailyCap : null;
+    saveCap();
+    proteinGoal = (typeof data.proteinGoal === 'number' && data.proteinGoal > 0) ? data.proteinGoal : null;
+    saveProteinGoal();
+    calorieGoal = (typeof data.calorieGoal === 'number' && data.calorieGoal > 0) ? data.calorieGoal : null;
+    saveCalorieGoal();
+    quickAddFoods = (Array.isArray(data.quickAddFoods) && data.quickAddFoods.length) ? data.quickAddFoods : DEFAULT_QUICKADD.slice();
+    saveQuickAdd();
+
+    viewDate = todayISO();
+    log = logByDay[viewDate] || (logByDay[viewDate] = []);
+    lastAction = null;
+
+    renderAll();
+    renderDayBar();
+    renderQuickAdd();
+    renderProteinPicks();
+    renderMethio();
+    showToast('Save file imported.', null);
+  }
+  function importSaveFile(file) {
+    if (!file) return;
+    if (!confirm('Importing will replace everything currently saved on this device — every day\'s log, methioninase records, your daily limit, and goals — with what\'s in this file. Continue?')) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      let data;
+      try { data = JSON.parse(reader.result); } catch (e) {
+        showToast('That file isn\'t valid JSON — nothing was changed.', 'over');
+        return;
+      }
+      applyImportedData(data);
+    };
+    reader.onerror = () => showToast('Could not read that file.', 'over');
+    reader.readAsText(file);
+  }
+
   async function shareSummary() {
     const text = buildSummaryText();
     if (navigator.share) {
@@ -1184,6 +1310,7 @@
     if (CONFIG.lockCap) return; // care team's value is already authoritative
     if (dailyCap !== null) return; // already set on a previous visit
     document.getElementById('onboardCapInput').value = '';
+    document.getElementById('onboardWeightCalc').hidden = true;
     document.getElementById('onboardOverlay').hidden = false;
     document.getElementById('onboardCapInput').focus();
   }
@@ -1191,6 +1318,25 @@
     const num = parseFloat(document.getElementById('onboardCapInput').value);
     if (!isNaN(num) && num > 0) { dailyCap = num; saveCap(); renderAll(); }
     document.getElementById('onboardOverlay').hidden = true;
+  }
+  const LB_PER_KG = 2.20462262185;
+  // Dr. Hoffman has described setting the ceiling relative to body
+  // weight rather than a flat number — this does the arithmetic for
+  // whatever mg/kg target the patient's own care team gave them. It
+  // never supplies that target itself; there's no verified published
+  // coefficient this app could safely default to, and guessing one
+  // would be exactly the kind of fabricated-precision this tracker
+  // otherwise goes out of its way to avoid.
+  function calcOnboardFromWeight() {
+    const weightRaw = parseFloat(document.getElementById('onboardWeight').value);
+    const unit = document.getElementById('onboardWeightUnit').value;
+    const mgPerKg = parseFloat(document.getElementById('onboardMgPerKg').value);
+    if (isNaN(weightRaw) || weightRaw <= 0 || isNaN(mgPerKg) || mgPerKg <= 0) {
+      showToast('Enter both a body weight and the mg/kg target your care team gave you.', 'over');
+      return;
+    }
+    const weightKg = unit === 'lb' ? weightRaw / LB_PER_KG : weightRaw;
+    document.getElementById('onboardCapInput').value = Math.round(weightKg * mgPerKg * 10) / 10;
   }
 
   // ── Protein/calorie goal editing — same shape as cap editing, but for
@@ -1323,6 +1469,7 @@
   }
 
   function init() {
+    checkStoragePersistence();
     loadState();
     renderAll();
     renderDayBar();
@@ -1358,6 +1505,11 @@
       e.preventDefault();
       saveOnboardCap();
     });
+    document.getElementById('btnOnboardWeightToggle').addEventListener('click', () => {
+      const calc = document.getElementById('onboardWeightCalc');
+      calc.hidden = !calc.hidden;
+    });
+    document.getElementById('btnOnboardCalc').addEventListener('click', calcOnboardFromWeight);
     maybeShowOnboarding();
 
     document.getElementById('btnSetGoals').addEventListener('click', openGoalsEdit);
@@ -1401,6 +1553,15 @@
     document.getElementById('btnPrint').addEventListener('click', () => window.print());
     document.getElementById('btnCopy').addEventListener('click', copySummary);
     document.getElementById('btnCopyCompliance').addEventListener('click', copyComplianceSummary);
+    document.getElementById('btnExportSave').addEventListener('click', exportSaveFile);
+    document.getElementById('btnImportSave').addEventListener('click', () => {
+      document.getElementById('importFileInput').click();
+    });
+    document.getElementById('importFileInput').addEventListener('change', e => {
+      const file = e.target.files && e.target.files[0];
+      importSaveFile(file);
+      e.target.value = ''; // allow re-importing the same filename later
+    });
 
     document.getElementById('btnEditQuickAdd').addEventListener('click', openEditQuickAdd);
     document.getElementById('btnAddFoodRow').addEventListener('click', () => {

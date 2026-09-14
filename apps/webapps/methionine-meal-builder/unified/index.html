@@ -17,6 +17,8 @@
   <button type="button" class="helpFab" id="btnHelp" aria-label="How to use this">❓</button>
 </header>
 
+<div class="storageWarning" id="storageWarning" hidden role="alert"></div>
+
 <main class="layout">
 
   <!-- LEFT / TOP pane: finding and adding food -->
@@ -184,6 +186,16 @@
       </div>
     </div>
 
+    <div class="card">
+      <h2>💾 Backup &amp; Transfer</h2>
+      <p class="picksHint">A save file for moving data between devices or keeping a manual backup — not for your care team (use Copy Summary / Compliance Summary above for that). Export saves everything: every day's log, methioninase records, your daily limit, and goals. Importing replaces what's on this device with what's in the file.</p>
+      <div class="actionRow">
+        <button type="button" class="bigBtn compact secondary" id="btnExportSave">⬇️ Export Save File</button>
+        <button type="button" class="bigBtn compact secondary" id="btnImportSave">⬆️ Import Save File</button>
+      </div>
+      <input type="file" id="importFileInput" accept="application/json,.json" hidden>
+    </div>
+
     <div class="disclaimer">
       ⚠️ This tool helps track numbers only. It does not give medical advice. Always follow your doctor's instructions. Methioninase and diet changes should only be done under medical supervision.
     </div>
@@ -203,11 +215,29 @@
 <div class="modalOverlay" id="onboardOverlay" hidden>
   <div class="modal" role="dialog" aria-labelledby="onboardTitle">
     <h2 id="onboardTitle">What's your daily methionine goal?</h2>
-    <p>This tracker doesn't guess a number for you. Ask your oncologist or dietitian what daily methionine ceiling they've set for your protocol, then enter it here — you can change it any time.</p>
+    <p>This tracker doesn't guess a number for you — it has to come from your oncologist or dietitian. Some protocols set a flat daily number; Dr. Hoffman has described setting it based on body weight instead. Enter whichever your care team actually gave you.</p>
     <form id="onboardForm" class="capEditForm" style="justify-content:flex-start;">
-      <input type="number" inputmode="decimal" id="onboardCapInput" min="1" step="1" placeholder="e.g. 200" autofocus>
+      <input type="number" inputmode="decimal" id="onboardCapInput" min="1" step="1" placeholder="mg / day" autofocus>
       <span style="font-weight:700;">mg / day</span>
     </form>
+    <button type="button" class="linkBtn" id="btnOnboardWeightToggle">Or calculate it from a per-kg target</button>
+    <div id="onboardWeightCalc" hidden>
+      <div class="goalsEditForm" style="margin-bottom:0.4rem;">
+        <label>Body weight
+          <div class="doseRow">
+            <input type="number" inputmode="decimal" id="onboardWeight" min="1" step="0.1" placeholder="e.g. 70">
+            <select id="onboardWeightUnit">
+              <option value="kg">kg</option>
+              <option value="lb">lb</option>
+            </select>
+          </div>
+        </label>
+        <label>Target your care team gave you (mg per kg of body weight)
+          <input type="number" inputmode="decimal" id="onboardMgPerKg" min="0.01" step="0.01" placeholder="from your care team, not a guess">
+        </label>
+      </div>
+      <button type="button" class="linkBtn" id="btnOnboardCalc">Calculate and fill in mg/day above</button>
+    </div>
     <div class="modalActions">
       <button type="button" class="linkBtn" id="btnOnboardSkip">Not sure yet — ask me later</button>
       <button type="button" class="bigBtn" id="btnOnboardSave">Save</button>
