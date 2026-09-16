@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The $14K Toll Trap</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto+Mono:wght@300;400&family=Cinzel:wght@400;700&family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/game.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+  <script src="https://unpkg.com/topojson-client@3"></script>
+</head>
+<body data-theme="night">
+
+  <div id="canvas-container" aria-hidden="true">
+    <canvas id="apocalypse-canvas"></canvas>
+  </div>
+
+  <aside id="toll-meter" aria-label="Escalating toll debt meter">
+    <div id="debt-label">TOLL DEBT</div>
+    <div id="debt-value">$14,000.00</div>
+    <div id="debt-fill-wrap"><div id="debt-fill"></div></div>
+  </aside>
+
+  <div id="speak-indicator" aria-live="polite"></div>
+
+  <main id="stage"></main>
+
+  <!-- Manifold Atlas renderers, reused in place from their home under /manifold-atlas -->
+  <script src="../../../../manifold-atlas/app/data.js"></script>
+  <script src="../../../../manifold-atlas/app/earth.js"></script>
+  <script src="../../../../manifold-atlas/app/sky.js"></script>
+
+  <script type="module">
+    try {
+      const { EdgeTTS } = await import('https://unpkg.com/edge-tts-universal@1.4.0/dist/browser.js');
+      window.EdgeTTS = EdgeTTS;
+      window.ttsReady = true;
+    } catch (e) {
+      window.ttsReady = false;
+      console.warn('Edge TTS failed to load.', e);
+    }
+  </script>
+
+  <script src="js/scenes.js"></script>
+  <script src="js/game.js"></script>
+</body>
+</html>
