@@ -1,0 +1,60 @@
+body { margin: 0; background: #050510; color: #e0e0e0; font-family: var(--font-body, 'Roboto Mono', monospace); overflow-x: hidden; }
+
+#mc-app { max-width: 1100px; margin: 0 auto; padding: 0 0 2rem; }
+
+.mc-head { text-align: center; padding: 1.4rem 1rem 0.6rem; }
+.mc-head h1 { font-family: var(--font-head, 'Orbitron', sans-serif); font-size: clamp(1.3rem, 4vw, 2rem); color: #fff; letter-spacing: 0.04em; margin: 0 0 0.4rem; }
+.mc-head p { color: #8b949e; font-size: 0.95rem; margin: 0; }
+
+/* ---- big panel viewer ---- */
+#panel-wrap { position: relative; margin: 1.2rem 1rem 0; border-radius: 16px; overflow: hidden; border: 1px solid #30363d; box-shadow: 0 20px 60px rgba(0,0,0,0.6); background: #010409; }
+#panel-meta { display: flex; justify-content: space-between; align-items: center; padding: 0.7rem 1rem; background: #010409; border-bottom: 1px solid #30363d; }
+#panelCounter { font-family: var(--font-head, 'Orbitron', sans-serif); font-size: 0.7rem; color: #58a6ff; letter-spacing: 0.1em; }
+#panelIndicator { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em; padding: 3px 10px; border-radius: 4px; border: 1px solid #58a6ff; text-transform: uppercase; }
+#panel-stage { width: 100%; aspect-ratio: 16 / 9; background: #010409; }
+#panel-stage svg { width: 100%; height: 100%; display: block; }
+#panelTitle { padding: 0.9rem 1.1rem 0.2rem; font-size: clamp(1.1rem, 3vw, 1.4rem); font-weight: 700; color: #fff; background: #11141a; }
+
+/* ---- captions: large, high-contrast, the primary read-along for
+   anyone who can't rely on hearing alone ---- */
+#caption-bar { background: #11141a; padding: 0.4rem 1.1rem 1.3rem; border-top: 1px solid #21262d; min-height: 4.5rem; }
+.caption-spkr { display: inline-block; font-family: var(--font-head, 'Orbitron', sans-serif); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.14em; padding: 3px 10px; border-radius: 4px; margin-bottom: 0.5rem; }
+.caption-spkr.spkr-cole { background: #1f6feb; color: #fff; }
+.caption-spkr.spkr-reyes { background: #bc13fe; color: #fff; }
+#caption-text { font-size: clamp(1.15rem, 2.6vw, 1.6rem); line-height: 1.45; color: #f0f3f7; font-family: var(--font-read, 'Merriweather', serif); }
+
+/* ---- transport ---- */
+#transport { display: flex; flex-direction: column; gap: 0.7rem; padding: 1rem; }
+.progress-wrap { width: 100%; height: 6px; background: #21262d; border-radius: 3px; overflow: hidden; }
+#progressBar { height: 100%; width: 0%; background: linear-gradient(90deg, #bc13fe, #00f3ff); transition: width 0.3s; }
+.transport-row { display: flex; justify-content: center; align-items: center; gap: 0.8rem; flex-wrap: wrap; }
+.transport-row .btn { font-size: 0.85rem; padding: 0.7rem 1.1rem; }
+#playBtn { min-width: 150px; font-size: 0.95rem; background: #bc13fe; color: #fff; border-color: #bc13fe; }
+
+/* ---- hosts / voice picking ---- */
+#host-row { display: flex; justify-content: center; gap: 0.9rem; flex-wrap: wrap; padding: 0 1rem; }
+.host-chip { display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.5); border: 1px solid rgba(0,243,255,0.3); color: #e0e0e0; padding: 0.5rem 0.9rem; border-radius: 999px; cursor: pointer; font-family: var(--font-body, 'Roboto Mono', monospace); font-size: 0.8rem; }
+.host-chip:hover { border-color: #58a6ff; background: rgba(88,166,255,0.1); }
+.host-chip .host-name { font-weight: 700; }
+.host-chip.chip-cole .host-name { color: #58a6ff; }
+.host-chip.chip-reyes .host-name { color: #bc13fe; }
+.host-chip .host-voice { color: #999; }
+
+/* ---- download ---- */
+#download-row { text-align: center; padding: 0.6rem 1rem 0; }
+#downloadBtn { font-size: 0.85rem; padding: 0.75rem 1.4rem; background: #238636; color: #fff; border-color: #238636; }
+#downloadBtn:disabled { opacity: 0.6; cursor: wait; }
+
+/* ---- start overlay: the single big affordance that both unlocks
+   audio (required by every mobile browser) and starts playback ---- */
+#startOverlay { position: fixed; inset: 0; z-index: 500; background: rgba(3,3,8,0.96); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.2rem; text-align: center; padding: 2rem; }
+#startOverlay.hidden { display: none; }
+#startOverlay h2 { font-family: var(--font-head, 'Orbitron', sans-serif); color: #fff; font-size: clamp(1.3rem, 5vw, 2.2rem); margin: 0; }
+#startOverlay p { color: #8b949e; max-width: 480px; font-size: 1rem; line-height: 1.6; margin: 0; }
+#startBtn { font-size: 1.3rem; padding: 1.2rem 2.4rem; border-radius: 999px; background: #bc13fe; color: #fff; border: none; cursor: pointer; font-family: var(--font-head, 'Orbitron', sans-serif); letter-spacing: 0.05em; box-shadow: 0 0 40px rgba(188,19,254,0.5); }
+#startBtn:hover { transform: scale(1.05); }
+
+@media (max-width: 600px) {
+  .transport-row .btn { padding: 0.6rem 0.9rem; font-size: 0.78rem; }
+  #playBtn { min-width: 120px; }
+}
