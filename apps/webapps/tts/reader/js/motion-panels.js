@@ -46,9 +46,10 @@ const PANELS = [
       <text x="320" y="280" fill="#8b949e" font-family="sans-serif" font-size="14">Two checks. One sedan. The month closes.</text>
     </svg>`,
     dialogue: [
-      { spkr: "cole", text: "Airport runs before dawn, cafeteria duty after lunch." },
-      { spkr: "reyes", text: "Rent stamped. Con Ed stamped. The note leaves the account on the fifteenth and nobody calls." },
-      { spkr: "cole", text: "He's current. He's working." }
+      { spkr: "reyes", text: "Two jobs holding up one car. Airport runs before six, cafeteria shift after lunch." },
+      { spkr: "cole", text: "Same forty-two eighty most days, if the tips hold on the morning loop." },
+      { spkr: "reyes", text: "Rent's in. Con Ed's in. The note leaves the account automatic on the fifteenth." },
+      { spkr: "cole", text: "Four months now, nobody's called about it." }
     ]
   },
   {
@@ -75,8 +76,10 @@ const PANELS = [
       </g>
     </svg>`,
     dialogue: [
-      { spkr: "reyes", text: "Same bridge, same airport, same forty minutes." },
-      { spkr: "cole", text: "The app redraws the payout overnight. Gas doesn't move. The take does." }
+      { spkr: "cole", text: "Same trip. Same forty minutes to LaGuardia." },
+      { spkr: "reyes", text: "Overnight the number under it changes. Forty-two eighty to nineteen fifteen." },
+      { spkr: "cole", text: "Gas is still gas. The app just decided the miles are worth less this week." },
+      { spkr: "reyes", text: "Nobody signs off on that. It just updates." }
     ]
   },
   {
@@ -97,8 +100,9 @@ const PANELS = [
       <text x="120" y="330" fill="#c9d1d9" font-family="sans-serif" font-size="15">The second check shrinks in the same week as the first.</text>
     </svg>`,
     dialogue: [
-      { spkr: "cole", text: "A printed schedule on the aide locker: twenty-eight hours down to eleven and a half." },
-      { spkr: "reyes", text: "The cafeteria still needs bodies. The line item doesn't." }
+      { spkr: "reyes", text: "Same week, the other check. Twenty-eight hours on the school schedule drops to eleven and a half." },
+      { spkr: "cole", text: "A budget memo taped in the break room is the whole explanation he gets." },
+      { spkr: "reyes", text: "The cafeteria still needs somebody at the register. Just not him, not as much." }
     ]
   },
   {
@@ -123,8 +127,9 @@ const PANELS = [
       <text x="40" y="360" fill="#8b949e" font-family="sans-serif" font-size="14">One night. One wristband. The table already had two jobs on it.</text>
     </svg>`,
     dialogue: [
-      { spkr: "reyes", text: "He walks in upright and leaves with a number that doesn't care about airport runs." },
-      { spkr: "cole", text: "The bill sits on the same stack as rent and the car note." }
+      { spkr: "cole", text: "One night in the ER. No insurance behind it." },
+      { spkr: "reyes", text: "Eighty-six forty, and the hospital doesn't care he worked two jobs to get there upright." },
+      { spkr: "cole", text: "It lands on the same pile as the rent and the note." }
     ]
   },
   {
@@ -153,8 +158,9 @@ const PANELS = [
       <text x="400" y="220" fill="#8b949e" font-family="sans-serif" font-size="14">They know the block before he does.</text>
     </svg>`,
     dialogue: [
-      { spkr: "cole", text: "Forty-one days. The lender stops sending pink paper and starts sending a truck." },
-      { spkr: "reyes", text: "The sedan's still his in the driveway. Already theirs on a list." }
+      { spkr: "reyes", text: "Forty-one days past due on the car, and the lender stops mailing reminders." },
+      { spkr: "cole", text: "They mail a repossession order instead." },
+      { spkr: "reyes", text: "The car's still sitting in his driveway. It's already on a list downtown." }
     ]
   },
   {
@@ -197,8 +203,9 @@ const PANELS = [
       <text x="320" y="50" fill="#a371f7" font-family="sans-serif" font-size="15" font-weight="700">BODY IN THE SEAT = NO HOOK</text>
     </svg>`,
     dialogue: [
-      { spkr: "reyes", text: "He takes the basket. The friend takes the wheel and doesn't leave it." },
-      { spkr: "cole", text: "A car with a body in it stays a car. The hook across the lot keeps idling." }
+      { spkr: "cole", text: "Turns out there's a rule for this. A car with a person in the driver's seat doesn't get hooked mid-lot." },
+      { spkr: "reyes", text: "So a friend sits behind the wheel outside Key Food while he's inside buying rice." },
+      { spkr: "cole", text: "The tow truck just idles across the row the whole time." }
     ]
   },
   {
@@ -266,8 +273,9 @@ const PANELS = [
       </g>
     </svg>`,
     dialogue: [
-      { spkr: "cole", text: "Queens to the island and back. No tag in the windshield." },
-      { spkr: "reyes", text: "The gantry writes a letter instead of taking a beep. Ten dollars and change, every pass, plus a late machine that wakes up later." }
+      { spkr: "reyes", text: "No transponder in the windshield, so every crossing gets photographed instead of billed on the spot." },
+      { spkr: "cole", text: "Ten seventeen a pass by mail, plus whatever the late schedule adds once it notices." },
+      { spkr: "reyes", text: "Queens to the island and back. Some days, twice." }
     ]
   },
   {
@@ -292,8 +300,9 @@ const PANELS = [
       <text x="90" y="396" fill="#f85149" font-family="sans-serif" font-size="14">Two trucks want it. The letters already own the number.</text>
     </svg>`,
     dialogue: [
-      { spkr: "reyes", text: "The fourteen thousand is mostly late fees, standing on a few thousand in actual crossings." },
-      { spkr: "cole", text: "The hook still wants the car. He watches the street from the glass and starts inventing exits." }
+      { spkr: "reyes", text: "By now the number on the letters says fourteen thousand." },
+      { spkr: "cole", text: "Most of that's fees stacked on maybe two or three thousand in actual crossings." },
+      { spkr: "reyes", text: "Two different trucks are still circling for the car. He's watching the street through the blinds, running the math himself." }
     ]
   },
   {
@@ -323,8 +332,9 @@ const PANELS = [
       <g transform="translate(620,90)"><circle r="22" fill="#8d5524"/><g fill="#2b1a10"><circle cx="-10" cy="-14" r="5"/><circle cx="0" cy="-16" r="5"/><circle cx="10" cy="-12" r="5"/></g></g>
     </svg>`,
     dialogue: [
-      { spkr: "cole", text: "The thought is clean in the driveway: same sedan shape, different aluminum." },
-      { spkr: "reyes", text: "Unscrew his. Bolt the friend's. Drive like the gantry's reading a different man." }
+      { spkr: "cole", text: "One idea: swap plates with a friend who drives the same model, same color." },
+      { spkr: "reyes", text: "Same shape rolling past the cameras, different registration attached to it." },
+      { spkr: "cole", text: "Four screws each way. Fifteen minutes in the driveway." }
     ]
   },
   {
@@ -345,8 +355,9 @@ const PANELS = [
       <text x="148" y="344" fill="#fff" font-family="sans-serif" font-size="14" font-weight="700">SCHEME DEAD</text>
     </svg>`,
     dialogue: [
-      { spkr: "reyes", text: "Flock and the gantries store plate, make, and VIN together, for whenever a cop or a reader wants it." },
-      { spkr: "cole", text: "Aluminum off another car, on this one, is a new crime sitting on top of the old debt." }
+      { spkr: "reyes", text: "Except the cameras don't just log the plate. They log the VIN stamped into the dash, too." },
+      { spkr: "cole", text: "Put one plate on a different chassis and the two records stop agreeing with each other." },
+      { spkr: "reyes", text: "A cop pulling that mismatch isn't looking at a toll problem anymore. That's a different conversation." }
     ]
   },
   {
@@ -375,8 +386,8 @@ const PANELS = [
       </g>
     </svg>`,
     dialogue: [
-      { spkr: "cole", text: "Drive south. Stand at Glen Burnie. Ask the friend to title the sedan in his name and hang a War of 1812 plate on it." },
-      { spkr: "reyes", text: "New state. New file. Old car." }
+      { spkr: "cole", text: "New idea: drive it down to Glen Burnie, title it in the friend's name, hang a Maryland plate on it." },
+      { spkr: "reyes", text: "New state. New file. Same car underneath." }
     ]
   },
   {
@@ -397,8 +408,9 @@ const PANELS = [
       <text x="148" y="352" fill="#fff" font-family="sans-serif" font-size="14" font-weight="700">SCHEME DEAD</text>
     </svg>`,
     dialogue: [
-      { spkr: "reyes", text: "Every DMV talks to the same title spine. The car's still the lender's until the note dies." },
-      { spkr: "cole", text: "Putting a friend's name on it in another state is a second crime, with the first one still open." }
+      { spkr: "reyes", text: "Except every state DMV pulls from the same national title database." },
+      { spkr: "cole", text: "The lender's lien is already attached to that VIN, whichever state's plate goes on top." },
+      { spkr: "reyes", text: "Maryland won't title a car a bank in New York still owns. And now the friend's name is on paper for it too." }
     ]
   },
   {
@@ -463,8 +475,9 @@ const PANELS = [
       </g>
     </svg>`,
     dialogue: [
-      { spkr: "cole", text: "Slim pole. Solar hat. Hooded lens. A full-body raster down the sedan." },
-      { spkr: "reyes", text: "Suspended registration plus the fourteen-thousand-dollar stack turns a commute into a misdemeanor stop and an NYPD impound." }
+      { spkr: "cole", text: "A Flock camera on a pole doesn't need a person behind it. Solar panel, hooded lens, a red scan down the length of the car." },
+      { spkr: "reyes", text: "Suspended registration plus a fourteen-thousand-dollar toll balance turns a routine pass into an NYPD tow." },
+      { spkr: "cole", text: "Confidence reading on the plate: ninety-seven percent. That's not a maybe." }
     ]
   },
   {
@@ -503,8 +516,9 @@ const PANELS = [
       </g>
     </svg>`,
     dialogue: [
-      { spkr: "reyes", text: "So he calls the hardship line and authorizes recovery." },
-      { spkr: "cole", text: "Their insured flatbed takes the metal off the street before a patrol car writes the driving-while-suspended ticket." }
+      { spkr: "reyes", text: "So instead of waiting for a patrol car to find it, he calls the lender's hardship line himself." },
+      { spkr: "cole", text: "Authorizes a voluntary repossession. Their own flatbed, insured, comes and takes it." },
+      { spkr: "reyes", text: "No driving-while-suspended charge attached to that. Nobody was behind the wheel when it happened." }
     ]
   },
   {
@@ -534,8 +548,9 @@ const PANELS = [
       <text x="200" y="56" fill="#58a6ff" font-family="sans-serif" font-size="18" font-weight="700">UNSCREW. WALK IT IN.</text>
     </svg>`,
     dialogue: [
-      { spkr: "cole", text: "Both plates off before the flatbed even rolls." },
-      { spkr: "reyes", text: "Handed across a DMV counter. The penalty clock on the license stops at the window." }
+      { spkr: "cole", text: "Before the flatbed even shows up, both plates come off with a screwdriver." },
+      { spkr: "reyes", text: "Walked into the DMV by hand, not mailed in." },
+      { spkr: "cole", text: "The penalty clock on the license stops the moment the counter takes them. Not whenever the tow company gets to its own paperwork." }
     ]
   },
   {
@@ -582,8 +597,9 @@ const PANELS = [
       <text x="80" y="36" fill="#f0883e" font-family="sans-serif" font-size="20" font-weight="700">BEDLAM: TOTAL BANKING COLLAPSE</text>
     </svg>`,
     dialogue: [
-      { spkr: "reyes", text: "A UAP flock cooks the clearinghouses. Property law evaporates mid-sentence." },
-      { spkr: "cole", text: "The friend's still on the wheel, grinning like the note never existed." }
+      { spkr: "reyes", text: "And somewhere in the middle of all this, his brain offers him a different ending entirely." },
+      { spkr: "cole", text: "Unmarked aircraft over the financial district. The clearinghouses go dark mid-transaction." },
+      { spkr: "reyes", text: "In the version his brain runs, the friend's still behind the wheel, grinning, like none of the paperwork ever existed." }
     ]
   },
   {
@@ -628,8 +644,9 @@ const PANELS = [
       <text x="210" y="44" fill="#fcd34d" font-family="sans-serif" font-size="20" font-weight="700">STATUS: YOU KEPT THE METAL</text>
     </svg>`,
     dialogue: [
-      { spkr: "cole", text: "Clearinghouses, ash. Flock poles, rusted hats on sticks." },
-      { spkr: "reyes", text: "Debt-free, only because the ledger burned. Both hands on the wheel." }
+      { spkr: "cole", text: "Every camera pole on the shoulder out here is rusted through, dead." },
+      { spkr: "reyes", text: "Full tank. No note. Debt-free, but only because there's no ledger left standing to hold the debt." },
+      { spkr: "cole", text: "Both hands on the wheel. Nobody keeping score anymore." }
     ]
   },
   {
@@ -655,8 +672,10 @@ const PANELS = [
       </g>
     </svg>`,
     dialogue: [
-      { spkr: "reyes", text: "The aliens stay in orbit. He requests the ombudsman, and a hardship hearing." },
-      { spkr: "cole", text: "The stacked hundreds compress back toward the two thousand in actual crossings, on a plan the desk will stamp." }
+      { spkr: "reyes", text: "Back in the real version, there's no invasion. Just an ombudsman and a hardship docket." },
+      { spkr: "cole", text: "Turns out most of that fourteen thousand was stacked late fees riding on a two-thousand-dollar base toll." },
+      { spkr: "reyes", text: "Squeeze the fees back out, and it's a number a payment plan can actually carry." },
+      { spkr: "cole", text: "The ombudsman signs off. File closes as settled, not as repossessed." }
     ]
   }
 ];
