@@ -12,19 +12,9 @@ let voiceLoadAttempted = false;
 let isPlaying = false;
 let audioUnlocked = false;
 
-// Lookahead Cache for seamless pre-buffering
-const audioCache = {};
-function clearAudioCache() {
-    Object.values(audioCache).forEach(url => {
-        try { URL.revokeObjectURL(url); } catch(e) {}
-    });
-    for (let k in audioCache) delete audioCache[k];
-}
-
 // ==================== BACKGROUND ====================
 (function() {
     const canvas = document.getElementById('bg-canvas');
-    if (!canvas) return;
     const ctx = canvas.getContext('2d');
     let width, height, frame = 0;
     let target = { x: window.innerWidth/2, y: window.innerHeight/2 };
@@ -94,7 +84,17 @@ function setPlatform(id, el) {
     document.getElementById('inst-'+id).classList.add('active');
 }
 
-// ==================== AUDIO UNLOCK ====================
+// ==================== AUDIO UNLOCK (iOS WebKit) ====================
+// iOS Safari/WebKit only allows a programmatic play() when it's still tied
+// to the user gesture that triggered it. The Edge-TTS path awaits a network
+// round-trip before calling audioPlayer.play(), which breaks that
+// association — play() then gets silently rejected, the app's own error
+// handling in play() falls back to useBrowserTTS, and the "cool" Edge
+// neural voices are swapped out for the OS's built-in voice list. This
+// applies to every iOS browser (Safari, Edge iOS, Chrome iOS) since Apple
+// requires them all to run on WebKit, not just Edge. A muted play()+pause()
+// synchronously inside the tap unlocks the element for the rest of the page
+// session, so the later async play() call is allowed through.
 function unlockAudioPlayback() {
     if(audioUnlocked) return;
     audioUnlocked = true;
@@ -109,16 +109,12 @@ function unlockAudioPlayback() {
 function triggerVoiceLoad() {
     const statusEl = document.getElementById('voiceLoadStatus');
     if(voiceLoadAttempted && voices.length > 0) {
-        if(statusEl) {
-            statusEl.textContent = `✅ ${voices.length} voices already loaded`;
-            statusEl.style.color = '#00ff41';
-        }
+        statusEl.textContent = `✅ ${voices.length} voices already loaded`;
+        statusEl.style.color = '#00ff41';
         return;
     }
-    if(statusEl) {
-        statusEl.textContent = '⏳ Triggering browser voice loader...';
-        statusEl.style.color = 'orange';
-    }
+    statusEl.textContent = '⏳ Triggering browser voice loader...';
+    statusEl.style.color = 'orange';
     voiceLoadAttempted = true;
     const utterance = new SpeechSynthesisUtterance('');
     utterance.volume = 0; utterance.rate = 10;
@@ -128,10 +124,8 @@ function triggerVoiceLoad() {
         setTimeout(() => {
             loadBrowserVoices();
             const cnt = voices.length;
-            if(statusEl) {
-                statusEl.textContent = cnt > 0 ? `✅ ${cnt} voices loaded` : '⚠ No voices found — try Read Aloud in Edge first';
-                statusEl.style.color = cnt > 0 ? '#00ff41' : 'orange';
-            }
+            statusEl.textContent = cnt > 0 ? `✅ ${cnt} voices loaded` : '⚠ No voices found — try Read Aloud in Edge first';
+            statusEl.style.color = cnt > 0 ? '#00ff41' : 'orange';
             renderVoiceMapping();
         }, 200);
     };
@@ -139,15 +133,16 @@ function triggerVoiceLoad() {
     utterance.onerror = () => {
         loadBrowserVoices();
         const cnt = voices.length;
-        if(statusEl) {
-            statusEl.textContent = cnt > 0 ? `✅ ${cnt} voices loaded` : '⚠ No browser voices found';
-            statusEl.style.color = cnt > 0 ? '#00ff41' : 'orange';
-        }
+        statusEl.textContent = cnt > 0 ? `✅ ${cnt} voices loaded` : '⚠ No browser voices found';
+        statusEl.style.color = cnt > 0 ? '#00ff41' : 'orange';
     };
     if (window.speechSynthesis) speechSynthesis.speak(utterance);
 }
 
-// ==================== VOICE CATALOG ====================
+// ==================== VOICE CATALOG (accent metadata) ====================
+// window.VOICE_CATALOG / window.VOICE_PRIORITY_ORDER come from
+// js/voice-catalog.js, generated from the full Azure voice list so every
+// voice gets a human accent label instead of a bare locale code.
 const catalogByShortName = {};
 (window.VOICE_CATALOG || []).forEach(v => { catalogByShortName[v.shortName] = v; });
 
@@ -180,6 +175,9 @@ function sortVoicesByPriority(list) {
 async function loadEdgeVoices() {
     try {
         const manager = await window.VoicesManager.create();
+        // Library API has changed shape across versions — try every form
+        // seen (property, getVoices(), the documented find()) instead of
+        // hard-coding one.
         let edgeVoices;
         if(Array.isArray(manager.voices)) edgeVoices = manager.voices;
         else if(typeof manager.getVoices === 'function') edgeVoices = manager.getVoices();
@@ -190,6 +188,11 @@ async function loadEdgeVoices() {
         voices = sortVoicesByPriority(edgeVoices.map(annotateVoice));
         settings.useBrowserTTS = false;
     } catch(e) {
+        // Listing the live catalog failed (offline, blocked, API drift) —
+        // fall back to the bundled catalog as the pickable list. Edge-TTS
+        // synthesis is a separate call from listing, so these ShortNames
+        // still work once played; the existing working/broken status-dot
+        // system will surface any that don't.
         console.warn('Edge-TTS voice listing unavailable, using bundled catalog', e);
         const fallback = (window.VOICE_CATALOG || []).map(v => ({
             ShortName: v.shortName, FriendlyName: v.name, Gender: v.gender, Locale: v.locale
@@ -255,13 +258,11 @@ function autoAssignVoices() {
             fi++;
         }
     });
-    clearAudioCache();
 }
 
 function renderVoiceMapping() {
     const container = document.getElementById('voiceMappingContainer');
     const engineDiv = document.getElementById('engineStatus');
-    if (!container || !engineDiv) return;
     container.innerHTML = '';
     engineDiv.innerHTML = '';
 
@@ -276,7 +277,6 @@ function renderVoiceMapping() {
     toggleBtn.innerText = settings.useBrowserTTS ? '⚡ SWITCH TO EDGE-TTS' : '🌐 SWITCH TO BROWSER TTS';
     toggleBtn.onclick = () => {
         settings.useBrowserTTS = !settings.useBrowserTTS;
-        clearAudioCache();
         if(settings.useBrowserTTS) loadBrowserVoices();
         else loadEdgeVoices();
         renderVoiceMapping();
@@ -292,6 +292,13 @@ function renderVoiceMapping() {
 
     renderCharRow(spkrs);
 
+    // #settingsPanel (opened by this button) holds the speed and volume
+    // sliders as well as per-character voice assignment -- it used to be
+    // hidden whenever there were 5 or fewer speakers on the theory that
+    // the inline char-row above the transport bar covered voice
+    // assignment on its own. It doesn't cover speed/volume at all, so
+    // that left no way to reach them on the (overwhelmingly common)
+    // single-narrator article. Always show it.
     const hbVoicesBtn = document.getElementById('hamburgerVoicesBtn');
     if(hbVoicesBtn) hbVoicesBtn.style.display = '';
 }
@@ -342,6 +349,9 @@ function buildCharCard(spkr) {
 }
 
 // ==================== VOICE PICKER ====================
+// Shared popover for both the inline char row and the sliding panel's
+// char-cards, grouped by accent with the user's preferred regions first
+// and everything else behind "show more".
 let vpCurrentSpkr = null;
 let vpShowAll = false;
 
@@ -410,7 +420,6 @@ function renderVoiceRow(v) {
     main.innerHTML = `<span class="vn${isSelected ? ' selected' : ''}">${v.FriendlyName || v.ShortName}</span><span class="va">${v.accent || ''}</span>`;
     main.onclick = () => {
         voiceMapping[vpCurrentSpkr] = v.ShortName;
-        clearAudioCache();
         saveState();
         closeVoicePicker();
         renderVoiceMapping();
@@ -437,9 +446,15 @@ function renderVoiceRow(v) {
 }
 
 function detectChapterBreak(line) {
-    return /^(={3,}|-{3,}|#{1,3}\s|chapter\s+\d+)/i.test(line);
+    return /^(={3,}|-{3,}|#{1,3}\s)/.test(line);
 }
 
+// --- VOICE CARDS (static shorthand -> Edge TTS ShortName, so a character's
+// voice can be assigned right in the manuscript the first time they speak
+// -- [SPKR: Alice|ARIA] -- instead of picking it from a dropdown every
+// time. See apps/webapps/tts/edge-voices.json for the full card list.
+// Manual override/preview in the Studio panel still works exactly as
+// before; this only fills in voiceMapping when it's still unset. ---
 let cardMap = {};
 fetch('../edge-voices.json').then(r => r.json()).then(list => {
     list.forEach(v => { cardMap[v.card.toUpperCase()] = v.shortName; });
@@ -448,16 +463,13 @@ fetch('../edge-voices.json').then(r => r.json()).then(list => {
 function resolveCard(token) {
     if(!token) return null;
     const t = token.trim();
-    return cardMap[t.toUpperCase()] || t;
+    return cardMap[t.toUpperCase()] || t; // fall back to a literal ShortName if pasted directly
 }
 
-const SPKR_REGEX = /\[(?:SPKR:\s*)?([A-Za-z0-9_ -]{1,30})(?:\|\s*([^\]]+))?\]/gi;
-
 function detectSpkrs(text) {
-    const matches = text.matchAll(SPKR_REGEX);
+    const matches = text.matchAll(/\[SPKR:\s*([^\|\]]+?)\s*(?:\|\s*([^\]]+))?\]/gi);
     for(const match of matches) {
         const name = match[1].trim();
-        if(!name || /^\d+$/.test(name)) continue;
         detectedSpkrs.add(name);
         if(match[2] && !voiceMapping[name]) voiceMapping[name] = resolveCard(match[2]);
     }
@@ -469,30 +481,21 @@ function parseTextWithSpkrs(text) {
     let currentSpkr = 'narrator';
     let chapterNum = 1;
     let chapterTitle = null;
-
     lines.forEach(line => {
         line = line.trim();
         if(!line) return;
-
         if(detectChapterBreak(line)) {
             chapterNum++;
             chapterTitle = line.replace(/^#{1,3}\s*/, '').replace(/^[=\-]+$/, '').trim() || null;
             return;
         }
-
-        const spkrMatch = line.match(/^\[(?:SPKR:\s*)?([A-Za-z0-9_ -]{1,30})(?:\|\s*([^\]]+))?\]/i);
+        const spkrMatch = line.match(/\[SPKR:\s*([^\|\]]+?)\s*(?:\|\s*([^\]]+))?\]/i);
         if(spkrMatch) {
-            const potentialName = spkrMatch[1].trim();
-            if(potentialName && !/^\d+$/.test(potentialName)) {
-                currentSpkr = potentialName;
-                detectedSpkrs.add(currentSpkr);
-                if(spkrMatch[2] && !voiceMapping[currentSpkr]) {
-                    voiceMapping[currentSpkr] = resolveCard(spkrMatch[2]);
-                }
-                line = line.replace(/^\[[^\]]+\]\s*/, '').trim();
-            }
+            currentSpkr = spkrMatch[1].trim();
+            detectedSpkrs.add(currentSpkr);
+            if(spkrMatch[2] && !voiceMapping[currentSpkr]) voiceMapping[currentSpkr] = resolveCard(spkrMatch[2]);
+            line = line.replace(/\[SPKR:\s*[^\]]+\]/i, '').trim();
         }
-
         if(line) {
             segs.push({ spkr: currentSpkr, text: line, chapter: String(chapterNum), chapterTitle });
             currentSpkr = 'narrator';
@@ -547,95 +550,43 @@ async function play() {
 
 function handlePlayError(e) {
     isPlaying = false;
-    const playBtn = document.getElementById('playBtn');
-    if (playBtn) playBtn.innerText = '⚠ ERR';
+    document.getElementById('playBtn').innerText = '⚠ ERR';
     showTTSStatus('Playback failed: ' + (e?.message || e?.error || 'unknown'), 4000);
 }
 
-async function preloadNextSegment(currentIndex) {
-    const nextIdx = currentIndex + 1;
-    if(nextIdx >= segments.length || settings.useBrowserTTS || !window.EdgeTTS) return;
-    if(audioCache[nextIdx]) return;
-
-    const nextSeg = segments[nextIdx];
-    if(!nextSeg || !nextSeg.text || !nextSeg.text.trim()) return;
-
-    const voice = voiceMapping[nextSeg.spkr] || voiceMapping.narrator || voices[0]?.ShortName;
-    try {
-        const tts = new window.EdgeTTS(String(nextSeg.text || ' '), voice, {
-            rate: formatEdgePct(settings.speed),
-            pitch: '+0Hz',
-            volume: formatEdgePct(settings.volume)
-        });
-        const result = await tts.synthesize();
-        if(result && result.audio && result.audio.byteLength > 0) {
-            const blob = new Blob([result.audio], { type: 'audio/mp3' });
-            audioCache[nextIdx] = URL.createObjectURL(blob);
-        }
-    } catch(e) {}
-}
-
 async function playWithEdgeTTS(seg) {
-    if(!seg || !seg.text || !seg.text.trim()) {
-        throw new Error('Segment text is empty');
-    }
-
-    let url = audioCache[currentSegmentIndex];
-    if(!url) {
-        const voice = voiceMapping[seg.spkr] || voiceMapping.narrator || voices[0]?.ShortName;
-        const tts = new window.EdgeTTS(String(seg.text || ' '), voice, {
-            rate: formatEdgePct(settings.speed),
-            pitch: '+0Hz',
-            volume: formatEdgePct(settings.volume)
-        });
-        const result = await tts.synthesize();
-        if(!result || !result.audio || result.audio.byteLength === 0) {
-            throw new Error('NoAudioReceived');
-        }
-        const blob = new Blob([result.audio], { type: 'audio/mp3' });
-        url = URL.createObjectURL(blob);
-    } else {
-        delete audioCache[currentSegmentIndex];
-    }
-
-    if(!url) throw new Error('Audio URL is empty');
-
-    preloadNextSegment(currentSegmentIndex);
-
+    const voice = voiceMapping[seg.spkr] || voiceMapping.narrator || voices[0]?.ShortName;
+    // Current library signature is positional: (text, voice, options) —
+    // passing an options object as the first arg reads as "text", hence
+    // the "text must be a string" error.
+    const tts = new window.EdgeTTS(String(seg.text || ' '), voice, {
+        rate: formatEdgePct(settings.speed),
+        pitch: '+0Hz',
+        volume: formatEdgePct(settings.volume)
+    });
+    const result = await tts.synthesize();
+    const blob = new Blob([result.audio], { type: 'audio/mp3' });
+    const url = URL.createObjectURL(blob);
     audioPlayer.src = url;
     audioPlayer.volume = settings.volume;
     audioPlayer.playbackRate = 1.0;
     audioPlayer.onended = () => {
-        try { URL.revokeObjectURL(url); } catch(e) {}
+        URL.revokeObjectURL(url);
         if(!isPlaying) return;
         currentSegmentIndex++;
         saveState(); updateProgress();
         if(currentSegmentIndex < segments.length) play();
-        else {
-            isPlaying = false;
-            const playBtn = document.getElementById('playBtn');
-            if (playBtn) playBtn.innerText = '▶ PLAY';
-        }
+        else { isPlaying = false; document.getElementById('playBtn').innerText = '▶ PLAY'; }
     };
-
     audioPlayer.onerror = () => {
         const mediaErr = audioPlayer.error;
         const codeNames = {1:'ABORTED',2:'NETWORK',3:'DECODE',4:'SRC_NOT_SUPPORTED'};
-        const detail = mediaErr
-            ? `${codeNames[mediaErr.code] || mediaErr.code}: ${mediaErr.message || 'no message'}`
-            : 'no MediaError available';
-
-        console.error('Edge-TTS audio error — ' + detail);
-        isPlaying = false;
-        const playBtn = document.getElementById('playBtn');
-        if (playBtn) playBtn.innerText = '⚠ ERR';
-        showTTSStatus('Playback failed: ' + detail, 4000);
+        const detail = mediaErr ? `${codeNames[mediaErr.code] || mediaErr.code}: ${mediaErr.message || 'no message'}` : 'no MediaError available';
+        throw new Error('Edge-TTS audio error — ' + detail);
     };
-
     window.dispatchEvent(new CustomEvent('FeistTech_Audio_Start', { detail: { chapter: seg.chapter } }));
     await audioPlayer.play();
-    const playBtn = document.getElementById('playBtn');
-    if (playBtn) playBtn.innerText = '⏸ PAUSE';
+    document.getElementById('playBtn').innerText = '⏸ PAUSE';
     updateMediaSession(seg);
 }
 
@@ -644,6 +595,9 @@ function formatEdgePct(val) {
     return (num >= 0 ? '+' : '') + num + '%';
 }
 
+// Synthesizes and downloads one chapter's audio as a single stitched MP3.
+// Shared by the single-chapter button and the download-all loop below, so
+// neither path needs the user to have clicked into that chapter first.
 async function synthesizeAndDownloadChapter(chapterNum, btn) {
     const chapterSegments = segments.filter(seg => seg.chapter === chapterNum);
     if(chapterSegments.length === 0) return;
@@ -652,8 +606,7 @@ async function synthesizeAndDownloadChapter(chapterNum, btn) {
     for (let i = 0; i < chapterSegments.length; i++) {
         const seg = chapterSegments[i];
         const voice = String(voiceMapping[seg.spkr] || voiceMapping.narrator || voices[0]?.ShortName || 'en-US-AriaNeural');
-        const safeText = String(seg.text || ' ').trim();
-        if(!safeText) continue;
+        const safeText = String(seg.text || ' ');
 
         if(btn) btn.innerText = `⏳ Ch ${chapterNum}: ${i + 1} / ${chapterSegments.length}`;
 
@@ -664,13 +617,10 @@ async function synthesizeAndDownloadChapter(chapterNum, btn) {
         });
 
         const result = await tts.synthesize();
-        if(result && result.audio && result.audio.byteLength > 0) {
-            audioBlobs.push(new Blob([result.audio], { type: 'audio/mp3' }));
-        }
+        audioBlobs.push(new Blob([result.audio], { type: 'audio/mp3' }));
+
         await new Promise(resolve => setTimeout(resolve, 200));
     }
-
-    if(audioBlobs.length === 0) throw new Error('NoAudioReceived');
 
     const finalBlob = new Blob(audioBlobs, { type: 'audio/mp3' });
     const url = URL.createObjectURL(finalBlob);
@@ -682,7 +632,7 @@ async function synthesizeAndDownloadChapter(chapterNum, btn) {
 
     a.download = `FeistTech_${safeTitle}.mp3`;
     a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 10000);
+    URL.revokeObjectURL(url);
 }
 
 async function saveCurrentChapterAudio() {
@@ -691,67 +641,63 @@ async function saveCurrentChapterAudio() {
         return;
     }
     if (settings.useBrowserTTS) {
-        alert('Chapter audio export needs Edge-TTS.');
+        alert('Chapter audio export needs Edge-TTS — this only works with real Edge neural voices, not your browser\'s built-in voices. Switch back to Edge-TTS in the VOICES panel and try again.');
         return;
     }
 
     const targetChapter = segments[currentSegmentIndex].chapter;
     const btn = document.getElementById('saveChapterBtn');
-    const originalText = btn ? btn.innerText : '';
-    if (btn) {
-        btn.innerText = `⏳ Starting Ch ${targetChapter}...`;
-        btn.disabled = true;
-    }
+    const originalText = btn.innerText;
+    btn.innerText = `⏳ Starting Ch ${targetChapter}...`;
+    btn.disabled = true;
 
     try {
         await synthesizeAndDownloadChapter(targetChapter, btn);
-        if (btn) btn.innerText = "✅ CHAPTER SAVED";
+        btn.innerText = "✅ CHAPTER SAVED";
     } catch (e) {
         console.error("Chapter audio generation failed:", e);
-        alert("Failed to generate chapter audio: " + e.message);
-        if (btn) btn.innerText = "❌ ERROR";
+        alert("Failed to generate chapter audio.");
+        btn.innerText = "❌ ERROR";
     } finally {
         setTimeout(() => {
-            if (btn) {
-                btn.innerText = originalText;
-                btn.disabled = false;
-            }
+            btn.innerText = originalText;
+            btn.disabled = false;
         }, 3000);
     }
 }
 
+// Exports every chapter as its own MP3, one at a time, without requiring
+// the user to click into each chapter's first paragraph first.
 async function saveAllChaptersAudio() {
     if (segments.length === 0) {
         alert("Load a story first!");
         return;
     }
     if (settings.useBrowserTTS) {
-        alert('Full-book export needs Edge-TTS.');
+        alert('Full-book export needs Edge-TTS — switch back to Edge-TTS in the VOICES panel and try again.');
         return;
     }
 
     const chapters = [...new Set(segments.map(s => s.chapter))];
     const btn = document.getElementById('saveAllBtn');
-    const originalText = btn ? btn.innerText : '';
-    if (btn) btn.disabled = true;
+    const originalText = btn.innerText;
+    btn.disabled = true;
 
     try {
         for (let c = 0; c < chapters.length; c++) {
-            if (btn) btn.innerText = `⏳ Chapter ${c + 1} / ${chapters.length}...`;
+            btn.innerText = `⏳ Chapter ${c + 1} / ${chapters.length}...`;
             await synthesizeAndDownloadChapter(chapters[c], btn);
             await new Promise(resolve => setTimeout(resolve, 400));
         }
-        if (btn) btn.innerText = "✅ ALL CHAPTERS SAVED";
+        btn.innerText = "✅ ALL CHAPTERS SAVED";
     } catch (e) {
         console.error("Full-book audio generation failed:", e);
-        alert("Failed to generate audio for all chapters: " + e.message);
-        if (btn) btn.innerText = "❌ ERROR";
+        alert("Failed to generate audio for all chapters.");
+        btn.innerText = "❌ ERROR";
     } finally {
         setTimeout(() => {
-            if (btn) {
-                btn.innerText = originalText;
-                btn.disabled = false;
-            }
+            btn.innerText = originalText;
+            btn.disabled = false;
         }, 3000);
     }
 }
@@ -767,8 +713,7 @@ async function playWithBrowserTTS(seg) {
         utterance.volume = parseFloat(settings.volume);
         utterance.onstart = () => {
             nativeTTSActive = true;
-            const playBtn = document.getElementById('playBtn');
-            if (playBtn) playBtn.innerText = '⏸ PAUSE';
+            document.getElementById('playBtn').innerText = '⏸ PAUSE';
             showTTSStatus(`🎙 ${seg.spkr}`, 0);
         };
         utterance.onend = () => {
@@ -776,11 +721,7 @@ async function playWithBrowserTTS(seg) {
             if(!isPlaying) { resolve(); return; }
             currentSegmentIndex++; saveState(); updateProgress();
             if(currentSegmentIndex < segments.length) play();
-            else {
-                isPlaying = false;
-                const playBtn = document.getElementById('playBtn');
-                if (playBtn) playBtn.innerText = '▶ PLAY';
-            }
+            else { isPlaying = false; document.getElementById('playBtn').innerText = '▶ PLAY'; }
             resolve();
         };
         utterance.onerror = (e) => {
@@ -798,37 +739,30 @@ async function playWithBrowserTTS(seg) {
 // ==================== CONTROLS ====================
 function togglePlay() {
     unlockAudioPlayback();
-    const playBtn = document.getElementById('playBtn');
     if(settings.useBrowserTTS) {
         if(speechSynthesis.speaking && !speechSynthesis.paused) {
             speechSynthesis.pause(); isPlaying = false;
-            if (playBtn) playBtn.innerText = '▶ PLAY';
+            document.getElementById('playBtn').innerText = '▶ PLAY';
         } else if(speechSynthesis.paused) {
             speechSynthesis.resume(); isPlaying = true;
-            if (playBtn) playBtn.innerText = '⏸ PAUSE';
+            document.getElementById('playBtn').innerText = '⏸ PAUSE';
         } else { play(); }
     } else {
         if(!audioPlayer.paused) {
             audioPlayer.pause(); isPlaying = false;
-            if (playBtn) playBtn.innerText = '▶ PLAY';
+            document.getElementById('playBtn').innerText = '▶ PLAY';
         } else if(audioPlayer.src && audioPlayer.src !== window.location.href) {
             audioPlayer.play(); isPlaying = true;
-            if (playBtn) playBtn.innerText = '⏸ PAUSE';
+            document.getElementById('playBtn').innerText = '⏸ PAUSE';
         } else { play(); }
     }
 }
 
 function stopPlayback() {
     isPlaying = false;
-    if(settings.useBrowserTTS) {
-        speechSynthesis.cancel();
-    } else {
-        audioPlayer.pause();
-        audioPlayer.removeAttribute('src');
-        audioPlayer.load();
-    }
-    const playBtn = document.getElementById('playBtn');
-    if (playBtn) playBtn.innerText = '▶ PLAY';
+    if(settings.useBrowserTTS) speechSynthesis.cancel();
+    else { audioPlayer.pause(); audioPlayer.src = ''; }
+    document.getElementById('playBtn').innerText = '▶ PLAY';
     hideTTSStatus();
     window.dispatchEvent(new CustomEvent('FeistTech_Audio_Stop'));
 }
@@ -849,13 +783,16 @@ function jumpToChapter(v) {
 }
 
 function updateStatusDot(dot, spkr, voiceName) {
-    if (!dot) return;
     const status = voiceStatusMemory[voiceName] || 'unknown';
     dot.className = 'voice-status-dot ' + status;
     dot.title = status === 'working' ? '✓ Verified working' : status === 'broken' ? '✗ Not working (geo-locked or unavailable)' : 'Unknown — click ▶ to test';
 }
 
 // ==================== VOICE PREVIEW ====================
+// A varied pool instead of one fixed line, so auditioning a voice across
+// several presses actually exercises different syllables/intonation
+// (questions, exclamations, longer and shorter clauses) rather than
+// hearing the exact same sentence every time.
 const SAMPLE_SENTENCES = [
     "The quick brown fox jumps over the lazy dog while the owl watches quietly.",
     "Could you really believe what happened at the harbor last night?",
@@ -894,6 +831,7 @@ async function previewVoice(voiceName, spkr) {
             u.onerror = () => resolve(false);
             speechSynthesis.cancel();
             setTimeout(() => speechSynthesis.speak(u), 50);
+            // If nothing happens in 2s, assume broken
             setTimeout(() => { if(!started) resolve(false); }, 2000);
         } else {
             (async () => {
@@ -916,22 +854,23 @@ async function previewVoice(voiceName, spkr) {
 // ==================== SLIDERS ====================
 function onSpeedChange(v) {
     settings.speed = parseFloat(v);
-    const speedVal = document.getElementById('speedVal');
-    if (speedVal) speedVal.innerText = parseFloat(v).toFixed(1) + 'x';
-    clearAudioCache();
+    document.getElementById('speedVal').innerText = parseFloat(v).toFixed(1) + 'x';
     syncDeckSpeedControls();
     saveState();
 }
 function onVolumeChange(v) {
     settings.volume = parseFloat(v);
-    const volumeVal = document.getElementById('volumeVal');
-    if (volumeVal) volumeVal.innerText = Math.round(v * 100) + '%';
+    document.getElementById('volumeVal').innerText = Math.round(v * 100) + '%';
     audioPlayer.volume = settings.volume;
-    clearAudioCache();
     saveState();
 }
 
 // ==================== COMMAND DECK ====================
+// Quick-access speed pill/popover + speaker chip + export menu docked at
+// the bottom of the screen, so the most-used controls during playback
+// never require opening the Studio panel. All of it reads/writes the same
+// `settings`/`voiceMapping` state the Studio panel already does -- this is
+// a second set of controls over that state, not a separate copy of it.
 function currentDeckSpkr() {
     return (segments[currentSegmentIndex] && segments[currentSegmentIndex].spkr) || 'narrator';
 }
@@ -963,7 +902,6 @@ function setQuickSpeed(v) {
 
 function toggleSpeedPopover() {
     const pop = document.getElementById('speedPopover');
-    if (!pop) return;
     const wasOpen = pop.classList.contains('open');
     closeAllPopovers();
     if(!wasOpen) pop.classList.add('open');
@@ -971,7 +909,6 @@ function toggleSpeedPopover() {
 
 function toggleExportPopover() {
     const pop = document.getElementById('exportPopover');
-    if (!pop) return;
     const wasOpen = pop.classList.contains('open');
     closeAllPopovers();
     if(!wasOpen) pop.classList.add('open');
@@ -1004,9 +941,8 @@ function updateMediaSession(seg) {
 
 // ==================== PROGRESS ====================
 function updateProgress() {
-    const bar = document.getElementById('progressBar');
-    if(bar && segments.length > 0)
-        bar.style.width = (currentSegmentIndex / segments.length * 100) + '%';
+    if(segments.length > 0)
+        document.getElementById('progressBar').style.width = (currentSegmentIndex / segments.length * 100) + '%';
 }
 
 // ==================== HIGHLIGHT ====================
@@ -1014,9 +950,16 @@ function highlight(seg) {
     document.querySelectorAll('.reading').forEach(e => e.classList.remove('reading'));
     if(seg && seg.element) {
         seg.element.classList.add('reading');
+        // In the leather-bound skin the element lives inside a paginated
+        // leaf rather than a scrolling column -- turn to its page instead
+        // of scrolling to it. window.LeatherSkin is a no-op when that
+        // skin isn't active (see js/leather-skin.js).
         if (window.LeatherSkin && window.LeatherSkin.getSkin() === 'leather') {
             window.LeatherSkin.gotoSegment(seg);
         } else if (!anyDrawerOpen()) {
+            // Don't yank the page out from under someone auditioning a
+            // voice or reading the library/help -- only autoscroll while
+            // nothing is open over the text.
             seg.element.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
     }
@@ -1036,11 +979,7 @@ function setupKeyboard() {
     document.addEventListener('keydown', e => {
         const tag = document.activeElement.tagName;
         if(tag === 'TEXTAREA' || tag === 'INPUT' || tag === 'SELECT') return;
-
-        // Null-safe overlay check
-        const rsvpOverlay = document.getElementById('rsvpOverlay');
-        const rsvpOpen = !!rsvpOverlay && rsvpOverlay.classList.contains('open');
-
+        const rsvpOpen = document.getElementById('rsvpOverlay').classList.contains('open');
         if(rsvpOpen) {
             if(e.code === 'Escape') { e.preventDefault(); closeRsvp(); }
             if(e.code === 'Space') { e.preventDefault(); rsvpToggle(); }
@@ -1058,32 +997,25 @@ function setupKeyboard() {
 // ==================== TTS STATUS ====================
 let ttsStatusTimer = null;
 function showTTSStatus(msg, dur=0) {
-    const textEl = document.getElementById('ttsStatusText');
-    const boxEl = document.getElementById('ttsStatus');
-    if (textEl) textEl.innerText = msg;
-    if (boxEl) boxEl.classList.add('active');
+    document.getElementById('ttsStatusText').innerText = msg;
+    document.getElementById('ttsStatus').classList.add('active');
     if(ttsStatusTimer) clearTimeout(ttsStatusTimer);
     if(dur > 0) ttsStatusTimer = setTimeout(hideTTSStatus, dur);
 }
-
-function hideTTSStatus() {
-    const boxEl = document.getElementById('ttsStatus');
-    if (boxEl) boxEl.classList.remove('active');
-}
+function hideTTSStatus() { document.getElementById('ttsStatus').classList.remove('active'); }
 
 // ==================== SAVE STATE ====================
+// State stored separately so content (potentially large) doesn't break small data
 function saveState() {
     try {
         localStorage.setItem('feist_settings', JSON.stringify(settings));
         localStorage.setItem('feist_progress', currentSegmentIndex);
         localStorage.setItem('feist_spkrs', JSON.stringify([...detectedSpkrs]));
         localStorage.setItem('feist_voiceMapping', JSON.stringify(voiceMapping));
-        const storyEl = document.getElementById('storyContainer');
-        if (storyEl) {
-            const content = storyEl.innerHTML;
-            if(content && content.length < 500000) {
-                localStorage.setItem('feist_content', content);
-            }
+        // Store content separately — catch quota errors gracefully
+        const content = document.getElementById('storyContainer').innerHTML;
+        if(content && content.length < 500000) {
+            localStorage.setItem('feist_content', content);
         }
     } catch(e) {
         console.warn('State save partial failure:', e);
@@ -1103,9 +1035,11 @@ function checkPersistence() {
     const progress = parseInt(localStorage.getItem('feist_progress') || '0');
     if(hasContent) {
         const banner = document.getElementById('resumeBanner');
-        if (banner) banner.classList.add('visible');
+        banner.classList.add('visible');
         const detail = document.getElementById('resumeDetail');
-        if (detail) detail.innerText = `Segment ${progress + 1} — tap to continue`;
+        detail.innerText = `Segment ${progress + 1} — tap to continue`;
+        // Keep the input panel open so the resume banner is visible without
+        // an extra tap; it collapses itself once the session is resumed.
         expandInputPanel();
     }
 }
@@ -1120,17 +1054,11 @@ function resumeSession() {
     if(s) { try { settings = {...settings, ...JSON.parse(s)}; } catch(e) {} }
     if(sp) { try { detectedSpkrs = new Set(JSON.parse(sp)); } catch(e) {} }
     if(vm) { try { voiceMapping = JSON.parse(vm); } catch(e) {} }
-
-    const speedSlider = document.getElementById('speedSlider');
-    const speedVal = document.getElementById('speedVal');
-    const volumeSlider = document.getElementById('volumeSlider');
-    const volumeVal = document.getElementById('volumeVal');
-
-    if (speedSlider) speedSlider.value = settings.speed;
-    if (speedVal) speedVal.innerText = parseFloat(settings.speed).toFixed(1) + 'x';
-    if (volumeSlider) volumeSlider.value = settings.volume || 1;
-    if (volumeVal) volumeVal.innerText = Math.round((settings.volume || 1) * 100) + '%';
-
+    // Restore sliders
+    document.getElementById('speedSlider').value = settings.speed;
+    document.getElementById('speedVal').innerText = parseFloat(settings.speed).toFixed(1) + 'x';
+    document.getElementById('volumeSlider').value = settings.volume || 1;
+    document.getElementById('volumeVal').innerText = Math.round((settings.volume || 1) * 100) + '%';
     syncDeckSpeedControls();
     initReader(c, true);
     if(p) {
@@ -1174,7 +1102,6 @@ function getSaveSlots() {
 function renderSaveSlots() {
     const container = document.getElementById('saveSlotsContainer');
     const slots = getSaveSlots();
-    if(!container) return;
     container.innerHTML = '';
     if(!slots.length) {
         container.innerHTML = '<p style="color:#444;font-size:0.8rem;">No saves yet. Press + above to save your current position.</p>';
@@ -1205,7 +1132,6 @@ function loadSlot(id) {
     voiceMapping = {...(slot.voiceMapping || {})};
     if(slot.settings) settings = {...settings, ...slot.settings};
     if(slot.spkrs) detectedSpkrs = new Set(slot.spkrs);
-    clearAudioCache();
     saveState();
     closeSavePanel();
     if(segments[currentSegmentIndex]) highlight(segments[currentSegmentIndex]);
@@ -1221,19 +1147,15 @@ function deleteSlot(id) {
 function openSavePanel() {
     closeAllPanels();
     renderSaveSlots();
-    const panel = document.getElementById('savePanel');
-    if (panel) panel.style.right = '0';
+    document.getElementById('savePanel').style.right = '0';
 }
 function closeSavePanel() {
-    const panel = document.getElementById('savePanel');
-    if (panel) panel.style.right = '-460px';
+    document.getElementById('savePanel').style.right = '-460px';
 }
 
 // ==================== LOADING ====================
 function loadFromPaste() {
-    const pasteEl = document.getElementById('pasteArea');
-    if (!pasteEl) return;
-    const text = pasteEl.value.trim();
+    const text = document.getElementById('pasteArea').value.trim();
     if(!text) { alert('Paste some content first!'); return; }
     detectSpkrs(text);
     const parsed = parseTextWithSpkrs(text);
@@ -1242,7 +1164,6 @@ function loadFromPaste() {
 }
 
 function handleFileSelect(input) {
-    if (!input.files || !input.files[0]) return;
     const r = new FileReader();
     r.onload = e => {
         const text = e.target.result;
@@ -1270,7 +1191,6 @@ async function parseAndLoadPDF(arrayBuffer) {
 }
 
 async function handlePDFSelect(input) {
-    if (!input.files || !input.files[0]) return;
     showTTSStatus('⏳ Parsing PDF...', 0);
     try {
         const arrayBuffer = await input.files[0].arrayBuffer();
@@ -1282,6 +1202,10 @@ async function handlePDFSelect(input) {
     }
 }
 
+// Deep-link support: ?pdf=<url>&title=<label> auto-fetches and loads a
+// hosted PDF straight into the reader, so other pages (e.g. the hoffect
+// research library) can send a paper here with one click instead of
+// requiring the visitor to download it and re-upload it manually.
 async function loadPDFFromUrl(url, label) {
     showTTSStatus('⏳ Fetching ' + (label || 'PDF') + '...', 0);
     try {
@@ -1299,9 +1223,18 @@ async function loadPDFFromUrl(url, label) {
     }
 }
 
-// ==================== LIBRARY ====================
+// ==================== LIBRARY (article directory) ====================
+// Real FeistTech articles, one JSON file per article under
+// data/reading-room/articles/, listed in data/reading-room/manifest.json.
+// Loaded straight into the reader below -- never a page navigation, so a
+// reader can go from "browsing the library" to "listening/reading" without
+// ever leaving the Reading Room. To add a new article: drop a new
+// {id}.json into that folder (see any existing one for the shape) and add
+// its id to manifest.json. Nothing else needs to change -- the homepage's
+// featured-article slot and this library's sort order are both computed
+// from each article's own `published` date, automatically.
 const LIBRARY_BASE = '../../../../data/reading-room/';
-let libraryArticles = {};
+let libraryArticles = {}; // id -> full article object, cached once fetched
 let libraryManifestLoaded = false;
 
 function fmtLibraryDate(iso) {
@@ -1313,7 +1246,6 @@ function fmtLibraryDate(iso) {
 
 async function loadLibrary() {
     const list = document.getElementById('libraryList');
-    if (!list) return;
     try {
         const manifestRes = await fetch(LIBRARY_BASE + 'manifest.json');
         if (!manifestRes.ok) throw new Error('HTTP ' + manifestRes.status);
@@ -1334,7 +1266,6 @@ async function loadLibrary() {
 
 function renderLibrary(articles) {
     const list = document.getElementById('libraryList');
-    if (!list) return;
     if (!articles.length) { list.innerHTML = '<div class="library-loading">No articles yet.</div>'; return; }
     const sorted = articles.slice().sort((a, b) => (b.published || '').localeCompare(a.published || ''));
     list.innerHTML = '';
@@ -1389,22 +1320,26 @@ async function loadArticleIntoReader(id, pushState) {
     }
 }
 
-function toggleLibrary() { document.getElementById('libraryPanel')?.classList.toggle('open'); }
+function toggleLibrary() { document.getElementById('libraryPanel').classList.toggle('open'); }
 
 function initReader(html, isResume=false) {
     if(!html) return;
-    clearAudioCache();
-    const storyEl = document.getElementById('storyContainer');
-    if (storyEl) storyEl.innerHTML = html;
+    document.getElementById('storyContainer').innerHTML = html;
     processContent();
     populateChapters();
     if(!isResume) {
+        // First load or a re-submit after editing: auto-assign voices if
+        // not already mapped, restart from the top.
         if(voices.length > 0) autoAssignVoices();
         currentSegmentIndex = 0;
     }
     renderVoiceMapping();
     saveState();
     collapseInputPanel();
+    // New content just replaced #storyContainer's children outright, so any
+    // leather-bound leaves built from the previous article's elements are
+    // now stale -- rebuild pagination from the fresh DOM. No-op in the
+    // standard skin (window.LeatherSkin is always loaded, see index.html).
     if (window.LeatherSkin) window.LeatherSkin.refresh();
 }
 
@@ -1422,7 +1357,6 @@ function processContent() {
 
 function populateChapters() {
     const sel = document.getElementById('chapterSelect');
-    if (!sel) return;
     sel.innerHTML = '<option value="">— Chapter —</option>';
     const seen = new Set();
     segments.forEach((seg, idx) => {
@@ -1436,20 +1370,30 @@ function populateChapters() {
     });
 }
 
+// Only one of {settings panel, save panel} may be open at once — they used
+// to be independently toggled and would silently stack, so opening one
+// never actually brought it in front of another. (The hamburger menu this
+// used to also close is gone -- its items are now header buttons and the
+// Studio panel's footer links.)
 function closeAllPanels() {
-    document.getElementById('settingsPanel')?.classList.remove('open');
-    const savePanel = document.getElementById('savePanel');
-    if (savePanel) savePanel.style.right = '-460px';
+    document.getElementById('settingsPanel').classList.remove('open');
+    document.getElementById('savePanel').style.right = '-460px';
 }
 
 function togglePanel() {
     const panel = document.getElementById('settingsPanel');
-    if (!panel) return;
     const wasOpen = panel.classList.contains('open');
     closeAllPanels();
     if(!wasOpen) panel.classList.add('open');
 }
 
+// Clears the currently loaded story so a new one can be typed/pasted in,
+// without leaving this page. The reader stays on one screen the whole
+// time — this just empties it and reopens the text panel.
+// Kept in sync with the launchpad markup #storyContainer ships with on
+// first paint (index.html) -- startNewStory() below has to rebuild the
+// same structure (including #resumeBanner) since it's wiping and
+// replacing #storyContainer's children outright, not just hiding them.
 const EMPTY_STATE_HTML = `
 <div class="intake-launchpad" id="intakeLaunchpad">
     <h2>Welcome to the Reading Room</h2>
@@ -1463,7 +1407,7 @@ const EMPTY_STATE_HTML = `
         <button class="launch-card" onclick="toggleInputPanel()">
             <span class="icon">📄</span>
             <strong>Paste / Script</strong>
-            <p>Type or paste text tagged with [Name] or [SPKR: Name]</p>
+            <p>Type or paste text tagged with [SPKR: Name]</p>
         </button>
         <button class="launch-card" onclick="toggleInputPanel()">
             <span class="icon">📕</span>
@@ -1484,29 +1428,32 @@ function startNewStory() {
     if(!confirm('Start a new story? Your current position is saved and can be resumed later from the Load panel.')) return;
     saveState();
     stopPlayback();
-    clearAudioCache();
     segments = [];
     currentSegmentIndex = 0;
     detectedSpkrs = new Set(['narrator']);
-    const storyEl = document.getElementById('storyContainer');
-    if (storyEl) storyEl.innerHTML = EMPTY_STATE_HTML;
+    document.getElementById('storyContainer').innerHTML = EMPTY_STATE_HTML;
     populateChapters();
     renderVoiceMapping();
-    const banner = document.getElementById('resumeBanner');
-    if (banner) banner.classList.add('visible');
+    document.getElementById('resumeBanner').classList.add('visible');
     expandInputPanel();
 }
 
-function toggleInputPanel() { document.getElementById('inputPanel')?.classList.toggle('open'); }
+// ==================== COLLAPSIBLE PANELS (help + text input) ====================
+function toggleInputPanel() { document.getElementById('inputPanel').classList.toggle('open'); }
+// #resumeBanner now lives inside the always-visible empty-state launchpad
+// (see #storyContainer's initial markup) rather than inside this modal, so
+// there's no panel left to force open just to reveal it -- this is now a
+// no-op, kept only so its two existing call sites (checkPersistence,
+// startNewStory) don't need to change.
 function expandInputPanel() {}
 function collapseInputPanel() {
-    document.getElementById('inputPanel')?.classList.remove('open');
+    document.getElementById('inputPanel').classList.remove('open');
     const label = document.getElementById('inputPanelLabel');
     if(label) label.innerText = `✎ EDIT TEXT — ${segments.length} segments, ${new Set(segments.map(s=>s.chapter)).size} chapter(s)`;
 }
 
-function toggleHelp() { document.getElementById('helpPanel')?.classList.toggle('open'); }
-function expandHelp() { document.getElementById('helpPanel')?.classList.add('open'); }
+function toggleHelp() { document.getElementById('helpPanel').classList.toggle('open'); }
+function expandHelp() { document.getElementById('helpPanel').classList.add('open'); }
 
 function saveToDisk() {
     const ts = new Date().toISOString().slice(0,16).replace(/[:T]/g,'-');
@@ -1514,12 +1461,15 @@ function saveToDisk() {
     const blob = new Blob([document.documentElement.outerHTML], { type: 'text/html' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a'); a.href = url; a.download = fn; a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 5000);
+    URL.revokeObjectURL(url);
     showTTSStatus('💾 ' + fn, 2500);
 }
 
-// ==================== RSVP ====================
-let rsvpQueue = [];
+// ==================== RSVP (visual speed-read, audio-independent) ====================
+// This is a purely visual word-flash pacer. It never touches speechSynthesis
+// or audioPlayer, so opening it can never interrupt audio the user already
+// has playing — it just paces through the same text on screen.
+let rsvpQueue = [];      // flat list of { word, segIdx }
 let rsvpPos = 0;
 let rsvpWpm = 300;
 let rsvpPlaying = false;
@@ -1537,18 +1487,15 @@ function openRsvp() {
     if(segments.length === 0) { showTTSStatus('⚠️ Load a story first', 2000); return; }
     rsvpBuildQueueFrom(currentSegmentIndex);
     rsvpPos = 0;
-    const overlay = document.getElementById('rsvpOverlay');
-    if (overlay) overlay.classList.add('open');
+    document.getElementById('rsvpOverlay').classList.add('open');
     rsvpShowWord();
     rsvpPlaying = false;
-    const playBtn = document.getElementById('rsvpPlayBtn');
-    if (playBtn) playBtn.innerText = '▶ START';
+    document.getElementById('rsvpPlayBtn').innerText = '▶ START';
 }
 
 function closeRsvp() {
     rsvpPause();
-    const overlay = document.getElementById('rsvpOverlay');
-    if (overlay) overlay.classList.remove('open');
+    document.getElementById('rsvpOverlay').classList.remove('open');
 }
 
 function rsvpToggle() {
@@ -1559,8 +1506,7 @@ function rsvpPlay() {
     if(rsvpQueue.length === 0) return;
     if(rsvpPos >= rsvpQueue.length) rsvpPos = 0;
     rsvpPlaying = true;
-    const playBtn = document.getElementById('rsvpPlayBtn');
-    if (playBtn) playBtn.innerText = '⏸ PAUSE';
+    document.getElementById('rsvpPlayBtn').innerText = '⏸ PAUSE';
     rsvpTick();
 }
 
@@ -1584,13 +1530,9 @@ function rsvpShowWord() {
     const entry = rsvpQueue[rsvpPos];
     if(!entry) return;
     const seg = segments[entry.segIdx];
-    const stage = document.getElementById('rsvpStage');
-    const tag = document.getElementById('rsvpSpeakerTag');
-    const bar = document.getElementById('rsvpProgressBar');
-
-    if (stage) stage.innerText = entry.word;
-    if (tag) tag.innerText = (seg?.spkr || 'narrator').toUpperCase();
-    if (bar) bar.style.width = (rsvpPos / rsvpQueue.length * 100) + '%';
+    document.getElementById('rsvpStage').innerText = entry.word;
+    document.getElementById('rsvpSpeakerTag').innerText = (seg?.spkr || 'narrator').toUpperCase();
+    document.getElementById('rsvpProgressBar').style.width = (rsvpPos / rsvpQueue.length * 100) + '%';
 }
 
 function rsvpSkip(n) {
@@ -1600,6 +1542,5 @@ function rsvpSkip(n) {
 
 function rsvpUpdateWpm(v) {
     rsvpWpm = parseInt(v);
-    const disp = document.getElementById('rsvpWpmDisplay');
-    if (disp) disp.innerText = rsvpWpm;
+    document.getElementById('rsvpWpmDisplay').innerText = rsvpWpm;
 }
