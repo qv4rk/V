@@ -14,11 +14,93 @@ let audioUnlocked = false;
 
 // Lookahead Cache for seamless pre-buffering
 const audioCache = {};
+const audioCachePending = {};
+let audioCacheGen = 0;
+const PRELOAD_LOOKAHEAD = 2; // how many segments to keep pre-buffered ahead of playback
+const MAX_WORDS_PER_TTS_CALL = 45; // long paragraphs are split into word-bounded chunks so a single call can't time out/fail
+
 function clearAudioCache() {
+    audioCacheGen++;
     Object.values(audioCache).forEach(url => {
         try { URL.revokeObjectURL(url); } catch(e) {}
     });
     for (let k in audioCache) delete audioCache[k];
+    for (let k in audioCachePending) delete audioCachePending[k];
+}
+
+// Splits text into chunks of at most maxWords words, breaking at sentence
+// boundaries where possible (and mid-sentence only as a last resort) so
+// nothing gets cut off inside a word. Kept separate from a single overlong
+// paragraph -- Edge-TTS is far more likely to fail/time out on one huge
+// request than on several small ones.
+function chunkTextForTTS(text, maxWords = MAX_WORDS_PER_TTS_CALL) {
+    const trimmed = String(text || '').trim();
+    if(!trimmed) return [];
+    const words = trimmed.split(/\s+/);
+    if(words.length <= maxWords) return [trimmed];
+
+    const sentences = trimmed.match(/[^.!?]+[.!?]*(?:\s+|$)/g) || [trimmed];
+    const chunks = [];
+    let current = [];
+    let count = 0;
+    sentences.forEach(rawSentence => {
+        const sentence = rawSentence.trim();
+        if(!sentence) return;
+        const sWords = sentence.split(/\s+/);
+        if(sWords.length > maxWords) {
+            if(current.length) { chunks.push(current.join(' ')); current = []; count = 0; }
+            for(let i = 0; i < sWords.length; i += maxWords) {
+                chunks.push(sWords.slice(i, i + maxWords).join(' '));
+            }
+            return;
+        }
+        if(count && count + sWords.length > maxWords) {
+            chunks.push(current.join(' '));
+            current = [];
+            count = 0;
+        }
+        current.push(sentence);
+        count += sWords.length;
+    });
+    if(current.length) chunks.push(current.join(' '));
+    return chunks.filter(Boolean);
+}
+
+// One Edge-TTS call, with a single silent retry -- an empty/failed response
+// is often just a blip from firing requests back-to-back, and a beat later
+// usually clears it without bothering the reader with an error.
+async function synthesizeEdgeChunk(text, voice, opts) {
+    for (let attempt = 0; attempt < 2; attempt++) {
+        if(attempt > 0) await new Promise(resolve => setTimeout(resolve, 500));
+        try {
+            const result = await new window.EdgeTTS(text, voice, opts).synthesize();
+            if(result && result.audio && result.audio.byteLength > 0) return result.audio;
+        } catch(e) {
+            console.warn('Edge-TTS chunk failed' + (attempt === 0 ? ', retrying once' : ', giving up') + ':', e?.message || e);
+        }
+    }
+    return null;
+}
+
+// Synthesizes a full segment's text (chunked + retried under the hood) and
+// stitches the pieces into one playable/downloadable Blob. Shared by
+// playback, lookahead preloading, and chapter export so they all get the
+// same chunking + retry behavior for free.
+async function synthesizeSegmentAudio(text, voice, opts) {
+    const chunks = chunkTextForTTS(text);
+    if(chunks.length === 0) return null;
+    const blobs = [];
+    for (const chunk of chunks) {
+        const audio = await synthesizeEdgeChunk(chunk, voice, opts);
+        if(audio) blobs.push(new Blob([audio], { type: 'audio/mp3' }));
+        else console.warn('Dropped a TTS chunk with no audio after retry:', chunk.slice(0, 60));
+    }
+    if(blobs.length === 0) return null;
+    return new Blob(blobs, { type: 'audio/mp3' });
+}
+
+function edgeTTSOpts() {
+    return { rate: formatEdgePct(settings.speed), pitch: '+0Hz', volume: formatEdgePct(settings.volume) };
 }
 
 // ==================== BACKGROUND ====================
@@ -540,6 +622,8 @@ async function play() {
         if(!settings.useBrowserTTS) {
             settings.useBrowserTTS = true;
             loadBrowserVoices();
+            renderVoiceMapping();
+            console.warn('Edge-TTS kept failing after a retry -- switched to browser voices for this session. Re-open the VOICES panel to switch back.');
             try { await playWithBrowserTTS(seg); } catch(e2) { handlePlayError(e2); }
         } else { handlePlayError(e); }
     }
@@ -549,30 +633,33 @@ function handlePlayError(e) {
     isPlaying = false;
     const playBtn = document.getElementById('playBtn');
     if (playBtn) playBtn.innerText = '⚠ ERR';
-    showTTSStatus('Playback failed: ' + (e?.message || e?.error || 'unknown'), 4000);
+    console.error('Playback failed: ' + (e?.message || e?.error || 'unknown'));
 }
 
-async function preloadNextSegment(currentIndex) {
-    const nextIdx = currentIndex + 1;
-    if(nextIdx >= segments.length || settings.useBrowserTTS || !window.EdgeTTS) return;
-    if(audioCache[nextIdx]) return;
+// Keeps up to PRELOAD_LOOKAHEAD segments synthesized ahead of playback so
+// the next speaker's audio is usually already sitting in cache by the time
+// it's needed, instead of the player stalling on a live TTS round-trip
+// every time the speaker changes.
+async function preloadSegment(idx) {
+    if(idx < 0 || idx >= segments.length || settings.useBrowserTTS || !window.EdgeTTS) return;
+    if(audioCache[idx] || audioCachePending[idx]) return;
 
-    const nextSeg = segments[nextIdx];
-    if(!nextSeg || !nextSeg.text || !nextSeg.text.trim()) return;
+    const seg = segments[idx];
+    if(!seg || !seg.text || !seg.text.trim()) return;
 
-    const voice = voiceMapping[nextSeg.spkr] || voiceMapping.narrator || voices[0]?.ShortName;
+    const gen = audioCacheGen;
+    audioCachePending[idx] = true;
     try {
-        const tts = new window.EdgeTTS(String(nextSeg.text || ' '), voice, {
-            rate: formatEdgePct(settings.speed),
-            pitch: '+0Hz',
-            volume: formatEdgePct(settings.volume)
-        });
-        const result = await tts.synthesize();
-        if(result && result.audio && result.audio.byteLength > 0) {
-            const blob = new Blob([result.audio], { type: 'audio/mp3' });
-            audioCache[nextIdx] = URL.createObjectURL(blob);
-        }
-    } catch(e) {}
+        const voice = voiceMapping[seg.spkr] || voiceMapping.narrator || voices[0]?.ShortName;
+        const blob = await synthesizeSegmentAudio(seg.text, voice, edgeTTSOpts());
+        if(blob && gen === audioCacheGen) audioCache[idx] = URL.createObjectURL(blob);
+    } finally {
+        delete audioCachePending[idx];
+    }
+}
+
+function preloadAhead(fromIdx) {
+    for (let i = 1; i <= PRELOAD_LOOKAHEAD; i++) preloadSegment(fromIdx + i);
 }
 
 async function playWithEdgeTTS(seg) {
@@ -581,26 +668,18 @@ async function playWithEdgeTTS(seg) {
     }
 
     let url = audioCache[currentSegmentIndex];
-    if(!url) {
-        const voice = voiceMapping[seg.spkr] || voiceMapping.narrator || voices[0]?.ShortName;
-        const tts = new window.EdgeTTS(String(seg.text || ' '), voice, {
-            rate: formatEdgePct(settings.speed),
-            pitch: '+0Hz',
-            volume: formatEdgePct(settings.volume)
-        });
-        const result = await tts.synthesize();
-        if(!result || !result.audio || result.audio.byteLength === 0) {
-            throw new Error('NoAudioReceived');
-        }
-        const blob = new Blob([result.audio], { type: 'audio/mp3' });
-        url = URL.createObjectURL(blob);
-    } else {
+    if(url) {
         delete audioCache[currentSegmentIndex];
+    } else {
+        const voice = voiceMapping[seg.spkr] || voiceMapping.narrator || voices[0]?.ShortName;
+        const blob = await synthesizeSegmentAudio(seg.text, voice, edgeTTSOpts());
+        if(!blob) throw new Error('NoAudioReceived');
+        url = URL.createObjectURL(blob);
     }
 
     if(!url) throw new Error('Audio URL is empty');
 
-    preloadNextSegment(currentSegmentIndex);
+    preloadAhead(currentSegmentIndex);
 
     audioPlayer.src = url;
     audioPlayer.volume = settings.volume;
@@ -629,7 +708,6 @@ async function playWithEdgeTTS(seg) {
         isPlaying = false;
         const playBtn = document.getElementById('playBtn');
         if (playBtn) playBtn.innerText = '⚠ ERR';
-        showTTSStatus('Playback failed: ' + detail, 4000);
     };
 
     window.dispatchEvent(new CustomEvent('FeistTech_Audio_Start', { detail: { chapter: seg.chapter } }));
@@ -644,6 +722,17 @@ function formatEdgePct(val) {
     return (num >= 0 ? '+' : '') + num + '%';
 }
 
+// Briefly swaps a button's label to show a result/warning without an
+// alert() or on-screen toast -- the button already owns its own text
+// slot (⏳ / ✅ / ❌ during export), so reusing it keeps feedback out of
+// the way for anyone who isn't looking for it.
+function flashBtnText(btn, text, dur = 2500) {
+    if(!btn) return;
+    const original = btn.innerText;
+    btn.innerText = text;
+    setTimeout(() => { btn.innerText = original; }, dur);
+}
+
 async function synthesizeAndDownloadChapter(chapterNum, btn) {
     const chapterSegments = segments.filter(seg => seg.chapter === chapterNum);
     if(chapterSegments.length === 0) return;
@@ -652,21 +741,13 @@ async function synthesizeAndDownloadChapter(chapterNum, btn) {
     for (let i = 0; i < chapterSegments.length; i++) {
         const seg = chapterSegments[i];
         const voice = String(voiceMapping[seg.spkr] || voiceMapping.narrator || voices[0]?.ShortName || 'en-US-AriaNeural');
-        const safeText = String(seg.text || ' ').trim();
-        if(!safeText) continue;
 
         if(btn) btn.innerText = `⏳ Ch ${chapterNum}: ${i + 1} / ${chapterSegments.length}`;
 
-        const tts = new window.EdgeTTS(safeText, voice, {
-            rate: formatEdgePct(settings.speed),
-            pitch: '+0Hz',
-            volume: formatEdgePct(settings.volume)
-        });
+        const blob = await synthesizeSegmentAudio(seg.text, voice, edgeTTSOpts());
+        if(blob) audioBlobs.push(blob);
+        else console.warn(`Ch ${chapterNum} segment ${i + 1} produced no audio after retry -- skipped.`);
 
-        const result = await tts.synthesize();
-        if(result && result.audio && result.audio.byteLength > 0) {
-            audioBlobs.push(new Blob([result.audio], { type: 'audio/mp3' }));
-        }
         await new Promise(resolve => setTimeout(resolve, 200));
     }
 
@@ -686,17 +767,17 @@ async function synthesizeAndDownloadChapter(chapterNum, btn) {
 }
 
 async function saveCurrentChapterAudio() {
+    const btn = document.getElementById('saveChapterBtn');
     if (segments.length === 0) {
-        alert("Load a story first!");
+        flashBtnText(btn, "⚠ Load a story first");
         return;
     }
     if (settings.useBrowserTTS) {
-        alert('Chapter audio export needs Edge-TTS.');
+        flashBtnText(btn, "⚠ Needs Edge-TTS — switch in VOICES panel");
         return;
     }
 
     const targetChapter = segments[currentSegmentIndex].chapter;
-    const btn = document.getElementById('saveChapterBtn');
     const originalText = btn ? btn.innerText : '';
     if (btn) {
         btn.innerText = `⏳ Starting Ch ${targetChapter}...`;
@@ -708,7 +789,6 @@ async function saveCurrentChapterAudio() {
         if (btn) btn.innerText = "✅ CHAPTER SAVED";
     } catch (e) {
         console.error("Chapter audio generation failed:", e);
-        alert("Failed to generate chapter audio: " + e.message);
         if (btn) btn.innerText = "❌ ERROR";
     } finally {
         setTimeout(() => {
@@ -721,17 +801,17 @@ async function saveCurrentChapterAudio() {
 }
 
 async function saveAllChaptersAudio() {
+    const btn = document.getElementById('saveAllBtn');
     if (segments.length === 0) {
-        alert("Load a story first!");
+        flashBtnText(btn, "⚠ Load a story first");
         return;
     }
     if (settings.useBrowserTTS) {
-        alert('Full-book export needs Edge-TTS.');
+        flashBtnText(btn, "⚠ Needs Edge-TTS — switch in VOICES panel");
         return;
     }
 
     const chapters = [...new Set(segments.map(s => s.chapter))];
-    const btn = document.getElementById('saveAllBtn');
     const originalText = btn ? btn.innerText : '';
     if (btn) btn.disabled = true;
 
@@ -744,7 +824,6 @@ async function saveAllChaptersAudio() {
         if (btn) btn.innerText = "✅ ALL CHAPTERS SAVED";
     } catch (e) {
         console.error("Full-book audio generation failed:", e);
-        alert("Failed to generate audio for all chapters: " + e.message);
         if (btn) btn.innerText = "❌ ERROR";
     } finally {
         setTimeout(() => {
