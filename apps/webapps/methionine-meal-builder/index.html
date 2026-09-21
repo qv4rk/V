@@ -4,57 +4,30 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Methionine Tracker — FeistTech</title>
-<meta name="description" content="Links to the detailed meal builder and the four daily tracker versions.">
+<meta name="description" content="Research tools: accessible daily tracker and detailed meal builder. Not patient-ready medical advice.">
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../../../app/theme-vars.css">
 <script src="../../../app/theme-switcher.js"></script>
 <style>
   * { box-sizing: border-box; }
-  body {
-    background: var(--bg-deep);
-    color: var(--ink);
-    font-family: var(--font-mono, 'Space Mono', 'SF Mono', ui-monospace, monospace);
-    margin: 0;
-    padding: 0;
-    line-height: 1.5;
-  }
-  header {
-    padding: 1.2rem 2rem;
-    border-bottom: 1px solid var(--panel-edge);
-    background: var(--bg);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 1rem;
-  }
+  body { background: var(--bg-deep); color: var(--ink); font-family: var(--font-mono, 'Space Mono', monospace); margin: 0; line-height: 1.5; }
+  header { padding: 1.2rem 2rem; border-bottom: 1px solid var(--panel-edge); background: var(--bg); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
   header a { color: var(--ink-dim); text-decoration: none; font-size: 0.75rem; }
   header a:hover { color: var(--accent); }
   h1 { font-size: 1rem; margin: 0; color: var(--ink); font-weight: 600; }
-
   main { max-width: 560px; margin: 0 auto; padding: 2rem 1.2rem 4rem; }
   h2 { font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-dim); margin: 1.8rem 0 0.6rem; }
   h2:first-child { margin-top: 0; }
-
   .linkList { display: flex; flex-direction: column; gap: 0.5rem; }
-  .linkList a {
-    display: block;
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--ink);
-    border: 1px solid var(--panel-edge);
-    border-radius: 8px;
-    padding: 10px 14px;
-    text-decoration: none;
-  }
+  .linkList a { display: block; font-size: 0.85rem; font-weight: 600; color: var(--ink); border: 1px solid var(--panel-edge); border-radius: 8px; padding: 10px 14px; text-decoration: none; }
   .linkList a:hover { border-color: var(--accent); color: var(--accent); }
   .linkList a span { color: var(--ink-dim); font-weight: 400; font-size: 0.78rem; }
-
+  .linkList a.demoted { opacity: 0.55; font-weight: 400; }
   .note { margin-top: 2rem; font-size: 0.68rem; color: var(--ink-dim); }
+  .warn { margin-top: 1rem; font-size: 0.72rem; color: var(--ink-dim); border: 1px solid var(--panel-edge); padding: 10px 12px; border-radius: 8px; }
 </style>
 </head>
 <body>
-
 <header>
   <div>
     <a href="../../../index.html">← FeistTech</a>
@@ -62,29 +35,19 @@
   </div>
   <span id="themeSwitcherMount"></span>
 </header>
-
 <main>
-  <h2>Experimental — merged layout</h2>
+  <div class="warn">Research / lab tools only — <strong>not patient-ready</strong> and not medical advice. Follow your clinician’s instructions.</div>
+  <h2>Primary</h2>
   <div class="linkList">
-    <a href="unified/index.html">Unified Tracker <span>— combined search + photos + large-text daily tracker, adaptive layout</span></a>
+    <a href="accessible/index.html">Accessible Daily Tracker <span>— large text, 150mg limit, editable</span></a>
+    <a href="detailed/index.html">Detailed Meal Builder <span>— USDA search, recipes, shopping list</span></a>
   </div>
-
-  <h2>Detailed view</h2>
+  <h2>Experimental (demoted)</h2>
   <div class="linkList">
-    <a href="detailed/index.html">Meal Builder <span>— USDA search, recipes, shopping list</span></a>
+    <a class="demoted" href="unified/index.html">Unified Tracker <span>— experimental merge; not hub primary</span></a>
   </div>
-
-  <h2>Daily tracker — large text</h2>
-  <div class="linkList">
-    <a href="accessible/index.html">Daily Tracker <span>— 150mg limit, editable</span></a>
-  </div>
-
-  <div class="note">Each tracker keeps its own data on this device. Not medical advice — follow your doctor's instructions.</div>
+  <div class="note">Each tracker keeps its own data on this device.</div>
 </main>
-
-<script>
-  if (window.FeistTheme) FeistTheme.mount('#themeSwitcherMount');
-</script>
-
+<script>if (window.FeistTheme) FeistTheme.mount('#themeSwitcherMount');</script>
 </body>
 </html>

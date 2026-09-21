@@ -1,0 +1,1 @@
+Phase 0: `recorder.html` and `offscreen.html` were removed from the published GitHub Pages tree (Chrome package only). Keep using the unpacked extension sources (`recorder.js` / `offscreen.js`) locally when packaging.
