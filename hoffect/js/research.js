@@ -1,9 +1,6 @@
 (function () {
   'use strict';
 
-  // Reading Room lives 4 directories deep (apps/webapps/tts/reader/); the
-  // PDF path passed to it must therefore be relative to THAT location, not
-  // to this page, hence the "../../../../hoffect/..." prefix below.
   const READER_URL = '../apps/webapps/tts/reader/index.html';
   const READER_RELATIVE_PDF_PREFIX = '../../../../hoffect/research/';
 
@@ -18,14 +15,18 @@
     const doiLink = paper.doiUrl
       ? `<a href="${paper.doiUrl}" target="_blank" rel="noopener">DOI / Source ↗</a>`
       : '';
+    const hasPdf = !!(paper.file);
+    const pdfActions = hasPdf
+      ? `<a class="hf-primary" href="${readerLink(paper.file, paper.title)}">🔊 Read Aloud</a>
+         <a href="research/${paper.file}" target="_blank" rel="noopener">📄 View PDF</a>`
+      : `<span style="opacity:.7;font-size:.85em;">PDF not hosted — use DOI</span>`;
     card.innerHTML = `
       <span class="hf-paper-type">${paper.type || ''}</span>
       <h3 class="hf-paper-title">${paper.title}</h3>
       <div class="hf-paper-authors">${paper.authors}</div>
       <div class="hf-paper-cite">${paper.citation}</div>
       <div class="hf-paper-actions">
-        <a class="hf-primary" href="${readerLink(paper.file, paper.title)}">🔊 Read Aloud</a>
-        <a href="research/${paper.file}" target="_blank" rel="noopener">📄 View PDF</a>
+        ${pdfActions}
         ${doiLink}
       </div>
     `;
