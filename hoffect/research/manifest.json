@@ -1,5 +1,5 @@
 {
-  "note": "Every field below was read directly from page 1 (and references) of each PDF by an AI assistant — title, authors, journal, date, and DOI are transcribed from the document itself, not looked up or guessed. Verify against the DOI link before citing.",
+  "note": "Journal PDFs (Anticancer Research, AACR Cancer Research, npj Breast Cancer) are not hosted. Use DOI links. Press-release PDF may remain when clearly non-journal.",
   "papers": [
     {
       "id": "kubota-2022-pancreatic",
@@ -12,7 +12,8 @@
       "doiUrl": "https://doi.org/10.21873/anticanres.15734",
       "type": "Case report",
       "topic": "Methionine restriction / pancreatic cancer",
-      "file": "pdfs/KubotaY-etal_StageIVPancreaticCancerFOLFIRINOXOralMethioninase_2022_AnticancerResearch.pdf"
+      "file": null,
+      "hostedPdf": false
     },
     {
       "id": "sato-2024-pancreatic",
@@ -25,7 +26,8 @@
       "doiUrl": "https://doi.org/10.21873/anticanres.17215",
       "type": "Case report",
       "topic": "Methionine restriction / pancreatic cancer",
-      "file": "pdfs/SatoM-etal_FirstLineChemoOralMethioninaseLowMethionineDietStageIVPancreatic_2024_AnticancerResearch.pdf"
+      "file": null,
+      "hostedPdf": false
     },
     {
       "id": "kang-2025-rmetase-coculture",
@@ -38,7 +40,8 @@
       "doiUrl": "https://doi.org/10.21873/anticanres.17771",
       "type": "Preclinical study",
       "topic": "Methionine restriction / mechanism",
-      "file": "pdfs/KangBM-etal_RecombinantMethioninaseSelectivelyEliminatesCancerCells_2025_AnticancerResearch.pdf"
+      "file": null,
+      "hostedPdf": false
     },
     {
       "id": "revmed-2026-daraxonrasib",
@@ -64,7 +67,8 @@
       "doiUrl": "https://doi.org/10.1158/0008-5472.CAN-15-2887",
       "type": "Preclinical study",
       "topic": "Ivermectin / breast cancer",
-      "file": "pdfs/HuangC-etal_IvermectinPAK1AktAxisBreastCancer_2016_CancerResearch-AACR.pdf"
+      "file": null,
+      "hostedPdf": false
     },
     {
       "id": "draganov-2021-ivermectin-cold-hot",
@@ -77,7 +81,8 @@
       "doiUrl": "https://doi.org/10.1038/s41523-021-00229-5",
       "type": "Preclinical study",
       "topic": "Ivermectin / breast cancer / immunotherapy",
-      "file": "pdfs/Draganov-etal_IvermectinConvertsColdTumorsHotBreastCancer_2021_npjBreastCancer-Nature.pdf"
+      "file": null,
+      "hostedPdf": false
     }
   ]
 }
