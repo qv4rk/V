@@ -540,6 +540,8 @@ async function play() {
         if(!settings.useBrowserTTS) {
             settings.useBrowserTTS = true;
             loadBrowserVoices();
+            renderVoiceMapping();
+            showTTSStatus('⚠ Edge-TTS failed, switched to browser voices — Export needs Edge-TTS again', 5000);
             try { await playWithBrowserTTS(seg); } catch(e2) { handlePlayError(e2); }
         } else { handlePlayError(e); }
     }
@@ -657,13 +659,25 @@ async function synthesizeAndDownloadChapter(chapterNum, btn) {
 
         if(btn) btn.innerText = `⏳ Ch ${chapterNum}: ${i + 1} / ${chapterSegments.length}`;
 
-        const tts = new window.EdgeTTS(safeText, voice, {
+        let result = await new window.EdgeTTS(safeText, voice, {
             rate: formatEdgePct(settings.speed),
             pitch: '+0Hz',
             volume: formatEdgePct(settings.volume)
-        });
+        }).synthesize();
 
-        const result = await tts.synthesize();
+        if(!result || !result.audio || result.audio.byteLength === 0) {
+            // Edge-TTS occasionally returns an empty response under rapid
+            // back-to-back requests -- one retry clears most of these
+            // instead of silently dropping the segment or failing the
+            // whole chapter export.
+            await new Promise(resolve => setTimeout(resolve, 500));
+            result = await new window.EdgeTTS(safeText, voice, {
+                rate: formatEdgePct(settings.speed),
+                pitch: '+0Hz',
+                volume: formatEdgePct(settings.volume)
+            }).synthesize();
+        }
+
         if(result && result.audio && result.audio.byteLength > 0) {
             audioBlobs.push(new Blob([result.audio], { type: 'audio/mp3' }));
         }
@@ -691,7 +705,7 @@ async function saveCurrentChapterAudio() {
         return;
     }
     if (settings.useBrowserTTS) {
-        alert('Chapter audio export needs Edge-TTS.');
+        alert('Chapter audio export needs Edge-TTS — this only works with real Edge neural voices, not your browser\'s built-in voices. Switch back to Edge-TTS in the VOICES panel and try again.');
         return;
     }
 
@@ -726,7 +740,7 @@ async function saveAllChaptersAudio() {
         return;
     }
     if (settings.useBrowserTTS) {
-        alert('Full-book export needs Edge-TTS.');
+        alert('Full-book export needs Edge-TTS — switch back to Edge-TTS in the VOICES panel and try again.');
         return;
     }
 
