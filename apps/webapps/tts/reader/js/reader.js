@@ -72,7 +72,7 @@ function chunkTextForTTS(text, maxWords = MAX_WORDS_PER_TTS_CALL) {
 async function synthesizeEdgeChunk(text, voice, opts) {
     // 1. Check local on-device Kokoro TTS first
     try {
-        const localUrl = 'http://127.0.0.1:5005/synthesize?text=' + encodeURIComponent(text);
+        const localUrl = 'http://127.0.0.1:5005/synthesize?text=' + encodeURIComponent(text) + '&voice=' + encodeURIComponent(voice || '');
         const ctrl = new AbortController();
         const tid = setTimeout(() => ctrl.abort(), 2000);
         const res = await fetch(localUrl, { signal: ctrl.signal });
@@ -276,6 +276,17 @@ function sortVoicesByPriority(list) {
 }
 
 async function loadEdgeVoices() {
+    let localKokoroVoices = [];
+    try {
+        const ctrl = new AbortController();
+        const tid = setTimeout(() => ctrl.abort(), 1500);
+        const kRes = await fetch('http://127.0.0.1:5005/voices', { signal: ctrl.signal });
+        clearTimeout(tid);
+        if(kRes.ok) {
+            localKokoroVoices = await kRes.json();
+            console.log('Loaded local Kokoro voices:', localKokoroVoices.length);
+        }
+    } catch(e) {}
     try {
         const manager = await window.VoicesManager.create();
         let edgeVoices;
@@ -285,14 +296,14 @@ async function loadEdgeVoices() {
         else edgeVoices = [];
 
         if(!edgeVoices || edgeVoices.length === 0) throw new Error('No Edge voices array available');
-        voices = sortVoicesByPriority(edgeVoices.map(annotateVoice));
+        voices = [...localKokoroVoices.map(annotateVoice), ...sortVoicesByPriority(edgeVoices.map(annotateVoice))];
         settings.useBrowserTTS = false;
     } catch(e) {
         console.warn('Edge-TTS voice listing unavailable, using bundled catalog', e);
         const fallback = (window.VOICE_CATALOG || []).map(v => ({
             ShortName: v.shortName, FriendlyName: v.name, Gender: v.gender, Locale: v.locale
         }));
-        voices = sortVoicesByPriority(fallback.map(annotateVoice));
+        voices = [...localKokoroVoices.map(annotateVoice), ...sortVoicesByPriority(fallback.map(annotateVoice))];
         settings.useBrowserTTS = false;
     }
     initializeDefaultVoiceMapping();
