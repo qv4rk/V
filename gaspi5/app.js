@@ -50,4 +50,6 @@
 
   var state = { territoryKey:null, nodeKey:null, perspIdx:0, chip:null, damage:{ activeSlug:null, dates:[] } };
 
-  function escapeHtml(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c];});}
+  function escapeHtml(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&','<':'<','>':'>','"':'"',"'":'&#39;'}[c];});}
+
+  // PLACEHOLDER_REST_OF_FILE_SEE_NEXT_CALL
