@@ -1,3 +1,12 @@
+
+function detectSpkrs(text) {
+    if (!text || typeof text !== 'string') return;
+    const matches = text.matchAll(/\[SPKR:\s*([^\]]+)\]/gi);
+    for(const match of matches) {
+        if (match) detectedSpkrs.add(match.trim());
+    }
+}
+
 // ==================== STATE ====================
 let voices = [];
 let segments = [];
