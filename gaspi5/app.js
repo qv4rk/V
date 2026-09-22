@@ -437,8 +437,29 @@
   function fmtDate(iso){ var d=new Date(iso); return d.toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric',timeZone:'UTC'}); }
 
   var damageCache = {};
+  var ALL_SLUG = '__all__';
   function loadNeighborhoodData(slug){
     if (damageCache[slug]) return Promise.resolve(damageCache[slug]);
+    if (slug === ALL_SLUG){
+      // Opt-in only (never preloaded, never the default view) -- fetches
+      // and merges all 15 neighborhoods' real building+damage geometry so
+      // the scale of the damage reads as one continuous field rather than
+      // one switched-to neighborhood at a time. ~54MB combined; the
+      // in-progress "Loading all neighborhoods…" label covers the wait.
+      return Promise.all(NEIGHBORHOODS.map(function(nb){ return loadNeighborhoodData(nb.slug); }))
+        .then(function(all){
+          var buildings = { type:'FeatureCollection', features:[] };
+          var unmatched = { type:'FeatureCollection', features:[] };
+          all.forEach(function(gd, i){
+            var nbSlug = NEIGHBORHOODS[i].slug;
+            gd.buildings.features.forEach(function(f){ f.properties.nb_slug = nbSlug; buildings.features.push(f); });
+            gd.unmatched.features.forEach(function(f){ f.properties.nb_slug = nbSlug; unmatched.features.push(f); });
+          });
+          var merged = { buildings: buildings, unmatched: unmatched };
+          damageCache[slug] = merged;
+          return merged;
+        });
+    }
     return Promise.all([
       fetch('data/gaza-damage/'+slug+'_buildings.geojson').then(function(r){ return r.json(); }),
       fetch('data/gaza-damage/'+slug+'_unmatched_points.geojson').then(function(r){ return r.json(); }),
@@ -534,7 +555,8 @@
 
   function renderDamageSwitchRow(){
     var row = document.getElementById('damageSwitchRow');
-    row.innerHTML = NEIGHBORHOODS.map(function(nb){
+    var allChip = '<button class="damage-switch-chip damage-switch-chip--all'+(state.damage.activeSlug===ALL_SLUG?' active':'')+'" data-slug="'+ALL_SLUG+'" title="Loads all 15 neighborhoods at once (~54MB)">All Neighborhoods</button>';
+    row.innerHTML = allChip + NEIGHBORHOODS.map(function(nb){
       return '<button class="damage-switch-chip'+(nb.slug===state.damage.activeSlug?' active':'')+'" data-slug="'+nb.slug+'">'+escapeHtml(nb.label)+'</button>';
     }).join('');
     Array.from(row.querySelectorAll('.damage-switch-chip')).forEach(function(btn){
@@ -549,7 +571,8 @@
   function loadNeighborhood(slug, flyIn){
     var d = state.damage;
     d.requestSlug = slug; // guards against a slower, superseded fetch resolving after a newer switch
-    document.getElementById('damageStats').textContent = 'Loading '+((nbBySlug(slug)||{}).label||slug)+'…';
+    var loadingLabel = slug === ALL_SLUG ? 'all 15 neighborhoods (~54MB)' : ((nbBySlug(slug)||{}).label||slug);
+    document.getElementById('damageStats').textContent = 'Loading '+loadingLabel+'…';
     document.getElementById('damageReadout').textContent = '—';
     loadNeighborhoodData(slug).then(function(gd){
       if (d.requestSlug !== slug) return; // a newer switch superseded this one; drop this stale response
@@ -564,7 +587,10 @@
       damageUpdate();
       renderDamageSwitchRow();
       var nb = nbBySlug(slug);
-      if (flyIn && nb) map.flyTo({ center: nb.homeView.center, zoom: nb.homeView.zoom, pitch:55, bearing:-17, essential:true });
+      if (flyIn){
+        if (nb) map.flyTo({ center: nb.homeView.center, zoom: nb.homeView.zoom, pitch:55, bearing:-17, essential:true });
+        else if (slug === ALL_SLUG) { var t = TERRITORIES['gaza-strip']; map.flyTo({ center:[t.center.lng,t.center.lat], zoom:11.3, pitch:55, bearing:-17, essential:true }); }
+      }
     });
   }
   function enterDamageMode(slug){
