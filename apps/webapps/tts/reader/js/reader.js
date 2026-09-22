@@ -11,6 +11,8 @@ let nativeTTSActive = false;
 let voiceLoadAttempted = false;
 let isPlaying = false;
 let audioUnlocked = false;
+let playbackGeneration = 0;
+let currentAudioUrl = null;
 
 // Lookahead Cache for seamless pre-buffering
 const audioCache = {};
@@ -585,22 +587,24 @@ function parseTextWithSpkrs(text) {
 
 function renderParsedSegments(parsedSegments) {
     let html = '';
+    const escape = escapeLibraryHtml;
     let currentChapter = null;
     parsedSegments.forEach(seg => {
         if(seg.chapter !== currentChapter) {
             if(currentChapter !== null) html += '</div></article>';
             currentChapter = seg.chapter;
             const title = seg.chapterTitle || (seg.chapter === '1' ? 'Begin' : `Chapter ${seg.chapter}`);
-            html += `<article class="chapter" data-chapter="${seg.chapter}"><h2>${title}</h2><div class="chapter-content">`;
+            html += `<article class="chapter" data-chapter="${escape(seg.chapter)}"><h2>${escape(title)}</h2><div class="chapter-content">`;
         }
-        const safeText = seg.text.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+        const safeText = escape(seg.text);
+        const safeSpkr = escape(seg.spkr);
         if(seg.spkr !== 'narrator') {
             html += `<div class="spkr-block" data-chapter="${seg.chapter}">`;
-            html += `<div class="spkr-tag">${seg.spkr}</div>`;
-            html += `<p data-spkr="${seg.spkr}" data-text="${safeText}">${seg.text}</p>`;
+            html += `<div class="spkr-tag">${safeSpkr}</div>`;
+            html += `<p data-spkr="${safeSpkr}" data-text="${safeText}">${safeText}</p>`;
             html += `</div>`;
         } else {
-            html += `<p class="narrator" data-spkr="narrator" data-text="${safeText}">${seg.text}</p>`;
+            html += `<p class="narrator" data-spkr="narrator" data-text="${safeText}">${safeText}</p>`;
         }
     });
     if(currentChapter !== null) html += '</div></article>';
@@ -610,21 +614,24 @@ function renderParsedSegments(parsedSegments) {
 // ==================== PLAYBACK ====================
 async function play() {
     if(currentSegmentIndex >= segments.length) { currentSegmentIndex = 0; }
+    if(!segments.length) { showTTSStatus('⚠️ Load a story first', 2000); return; }
+    const generation = ++playbackGeneration;
     isPlaying = true;
     document.getElementById('playBtn').innerText = '⏳';
     const seg = segments[currentSegmentIndex];
     highlight(seg);
     try {
-        if(settings.useBrowserTTS) await playWithBrowserTTS(seg);
-        else await playWithEdgeTTS(seg);
+        if(settings.useBrowserTTS) await playWithBrowserTTS(seg, generation);
+        else await playWithEdgeTTS(seg, generation);
     } catch(e) {
+        if(generation !== playbackGeneration) return;
         console.error('Playback error:', e);
         if(!settings.useBrowserTTS) {
             settings.useBrowserTTS = true;
             loadBrowserVoices();
             renderVoiceMapping();
             console.warn('Edge-TTS kept failing after a retry -- switched to browser voices for this session. Re-open the VOICES panel to switch back.');
-            try { await playWithBrowserTTS(seg); } catch(e2) { handlePlayError(e2); }
+            try { await playWithBrowserTTS(seg, generation); } catch(e2) { handlePlayError(e2); }
         } else { handlePlayError(e); }
     }
 }
@@ -642,19 +649,19 @@ function handlePlayError(e) {
 // every time the speaker changes.
 async function preloadSegment(idx) {
     if(idx < 0 || idx >= segments.length || settings.useBrowserTTS || !window.EdgeTTS) return;
-    if(audioCache[idx] || audioCachePending[idx]) return;
+    if(audioCache[idx] || audioCachePending[idx] === audioCacheGen) return;
 
     const seg = segments[idx];
     if(!seg || !seg.text || !seg.text.trim()) return;
 
     const gen = audioCacheGen;
-    audioCachePending[idx] = true;
+    audioCachePending[idx] = gen;
     try {
         const voice = voiceMapping[seg.spkr] || voiceMapping.narrator || voices[0]?.ShortName;
         const blob = await synthesizeSegmentAudio(seg.text, voice, edgeTTSOpts());
         if(blob && gen === audioCacheGen) audioCache[idx] = URL.createObjectURL(blob);
     } finally {
-        delete audioCachePending[idx];
+        if(audioCachePending[idx] === gen) delete audioCachePending[idx];
     }
 }
 
@@ -662,7 +669,7 @@ function preloadAhead(fromIdx) {
     for (let i = 1; i <= PRELOAD_LOOKAHEAD; i++) preloadSegment(fromIdx + i);
 }
 
-async function playWithEdgeTTS(seg) {
+async function playWithEdgeTTS(seg, generation) {
     if(!seg || !seg.text || !seg.text.trim()) {
         throw new Error('Segment text is empty');
     }
@@ -677,16 +684,20 @@ async function playWithEdgeTTS(seg) {
         url = URL.createObjectURL(blob);
     }
 
+    if(generation !== playbackGeneration) { if(url) URL.revokeObjectURL(url); return; }
     if(!url) throw new Error('Audio URL is empty');
 
+    if(currentAudioUrl) URL.revokeObjectURL(currentAudioUrl);
+    currentAudioUrl = url;
     preloadAhead(currentSegmentIndex);
 
     audioPlayer.src = url;
     audioPlayer.volume = settings.volume;
     audioPlayer.playbackRate = 1.0;
     audioPlayer.onended = () => {
-        try { URL.revokeObjectURL(url); } catch(e) {}
-        if(!isPlaying) return;
+        if(currentAudioUrl === url) currentAudioUrl = null;
+        URL.revokeObjectURL(url);
+        if(!isPlaying || generation !== playbackGeneration) return;
         currentSegmentIndex++;
         saveState(); updateProgress();
         if(currentSegmentIndex < segments.length) play();
@@ -835,7 +846,7 @@ async function saveAllChaptersAudio() {
     }
 }
 
-async function playWithBrowserTTS(seg) {
+async function playWithBrowserTTS(seg, generation) {
     return new Promise((resolve, reject) => {
         if(speechSynthesis.speaking || speechSynthesis.pending) speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(seg.text);
@@ -852,7 +863,7 @@ async function playWithBrowserTTS(seg) {
         };
         utterance.onend = () => {
             nativeTTSActive = false; hideTTSStatus();
-            if(!isPlaying) { resolve(); return; }
+            if(!isPlaying || generation !== playbackGeneration) { resolve(); return; }
             currentSegmentIndex++; saveState(); updateProgress();
             if(currentSegmentIndex < segments.length) play();
             else {
@@ -868,6 +879,7 @@ async function playWithBrowserTTS(seg) {
             reject(e);
         };
         setTimeout(() => {
+            if(generation !== playbackGeneration) { resolve(); return; }
             try { speechSynthesis.speak(utterance); updateMediaSession(seg); }
             catch(e) { nativeTTSActive = false; reject(e); }
         }, 50);
@@ -890,22 +902,25 @@ function togglePlay() {
         if(!audioPlayer.paused) {
             audioPlayer.pause(); isPlaying = false;
             if (playBtn) playBtn.innerText = '▶ PLAY';
-        } else if(audioPlayer.src && audioPlayer.src !== window.location.href) {
+        } else if(isPlaying && audioPlayer.src && audioPlayer.src !== window.location.href) {
             audioPlayer.play(); isPlaying = true;
             if (playBtn) playBtn.innerText = '⏸ PAUSE';
-        } else { play(); }
+        } else if(audioPlayer.src && audioPlayer.src !== window.location.href && currentAudioUrl) {
+            audioPlayer.play(); isPlaying = true;
+            if (playBtn) playBtn.innerText = '⏸ PAUSE';
+        } else if(isPlaying) { stopPlayback(); }
+        else { play(); }
     }
 }
 
 function stopPlayback() {
+    playbackGeneration++;
     isPlaying = false;
-    if(settings.useBrowserTTS) {
-        speechSynthesis.cancel();
-    } else {
-        audioPlayer.pause();
-        audioPlayer.removeAttribute('src');
-        audioPlayer.load();
-    }
+    if(window.speechSynthesis) speechSynthesis.cancel();
+    audioPlayer.pause();
+    audioPlayer.removeAttribute('src');
+    audioPlayer.load();
+    if(currentAudioUrl) { URL.revokeObjectURL(currentAudioUrl); currentAudioUrl = null; }
     const playBtn = document.getElementById('playBtn');
     if (playBtn) playBtn.innerText = '▶ PLAY';
     hideTTSStatus();
@@ -913,6 +928,7 @@ function stopPlayback() {
 }
 
 function skipSegment(dir) {
+    if(!segments.length) return;
     stopPlayback();
     currentSegmentIndex = Math.max(0, Math.min(segments.length - 1, currentSegmentIndex + dir));
     saveState();
@@ -920,7 +936,7 @@ function skipSegment(dir) {
 }
 
 function jumpToChapter(v) {
-    if(!v || isNaN(parseInt(v))) return;
+    if(!v || isNaN(parseInt(v)) || !segments[parseInt(v)]) return;
     stopPlayback();
     currentSegmentIndex = parseInt(v);
     saveState();
@@ -1213,7 +1229,7 @@ function resumeSession() {
     syncDeckSpeedControls();
     initReader(c, true);
     if(p) {
-        currentSegmentIndex = Math.max(0, parseInt(p));
+        currentSegmentIndex = Math.max(0, Math.min(segments.length - 1, parseInt(p) || 0));
         setTimeout(() => {
             if(segments[currentSegmentIndex]) highlight(segments[currentSegmentIndex]);
         }, 400);
@@ -1280,7 +1296,7 @@ function loadSlot(id) {
     const slots = getSaveSlots();
     const slot = slots.find(s => s.id === id);
     if(!slot) return;
-    currentSegmentIndex = slot.progress;
+    currentSegmentIndex = Math.max(0, Math.min(segments.length - 1, slot.progress));
     voiceMapping = {...(slot.voiceMapping || {})};
     if(slot.settings) settings = {...settings, ...slot.settings};
     if(slot.spkrs) detectedSpkrs = new Set(slot.spkrs);
@@ -1472,6 +1488,7 @@ function toggleLibrary() { document.getElementById('libraryPanel')?.classList.to
 
 function initReader(html, isResume=false) {
     if(!html) return;
+    stopPlayback();
     clearAudioCache();
     const storyEl = document.getElementById('storyContainer');
     if (storyEl) storyEl.innerHTML = html;
@@ -1494,8 +1511,9 @@ function processContent() {
         if(!txt) return;
         const spkr = p.dataset.spkr || 'narrator';
         const ch = p.closest('article')?.dataset.chapter || '1';
-        segments.push({ index: i, element: p, text: txt, chapter: ch, spkr });
-        p.onclick = () => { currentSegmentIndex = i; stopPlayback(); play(); };
+        const index = segments.length;
+        segments.push({ index, element: p, text: txt, chapter: ch, spkr });
+        p.onclick = () => { stopPlayback(); currentSegmentIndex = index; play(); };
     });
 }
 
@@ -1510,7 +1528,10 @@ function populateChapters() {
             const firstIdx = segments.findIndex(s => s.chapter === seg.chapter);
             const art = document.querySelector(`article[data-chapter="${seg.chapter}"] h2`);
             const title = art ? art.innerText : `Chapter ${seg.chapter}`;
-            sel.innerHTML += `<option value="${firstIdx}">${title}</option>`;
+            const option = document.createElement('option');
+            option.value = firstIdx;
+            option.textContent = title;
+            sel.appendChild(option);
         }
     });
 }
@@ -1569,6 +1590,7 @@ function startNewStory() {
     detectedSpkrs = new Set(['narrator']);
     const storyEl = document.getElementById('storyContainer');
     if (storyEl) storyEl.innerHTML = EMPTY_STATE_HTML;
+    localStorage.removeItem('feist_content');
     populateChapters();
     renderVoiceMapping();
     const banner = document.getElementById('resumeBanner');
