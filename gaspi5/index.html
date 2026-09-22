@@ -185,6 +185,12 @@ body{background:var(--bg);color:var(--ink);font-family:var(--font-serif);overflo
 .dpointer{stroke:var(--gold);stroke-width:2}
 .dhub{fill:var(--gold)}
 .damage-stats{font-family:var(--font-mono);font-size:.6rem;letter-spacing:.03em;color:var(--ink-mute);text-align:center;max-width:280px}
+.damage-caveat{
+  position:fixed;left:24px;right:24px;bottom:220px;z-index:21;pointer-events:none;
+  font-family:var(--font-mono);font-size:.58rem;line-height:1.45;letter-spacing:.02em;
+  color:rgba(230,220,200,.78);background:rgba(5,6,8,.82);border:1px solid var(--line);
+  padding:8px 12px;backdrop-filter:blur(8px);max-width:520px;margin:0 auto;
+}
 
 @media(max-width:720px){
   .sheet{max-height:88vh}
@@ -211,7 +217,7 @@ body{background:var(--bg);color:var(--ink);font-family:var(--font-serif);overflo
     <div class="sheet-expand-hint" id="sheetHint">Tap to expand</div>
   </div>
   <div class="persp-switch" id="perspSwitch"></div>
-  <div class="damage-intro" id="damageIntro" style="display:none">Building-level damage over time — real UNOSAT + OpenStreetMap data, by neighborhood</div>
+  <div class="damage-intro" id="damageIntro" style="display:none">UNOSAT damage points joined to OSM building footprints — approximate overlay, not precision aiming</div>
   <div class="damage-entry-row" id="damageEntryRow" style="display:none"></div>
   <div class="chip-row" id="chipRow"></div>
   <div class="sheet-body" id="sheetBody"></div>
@@ -220,6 +226,7 @@ body{background:var(--bg);color:var(--ink);font-family:var(--font-serif);overflo
 <div class="damage-mode" id="damageMode">
   <div class="damage-switch-row" id="damageSwitchRow"></div>
   <button class="damage-close" id="damageClose">← Back to Gaza</button>
+  <div class="damage-caveat" id="damageCaveat">Gray / uncolored ≠ confirmed intact — only “no UNOSAT record.” Damage dots are satellite assessments snapped to nearby OSM footprints (join radius), so sharp street-by-street contrasts can be spatial-join artifacts, not surgical targeting. Clock = assessment date, not strike time.</div>
   <div class="damage-dial-wrap">
     <div class="damage-readout" id="damageReadout">—</div>
     <svg id="damageDial" viewBox="0 0 180 180"></svg>
