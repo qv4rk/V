@@ -522,6 +522,12 @@ function detectChapterBreak(line) {
     return /^(={3,}|-{3,}|#{1,3}\s|chapter\s+\d+)/i.test(line);
 }
 
+function escapeHtml(value) {
+    return String(value == null ? '' : value).replace(/[&<>"']/g, ch => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    })[ch]);
+}
+
 let cardMap = {};
 fetch('../edge-voices.json').then(r => r.json()).then(list => {
     list.forEach(v => { cardMap[v.card.toUpperCase()] = v.shortName; });
@@ -587,20 +593,22 @@ function renderParsedSegments(parsedSegments) {
     let html = '';
     let currentChapter = null;
     parsedSegments.forEach(seg => {
+        const safeChapter = escapeHtml(seg.chapter);
+        const safeTitle = escapeHtml(seg.chapterTitle || (seg.chapter === '1' ? 'Begin' : `Chapter ${seg.chapter}`));
+        const safeSpkr = escapeHtml(seg.spkr);
+        const safeText = escapeHtml(seg.text);
         if(seg.chapter !== currentChapter) {
             if(currentChapter !== null) html += '</div></article>';
             currentChapter = seg.chapter;
-            const title = seg.chapterTitle || (seg.chapter === '1' ? 'Begin' : `Chapter ${seg.chapter}`);
-            html += `<article class="chapter" data-chapter="${seg.chapter}"><h2>${title}</h2><div class="chapter-content">`;
+            html += `<article class="chapter" data-chapter="${safeChapter}"><h2>${safeTitle}</h2><div class="chapter-content">`;
         }
-        const safeText = seg.text.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
         if(seg.spkr !== 'narrator') {
-            html += `<div class="spkr-block" data-chapter="${seg.chapter}">`;
-            html += `<div class="spkr-tag">${seg.spkr}</div>`;
-            html += `<p data-spkr="${seg.spkr}" data-text="${safeText}">${seg.text}</p>`;
-            html += `</div>`;
+            html += `<div class="spkr-block" data-chapter="${safeChapter}">`;
+            html += `<div class="spkr-tag">${safeSpkr}</div>`;
+            html += `<p data-spkr="${safeSpkr}" data-text="${safeText}">${safeText}</p>`;
+            html += '</div>';
         } else {
-            html += `<p class="narrator" data-spkr="narrator" data-text="${safeText}">${seg.text}</p>`;
+            html += `<p class="narrator" data-spkr="narrator" data-text="${safeText}">${safeText}</p>`;
         }
     });
     if(currentChapter !== null) html += '</div></article>';
