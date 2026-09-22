@@ -70,22 +70,25 @@ function chunkTextForTTS(text, maxWords = MAX_WORDS_PER_TTS_CALL) {
 // is often just a blip from firing requests back-to-back, and a beat later
 // usually clears it without bothering the reader with an error.
 async function synthesizeEdgeChunk(text, voice, opts) {
-    // 1. Check local on-device Kokoro TTS first (try HTTPS then HTTP)
-    for (const proto of ['https', 'http']) {
+    // 1. Check local on-device Kokoro TTS (HTTP or HTTPS on 5005)
+    for (const proto of ['http', 'https']) {
         try {
             const localUrl = proto + '://127.0.0.1:5005/synthesize?text=' + encodeURIComponent(text) + '&voice=' + encodeURIComponent(voice || '');
             const ctrl = new AbortController();
-            const tid = setTimeout(() => ctrl.abort(), 12000);
+            const tid = setTimeout(() => ctrl.abort(), 15000);
             const res = await fetch(localUrl, { signal: ctrl.signal });
             clearTimeout(tid);
-            if(res.ok) {
+            if (res.ok) {
                 const buf = await res.arrayBuffer();
-                if(buf && buf.byteLength > 0) return buf;
+                if (buf && buf.byteLength > 0) {
+                    console.log('[Kokoro] Received ' + buf.byteLength + ' bytes for voice: ' + (voice || 'default'));
+                    return buf;
+                }
             }
         } catch(err) {}
     }
 
-    // 2. Remote Edge-TTS
+    // 2. Remote Edge-TTS Fallback
     for (let attempt = 0; attempt < 2; attempt++) {
         if(attempt > 0) await new Promise(resolve => setTimeout(resolve, 500));
         try {
