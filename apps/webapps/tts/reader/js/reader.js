@@ -138,7 +138,6 @@ async function loadEdgeVoices() {
     }
     initializeDefaultVoiceMapping();
     renderVoiceMapping();
-    renderEngineStatus();
 }
 
 function loadBrowserVoices() {
@@ -154,7 +153,6 @@ function loadBrowserVoices() {
     settings.voicesLoaded = true;
     if(!voiceMapping.narrator && voices.length) voiceMapping.narrator = voices[0].ShortName;
     renderVoiceMapping();
-    renderEngineStatus();
 }
 
 function initializeDefaultVoiceMapping() {
@@ -163,36 +161,9 @@ function initializeDefaultVoiceMapping() {
     if(!voiceMapping.narrator) voiceMapping.narrator = (femaleEN || voices[0]).ShortName;
 }
 
-function renderEngineStatus() {
-    const edge = document.getElementById('edgeEngineBtn');
-    const browser = document.getElementById('browserEngineBtn');
-    if(edge) {
-        edge.disabled = !window.EdgeTTS;
-        edge.textContent = settings.useBrowserTTS ? 'USE EDGE TTS' : '✓ EDGE TTS ACTIVE';
-    }
-    if(browser) {
-        browser.textContent = settings.useBrowserTTS ? '✓ BROWSER TTS ACTIVE' : 'USE BROWSER TTS';
-    }
-}
-
-async function selectTTSEngine(engine) {
-    stopPlayback();
-    if(engine === 'edge') {
-        settings.useBrowserTTS = false;
-        renderEngineStatus();
-        await loadEdgeVoices();
-    } else {
-        loadBrowserVoices();
-    }
-    clearAudioCache();
-    saveState();
-    renderEngineStatus();
-}
-
 function triggerVoiceLoad() {
     voiceLoadAttempted = true;
     loadBrowserVoices();
-    renderEngineStatus();
 }
 
 function edgeTTSOpts() {
@@ -684,11 +655,32 @@ function setSpeakerVoice(spkr, voiceName) {
 
 function renderVoiceMapping() {
     const container = document.getElementById('voiceMappingContainer');
-    if (!container) return;
-    const available = getAvailableVoices();
-    if (available.length) autoAssignVoices();
+    const engineDiv = document.getElementById('engineStatus');
+    if(!container || !engineDiv) return;
+    container.innerHTML = '';
+    engineDiv.innerHTML = '';
 
-    container.replaceChildren();
+    const badge = document.createElement('div');
+    badge.className = 'engine-badge ' + (settings.useBrowserTTS ? 'browser' : 'edge');
+    badge.innerText = settings.useBrowserTTS
+        ? '🌐 BROWSER TTS — ' + voices.length + ' voices'
+        : '⚡ EDGE-TTS — ' + voices.length + ' voices';
+    engineDiv.appendChild(badge);
+
+    const toggleBtn = document.createElement('button');
+    toggleBtn.className = 'btn';
+    toggleBtn.style.cssText = 'width:100%; font-size:0.7rem;';
+    toggleBtn.innerText = settings.useBrowserTTS ? '⚡ SWITCH TO EDGE-TTS' : '🌐 SWITCH TO BROWSER TTS';
+    toggleBtn.onclick = async () => {
+        stopPlayback();
+        if(settings.useBrowserTTS) await loadEdgeVoices();
+        else loadBrowserVoices();
+        clearAudioCache();
+        saveState();
+        renderVoiceMapping();
+    };
+    engineDiv.appendChild(toggleBtn);
+
     [...detectedSpkrs].forEach(spkr => {
         const row = document.createElement('div');
         row.className = 'voice-map-row';
