@@ -36,7 +36,7 @@ input[type=range]{width:100%;accent-color:#5fe0e8;margin-top:14px;cursor:pointer
 <div id="map" aria-label="Gaza City damage map"></div>
 <button class="sidebar-toggle" id="menuToggle" aria-expanded="false" aria-controls="sidebar">☰ Neighborhoods</button>
 <aside class="sidebar" id="sidebar" aria-label="Neighborhood and page menu">
- <header><button class="sidebar-close" id="menuClose" type="button" aria-label="Close neighborhood menu">✕ Close</button><h1>Gaza City · Damage Over Time</h1><p>15 neighborhoods · UNOSAT satellite assessments joined to OpenStreetMap building footprints · heights visually exaggerated; most source heights are estimates</p></header>
+ <header><button class="sidebar-close" id="menuClose" type="button" aria-label="Close neighborhood menu">✕ Close</button><h1>Gaza City · Damage Over Time</h1><p>15 neighborhoods · UNOSAT satellite assessments joined to OpenStreetMap building footprints · heights visually exaggerated; most source heights are estimates. Edges mark source coverage, not a boundary of damage.</p></header>
  <nav class="nav" id="nav">
   <div class="section-label">Views</div>
   <button id="allButton" type="button">◈ All neighborhoods</button>
@@ -82,7 +82,7 @@ function clsAsOf(sites,date){
 }
 function setPaint(){
  const extrude=mode==='holo';
- for(const name of ['areas-3d','detail-3d','all-buildings-3d'])if(map.getLayer(name))map.setLayoutProperty(name,'visibility',name.startsWith('areas')&&(selected||overviewBuildingsReady)?'none':name.startsWith('all-buildings')&&selected?'none':extrude?'visible':'none');
+ for(const name of ['areas-3d','detail-3d','all-buildings-3d'])if(map.getLayer(name))map.setLayoutProperty(name,'visibility',name.startsWith('areas')&&(selected||overviewBuildingsReady)?'none':extrude?'visible':'none');
  for(const name of ['areas-flat','detail-flat'])if(map.getLayer(name))map.setLayoutProperty(name,'visibility',name.startsWith('areas')&&selected?'none':extrude?'none':'visible');
  map.easeTo({pitch:extrude?viewPitch:0,bearing:extrude?-18:0,duration:650});
  $('holoButton').classList.toggle('active',extrude);$('flatButton').classList.toggle('active',!extrude);
@@ -114,7 +114,7 @@ function refresh(){
  if(overviewBuildingsReady&&map.getSource('all-buildings'))map.getSource('all-buildings').setData(annotatedAllBuildings());
  const total=selected&&detail?detail.features.length:overview.features.reduce((n,f)=>n+f.properties.building_count,0);
  const severe=selected&&detail?detail.features.reduce((n,f)=>n+([1,2].includes(clsAsOf(f.properties.damage_sites,dates[index]))?1:0),0):overview.features.reduce((n,f)=>n+f.properties.counts[index][1]+f.properties.counts[index][2],0);
- $('status').textContent=severe.toLocaleString()+' / '+total.toLocaleString()+' footprints with destroyed or severe damage records · '+(selected?'building view':'15-neighborhood overview');
+ $('status').textContent=severe.toLocaleString()+' / '+total.toLocaleString()+' footprints with destroyed or severe damage records · '+(selected?'selected neighborhood; surrounding coverage remains visible':'15-neighborhood overview');
 }
 function annotatedAllBuildings(){
  const features=[];
@@ -146,7 +146,7 @@ async function show(slug){
  $('allButton').classList.toggle('active',!slug);
  document.querySelectorAll('[data-slug]').forEach(b=>b.classList.toggle('active',b.dataset.slug===slug));
  if(map.getLayer('areas-3d'))map.setLayoutProperty('areas-3d','visibility',slug||overviewBuildingsReady?'none':mode==='holo'?'visible':'none');
- if(map.getLayer('all-buildings-3d'))map.setLayoutProperty('all-buildings-3d','visibility',slug||mode!=='holo'?'none':'visible');
+ if(map.getLayer('all-buildings-3d'))map.setLayoutProperty('all-buildings-3d','visibility',mode!=='holo'?'none':'visible');
  if(map.getLayer('areas-flat'))map.setLayoutProperty('areas-flat','visibility',slug?'none':mode==='flat'?'visible':'none');
  if(!slug){map.flyTo({center:[34.44,31.51],zoom:11.5,pitch:mode==='holo'?viewPitch:0,bearing:mode==='holo'?-18:0});refresh();closeMenu();return}
  $('status').textContent='Loading '+slug.replaceAll('-',' ')+' buildings…';
