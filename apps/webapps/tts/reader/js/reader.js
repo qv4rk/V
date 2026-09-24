@@ -185,7 +185,7 @@ async function synthesizeSegmentAudio(text, voice, opts) {
 const audioCache = {};
 const audioCachePending = {};
 let audioCacheGen = 0;
-const PRELOAD_LOOKAHEAD = 2; // how many segments to keep pre-buffered ahead of playback
+const PRELOAD_LOOKAHEAD = 4; // how many segments to keep pre-buffered ahead of playback
 const MAX_WORDS_PER_TTS_CALL = 45; // long paragraphs are split into word-bounded chunks so a single call can't time out/fail
 
 function clearAudioCache() {
