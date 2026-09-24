@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Checkpoint locations · GASPI</title>
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4/dist/maplibre-gl.css">
+<script src="https://unpkg.com/maplibre-gl@4/dist/maplibre-gl.js"></script>
+<style>
+*{box-sizing:border-box}html,body{height:100%;margin:0;background:#081018;color:#edf6fa;font-family:system-ui,sans-serif}
+#map{position:fixed;inset:0}
+aside{position:fixed;z-index:3;left:12px;top:12px;bottom:12px;width:315px;overflow:auto;background:#07121ce8;border:1px solid #34515e;border-radius:11px;box-shadow:0 15px 40px #0009}
+h1{font-size:1.2rem;margin:0 0 8px}p{font-size:.8rem;color:#bdd0d9;line-height:1.45;margin:8px 0}
+header{padding:16px;border-bottom:1px solid #34515e}
+a{color:#8ee4ed}nav{display:flex;gap:12px;flex-wrap:wrap;font-size:.8rem;margin-top:10px}
+section{padding:10px 13px}.group{color:#79dce4;font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;margin:9px 2px}
+button{display:block;width:100%;padding:10px;margin:5px 0;text-align:left;background:#142734;border:1px solid #325263;border-radius:6px;color:#f3fbff;font:inherit;cursor:pointer}
+button:hover,button:focus-visible{border-color:#8ee4ed;outline:none;background:#1a3d4c}
+button small{float:right;color:#a8bac6}
+.notice{position:fixed;z-index:2;bottom:12px;left:340px;right:12px;background:#07121ce9;border:1px solid #34515e;border-radius:8px;padding:10px 14px;font-size:.77rem;line-height:1.35}
+.maplibregl-popup-content{background:#101e2a;color:#f4fbfc;border:1px solid #52a9b6;font-size:.8rem}
+.maplibregl-popup-tip{border-top-color:#52a9b6!important}
+.toggle{display:none}
+@media(max-width:700px){aside{top:12px;bottom:98px;left:12px;width:min(83vw,325px);transform:translateX(calc(-100% - 20px));transition:transform .2s}aside.open{transform:none}.toggle{display:block;position:fixed;z-index:4;left:12px;top:12px;width:auto}.notice{left:12px;bottom:12px;right:12px;padding:8px;font-size:.71rem}}
+</style>
+</head>
+<body>
+<div id="map" aria-label="Map of selected checkpoint locations"></div>
+<button id="toggle" class="toggle" aria-controls="sidebar" aria-expanded="false">☰ Checkpoints</button>
+<aside id="sidebar">
+ <header>
+  <h1>Checkpoint locations</h1>
+  <p>Eight selected B’Tselem map records, shown with their original coordinates. Tap a name or map point for its source details.</p>
+  <nav><a href="./">← GASPI 5</a><a href="../gaza-damage/">Gaza damage hologram →</a></nav>
+ </header>
+ <section><div class="group">Gaza crossings and checkpoints</div><div id="gaza"></div>
+ <div class="group">West Bank examples</div><div id="westbank"></div>
+ <button id="fit">↗ Show all eight locations</button></section>
+</aside>
+<div class="notice">Archival source snapshot: B’Tselem’s published GeoJSON repository (commit dated 20 May 2020); the file gives no observation date. These symbols show source-recorded locations, and the named facilities may have changed status since that snapshot. <a href="https://github.com/btselem/map-data/blob/master/s9/checkpoints_all.geojson" target="_blank" rel="noopener">View source ↗</a></div>
+<script>
+const map=new maplibregl.Map({container:'map',style:'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',center:[34.83,31.70],zoom:8.4});
+map.addControl(new maplibregl.NavigationControl(),'top-right');
+const popup=new maplibregl.Popup({closeButton:true,offset:15});
+let features=[];
+function show(f){
+ const p=f.properties;
+ map.flyTo({center:f.geometry.coordinates,zoom:12.5,essential:true});
+ popup.setLngLat(f.geometry.coordinates).setHTML('<strong>'+escapeHtml(p.name)+'</strong><br>'+escapeHtml(p.category)+' · '+escapeHtml(p.district)+'<br>Source: B’Tselem archival map-data<br><a href="'+p.source_url+'" target="_blank" rel="noopener">Original GeoJSON ↗</a>').addTo(map);
+ if(innerWidth<=700){document.getElementById('sidebar').classList.remove('open');document.getElementById('toggle').setAttribute('aria-expanded','false')}
+}
+function escapeHtml(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function fit(){const b=features.reduce((bounds,f)=>bounds.extend(f.geometry.coordinates),new maplibregl.LngLatBounds(features[0].geometry.coordinates,features[0].geometry.coordinates));map.fitBounds(b,{padding:{left:innerWidth>700?330:35,right:45,top:60,bottom:135},maxZoom:10,duration:700})}
+document.getElementById('fit').onclick=()=>features.length&&fit();
+document.getElementById('toggle').onclick=()=>{const open=document.getElementById('sidebar').classList.toggle('open');document.getElementById('toggle').setAttribute('aria-expanded',String(open))};
+Promise.all([new Promise(resolve=>map.on('load',resolve)),fetch('data/checkpoints-selected.geojson').then(r=>{if(!r.ok)throw Error('HTTP '+r.status);return r.json()})]).then(([,data])=>{
+ features=data.features;
+ map.addSource('checkpoints',{type:'geojson',data});
+ map.addLayer({id:'checkpoint-halo',type:'circle',source:'checkpoints',paint:{'circle-radius':14,'circle-color':['case',['==',['get','district'],'Gaza Strip'],'#37dbe8','#efc674'],'circle-opacity':.17}});
+ map.addLayer({id:'checkpoint-dot',type:'circle',source:'checkpoints',paint:{'circle-radius':6,'circle-color':['case',['==',['get','district'],'Gaza Strip'],'#52eaf2','#f7ca70'],'circle-stroke-color':'#082029','circle-stroke-width':1.5}});
+ map.on('click','checkpoint-dot',e=>show(e.features[0]));
+ map.on('mouseenter','checkpoint-dot',()=>map.getCanvas().style.cursor='pointer');
+ map.on('mouseleave','checkpoint-dot',()=>map.getCanvas().style.cursor='');
+ for(const f of features){const b=document.createElement('button');b.type='button';b.textContent=f.properties.name;const detail=document.createElement('small');detail.textContent=f.properties.category;b.append(detail);b.onclick=()=>show(f);document.getElementById(f.properties.district==='Gaza Strip'?'gaza':'westbank').append(b)}
+ fit();
+}).catch(e=>document.querySelector('.notice').textContent='Checkpoint data could not load: '+e.message);
+</script>
+</body>
+</html>
