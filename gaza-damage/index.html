@@ -51,6 +51,7 @@ input[type=range]{width:100%;accent-color:#5fe0e8;margin-top:14px;cursor:pointer
  <button id="holoButton" class="active" type="button" aria-pressed="true">◇ Hologram 3D</button>
  <button id="flatButton" type="button" aria-pressed="false">▣ Flat map</button>
  <button id="sideButton" type="button" aria-pressed="false">↗ Side view</button>
+ <button id="focusButton" type="button" aria-pressed="false">◉ Focus damage</button>
  <button id="fullscreenButton" type="button">⛶ Full screen</button>
 </div>
 <div class="timeline" aria-label="Assessment date control">
@@ -68,7 +69,8 @@ const PALETTE = ['#3c5660','#ff5b68','#ff9b54','#ffcc61','#c6d77a','#858998'];
 const $ = id => document.getElementById(id);
 const map = new maplibregl.Map({container:'map',style:'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',center:[34.44,31.51],zoom:11.5,pitch:58,maxPitch:85,bearing:-18});
 map.addControl(new maplibregl.NavigationControl(), 'bottom-right');
-let overview, dates=[], index=0, selected=null, detail=null, mode='holo', viewPitch=58, loadToken=0, timer=null;
+let overview, dates=[], index=0, selected=null, detail=null, mode='holo', viewPitch=58, focusDamage=false, loadToken=0, timer=null;
+const DAMAGED_FILTER=['in',['get','color'],['literal',PALETTE.slice(1,5)]];
 let HEIGHT_EXAGGERATION=250; // Visual projection scale; source height_m remains in metres.
 let antikythera=null;
 const cached = new Map();
@@ -79,6 +81,12 @@ function clsAsOf(sites,date){
  for(const site of sites||[]){let last=null;for(const h of site.h||[]){if(h[0].slice(0,10)<=date)last=h[1];else break}
  if(last!==null)worst=worst===null?last:Math.min(worst,last)}
  return worst;
+}
+function applyDamageFocus(){
+ for(const id of ['all-buildings-3d','all-buildings-flat','detail-3d','detail-flat'])if(map.getLayer(id))map.setFilter(id,focusDamage?DAMAGED_FILTER:null);
+ $('focusButton').textContent=focusDamage?'◉ Show all buildings':'◉ Focus damage';
+ $('focusButton').classList.toggle('active',focusDamage);
+ $('focusButton').setAttribute('aria-pressed',String(focusDamage));
 }
 function setPaint(){
  const extrude=mode==='holo';
@@ -136,7 +144,7 @@ async function loadOverviewBuildings(){
  map.addSource('all-buildings',{type:'geojson',data:annotatedAllBuildings()});
  map.addLayer({id:'all-buildings-flat',type:'fill',source:'all-buildings',layout:{visibility:mode==='flat'?'visible':'none'},paint:{'fill-color':['get','color'],'fill-opacity':.76}});
  map.addLayer({id:'all-buildings-3d',type:'fill-extrusion',source:'all-buildings',layout:{visibility:selected||mode!=='holo'?'none':'visible'},paint:{'fill-extrusion-color':['get','color'],'fill-extrusion-opacity':.68,'fill-extrusion-height':['get','displayHeight'],'fill-extrusion-base':0}});
- map.setLayoutProperty('areas-3d','visibility','none');refresh();
+ map.setLayoutProperty('areas-3d','visibility','none');applyDamageFocus();refresh();
 }
 async function show(slug){
  selected=slug;detail=null;const token=++loadToken;
@@ -163,6 +171,7 @@ async function show(slug){
   map.addSource('detail',{type:'geojson',data:annotatedDetail()});
   map.addLayer({id:'detail-flat',type:'fill',source:'detail',layout:{visibility:mode==='holo'?'none':'visible'},paint:{'fill-color':['get','color'],'fill-opacity':.76}});
   map.addLayer({id:'detail-3d',type:'fill-extrusion',source:'detail',layout:{visibility:mode==='holo'?'visible':'none'},paint:{'fill-extrusion-color':['get','color'],'fill-extrusion-opacity':.68,'fill-extrusion-height':['get','displayHeight'],'fill-extrusion-base':0}});
+  applyDamageFocus();
   const coords=overview.features.find(f=>f.properties.slug===slug).geometry.coordinates[0];
   const bounds=coords.reduce((b,p)=>b.extend(p),new maplibregl.LngLatBounds(coords[0],coords[0]));
   map.fitBounds(bounds,{padding:{top:90,bottom:160,left:innerWidth>700?320:30,right:30},pitch:mode==='holo'?viewPitch:0,bearing:mode==='holo'?-18:0,maxZoom:15.5,duration:900});
@@ -181,6 +190,7 @@ $('heightSlider').oninput=e=>$('heightValue').textContent=e.target.value+'×';
 $('playButton').onclick=()=>{if(timer){pause();return}if(index===dates.length-1)setDate(0);timer=setInterval(()=>{if(index===dates.length-1){pause();return}setDate(index+1)},850);$('playButton').textContent='Ⅱ Pause'};
 $('holoButton').onclick=()=>{mode='holo';setPaint()};
 $('flatButton').onclick=()=>{mode='flat';setPaint()};
+$('focusButton').onclick=()=>{focusDamage=!focusDamage;applyDamageFocus()};
 $('sideButton').onclick=()=>{mode='holo';viewPitch=viewPitch>=80?58:85;setPaint();$('sideButton').classList.toggle('active',viewPitch>=80);$('sideButton').setAttribute('aria-pressed',String(viewPitch>=80));$('sideButton').textContent=viewPitch>=80?'↗ Angled view':'↗ Side view'};
 $('fullscreenButton').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen()}catch(e){$('status').textContent='Full screen is unavailable in this browser; use its menu to expand the page.'}};
 document.addEventListener('fullscreenchange',()=>$('fullscreenButton').textContent=document.fullscreenElement?'⛶ Exit full screen':'⛶ Full screen');
