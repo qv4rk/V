@@ -51,7 +51,7 @@ input[type=range]{width:100%;accent-color:#5fe0e8;margin-top:14px;cursor:pointer
  <button id="holoButton" class="active" type="button" aria-pressed="true">◇ Hologram 3D</button>
  <button id="flatButton" type="button" aria-pressed="false">▣ Flat map</button>
  <button id="sideButton" type="button" aria-pressed="false">↗ Side view</button>
- <button id="focusButton" type="button" aria-pressed="false">◉ Focus damage</button>
+ <button id="focusButton" type="button" aria-pressed="false" title="Keep buildings with a damage record at any assessment date visible across the whole timeline">◉ Future damage</button>
  <button id="fullscreenButton" type="button">⛶ Full screen</button>
 </div>
 <div class="timeline" aria-label="Assessment date control">
@@ -70,12 +70,13 @@ const $ = id => document.getElementById(id);
 const map = new maplibregl.Map({container:'map',style:'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',center:[34.44,31.51],zoom:11.5,pitch:58,maxPitch:85,bearing:-18});
 map.addControl(new maplibregl.NavigationControl(), 'bottom-right');
 let overview, dates=[], index=0, selected=null, detail=null, mode='holo', viewPitch=58, focusDamage=false, loadToken=0, timer=null, playDirection=1;
-const DAMAGED_FILTER=['in',['get','color'],['literal',PALETTE.slice(1,5)]];
+const DAMAGED_FILTER=['==',['get','eventualDamage'],true];
 let HEIGHT_EXAGGERATION=250; // Visual projection scale; source height_m remains in metres.
 let antikythera=null;
 const cached = new Map();
 let overviewBuildingsReady=false;
 const mapReady = new Promise(resolve => map.on('load',resolve));
+function eventuallyDamaged(sites){return (sites||[]).some(site=>(site.h||[]).some(observation=>[1,2,3,4].includes(observation[1])))}
 function clsAsOf(sites,date){
  let worst=null;
  for(const site of sites||[]){let last=null;for(const h of site.h||[]){if(h[0].slice(0,10)<=date)last=h[1];else break}
@@ -84,7 +85,7 @@ function clsAsOf(sites,date){
 }
 function applyDamageFocus(){
  for(const id of ['all-buildings-3d','all-buildings-flat','detail-3d','detail-flat'])if(map.getLayer(id))map.setFilter(id,focusDamage?DAMAGED_FILTER:null);
- $('focusButton').textContent=focusDamage?'◉ Show all buildings':'◉ Focus damage';
+ $('focusButton').textContent=focusDamage?'◉ Show all buildings':'◉ Future damage';
  $('focusButton').classList.toggle('active',focusDamage);
  $('focusButton').setAttribute('aria-pressed',String(focusDamage));
 }
@@ -109,7 +110,7 @@ function annotatedDetail(){
   const cls=clsAsOf(f.properties.damage_sites,date);
   const base=Math.max(5,Math.min(28,Number(f.properties.height_m)||10));
   const factor=cls===1?.06:cls===2?.27:cls===3?.58:cls===4?.8:1;
-  return {...f,properties:{...f.properties,currentClass:cls,displayHeight:Math.max(.45,base*HEIGHT_EXAGGERATION*factor),color:PALETTE[cls>=1&&cls<=4?cls:cls===null?0:5]}};
+  return {...f,properties:{...f.properties,currentClass:cls,eventualDamage:eventuallyDamaged(f.properties.damage_sites),displayHeight:Math.max(.45,base*HEIGHT_EXAGGERATION*factor),color:PALETTE[cls>=1&&cls<=4?cls:cls===null?0:5]}};
  })};
 }
 function refresh(){
@@ -128,7 +129,7 @@ function annotatedAllBuildings(){
  const features=[];
  for(const slug of SLUGS){const collection=cached.get(slug);if(!collection)continue;
   for(const f of collection.features){const cls=clsAsOf(f.properties.damage_sites,dates[index]);const base=Math.max(5,Math.min(28,Number(f.properties.height_m)||10));const factor=cls===1?.06:cls===2?.27:cls===3?.58:cls===4?.8:1;
-   features.push({...f,properties:{...f.properties,displayHeight:Math.max(.45,base*HEIGHT_EXAGGERATION*factor),color:PALETTE[cls>=1&&cls<=4?cls:cls===null?0:5]}});
+   features.push({...f,properties:{...f.properties,eventualDamage:eventuallyDamaged(f.properties.damage_sites),displayHeight:Math.max(.45,base*HEIGHT_EXAGGERATION*factor),color:PALETTE[cls>=1&&cls<=4?cls:cls===null?0:5]}});
   }
  }
  return {type:'FeatureCollection',features};
