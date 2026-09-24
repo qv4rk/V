@@ -164,36 +164,29 @@ function initializeDefaultVoiceMapping() {
 }
 
 function renderEngineStatus() {
-    const el = document.getElementById('engineStatus');
-    if(!el) return;
-    const edgeReady = !!window.EdgeTTS;
-    el.innerHTML = '';
-    const edge = document.createElement('button');
-    edge.type = 'button';
-    edge.className = 'btn';
-    edge.textContent = settings.useBrowserTTS ? 'USE EDGE TTS' : '✓ EDGE TTS ACTIVE';
-    edge.disabled = !edgeReady;
-    edge.onclick = async () => {
-        stopPlayback();
+    const edge = document.getElementById('edgeEngineBtn');
+    const browser = document.getElementById('browserEngineBtn');
+    if(edge) {
+        edge.disabled = !window.EdgeTTS;
+        edge.textContent = settings.useBrowserTTS ? 'USE EDGE TTS' : '✓ EDGE TTS ACTIVE';
+    }
+    if(browser) {
+        browser.textContent = settings.useBrowserTTS ? '✓ BROWSER TTS ACTIVE' : 'USE BROWSER TTS';
+    }
+}
+
+async function selectTTSEngine(engine) {
+    stopPlayback();
+    if(engine === 'edge') {
         settings.useBrowserTTS = false;
+        renderEngineStatus();
         await loadEdgeVoices();
-        clearAudioCache();
-        saveState();
-        renderEngineStatus();
-    };
-    const browser = document.createElement('button');
-    browser.type = 'button';
-    browser.className = 'btn';
-    browser.style.marginLeft = '0.5rem';
-    browser.textContent = settings.useBrowserTTS ? '✓ BROWSER TTS ACTIVE' : 'USE BROWSER TTS';
-    browser.onclick = () => {
-        stopPlayback();
+    } else {
         loadBrowserVoices();
-        clearAudioCache();
-        saveState();
-        renderEngineStatus();
-    };
-    el.append(edge, browser);
+    }
+    clearAudioCache();
+    saveState();
+    renderEngineStatus();
 }
 
 function triggerVoiceLoad() {
