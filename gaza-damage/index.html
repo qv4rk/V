@@ -43,6 +43,7 @@ input[type=range]{width:100%;accent-color:#5fe0e8;margin-top:14px;cursor:pointer
   <div class="section-label">Building-level views</div>
   <div id="neighborhoodButtons"></div>
   <div class="section-label">Elsewhere</div>
+  <a href="../gaspi5/checkpoints.html" style="color:#91eaf1;padding:8px">◎ Checkpoint locations</a>
   <a href="../gaspi5/" style="color:#91eaf1;padding:8px">← GASPI</a>
   <a href="../" style="color:#91eaf1;padding:8px">← FeistTech home</a>
  </nav>
@@ -51,7 +52,6 @@ input[type=range]{width:100%;accent-color:#5fe0e8;margin-top:14px;cursor:pointer
  <button id="holoButton" class="active" type="button" aria-pressed="true">◇ Hologram 3D</button>
  <button id="flatButton" type="button" aria-pressed="false">▣ Flat map</button>
  <button id="sideButton" type="button" aria-pressed="false">↗ Side view</button>
- <button id="focusButton" type="button" aria-pressed="false" title="Keep buildings with a damage record at any assessment date visible across the whole timeline">◉ Future damage</button>
  <button id="fullscreenButton" type="button">⛶ Full screen</button>
 </div>
 <div class="timeline" aria-label="Assessment date control">
@@ -61,6 +61,7 @@ input[type=range]{width:100%;accent-color:#5fe0e8;margin-top:14px;cursor:pointer
  <input id="timeSlider" type="range" min="0" max="14" value="14" aria-label="Satellite assessment date">
  <label for="heightSlider" style="display:flex;gap:8px;align-items:center;font-size:.72rem;color:#bfd0da">Projection height <input id="heightSlider" type="range" min="10" max="500" step="10" value="250" style="flex:1;margin:0"><output id="heightValue" for="heightSlider">250×</output></label>
  <div class="legend" id="legend"></div>
+ <div style="font-size:.65rem;color:#afc3cc">*Height before the first record is an illustrative projection; no assessment does not establish that a building was intact.</div>
  </div>
 </div>
 <script>
@@ -69,7 +70,7 @@ const PALETTE = ['#3c5660','#ff5b68','#ff9b54','#ffcc61','#c6d77a','#858998'];
 const $ = id => document.getElementById(id);
 const map = new maplibregl.Map({container:'map',style:'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',center:[34.44,31.51],zoom:11.5,pitch:58,maxPitch:85,bearing:-18});
 map.addControl(new maplibregl.NavigationControl(), 'bottom-right');
-let overview, dates=[], index=0, selected=null, detail=null, mode='holo', viewPitch=58, focusDamage=false, loadToken=0, timer=null, playDirection=1;
+let overview, dates=[], index=0, selected=null, detail=null, mode='holo', viewPitch=58, loadToken=0, timer=null, playDirection=1;
 const DAMAGED_FILTER=['==',['get','eventualDamage'],true];
 let HEIGHT_EXAGGERATION=250; // Visual projection scale; source height_m remains in metres.
 let antikythera=null;
@@ -85,11 +86,8 @@ function clsAsOf(sites,date){
  return worst;
 }
 function applyDamageFocus(){
- for(const id of ['all-buildings-3d','all-buildings-flat','detail-3d','detail-flat'])if(map.getLayer(id))map.setFilter(id,focusDamage?DAMAGED_FILTER:null);
+ for(const id of ['all-buildings-3d','all-buildings-flat','detail-3d','detail-flat'])if(map.getLayer(id))map.setFilter(id,DAMAGED_FILTER);
  if(overviewBuildingsReady&&map.getSource('all-buildings'))map.getSource('all-buildings').setData(annotatedAllBuildings());
- $('focusButton').textContent=focusDamage?'◉ Show all buildings':'◉ Future damage';
- $('focusButton').classList.toggle('active',focusDamage);
- $('focusButton').setAttribute('aria-pressed',String(focusDamage));
 }
 function setPaint(){
  const extrude=mode==='holo';
@@ -130,7 +128,7 @@ function refresh(){
 function annotatedAllBuildings(){
  const features=[];
  for(const slug of SLUGS){const collection=cached.get(slug);if(!collection)continue;
-  for(const f of collection.features){if(focusDamage&&!f.properties.eventualDamage)continue;const cls=clsAsOf(f.properties.damage_sites,dates[index]);const base=Math.max(5,Math.min(28,Number(f.properties.height_m)||10));const factor=cls===1?.06:cls===2?.27:cls===3?.58:cls===4?.8:1;
+  for(const f of collection.features){if(!f.properties.eventualDamage)continue;const cls=clsAsOf(f.properties.damage_sites,dates[index]);const base=Math.max(5,Math.min(28,Number(f.properties.height_m)||10));const factor=cls===1?.06:cls===2?.27:cls===3?.58:cls===4?.8:1;
    features.push({...f,properties:{...f.properties,eventualDamage:f.properties.eventualDamage,displayHeight:Math.max(.45,base*HEIGHT_EXAGGERATION*factor),color:PALETTE[cls>=1&&cls<=4?cls:cls===null?0:5]}});
   }
  }
@@ -193,7 +191,6 @@ $('heightSlider').oninput=e=>$('heightValue').textContent=e.target.value+'×';
 $('playButton').onclick=()=>{if(timer){pause();return}playDirection=index>=dates.length-1?-1:1;timer=setInterval(()=>{if(index+playDirection>=dates.length||index+playDirection<0)playDirection*=-1;setDate(index+playDirection)},1200);$('playButton').textContent='Ⅱ Pause ↔'};
 $('holoButton').onclick=()=>{mode='holo';setPaint()};
 $('flatButton').onclick=()=>{mode='flat';setPaint()};
-$('focusButton').onclick=()=>{focusDamage=!focusDamage;applyDamageFocus()};
 $('sideButton').onclick=()=>{mode='holo';viewPitch=viewPitch>=80?58:85;setPaint();$('sideButton').classList.toggle('active',viewPitch>=80);$('sideButton').setAttribute('aria-pressed',String(viewPitch>=80));$('sideButton').textContent=viewPitch>=80?'↗ Angled view':'↗ Side view'};
 $('fullscreenButton').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen()}catch(e){$('status').textContent='Full screen is unavailable in this browser; use its menu to expand the page.'}};
 document.addEventListener('fullscreenchange',()=>$('fullscreenButton').textContent=document.fullscreenElement?'⛶ Exit full screen':'⛶ Full screen');
@@ -218,7 +215,7 @@ Promise.all([mapReady,fetch('data/neighborhood-overview.json').then(r=>{if(!r.ok
  map.addLayer({id:'areas-3d',type:'fill-extrusion',source:'areas',paint:{'fill-extrusion-color':['get','color'],'fill-extrusion-height':['get','remaining'],'fill-extrusion-opacity':.42}});
  map.on('click','areas-3d',e=>show(e.features[0].properties.slug));
  map.on('click','areas-flat',e=>show(e.features[0].properties.slug));
- $('legend').innerHTML='<span><i style="background:#3c5660"></i>No class 1–4 record</span><span><i style="background:#ff5b68"></i>Destroyed</span><span><i style="background:#ff9b54"></i>Severe</span><span><i style="background:#ffcc61"></i>Moderate</span><span><i style="background:#c6d77a"></i>Possible</span>';
+ $('legend').innerHTML='<span><i style="background:#3c5660"></i>Before first damage assessment*</span><span><i style="background:#ff5b68"></i>Destroyed</span><span><i style="background:#ff9b54"></i>Severe</span><span><i style="background:#ffcc61"></i>Moderate</span><span><i style="background:#c6d77a"></i>Possible</span>';
  show(new URLSearchParams(location.search).get('neighborhood')&&SLUGS.includes(new URLSearchParams(location.search).get('neighborhood'))?new URLSearchParams(location.search).get('neighborhood'):null);
  loadOverviewBuildings();
 }).catch(e=>$('status').textContent='Map data could not load: '+e.message);
