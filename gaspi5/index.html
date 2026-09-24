@@ -40,6 +40,14 @@ body{background:var(--bg);color:var(--ink);font-family:var(--font-serif);overflo
   border:1px solid var(--line);transition:color .15s,border-color .15s;
 }
 .wordmark:hover{color:var(--ink);border-color:var(--ink-mute)}
+.damage-direct{
+  position:fixed;top:57px;right:24px;z-index:21;padding:11px 14px;
+  background:#174452;color:#e9fcff;border:1px solid #62e5ee;border-radius:5px;
+  font-family:var(--font-mono);font-size:.7rem;font-weight:700;text-decoration:none;
+  box-shadow:0 0 18px rgba(98,229,238,.25)
+}
+.damage-direct:hover,.damage-direct:focus-visible{background:#236979;outline:2px solid #e9fcff;outline-offset:2px}
+@media(max-width:600px){.damage-direct{top:58px;right:12px;max-width:56vw;text-align:center}}
 
 /* ---- territory pins (idle state) ---- */
 .pin{
@@ -208,6 +216,7 @@ body{background:var(--bg);color:var(--ink);font-family:var(--font-serif);overflo
 <div class="boot-loading" id="bootLoading">Loading GASPI…</div>
 <div id="map"></div>
 <a class="wordmark" href="/" title="Back to feisttech.com">← GASPI</a>
+<a class="damage-direct" href="../gaza-damage/">◇ Gaza damage · 15 neighborhoods →</a>
 <div class="back-btn" id="backBtn">← All territories</div>
 
 <div class="sheet hidden" id="sheet">
