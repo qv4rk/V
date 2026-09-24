@@ -148,7 +148,7 @@ async function show(slug){
  if(map.getLayer('areas-3d'))map.setLayoutProperty('areas-3d','visibility',slug||overviewBuildingsReady?'none':mode==='holo'?'visible':'none');
  if(map.getLayer('all-buildings-3d'))map.setLayoutProperty('all-buildings-3d','visibility',slug||mode!=='holo'?'none':'visible');
  if(map.getLayer('areas-flat'))map.setLayoutProperty('areas-flat','visibility',slug?'none':mode==='flat'?'visible':'none');
- if(!slug){map.flyTo({center:[34.44,31.51],zoom:11.5,pitch:mode==='holo'?viewPitch:0,bearing:mode==='holo'?-18:0});refresh();return}
+ if(!slug){map.flyTo({center:[34.44,31.51],zoom:11.5,pitch:mode==='holo'?viewPitch:0,bearing:mode==='holo'?-18:0});refresh();closeMenu();return}
  $('status').textContent='Loading '+slug.replaceAll('-',' ')+' buildings…';
  try{
   if(!cached.has(slug)){
@@ -170,7 +170,7 @@ async function show(slug){
 }
 function setDate(i){index=(i+dates.length)%dates.length;refresh()}
 function pause(){if(timer){clearInterval(timer);timer=null;$('playButton').textContent='▶ Play time'}}
-$('allButton').onclick=()=>show(null);
+$('allButton').onclick=()=>{if(selected===null){closeMenu();return}show(null)};
 $('prevButton').onclick=()=>{pause();setDate(index-1)};
 $('nextButton').onclick=()=>{pause();setDate(index+1)};
 $('timeSlider').oninput=e=>{pause();setDate(Number(e.target.value))};
