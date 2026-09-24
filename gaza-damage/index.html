@@ -36,7 +36,7 @@ input[type=range]{width:100%;accent-color:#5fe0e8;margin-top:14px;cursor:pointer
 <div id="map" aria-label="Gaza City damage map"></div>
 <button class="sidebar-toggle" id="menuToggle" aria-expanded="false" aria-controls="sidebar">☰ Neighborhoods</button>
 <aside class="sidebar" id="sidebar" aria-label="Neighborhood and page menu">
- <header><h1>Gaza City · Damage Over Time</h1><p>15 neighborhoods · UNOSAT satellite assessments joined to OpenStreetMap building footprints</p></header>
+ <header><h1>Gaza City · Damage Over Time</h1><p>15 neighborhoods · UNOSAT satellite assessments joined to OpenStreetMap building footprints · heights visually exaggerated</p></header>
  <nav class="nav" id="nav">
   <div class="section-label">Views</div>
   <button id="allButton" type="button">◈ All neighborhoods</button>
@@ -56,6 +56,7 @@ input[type=range]{width:100%;accent-color:#5fe0e8;margin-top:14px;cursor:pointer
  <div class="timeline-content">
  <div class="timeline-top"><button id="prevButton" aria-label="Previous assessment">◀</button><div><div class="date" id="dateLabel">Loading dates…</div><div id="status" role="status">Loading overview…</div></div><button id="nextButton" aria-label="Next assessment">▶</button><button id="playButton" type="button">▶ Play time</button></div>
  <input id="timeSlider" type="range" min="0" max="14" value="14" aria-label="Satellite assessment date">
+ <label for="heightSlider" style="display:flex;gap:8px;align-items:center;font-size:.72rem;color:#bfd0da">Projection height <input id="heightSlider" type="range" min="10" max="500" step="10" value="250" style="flex:1;margin:0"><output id="heightValue" for="heightSlider">250×</output></label>
  <div class="legend" id="legend"></div>
  </div>
 </div>
@@ -66,7 +67,7 @@ const $ = id => document.getElementById(id);
 const map = new maplibregl.Map({container:'map',style:'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',center:[34.44,31.51],zoom:11.5,pitch:58,bearing:-18});
 map.addControl(new maplibregl.NavigationControl(), 'bottom-right');
 let overview, dates=[], index=0, selected=null, detail=null, mode='holo', loadToken=0, timer=null;
-const HEIGHT_EXAGGERATION=5.5; // Visual scale; source height_m remains in metres.
+let HEIGHT_EXAGGERATION=250; // Visual projection scale; source height_m remains in metres.
 let antikythera=null;
 const cached = new Map();
 let overviewBuildingsReady=false;
@@ -171,6 +172,8 @@ $('allButton').onclick=()=>show(null);
 $('prevButton').onclick=()=>{pause();setDate(index-1)};
 $('nextButton').onclick=()=>{pause();setDate(index+1)};
 $('timeSlider').oninput=e=>{pause();setDate(Number(e.target.value))};
+$('heightSlider').onchange=e=>{HEIGHT_EXAGGERATION=Number(e.target.value);$('heightValue').textContent=HEIGHT_EXAGGERATION+'×';refresh()};
+$('heightSlider').oninput=e=>$('heightValue').textContent=e.target.value+'×';
 $('playButton').onclick=()=>{if(timer){pause();return}if(index===dates.length-1)setDate(0);timer=setInterval(()=>{if(index===dates.length-1){pause();return}setDate(index+1)},850);$('playButton').textContent='Ⅱ Pause'};
 $('holoButton').onclick=()=>{mode='holo';setPaint()};
 $('flatButton').onclick=()=>{mode='flat';setPaint()};
