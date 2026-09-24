@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gaza City · Damage Over Time | FeistTech</title>
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4/dist/maplibre-gl.css">
+<script src="https://unpkg.com/maplibre-gl@4/dist/maplibre-gl.js"></script>
+<script src="../app/data.js"></script>
+<script src="../app/dial.js"></script>
+<style>
+:root{color-scheme:dark;font-family:system-ui,sans-serif;background:#080e16;color:#eef5fc;--accent:#d6af66;--bg-soft:#1b1c1c;--ink:#eef5fc}
+*{box-sizing:border-box}body{margin:0}#map{position:fixed;inset:0}
+button{font:inherit;cursor:pointer;color:inherit;background:#162334;border:1px solid #496174;border-radius:6px;padding:10px 12px}
+button:hover,button:focus-visible{border-color:#62e5ee;outline:none}button.active{background:#174452;border-color:#62e5ee}
+.sidebar{position:fixed;z-index:4;top:12px;left:12px;bottom:12px;width:285px;background:#09131de9;border:1px solid #365365;border-radius:12px;overflow:auto;box-shadow:0 15px 50px #000a}
+.sidebar header{position:sticky;top:0;background:#09131d;padding:18px 16px 12px;border-bottom:1px solid #284454}
+h1{font-size:1.14rem;margin:0 0 4px}p{margin:6px 0;color:#bfd0da;font-size:.77rem;line-height:1.45}
+.nav{padding:12px;display:grid;gap:5px}.nav button{text-align:left;width:100%;padding:8px 10px;font-size:.84rem}
+.nav button small{float:right;color:#b0c6cf}.section-label{color:#7ddde5;font-size:.68rem;text-transform:uppercase;letter-spacing:.12em;margin:10px 2px 4px}
+.toolbar{position:fixed;z-index:3;right:14px;top:14px;display:flex;gap:7px;background:#09131de6;padding:8px;border:1px solid #365365;border-radius:9px}
+.timeline{position:fixed;z-index:3;left:310px;right:14px;bottom:14px;background:#09131df0;border:1px solid #365365;border-radius:12px;padding:10px 18px;display:flex;align-items:center;gap:18px}
+.antikythera{width:165px;height:165px;flex:none;color:#d6af66;touch-action:none;filter:drop-shadow(0 0 13px #c5a05988)}
+.antikythera svg{width:100%;height:100%;display:block}
+.timeline-content{flex:1;min-width:0}
+.timeline-top{display:flex;align-items:center;gap:12px;justify-content:space-between;flex-wrap:wrap}
+.date{font-variant-numeric:tabular-nums;font-size:1.08rem;color:#7de5ec;font-weight:700}
+input[type=range]{width:100%;accent-color:#5fe0e8;margin-top:14px;cursor:pointer}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:.7rem;color:#c4d3da;margin-top:8px}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:3px}
+#status{font-size:.73rem;color:#aac4cd}.sidebar-toggle{display:none}
+@media(max-width:700px){.sidebar{width:min(83vw,310px);bottom:155px;transform:translateX(calc(-100% - 18px));transition:transform .2s}.sidebar.open{transform:none}.sidebar-toggle{display:block;position:fixed;z-index:5;top:13px;left:13px}.toolbar{top:13px;right:13px}.timeline{left:12px;right:12px;bottom:12px;padding:8px;gap:6px}.antikythera{width:92px;height:92px}.timeline-top{gap:5px}.date{font-size:.9rem}.legend{gap:6px}.toolbar button{font-size:.75rem;padding:8px}}
+</style>
+</head>
+<body>
+<div id="map" aria-label="Gaza City damage map"></div>
+<button class="sidebar-toggle" id="menuToggle" aria-expanded="false" aria-controls="sidebar">☰ Neighborhoods</button>
+<aside class="sidebar" id="sidebar" aria-label="Neighborhood and page menu">
+ <header><h1>Gaza City · Damage Over Time</h1><p>15 neighborhoods · UNOSAT satellite assessments joined to OpenStreetMap building footprints</p></header>
+ <nav class="nav" id="nav">
+  <div class="section-label">Views</div>
+  <button id="allButton" type="button">◈ All neighborhoods</button>
+  <div class="section-label">Building-level views</div>
+  <div id="neighborhoodButtons"></div>
+  <div class="section-label">Elsewhere</div>
+  <a href="../gaspi5/" style="color:#91eaf1;padding:8px">← GASPI</a>
+  <a href="../" style="color:#91eaf1;padding:8px">← FeistTech home</a>
+ </nav>
+</aside>
+<div class="toolbar" aria-label="Map view controls">
+ <button id="holoButton" class="active" type="button" aria-pressed="true">◇ Hologram 3D</button>
+ <button id="flatButton" type="button" aria-pressed="false">▣ Flat map</button>
+</div>
+<div class="timeline" aria-label="Assessment date control">
+ <div id="antikytheraDial" class="antikythera" title="Drag the Antikythera dial to change assessment date"></div>
+ <div class="timeline-content">
+ <div class="timeline-top"><button id="prevButton" aria-label="Previous assessment">◀</button><div><div class="date" id="dateLabel">Loading dates…</div><div id="status" role="status">Loading overview…</div></div><button id="nextButton" aria-label="Next assessment">▶</button><button id="playButton" type="button">▶ Play time</button></div>
+ <input id="timeSlider" type="range" min="0" max="14" value="14" aria-label="Satellite assessment date">
+ <div class="legend" id="legend"></div>
+ </div>
+</div>
+<script>
+const SLUGS = ['ad-darraj','al-awadah','an-naser','as-sabra','ash-sheikh-ijleen','ash-sheikh-radwan','ash-shuja-iyeh-ijdeedeh','at-tuffah','at-turukman-ijdeedeh','az-zaitoun','ijdeedeh','northern-remal','old-city','southern-remal','tal-el-hawa'];
+const PALETTE = ['#3c5660','#ff5b68','#ff9b54','#ffcc61','#c6d77a','#858998'];
+const $ = id => document.getElementById(id);
+const map = new maplibregl.Map({container:'map',style:'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',center:[34.44,31.51],zoom:11.5,pitch:58,bearing:-18});
+map.addControl(new maplibregl.NavigationControl(), 'bottom-right');
+let overview, dates=[], index=0, selected=null, detail=null, mode='holo', loadToken=0, timer=null;
+let antikythera=null;
+const cached = new Map();
+const mapReady = new Promise(resolve => map.on('load',resolve));
+function clsAsOf(sites,date){
+ let worst=null;
+ for(const site of sites||[]){let last=null;for(const h of site.h||[]){if(h[0].slice(0,10)<=date)last=h[1];else break}
+ if(last!==null)worst=worst===null?last:Math.min(worst,last)}
+ return worst;
+}
+function setPaint(){
+ const extrude=mode==='holo';
+ for(const name of ['areas-3d','detail-3d'])if(map.getLayer(name))map.setLayoutProperty(name,'visibility',name.startsWith('areas')&&selected?'none':extrude?'visible':'none');
+ for(const name of ['areas-flat','detail-flat'])if(map.getLayer(name))map.setLayoutProperty(name,'visibility',name.startsWith('areas')&&selected?'none':extrude?'none':'visible');
+ map.easeTo({pitch:extrude?58:0,bearing:extrude?-18:0,duration:650});
+ $('holoButton').classList.toggle('active',extrude);$('flatButton').classList.toggle('active',!extrude);
+ $('holoButton').setAttribute('aria-pressed',String(extrude));$('flatButton').setAttribute('aria-pressed',String(!extrude));
+}
+function annotatedOverview(){
+ return {type:'FeatureCollection',features:overview.features.map(f=>{
+  const counts=f.properties.counts[index];
+  const severe=counts[1]+counts[2], assessed=counts[1]+counts[2]+counts[3]+counts[4];
+  return {...f,properties:{...f.properties,severe,assessed,remaining:Math.max(1,Math.round(170*(1-severe/f.properties.building_count))),color:PALETTE[severe/f.properties.building_count>.5?1:severe/f.properties.building_count>.25?2:3]}};
+ })};
+}
+function annotatedDetail(){
+ const date=dates[index];
+ return {type:'FeatureCollection',features:detail.features.map(f=>{
+  const cls=clsAsOf(f.properties.damage_sites,date);
+  const base=Math.max(5,Math.min(28,Number(f.properties.height_m)||10));
+  const factor=cls===1?.06:cls===2?.27:cls===3?.58:cls===4?.8:1;
+  return {...f,properties:{...f.properties,currentClass:cls,displayHeight:Math.max(.45,base*factor),color:PALETTE[cls>=1&&cls<=4?cls:cls===null?0:5]}};
+ })};
+}
+function refresh(){
+ if(!overview)return;
+ $('dateLabel').textContent=new Date(dates[index]+'T00:00:00Z').toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric',timeZone:'UTC'});
+ $('timeSlider').value=index;
+ if(antikythera)antikythera.setDate(MA.jd(new Date(dates[index]+'T12:00:00Z')));
+ map.getSource('areas').setData(annotatedOverview());
+ if(detail&&map.getSource('detail'))map.getSource('detail').setData(annotatedDetail());
+ const total=selected?detail.features.length:overview.features.reduce((n,f)=>n+f.properties.building_count,0);
+ const severe=selected?detail.features.reduce((n,f)=>n+([1,2].includes(clsAsOf(f.properties.damage_sites,dates[index]))?1:0),0):overview.features.reduce((n,f)=>n+f.properties.counts[index][1]+f.properties.counts[index][2],0);
+ $('status').textContent=severe.toLocaleString()+' / '+total.toLocaleString()+' footprints with destroyed or severe damage records · '+(selected?'building view':'15-neighborhood overview');
+}
+async function show(slug){
+ selected=slug;detail=null;const token=++loadToken;
+ history.replaceState(null,'',slug?'?neighborhood='+encodeURIComponent(slug):location.pathname);
+ if(map.getLayer('detail-3d'))map.removeLayer('detail-3d');
+ if(map.getLayer('detail-flat'))map.removeLayer('detail-flat');
+ if(map.getSource('detail'))map.removeSource('detail');
+ $('allButton').classList.toggle('active',!slug);
+ document.querySelectorAll('[data-slug]').forEach(b=>b.classList.toggle('active',b.dataset.slug===slug));
+ if(map.getLayer('areas-3d'))map.setLayoutProperty('areas-3d','visibility',slug?'none':mode==='holo'?'visible':'none');
+ if(map.getLayer('areas-flat'))map.setLayoutProperty('areas-flat','visibility',slug?'none':mode==='flat'?'visible':'none');
+ if(!slug){map.flyTo({center:[34.44,31.51],zoom:11.5,pitch:mode==='holo'?58:0,bearing:mode==='holo'?-18:0});refresh();return}
+ $('status').textContent='Loading '+slug.replaceAll('-',' ')+' buildings…';
+ try{
+  if(!cached.has(slug)){
+   const response=await fetch('data/'+slug+'_buildings.geojson');
+   if(!response.ok)throw Error('HTTP '+response.status);
+   cached.set(slug,await response.json());
+  }
+  if(token!==loadToken)return;
+  detail=cached.get(slug);
+  map.addSource('detail',{type:'geojson',data:annotatedDetail()});
+  map.addLayer({id:'detail-flat',type:'fill',source:'detail',layout:{visibility:mode==='holo'?'none':'visible'},paint:{'fill-color':['get','color'],'fill-opacity':.76}});
+  map.addLayer({id:'detail-3d',type:'fill-extrusion',source:'detail',layout:{visibility:mode==='holo'?'visible':'none'},paint:{'fill-extrusion-color':['get','color'],'fill-extrusion-opacity':.68,'fill-extrusion-height':['get','displayHeight'],'fill-extrusion-base':0}});
+  const coords=overview.features.find(f=>f.properties.slug===slug).geometry.coordinates[0];
+  const bounds=coords.reduce((b,p)=>b.extend(p),new maplibregl.LngLatBounds(coords[0],coords[0]));
+  map.fitBounds(bounds,{padding:{top:90,bottom:160,left:innerWidth>700?320:30,right:30},pitch:mode==='holo'?58:0,bearing:mode==='holo'?-18:0,maxZoom:15.5,duration:900});
+  refresh();
+  if(innerWidth<=700){$('sidebar').classList.remove('open');$('menuToggle').setAttribute('aria-expanded','false')}
+ }catch(e){$('status').textContent='Could not load '+slug+': '+e.message}
+}
+function setDate(i){index=(i+dates.length)%dates.length;refresh()}
+function pause(){if(timer){clearInterval(timer);timer=null;$('playButton').textContent='▶ Play time'}}
+$('allButton').onclick=()=>show(null);
+$('prevButton').onclick=()=>{pause();setDate(index-1)};
+$('nextButton').onclick=()=>{pause();setDate(index+1)};
+$('timeSlider').oninput=e=>{pause();setDate(Number(e.target.value))};
+$('playButton').onclick=()=>{if(timer){pause();return}if(index===dates.length-1)setDate(0);timer=setInterval(()=>{if(index===dates.length-1){pause();return}setDate(index+1)},850);$('playButton').textContent='Ⅱ Pause'};
+$('holoButton').onclick=()=>{mode='holo';setPaint()};
+$('flatButton').onclick=()=>{mode='flat';setPaint()};
+$('menuToggle').onclick=()=>{const open=$('sidebar').classList.toggle('open');$('menuToggle').setAttribute('aria-expanded',String(open))};
+Promise.all([mapReady,fetch('data/neighborhood-overview.json').then(r=>{if(!r.ok)throw Error('Overview HTTP '+r.status);return r.json()})]).then(([,data])=>{
+ overview=data;dates=data.dates;index=dates.length-1;$('timeSlider').max=index;
+ antikythera=new MA.AntikytheraDial($('antikytheraDial'),'atrium');
+ antikythera.onDateChange=jd=>{
+  pause();
+  const target=MA.dj(jd).getTime();
+  let closest=0;
+  for(let i=1;i<dates.length;i++)if(Math.abs(Date.parse(dates[i])-target)<Math.abs(Date.parse(dates[closest])-target))closest=i;
+  index=closest;refresh();
+ };
+ for(const feature of overview.features){const b=document.createElement('button');b.dataset.slug=feature.properties.slug;b.textContent=feature.properties.name+' · '+feature.properties.building_count.toLocaleString();b.onclick=()=>show(feature.properties.slug);$('neighborhoodButtons').append(b)}
+ map.addSource('areas',{type:'geojson',data:annotatedOverview()});
+ map.addLayer({id:'areas-flat',type:'fill',source:'areas',layout:{visibility:'none'},paint:{'fill-color':['get','color'],'fill-opacity':.45}});
+ map.addLayer({id:'areas-3d',type:'fill-extrusion',source:'areas',paint:{'fill-extrusion-color':['get','color'],'fill-extrusion-height':['get','remaining'],'fill-extrusion-opacity':.42}});
+ map.on('click','areas-3d',e=>show(e.features[0].properties.slug));
+ map.on('click','areas-flat',e=>show(e.features[0].properties.slug));
+ $('legend').innerHTML='<span><i style="background:#3c5660"></i>No class 1–4 record</span><span><i style="background:#ff5b68"></i>Destroyed</span><span><i style="background:#ff9b54"></i>Severe</span><span><i style="background:#ffcc61"></i>Moderate</span><span><i style="background:#c6d77a"></i>Possible</span>';
+ show(new URLSearchParams(location.search).get('neighborhood')&&SLUGS.includes(new URLSearchParams(location.search).get('neighborhood'))?new URLSearchParams(location.search).get('neighborhood'):null);
+}).catch(e=>$('status').textContent='Map data could not load: '+e.message);
+</script>
+</body>
+</html>
