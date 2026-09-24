@@ -66,8 +66,10 @@ const $ = id => document.getElementById(id);
 const map = new maplibregl.Map({container:'map',style:'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',center:[34.44,31.51],zoom:11.5,pitch:58,bearing:-18});
 map.addControl(new maplibregl.NavigationControl(), 'bottom-right');
 let overview, dates=[], index=0, selected=null, detail=null, mode='holo', loadToken=0, timer=null;
+const HEIGHT_EXAGGERATION=5.5; // Visual scale; source height_m remains in metres.
 let antikythera=null;
 const cached = new Map();
+let overviewBuildingsReady=false;
 const mapReady = new Promise(resolve => map.on('load',resolve));
 function clsAsOf(sites,date){
  let worst=null;
@@ -77,7 +79,7 @@ function clsAsOf(sites,date){
 }
 function setPaint(){
  const extrude=mode==='holo';
- for(const name of ['areas-3d','detail-3d'])if(map.getLayer(name))map.setLayoutProperty(name,'visibility',name.startsWith('areas')&&selected?'none':extrude?'visible':'none');
+ for(const name of ['areas-3d','detail-3d','all-buildings-3d'])if(map.getLayer(name))map.setLayoutProperty(name,'visibility',name.startsWith('areas')&&(selected||overviewBuildingsReady)?'none':name.startsWith('all-buildings')&&selected?'none':extrude?'visible':'none');
  for(const name of ['areas-flat','detail-flat'])if(map.getLayer(name))map.setLayoutProperty(name,'visibility',name.startsWith('areas')&&selected?'none':extrude?'none':'visible');
  map.easeTo({pitch:extrude?58:0,bearing:extrude?-18:0,duration:650});
  $('holoButton').classList.toggle('active',extrude);$('flatButton').classList.toggle('active',!extrude);
@@ -96,7 +98,7 @@ function annotatedDetail(){
   const cls=clsAsOf(f.properties.damage_sites,date);
   const base=Math.max(5,Math.min(28,Number(f.properties.height_m)||10));
   const factor=cls===1?.06:cls===2?.27:cls===3?.58:cls===4?.8:1;
-  return {...f,properties:{...f.properties,currentClass:cls,displayHeight:Math.max(.45,base*factor),color:PALETTE[cls>=1&&cls<=4?cls:cls===null?0:5]}};
+  return {...f,properties:{...f.properties,currentClass:cls,displayHeight:Math.max(.45,base*HEIGHT_EXAGGERATION*factor),color:PALETTE[cls>=1&&cls<=4?cls:cls===null?0:5]}};
  })};
 }
 function refresh(){
@@ -106,9 +108,31 @@ function refresh(){
  if(antikythera)antikythera.setDate(MA.jd(new Date(dates[index]+'T12:00:00Z')));
  map.getSource('areas').setData(annotatedOverview());
  if(detail&&map.getSource('detail'))map.getSource('detail').setData(annotatedDetail());
- const total=selected?detail.features.length:overview.features.reduce((n,f)=>n+f.properties.building_count,0);
- const severe=selected?detail.features.reduce((n,f)=>n+([1,2].includes(clsAsOf(f.properties.damage_sites,dates[index]))?1:0),0):overview.features.reduce((n,f)=>n+f.properties.counts[index][1]+f.properties.counts[index][2],0);
+ if(overviewBuildingsReady&&map.getSource('all-buildings'))map.getSource('all-buildings').setData(annotatedAllBuildings());
+ const total=selected&&detail?detail.features.length:overview.features.reduce((n,f)=>n+f.properties.building_count,0);
+ const severe=selected&&detail?detail.features.reduce((n,f)=>n+([1,2].includes(clsAsOf(f.properties.damage_sites,dates[index]))?1:0),0):overview.features.reduce((n,f)=>n+f.properties.counts[index][1]+f.properties.counts[index][2],0);
  $('status').textContent=severe.toLocaleString()+' / '+total.toLocaleString()+' footprints with destroyed or severe damage records · '+(selected?'building view':'15-neighborhood overview');
+}
+function annotatedAllBuildings(){
+ const features=[];
+ for(const slug of SLUGS){const collection=cached.get(slug);if(!collection)continue;
+  for(const f of collection.features){const cls=clsAsOf(f.properties.damage_sites,dates[index]);const base=Math.max(5,Math.min(28,Number(f.properties.height_m)||10));const factor=cls===1?.06:cls===2?.27:cls===3?.58:cls===4?.8:1;
+   features.push({...f,properties:{...f.properties,displayHeight:Math.max(.45,base*HEIGHT_EXAGGERATION*factor),color:PALETTE[cls>=1&&cls<=4?cls:cls===null?0:5]}});
+  }
+ }
+ return {type:'FeatureCollection',features};
+}
+async function loadOverviewBuildings(){
+ // Load gradually, preserving the neighborhood outline until all footprints are ready.
+ for(const slug of SLUGS){
+  if(cached.has(slug))continue;
+  try{const response=await fetch('data/'+slug+'_buildings.geojson');if(!response.ok)throw Error('HTTP '+response.status);cached.set(slug,await response.json())}
+  catch(e){$('status').textContent='Building data unavailable for '+slug+': '+e.message;return}
+ }
+ overviewBuildingsReady=true;
+ map.addSource('all-buildings',{type:'geojson',data:annotatedAllBuildings()});
+ map.addLayer({id:'all-buildings-3d',type:'fill-extrusion',source:'all-buildings',layout:{visibility:selected||mode!=='holo'?'none':'visible'},paint:{'fill-extrusion-color':['get','color'],'fill-extrusion-opacity':.68,'fill-extrusion-height':['get','displayHeight'],'fill-extrusion-base':0}});
+ map.setLayoutProperty('areas-3d','visibility','none');refresh();
 }
 async function show(slug){
  selected=slug;detail=null;const token=++loadToken;
@@ -118,7 +142,8 @@ async function show(slug){
  if(map.getSource('detail'))map.removeSource('detail');
  $('allButton').classList.toggle('active',!slug);
  document.querySelectorAll('[data-slug]').forEach(b=>b.classList.toggle('active',b.dataset.slug===slug));
- if(map.getLayer('areas-3d'))map.setLayoutProperty('areas-3d','visibility',slug?'none':mode==='holo'?'visible':'none');
+ if(map.getLayer('areas-3d'))map.setLayoutProperty('areas-3d','visibility',slug||overviewBuildingsReady?'none':mode==='holo'?'visible':'none');
+ if(map.getLayer('all-buildings-3d'))map.setLayoutProperty('all-buildings-3d','visibility',slug||mode!=='holo'?'none':'visible');
  if(map.getLayer('areas-flat'))map.setLayoutProperty('areas-flat','visibility',slug?'none':mode==='flat'?'visible':'none');
  if(!slug){map.flyTo({center:[34.44,31.51],zoom:11.5,pitch:mode==='holo'?58:0,bearing:mode==='holo'?-18:0});refresh();return}
  $('status').textContent='Loading '+slug.replaceAll('-',' ')+' buildings…';
@@ -151,7 +176,7 @@ $('holoButton').onclick=()=>{mode='holo';setPaint()};
 $('flatButton').onclick=()=>{mode='flat';setPaint()};
 $('menuToggle').onclick=()=>{const open=$('sidebar').classList.toggle('open');$('menuToggle').setAttribute('aria-expanded',String(open))};
 Promise.all([mapReady,fetch('data/neighborhood-overview.json').then(r=>{if(!r.ok)throw Error('Overview HTTP '+r.status);return r.json()})]).then(([,data])=>{
- overview=data;dates=data.dates;index=dates.length-1;$('timeSlider').max=index;
+ overview=data;dates=data.dates;index=0;$('timeSlider').max=dates.length-1;
  antikythera=new MA.AntikytheraDial($('antikytheraDial'),'atrium');
  antikythera.onDateChange=jd=>{
   pause();
@@ -168,6 +193,7 @@ Promise.all([mapReady,fetch('data/neighborhood-overview.json').then(r=>{if(!r.ok
  map.on('click','areas-flat',e=>show(e.features[0].properties.slug));
  $('legend').innerHTML='<span><i style="background:#3c5660"></i>No class 1–4 record</span><span><i style="background:#ff5b68"></i>Destroyed</span><span><i style="background:#ff9b54"></i>Severe</span><span><i style="background:#ffcc61"></i>Moderate</span><span><i style="background:#c6d77a"></i>Possible</span>';
  show(new URLSearchParams(location.search).get('neighborhood')&&SLUGS.includes(new URLSearchParams(location.search).get('neighborhood'))?new URLSearchParams(location.search).get('neighborhood'):null);
+ loadOverviewBuildings();
 }).catch(e=>$('status').textContent='Map data could not load: '+e.message);
 </script>
 </body>
