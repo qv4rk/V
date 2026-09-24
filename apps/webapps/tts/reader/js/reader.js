@@ -138,6 +138,7 @@ async function loadEdgeVoices() {
     }
     initializeDefaultVoiceMapping();
     renderVoiceMapping();
+    renderEngineStatus();
 }
 
 function loadBrowserVoices() {
@@ -153,6 +154,7 @@ function loadBrowserVoices() {
     settings.voicesLoaded = true;
     if(!voiceMapping.narrator && voices.length) voiceMapping.narrator = voices[0].ShortName;
     renderVoiceMapping();
+    renderEngineStatus();
 }
 
 function initializeDefaultVoiceMapping() {
@@ -161,9 +163,43 @@ function initializeDefaultVoiceMapping() {
     if(!voiceMapping.narrator) voiceMapping.narrator = (femaleEN || voices[0]).ShortName;
 }
 
+function renderEngineStatus() {
+    const el = document.getElementById('engineStatus');
+    if(!el) return;
+    const edgeReady = !!window.EdgeTTS;
+    el.innerHTML = '';
+    const edge = document.createElement('button');
+    edge.type = 'button';
+    edge.className = 'btn';
+    edge.textContent = settings.useBrowserTTS ? 'USE EDGE TTS' : '✓ EDGE TTS ACTIVE';
+    edge.disabled = !edgeReady;
+    edge.onclick = async () => {
+        stopPlayback();
+        settings.useBrowserTTS = false;
+        await loadEdgeVoices();
+        clearAudioCache();
+        saveState();
+        renderEngineStatus();
+    };
+    const browser = document.createElement('button');
+    browser.type = 'button';
+    browser.className = 'btn';
+    browser.style.marginLeft = '0.5rem';
+    browser.textContent = settings.useBrowserTTS ? '✓ BROWSER TTS ACTIVE' : 'USE BROWSER TTS';
+    browser.onclick = () => {
+        stopPlayback();
+        loadBrowserVoices();
+        clearAudioCache();
+        saveState();
+        renderEngineStatus();
+    };
+    el.append(edge, browser);
+}
+
 function triggerVoiceLoad() {
     voiceLoadAttempted = true;
     loadBrowserVoices();
+    renderEngineStatus();
 }
 
 function edgeTTSOpts() {
