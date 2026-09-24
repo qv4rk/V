@@ -74,6 +74,7 @@ const DAMAGED_FILTER=['==',['get','eventualDamage'],true];
 let HEIGHT_EXAGGERATION=250; // Visual projection scale; source height_m remains in metres.
 let antikythera=null;
 const cached = new Map();
+function prepareCollection(collection){for(const f of collection.features)f.properties.eventualDamage=eventuallyDamaged(f.properties.damage_sites);return collection}
 let overviewBuildingsReady=false;
 const mapReady = new Promise(resolve => map.on('load',resolve));
 function eventuallyDamaged(sites){return (sites||[]).some(site=>(site.h||[]).some(observation=>[1,2,3,4].includes(observation[1])))}
@@ -85,6 +86,7 @@ function clsAsOf(sites,date){
 }
 function applyDamageFocus(){
  for(const id of ['all-buildings-3d','all-buildings-flat','detail-3d','detail-flat'])if(map.getLayer(id))map.setFilter(id,focusDamage?DAMAGED_FILTER:null);
+ if(overviewBuildingsReady&&map.getSource('all-buildings'))map.getSource('all-buildings').setData(annotatedAllBuildings());
  $('focusButton').textContent=focusDamage?'◉ Show all buildings':'◉ Future damage';
  $('focusButton').classList.toggle('active',focusDamage);
  $('focusButton').setAttribute('aria-pressed',String(focusDamage));
@@ -110,7 +112,7 @@ function annotatedDetail(){
   const cls=clsAsOf(f.properties.damage_sites,date);
   const base=Math.max(5,Math.min(28,Number(f.properties.height_m)||10));
   const factor=cls===1?.06:cls===2?.27:cls===3?.58:cls===4?.8:1;
-  return {...f,properties:{...f.properties,currentClass:cls,eventualDamage:eventuallyDamaged(f.properties.damage_sites),displayHeight:Math.max(.45,base*HEIGHT_EXAGGERATION*factor),color:PALETTE[cls>=1&&cls<=4?cls:cls===null?0:5]}};
+  return {...f,properties:{...f.properties,currentClass:cls,eventualDamage:f.properties.eventualDamage,displayHeight:Math.max(.45,base*HEIGHT_EXAGGERATION*factor),color:PALETTE[cls>=1&&cls<=4?cls:cls===null?0:5]}};
  })};
 }
 function refresh(){
@@ -128,8 +130,8 @@ function refresh(){
 function annotatedAllBuildings(){
  const features=[];
  for(const slug of SLUGS){const collection=cached.get(slug);if(!collection)continue;
-  for(const f of collection.features){const cls=clsAsOf(f.properties.damage_sites,dates[index]);const base=Math.max(5,Math.min(28,Number(f.properties.height_m)||10));const factor=cls===1?.06:cls===2?.27:cls===3?.58:cls===4?.8:1;
-   features.push({...f,properties:{...f.properties,eventualDamage:eventuallyDamaged(f.properties.damage_sites),displayHeight:Math.max(.45,base*HEIGHT_EXAGGERATION*factor),color:PALETTE[cls>=1&&cls<=4?cls:cls===null?0:5]}});
+  for(const f of collection.features){if(focusDamage&&!f.properties.eventualDamage)continue;const cls=clsAsOf(f.properties.damage_sites,dates[index]);const base=Math.max(5,Math.min(28,Number(f.properties.height_m)||10));const factor=cls===1?.06:cls===2?.27:cls===3?.58:cls===4?.8:1;
+   features.push({...f,properties:{...f.properties,eventualDamage:f.properties.eventualDamage,displayHeight:Math.max(.45,base*HEIGHT_EXAGGERATION*factor),color:PALETTE[cls>=1&&cls<=4?cls:cls===null?0:5]}});
   }
  }
  return {type:'FeatureCollection',features};
@@ -138,13 +140,13 @@ async function loadOverviewBuildings(){
  // Load gradually, preserving the neighborhood outline until all footprints are ready.
  for(const slug of SLUGS){
   if(cached.has(slug))continue;
-  try{const response=await fetch('data/'+slug+'_buildings.geojson');if(!response.ok)throw Error('HTTP '+response.status);cached.set(slug,await response.json())}
+  try{const response=await fetch('data/'+slug+'_buildings.geojson');if(!response.ok)throw Error('HTTP '+response.status);cached.set(slug,prepareCollection(await response.json()))}
   catch(e){$('status').textContent='Building data unavailable for '+slug+': '+e.message;return}
  }
  overviewBuildingsReady=true;
  map.addSource('all-buildings',{type:'geojson',data:annotatedAllBuildings()});
  map.addLayer({id:'all-buildings-flat',type:'fill',source:'all-buildings',layout:{visibility:mode==='flat'?'visible':'none'},paint:{'fill-color':['get','color'],'fill-opacity':.76}});
- map.addLayer({id:'all-buildings-3d',type:'fill-extrusion',source:'all-buildings',layout:{visibility:selected||mode!=='holo'?'none':'visible'},paint:{'fill-extrusion-color':['get','color'],'fill-extrusion-opacity':.68,'fill-extrusion-height':['get','displayHeight'],'fill-extrusion-base':0}});
+ map.addLayer({id:'all-buildings-3d',type:'fill-extrusion',source:'all-buildings',layout:{visibility:mode!=='holo'?'none':'visible'},paint:{'fill-extrusion-color':['get','color'],'fill-extrusion-opacity':.68,'fill-extrusion-height':['get','displayHeight'],'fill-extrusion-base':0}});
  map.setLayoutProperty('areas-3d','visibility','none');applyDamageFocus();refresh();
 }
 async function show(slug){
@@ -165,7 +167,7 @@ async function show(slug){
   if(!cached.has(slug)){
    const response=await fetch('data/'+slug+'_buildings.geojson');
    if(!response.ok)throw Error('HTTP '+response.status);
-   cached.set(slug,await response.json());
+   cached.set(slug,prepareCollection(await response.json()));
   }
   if(token!==loadToken)return;
   detail=cached.get(slug);
@@ -188,7 +190,7 @@ $('nextButton').onclick=()=>{pause();setDate(index+1)};
 $('timeSlider').oninput=e=>{pause();setDate(Number(e.target.value))};
 $('heightSlider').onchange=e=>{HEIGHT_EXAGGERATION=Number(e.target.value);$('heightValue').textContent=HEIGHT_EXAGGERATION+'×';refresh()};
 $('heightSlider').oninput=e=>$('heightValue').textContent=e.target.value+'×';
-$('playButton').onclick=()=>{if(timer){pause();return}playDirection=index>=dates.length-1?-1:1;timer=setInterval(()=>{if(index+playDirection>=dates.length||index+playDirection<0)playDirection*=-1;setDate(index+playDirection)},850);$('playButton').textContent='Ⅱ Pause ↔'};
+$('playButton').onclick=()=>{if(timer){pause();return}playDirection=index>=dates.length-1?-1:1;timer=setInterval(()=>{if(index+playDirection>=dates.length||index+playDirection<0)playDirection*=-1;setDate(index+playDirection)},1200);$('playButton').textContent='Ⅱ Pause ↔'};
 $('holoButton').onclick=()=>{mode='holo';setPaint()};
 $('flatButton').onclick=()=>{mode='flat';setPaint()};
 $('focusButton').onclick=()=>{focusDamage=!focusDamage;applyDamageFocus()};
