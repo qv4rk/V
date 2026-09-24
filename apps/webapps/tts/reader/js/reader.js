@@ -62,6 +62,8 @@ let nativeTTSActive = false;
 let voiceLoadAttempted = false;
 let isPlaying = false;
 let audioUnlocked = false;
+let playbackGeneration = 0;
+let currentAudioUrl = null;
 
 // ==================== INIT / VOICE SYSTEM ====================
 window.onload = () => {
@@ -381,7 +383,7 @@ async function saveAllChaptersAudio() {
     }
 }
 
-async function playWithBrowserTTS(seg) {
+async function playWithBrowserTTS(seg, generation) {
     return new Promise((resolve, reject) => {
         if(speechSynthesis.speaking || speechSynthesis.pending) speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(seg.text);
@@ -398,7 +400,7 @@ async function playWithBrowserTTS(seg) {
         };
         utterance.onend = () => {
             nativeTTSActive = false; hideTTSStatus();
-            if(!isPlaying) { resolve(); return; }
+            if(!isPlaying || generation !== playbackGeneration) { resolve(); return; }
             currentSegmentIndex++; saveState(); updateProgress();
             if(currentSegmentIndex < segments.length) play();
             else {
@@ -414,6 +416,7 @@ async function playWithBrowserTTS(seg) {
             reject(e);
         };
         setTimeout(() => {
+            if(generation !== playbackGeneration) { resolve(); return; }
             try { speechSynthesis.speak(utterance); updateMediaSession(seg); }
             catch(e) { nativeTTSActive = false; reject(e); }
         }, 50);
@@ -436,22 +439,25 @@ function togglePlay() {
         if(!audioPlayer.paused) {
             audioPlayer.pause(); isPlaying = false;
             if (playBtn) playBtn.innerText = '▶ PLAY';
-        } else if(audioPlayer.src && audioPlayer.src !== window.location.href) {
+        } else if(isPlaying && audioPlayer.src && audioPlayer.src !== window.location.href) {
             audioPlayer.play(); isPlaying = true;
             if (playBtn) playBtn.innerText = '⏸ PAUSE';
-        } else { play(); }
+        } else if(audioPlayer.src && audioPlayer.src !== window.location.href && currentAudioUrl) {
+            audioPlayer.play(); isPlaying = true;
+            if (playBtn) playBtn.innerText = '⏸ PAUSE';
+        } else if(isPlaying) { stopPlayback(); }
+        else { play(); }
     }
 }
 
 function stopPlayback() {
+    playbackGeneration++;
     isPlaying = false;
-    if(settings.useBrowserTTS) {
-        speechSynthesis.cancel();
-    } else {
-        audioPlayer.pause();
-        audioPlayer.removeAttribute('src');
-        audioPlayer.load();
-    }
+    if(window.speechSynthesis) speechSynthesis.cancel();
+    audioPlayer.pause();
+    audioPlayer.removeAttribute('src');
+    audioPlayer.load();
+    if(currentAudioUrl) { URL.revokeObjectURL(currentAudioUrl); currentAudioUrl = null; }
     const playBtn = document.getElementById('playBtn');
     if (playBtn) playBtn.innerText = '▶ PLAY';
     hideTTSStatus();
@@ -459,6 +465,7 @@ function stopPlayback() {
 }
 
 function skipSegment(dir) {
+    if(!segments.length) return;
     stopPlayback();
     currentSegmentIndex = Math.max(0, Math.min(segments.length - 1, currentSegmentIndex + dir));
     saveState();
@@ -466,7 +473,7 @@ function skipSegment(dir) {
 }
 
 function jumpToChapter(v) {
-    if(!v || isNaN(parseInt(v))) return;
+    if(!v || isNaN(parseInt(v)) || !segments[parseInt(v)]) return;
     stopPlayback();
     currentSegmentIndex = parseInt(v);
     saveState();
@@ -845,7 +852,7 @@ function resumeSession() {
     syncDeckSpeedControls();
     initReader(c, true);
     if(p) {
-        currentSegmentIndex = Math.max(0, parseInt(p));
+        currentSegmentIndex = Math.max(0, Math.min(segments.length - 1, parseInt(p) || 0));
         setTimeout(() => {
             if(segments[currentSegmentIndex]) highlight(segments[currentSegmentIndex]);
         }, 400);
@@ -912,7 +919,7 @@ function loadSlot(id) {
     const slots = getSaveSlots();
     const slot = slots.find(s => s.id === id);
     if(!slot) return;
-    currentSegmentIndex = slot.progress;
+    currentSegmentIndex = Math.max(0, Math.min(segments.length - 1, slot.progress));
     voiceMapping = {...(slot.voiceMapping || {})};
     if(slot.settings) settings = {...settings, ...slot.settings};
     if(slot.spkrs) detectedSpkrs = new Set(slot.spkrs);
@@ -1104,6 +1111,7 @@ function toggleLibrary() { document.getElementById('libraryPanel')?.classList.to
 
 function initReader(html, isResume=false) {
     if(!html) return;
+    stopPlayback();
     clearAudioCache();
     const storyEl = document.getElementById('storyContainer');
     if (storyEl) storyEl.innerHTML = html;
@@ -1126,8 +1134,9 @@ function processContent() {
         if(!txt) return;
         const spkr = p.dataset.spkr || 'narrator';
         const ch = p.closest('article')?.dataset.chapter || '1';
-        segments.push({ index: i, element: p, text: txt, chapter: ch, spkr });
-        p.onclick = () => { currentSegmentIndex = i; stopPlayback(); play(); };
+        const index = segments.length;
+        segments.push({ index, element: p, text: txt, chapter: ch, spkr });
+        p.onclick = () => { stopPlayback(); currentSegmentIndex = index; play(); };
     });
 }
 
@@ -1142,7 +1151,10 @@ function populateChapters() {
             const firstIdx = segments.findIndex(s => s.chapter === seg.chapter);
             const art = document.querySelector(`article[data-chapter="${seg.chapter}"] h2`);
             const title = art ? art.innerText : `Chapter ${seg.chapter}`;
-            sel.innerHTML += `<option value="${firstIdx}">${title}</option>`;
+            const option = document.createElement('option');
+            option.value = firstIdx;
+            option.textContent = title;
+            sel.appendChild(option);
         }
     });
 }
@@ -1201,6 +1213,7 @@ function startNewStory() {
     detectedSpkrs = new Set(['narrator']);
     const storyEl = document.getElementById('storyContainer');
     if (storyEl) storyEl.innerHTML = EMPTY_STATE_HTML;
+    localStorage.removeItem('feist_content');
     populateChapters();
     renderVoiceMapping();
     const banner = document.getElementById('resumeBanner');
