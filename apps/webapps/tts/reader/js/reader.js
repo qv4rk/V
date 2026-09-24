@@ -1,10 +1,52 @@
 
 function detectSpkrs(text) {
     if (!text || typeof text !== 'string') return;
-    const matches = text.matchAll(/\[SPKR:\s*([^\]]+)\]/gi);
-    for(const match of matches) {
-        if (match && match[1]) detectedSpkrs.add(match[1].trim());
+    const matches = text.matchAll(/\[(?:SPKR|SPEAKER):\s*([^\]]+)\]/gi);
+    for (const match of matches) {
+        if (match && typeof match[1] === 'string') detectedSpkrs.add(match[1].trim());
     }
+}
+
+function parseTextWithSpkrs(text) {
+    const source = String(text || '').replace(/\r\n?/g, '\n');
+    const parsed = [];
+    let currentSpeaker = 'narrator';
+
+    // Explicit tags are authoritative. They may occur at the start, end, or
+    // inline; text between tags becomes a virtual TTS segment.
+    const tagRe = /\[(?:(?:SPKR|SPEAKER):\s*)?([^\]\n]+)\]/gi;
+    let last = 0;
+    let match;
+
+    const pushText = (raw, speaker) => {
+        String(raw || '').split(/\n{2,}/).forEach(part => {
+            const clean = part.trim();
+            if (clean) parsed.push({ text: clean, spkr: speaker || 'narrator' });
+        });
+    };
+
+    while ((match = tagRe.exec(source)) !== null) {
+        pushText(source.slice(last, match.index), currentSpeaker);
+        const speaker = String(match[1] || '').trim();
+        if (speaker) {
+            currentSpeaker = speaker;
+            detectedSpkrs.add(speaker);
+        }
+        last = tagRe.lastIndex;
+    }
+    pushText(source.slice(last), currentSpeaker);
+
+    if (!parsed.length && source.trim()) parsed.push({ text: source.trim(), spkr: 'narrator' });
+    return parsed;
+}
+
+function renderParsedSegments(parsed) {
+    return (parsed || []).map(seg => {
+        const p = document.createElement('p');
+        p.dataset.spkr = seg.spkr || 'narrator';
+        p.textContent = seg.text || '';
+        return p.outerHTML;
+    }).join('');
 }
 
 // ==================== STATE ====================
