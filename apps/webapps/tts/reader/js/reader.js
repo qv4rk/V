@@ -364,6 +364,92 @@ function updateStatusDot(dot, spkr, voiceName) {
     dot.title = status === 'working' ? '✓ Verified working' : status === 'broken' ? '✗ Not working (geo-locked or unavailable)' : 'Unknown — click ▶ to test';
 }
 
+// ==================== VOICE MAPPING ====================
+function getAvailableVoices() {
+    if (Array.isArray(voices) && voices.length) {
+        return voices.map(v => ({
+            ShortName: v.ShortName || v.shortName || v.name,
+            FriendlyName: v.FriendlyName || v.name || v.ShortName || v.shortName,
+            Gender: v.Gender || v.gender || '',
+            Locale: v.Locale || v.locale || ''
+        })).filter(v => v.ShortName);
+    }
+    return (window.VOICE_CATALOG || []).map(v => ({
+        ShortName: v.shortName,
+        FriendlyName: v.name || v.shortName,
+        Gender: v.gender || '',
+        Locale: v.locale || ''
+    })).filter(v => v.ShortName);
+}
+
+function autoAssignVoices() {
+    const available = getAvailableVoices();
+    if (!available.length) return;
+    const speakers = [...detectedSpkrs];
+    speakers.forEach((spkr, i) => {
+        if (!voiceMapping[spkr]) voiceMapping[spkr] = available[i % available.length].ShortName;
+    });
+}
+
+function setSpeakerVoice(spkr, voiceName) {
+    voiceMapping[spkr] = voiceName || null;
+    clearAudioCache();
+    saveState();
+    renderVoiceMapping();
+}
+
+function renderVoiceMapping() {
+    const container = document.getElementById('voiceMappingContainer');
+    if (!container) return;
+    const available = getAvailableVoices();
+    if (available.length) autoAssignVoices();
+
+    container.replaceChildren();
+    [...detectedSpkrs].forEach(spkr => {
+        const row = document.createElement('div');
+        row.className = 'voice-map-row';
+
+        const label = document.createElement('span');
+        label.className = 'voice-map-speaker';
+        label.textContent = spkr === 'narrator' ? 'Narrator' : spkr;
+
+        const select = document.createElement('select');
+        select.className = 'voice-select';
+        select.setAttribute('aria-label', 'Voice for ' + label.textContent);
+
+        const empty = document.createElement('option');
+        empty.value = '';
+        empty.textContent = available.length ? 'Choose voice…' : 'Voices loading…';
+        select.appendChild(empty);
+
+        available.forEach(v => {
+            const opt = document.createElement('option');
+            opt.value = v.ShortName;
+            opt.textContent = [v.FriendlyName, v.Gender, v.Locale].filter(Boolean).join(' · ');
+            select.appendChild(opt);
+        });
+
+        select.value = voiceMapping[spkr] || '';
+        select.onchange = () => setSpeakerVoice(spkr, select.value);
+
+        const preview = document.createElement('button');
+        preview.type = 'button';
+        preview.className = 'btn';
+        preview.textContent = '▶';
+        preview.title = 'Preview voice';
+        preview.onclick = async () => {
+            const voiceName = select.value || voiceMapping[spkr];
+            if (!voiceName) return;
+            const ok = await previewVoice(voiceName, spkr);
+            voiceStatusMemory[voiceName] = ok ? 'working' : 'broken';
+            try { localStorage.setItem('feist_voiceStatus', JSON.stringify(voiceStatusMemory)); } catch(e) {}
+        };
+
+        row.append(label, select, preview);
+        container.appendChild(row);
+    });
+}
+
 // ==================== VOICE PREVIEW ====================
 const SAMPLE_SENTENCES = [
     "The quick brown fox jumps over the lazy dog while the owl watches quietly.",
