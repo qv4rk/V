@@ -63,6 +63,122 @@ let voiceLoadAttempted = false;
 let isPlaying = false;
 let audioUnlocked = false;
 
+// ==================== INIT / VOICE SYSTEM ====================
+window.onload = () => {
+    checkPersistence();
+    waitForLib();
+    setupKeyboard();
+    if(window.FeistTheme) FeistTheme.mount('#themeSwitcherMount');
+    loadLibrary();
+    const params = new URLSearchParams(window.location.search);
+    const pdfUrl = params.get('pdf');
+    if (pdfUrl) loadPDFFromUrl(pdfUrl, params.get('title'));
+    const articleId = params.get('article');
+    if (articleId) loadArticleIntoReader(articleId, false);
+};
+
+function waitForLib() {
+    if(window.appReady) loadEdgeVoices();
+    else setTimeout(waitForLib, 100);
+}
+
+function unlockAudioPlayback() {
+    if(audioUnlocked) return;
+    audioUnlocked = true;
+    audioPlayer.muted = true;
+    const p = audioPlayer.play();
+    if(p && p.catch) p.catch(() => {});
+    audioPlayer.pause();
+    audioPlayer.muted = false;
+}
+
+const catalogByShortName = {};
+(window.VOICE_CATALOG || []).forEach(v => { catalogByShortName[v.shortName] = v; });
+
+function accentForLocale(locale) {
+    const hit = (window.VOICE_CATALOG || []).find(v => v.locale === locale);
+    return hit ? hit.accent : (locale || 'Unknown');
+}
+
+function annotateVoice(v) {
+    const meta = catalogByShortName[v.ShortName];
+    return { ...v, accent: meta ? meta.accent : accentForLocale(v.Locale), priority: meta ? meta.priority : null };
+}
+
+function sortVoicesByPriority(list) {
+    const order = window.VOICE_PRIORITY_ORDER || [];
+    return list.sort((a,b) => {
+        const ai = a.priority ? order.indexOf(a.priority) : 999;
+        const bi = b.priority ? order.indexOf(b.priority) : 999;
+        if(ai !== bi) return ai - bi;
+        return (a.FriendlyName || a.ShortName || '').localeCompare(b.FriendlyName || b.ShortName || '');
+    });
+}
+
+async function loadEdgeVoices() {
+    try {
+        const manager = await window.VoicesManager.create();
+        let edgeVoices;
+        if(Array.isArray(manager.voices)) edgeVoices = manager.voices;
+        else if(typeof manager.getVoices === 'function') edgeVoices = manager.getVoices();
+        else if(typeof manager.find === 'function') edgeVoices = manager.find({});
+        else edgeVoices = [];
+        if(!edgeVoices || edgeVoices.length === 0) throw new Error('No Edge voices array available');
+        voices = sortVoicesByPriority(edgeVoices.map(annotateVoice));
+        settings.useBrowserTTS = false;
+    } catch(e) {
+        console.warn('Edge-TTS voice listing unavailable, using bundled catalog', e);
+        voices = sortVoicesByPriority((window.VOICE_CATALOG || []).map(v => annotateVoice({
+            ShortName:v.shortName, FriendlyName:v.name, Gender:v.gender, Locale:v.locale
+        })));
+        settings.useBrowserTTS = false;
+    }
+    initializeDefaultVoiceMapping();
+    renderVoiceMapping();
+}
+
+function loadBrowserVoices() {
+    settings.useBrowserTTS = true;
+    if(!window.speechSynthesis) return;
+    const bv = speechSynthesis.getVoices();
+    if(!bv.length) return;
+    voices = sortVoicesByPriority(bv.map(v => annotateVoice({
+        ShortName:v.name, FriendlyName:v.name,
+        Gender:/female|woman|zira|karen|moira|tessa|fiona|allison|ava|susan|samantha|victoria/i.test(v.name) ? 'Female' : 'Male',
+        Locale:v.lang, _native:v
+    })));
+    settings.voicesLoaded = true;
+    if(!voiceMapping.narrator && voices.length) voiceMapping.narrator = voices[0].ShortName;
+    renderVoiceMapping();
+}
+
+function initializeDefaultVoiceMapping() {
+    if(!voices.length) return;
+    const femaleEN = voices.find(v => (v.Gender || '').toLowerCase() === 'female' && v.Locale && v.Locale.startsWith('en'));
+    if(!voiceMapping.narrator) voiceMapping.narrator = (femaleEN || voices[0]).ShortName;
+}
+
+function triggerVoiceLoad() {
+    voiceLoadAttempted = true;
+    loadBrowserVoices();
+}
+
+function edgeTTSOpts() {
+    return { rate: formatEdgePct(settings.speed), pitch: '+0Hz', volume: formatEdgePct(settings.volume) };
+}
+
+async function synthesizeSegmentAudio(text, voice, opts) {
+    const chunks = chunkTextForTTS(text);
+    if(!chunks.length) return null;
+    const blobs = [];
+    for(const chunk of chunks) {
+        const audio = await synthesizeEdgeChunk(chunk, voice, opts);
+        if(audio) blobs.push(new Blob([audio], {type:'audio/mp3'}));
+        else console.warn('Dropped a TTS chunk with no audio after retry:', chunk.slice(0,60));
+    }
+    return blobs.length ? new Blob(blobs, {type:'audio/mp3'}) : null;
+}
+
 // Lookahead Cache for seamless pre-buffering
 const audioCache = {};
 const audioCachePending = {};
