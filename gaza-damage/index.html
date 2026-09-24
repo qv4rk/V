@@ -18,7 +18,7 @@ button:hover,button:focus-visible{border-color:#62e5ee;outline:none}button.activ
 h1{font-size:1.14rem;margin:0 0 4px}p{margin:6px 0;color:#bfd0da;font-size:.77rem;line-height:1.45}
 .nav{padding:12px;display:grid;gap:5px}.nav button{text-align:left;width:100%;padding:8px 10px;font-size:.84rem}
 .nav button small{float:right;color:#b0c6cf}.section-label{color:#7ddde5;font-size:.68rem;text-transform:uppercase;letter-spacing:.12em;margin:10px 2px 4px}
-.toolbar{position:fixed;z-index:3;right:14px;top:14px;display:flex;gap:7px;background:#09131de6;padding:8px;border:1px solid #365365;border-radius:9px}
+.toolbar{position:fixed;z-index:3;right:14px;top:14px;display:flex;gap:7px;background:#09131de6;padding:8px;border:1px solid #365365;border-radius:9px;flex-wrap:wrap;max-width:min(92vw,440px);justify-content:flex-end}
 .timeline{position:fixed;z-index:3;left:310px;right:14px;bottom:14px;background:#09131df0;border:1px solid #365365;border-radius:12px;padding:10px 18px;display:flex;align-items:center;gap:18px}
 .antikythera{width:165px;height:165px;flex:none;color:#d6af66;touch-action:none;filter:drop-shadow(0 0 13px #c5a05988)}
 .antikythera svg{width:100%;height:100%;display:block}
@@ -36,7 +36,7 @@ input[type=range]{width:100%;accent-color:#5fe0e8;margin-top:14px;cursor:pointer
 <div id="map" aria-label="Gaza City damage map"></div>
 <button class="sidebar-toggle" id="menuToggle" aria-expanded="false" aria-controls="sidebar">☰ Neighborhoods</button>
 <aside class="sidebar" id="sidebar" aria-label="Neighborhood and page menu">
- <header><h1>Gaza City · Damage Over Time</h1><p>15 neighborhoods · UNOSAT satellite assessments joined to OpenStreetMap building footprints · heights visually exaggerated</p></header>
+ <header><h1>Gaza City · Damage Over Time</h1><p>15 neighborhoods · UNOSAT satellite assessments joined to OpenStreetMap building footprints · heights visually exaggerated; most source heights are estimates</p></header>
  <nav class="nav" id="nav">
   <div class="section-label">Views</div>
   <button id="allButton" type="button">◈ All neighborhoods</button>
@@ -50,6 +50,8 @@ input[type=range]{width:100%;accent-color:#5fe0e8;margin-top:14px;cursor:pointer
 <div class="toolbar" aria-label="Map view controls">
  <button id="holoButton" class="active" type="button" aria-pressed="true">◇ Hologram 3D</button>
  <button id="flatButton" type="button" aria-pressed="false">▣ Flat map</button>
+ <button id="sideButton" type="button" aria-pressed="false">↗ Side view</button>
+ <button id="fullscreenButton" type="button">⛶ Full screen</button>
 </div>
 <div class="timeline" aria-label="Assessment date control">
  <div id="antikytheraDial" class="antikythera" title="Drag the Antikythera dial to change assessment date"></div>
@@ -64,9 +66,9 @@ input[type=range]{width:100%;accent-color:#5fe0e8;margin-top:14px;cursor:pointer
 const SLUGS = ['ad-darraj','al-awadah','an-naser','as-sabra','ash-sheikh-ijleen','ash-sheikh-radwan','ash-shuja-iyeh-ijdeedeh','at-tuffah','at-turukman-ijdeedeh','az-zaitoun','ijdeedeh','northern-remal','old-city','southern-remal','tal-el-hawa'];
 const PALETTE = ['#3c5660','#ff5b68','#ff9b54','#ffcc61','#c6d77a','#858998'];
 const $ = id => document.getElementById(id);
-const map = new maplibregl.Map({container:'map',style:'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',center:[34.44,31.51],zoom:11.5,pitch:58,bearing:-18});
+const map = new maplibregl.Map({container:'map',style:'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',center:[34.44,31.51],zoom:11.5,pitch:58,maxPitch:85,bearing:-18});
 map.addControl(new maplibregl.NavigationControl(), 'bottom-right');
-let overview, dates=[], index=0, selected=null, detail=null, mode='holo', loadToken=0, timer=null;
+let overview, dates=[], index=0, selected=null, detail=null, mode='holo', viewPitch=58, loadToken=0, timer=null;
 let HEIGHT_EXAGGERATION=250; // Visual projection scale; source height_m remains in metres.
 let antikythera=null;
 const cached = new Map();
@@ -82,7 +84,7 @@ function setPaint(){
  const extrude=mode==='holo';
  for(const name of ['areas-3d','detail-3d','all-buildings-3d'])if(map.getLayer(name))map.setLayoutProperty(name,'visibility',name.startsWith('areas')&&(selected||overviewBuildingsReady)?'none':name.startsWith('all-buildings')&&selected?'none':extrude?'visible':'none');
  for(const name of ['areas-flat','detail-flat'])if(map.getLayer(name))map.setLayoutProperty(name,'visibility',name.startsWith('areas')&&selected?'none':extrude?'none':'visible');
- map.easeTo({pitch:extrude?58:0,bearing:extrude?-18:0,duration:650});
+ map.easeTo({pitch:extrude?viewPitch:0,bearing:extrude?-18:0,duration:650});
  $('holoButton').classList.toggle('active',extrude);$('flatButton').classList.toggle('active',!extrude);
  $('holoButton').setAttribute('aria-pressed',String(extrude));$('flatButton').setAttribute('aria-pressed',String(!extrude));
 }
@@ -146,7 +148,7 @@ async function show(slug){
  if(map.getLayer('areas-3d'))map.setLayoutProperty('areas-3d','visibility',slug||overviewBuildingsReady?'none':mode==='holo'?'visible':'none');
  if(map.getLayer('all-buildings-3d'))map.setLayoutProperty('all-buildings-3d','visibility',slug||mode!=='holo'?'none':'visible');
  if(map.getLayer('areas-flat'))map.setLayoutProperty('areas-flat','visibility',slug?'none':mode==='flat'?'visible':'none');
- if(!slug){map.flyTo({center:[34.44,31.51],zoom:11.5,pitch:mode==='holo'?58:0,bearing:mode==='holo'?-18:0});refresh();return}
+ if(!slug){map.flyTo({center:[34.44,31.51],zoom:11.5,pitch:mode==='holo'?viewPitch:0,bearing:mode==='holo'?-18:0});refresh();return}
  $('status').textContent='Loading '+slug.replaceAll('-',' ')+' buildings…';
  try{
   if(!cached.has(slug)){
@@ -161,7 +163,7 @@ async function show(slug){
   map.addLayer({id:'detail-3d',type:'fill-extrusion',source:'detail',layout:{visibility:mode==='holo'?'visible':'none'},paint:{'fill-extrusion-color':['get','color'],'fill-extrusion-opacity':.68,'fill-extrusion-height':['get','displayHeight'],'fill-extrusion-base':0}});
   const coords=overview.features.find(f=>f.properties.slug===slug).geometry.coordinates[0];
   const bounds=coords.reduce((b,p)=>b.extend(p),new maplibregl.LngLatBounds(coords[0],coords[0]));
-  map.fitBounds(bounds,{padding:{top:90,bottom:160,left:innerWidth>700?320:30,right:30},pitch:mode==='holo'?58:0,bearing:mode==='holo'?-18:0,maxZoom:15.5,duration:900});
+  map.fitBounds(bounds,{padding:{top:90,bottom:160,left:innerWidth>700?320:30,right:30},pitch:mode==='holo'?viewPitch:0,bearing:mode==='holo'?-18:0,maxZoom:15.5,duration:900});
   refresh();
   if(innerWidth<=700){$('sidebar').classList.remove('open');$('menuToggle').setAttribute('aria-expanded','false')}
  }catch(e){$('status').textContent='Could not load '+slug+': '+e.message}
@@ -177,6 +179,9 @@ $('heightSlider').oninput=e=>$('heightValue').textContent=e.target.value+'×';
 $('playButton').onclick=()=>{if(timer){pause();return}if(index===dates.length-1)setDate(0);timer=setInterval(()=>{if(index===dates.length-1){pause();return}setDate(index+1)},850);$('playButton').textContent='Ⅱ Pause'};
 $('holoButton').onclick=()=>{mode='holo';setPaint()};
 $('flatButton').onclick=()=>{mode='flat';setPaint()};
+$('sideButton').onclick=()=>{mode='holo';viewPitch=viewPitch>=80?58:85;setPaint();$('sideButton').classList.toggle('active',viewPitch>=80);$('sideButton').setAttribute('aria-pressed',String(viewPitch>=80));$('sideButton').textContent=viewPitch>=80?'↗ Angled view':'↗ Side view'};
+$('fullscreenButton').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen()}catch(e){$('status').textContent='Full screen is unavailable in this browser; use its menu to expand the page.'}};
+document.addEventListener('fullscreenchange',()=>$('fullscreenButton').textContent=document.fullscreenElement?'⛶ Exit full screen':'⛶ Full screen');
 $('menuToggle').onclick=()=>{const open=$('sidebar').classList.toggle('open');$('menuToggle').setAttribute('aria-expanded',String(open))};
 Promise.all([mapReady,fetch('data/neighborhood-overview.json').then(r=>{if(!r.ok)throw Error('Overview HTTP '+r.status);return r.json()})]).then(([,data])=>{
  overview=data;dates=data.dates;index=0;$('timeSlider').max=dates.length-1;
