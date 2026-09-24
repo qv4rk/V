@@ -1,3 +1,54 @@
+
+function detectSpkrs(text) {
+    if (!text || typeof text !== 'string') return;
+    const matches = text.matchAll(/\[(?:SPKR|SPEAKER):\s*([^\]]+)\]/gi);
+    for (const match of matches) {
+        if (match && typeof match[1] === 'string') detectedSpkrs.add(match[1].trim());
+    }
+}
+
+function parseTextWithSpkrs(text) {
+    const source = String(text || '').replace(/\r\n?/g, '\n');
+    const parsed = [];
+    let currentSpeaker = 'narrator';
+
+    // Explicit tags are authoritative. They may occur at the start, end, or
+    // inline; text between tags becomes a virtual TTS segment.
+    const tagRe = /\[(?:(?:SPKR|SPEAKER):\s*)?([^\]\n]+)\]/gi;
+    let last = 0;
+    let match;
+
+    const pushText = (raw, speaker) => {
+        String(raw || '').split(/\n{2,}/).forEach(part => {
+            const clean = part.trim();
+            if (clean) parsed.push({ text: clean, spkr: speaker || 'narrator' });
+        });
+    };
+
+    while ((match = tagRe.exec(source)) !== null) {
+        pushText(source.slice(last, match.index), currentSpeaker);
+        const speaker = String(match[1] || '').trim();
+        if (speaker) {
+            currentSpeaker = speaker;
+            detectedSpkrs.add(speaker);
+        }
+        last = tagRe.lastIndex;
+    }
+    pushText(source.slice(last), currentSpeaker);
+
+    if (!parsed.length && source.trim()) parsed.push({ text: source.trim(), spkr: 'narrator' });
+    return parsed;
+}
+
+function renderParsedSegments(parsed) {
+    return (parsed || []).map(seg => {
+        const p = document.createElement('p');
+        p.dataset.spkr = seg.spkr || 'narrator';
+        p.textContent = seg.text || '';
+        return p.outerHTML;
+    }).join('');
+}
+
 // ==================== STATE ====================
 let voices = [];
 let segments = [];
@@ -5,18 +56,137 @@ let currentSegmentIndex = 0;
 let voiceMapping = { narrator: null };
 let detectedSpkrs = new Set(['narrator']);
 let voiceStatusMemory = {}; // { voiceName: 'working'|'broken' }
+let currentStoryTitle = 'Untitled';
 let settings = { speed: 1.0, volume: 1.0, useBrowserTTS: false, voicesLoaded: false };
 const audioPlayer = document.getElementById('audioPlayer');
 let nativeTTSActive = false;
 let voiceLoadAttempted = false;
 let isPlaying = false;
 let audioUnlocked = false;
+let playbackGeneration = 0;
+let currentAudioUrl = null;
+
+// ==================== INIT / VOICE SYSTEM ====================
+window.onload = () => {
+    checkPersistence();
+    waitForLib();
+    setupKeyboard();
+    if(window.FeistTheme) FeistTheme.mount('#themeSwitcherMount');
+    loadLibrary();
+    const params = new URLSearchParams(window.location.search);
+    const pdfUrl = params.get('pdf');
+    if (pdfUrl) loadPDFFromUrl(pdfUrl, params.get('title'));
+    const articleId = params.get('article');
+    if (articleId) loadArticleIntoReader(articleId, false);
+};
+
+function waitForLib() {
+    if(window.appReady) loadEdgeVoices();
+    else setTimeout(waitForLib, 100);
+}
+
+function unlockAudioPlayback() {
+    if(audioUnlocked) return;
+    audioUnlocked = true;
+    audioPlayer.muted = true;
+    const p = audioPlayer.play();
+    if(p && p.catch) p.catch(() => {});
+    audioPlayer.pause();
+    audioPlayer.muted = false;
+}
+
+const catalogByShortName = {};
+(window.VOICE_CATALOG || []).forEach(v => { catalogByShortName[v.shortName] = v; });
+
+function accentForLocale(locale) {
+    const hit = (window.VOICE_CATALOG || []).find(v => v.locale === locale);
+    return hit ? hit.accent : (locale || 'Unknown');
+}
+
+function annotateVoice(v) {
+    const meta = catalogByShortName[v.ShortName];
+    return { ...v, accent: meta ? meta.accent : accentForLocale(v.Locale), priority: meta ? meta.priority : null };
+}
+
+function sortVoicesByPriority(list) {
+    const order = window.VOICE_PRIORITY_ORDER || [];
+    return list.sort((a,b) => {
+        const ai = a.priority ? order.indexOf(a.priority) : 999;
+        const bi = b.priority ? order.indexOf(b.priority) : 999;
+        if(ai !== bi) return ai - bi;
+        return (a.FriendlyName || a.ShortName || '').localeCompare(b.FriendlyName || b.ShortName || '');
+    });
+}
+
+async function loadEdgeVoices() {
+    try {
+        const manager = await window.VoicesManager.create();
+        let edgeVoices;
+        if(Array.isArray(manager.voices)) edgeVoices = manager.voices;
+        else if(typeof manager.getVoices === 'function') edgeVoices = manager.getVoices();
+        else if(typeof manager.find === 'function') edgeVoices = manager.find({});
+        else edgeVoices = [];
+        if(!edgeVoices || edgeVoices.length === 0) throw new Error('No Edge voices array available');
+        voices = sortVoicesByPriority(edgeVoices.map(annotateVoice));
+        settings.useBrowserTTS = false;
+    } catch(e) {
+        console.warn('Edge-TTS voice listing unavailable, using bundled catalog', e);
+        voices = sortVoicesByPriority((window.VOICE_CATALOG || []).map(v => annotateVoice({
+            ShortName:v.shortName, FriendlyName:v.name, Gender:v.gender, Locale:v.locale
+        })));
+        settings.useBrowserTTS = false;
+    }
+    initializeDefaultVoiceMapping();
+    renderVoiceMapping();
+}
+
+function loadBrowserVoices() {
+    settings.useBrowserTTS = true;
+    if(!window.speechSynthesis) return;
+    const bv = speechSynthesis.getVoices();
+    if(!bv.length) return;
+    voices = sortVoicesByPriority(bv.map(v => annotateVoice({
+        ShortName:v.name, FriendlyName:v.name,
+        Gender:/female|woman|zira|karen|moira|tessa|fiona|allison|ava|susan|samantha|victoria/i.test(v.name) ? 'Female' : 'Male',
+        Locale:v.lang, _native:v
+    })));
+    settings.voicesLoaded = true;
+    if(!voiceMapping.narrator && voices.length) voiceMapping.narrator = voices[0].ShortName;
+    renderVoiceMapping();
+}
+
+function initializeDefaultVoiceMapping() {
+    if(!voices.length) return;
+    const femaleEN = voices.find(v => (v.Gender || '').toLowerCase() === 'female' && v.Locale && v.Locale.startsWith('en'));
+    if(!voiceMapping.narrator) voiceMapping.narrator = (femaleEN || voices[0]).ShortName;
+}
+
+function triggerVoiceLoad() {
+    voiceLoadAttempted = true;
+    loadBrowserVoices();
+}
+
+function edgeTTSOpts() {
+    return { rate: formatEdgePct(settings.speed), pitch: '+0Hz', volume: formatEdgePct(settings.volume) };
+}
+
+async function synthesizeSegmentAudio(text, voice, opts) {
+    const chunks = chunkTextForTTS(text);
+    if(!chunks.length) return null;
+    const blobs = [];
+    for(const chunk of chunks) {
+        const audio = await synthesizeEdgeChunk(chunk, voice, opts);
+        if(audio) blobs.push(new Blob([audio], {type:'audio/mp3'}));
+        else console.warn('Dropped a TTS chunk with no audio after retry:', chunk.slice(0,60));
+    }
+    return blobs.length ? new Blob(blobs, {type:'audio/mp3'}) : null;
+}
 
 // Lookahead Cache for seamless pre-buffering
 const audioCache = {};
 const audioCachePending = {};
 let audioCacheGen = 0;
-const PRELOAD_LOOKAHEAD = 2; // how many segments to keep pre-buffered ahead of playback
+const PRELOAD_LOOKAHEAD = 4; // how many segments to keep pre-buffered ahead of playback
 const MAX_WORDS_PER_TTS_CALL = 45; // long paragraphs are split into word-bounded chunks so a single call can't time out/fail
 
 function clearAudioCache() {
@@ -70,659 +240,30 @@ function chunkTextForTTS(text, maxWords = MAX_WORDS_PER_TTS_CALL) {
 // is often just a blip from firing requests back-to-back, and a beat later
 // usually clears it without bothering the reader with an error.
 async function synthesizeEdgeChunk(text, voice, opts) {
+    // 1. Check local on-device Kokoro TTS first
+    try {
+        const localUrl = 'http://127.0.0.1:5005/synthesize?text=' + encodeURIComponent(text) + '&voice=' + encodeURIComponent(voice || '');
+        const ctrl = new AbortController();
+        const tid = setTimeout(() => ctrl.abort(), 12000);
+        const res = await fetch(localUrl, { signal: ctrl.signal });
+        clearTimeout(tid);
+        if(res.ok) {
+            const buf = await res.arrayBuffer();
+            if(buf && buf.byteLength > 0) return buf;
+        }
+    } catch(err) {}
+
+    // 2. Remote Edge-TTS
     for (let attempt = 0; attempt < 2; attempt++) {
         if(attempt > 0) await new Promise(resolve => setTimeout(resolve, 500));
         try {
-            const result = await new window.EdgeTTS(text, voice, opts).synthesize();
+            const result = await new window.EdgeTTS(String(text || ' '), String(voice || 'en-US-AriaNeural'), opts || {}).synthesize();
             if(result && result.audio && result.audio.byteLength > 0) return result.audio;
         } catch(e) {
-            console.warn('Edge-TTS chunk failed' + (attempt === 0 ? ', retrying once' : ', giving up') + ':', e?.message || e);
+            console.warn('Edge-TTS chunk failed, attempt', attempt, e?.message || e);
         }
     }
     return null;
-}
-
-// Synthesizes a full segment's text (chunked + retried under the hood) and
-// stitches the pieces into one playable/downloadable Blob. Shared by
-// playback, lookahead preloading, and chapter export so they all get the
-// same chunking + retry behavior for free.
-async function synthesizeSegmentAudio(text, voice, opts) {
-    const chunks = chunkTextForTTS(text);
-    if(chunks.length === 0) return null;
-    const blobs = [];
-    for (const chunk of chunks) {
-        const audio = await synthesizeEdgeChunk(chunk, voice, opts);
-        if(audio) blobs.push(new Blob([audio], { type: 'audio/mp3' }));
-        else console.warn('Dropped a TTS chunk with no audio after retry:', chunk.slice(0, 60));
-    }
-    if(blobs.length === 0) return null;
-    return new Blob(blobs, { type: 'audio/mp3' });
-}
-
-function edgeTTSOpts() {
-    return { rate: formatEdgePct(settings.speed), pitch: '+0Hz', volume: formatEdgePct(settings.volume) };
-}
-
-// ==================== BACKGROUND ====================
-(function() {
-    const canvas = document.getElementById('bg-canvas');
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    let width, height, frame = 0;
-    let target = { x: window.innerWidth/2, y: window.innerHeight/2 };
-    let current = { ...target };
-    let particles = [];
-    function resize() { width = canvas.width = window.innerWidth; height = canvas.height = window.innerHeight; }
-    resize();
-    window.addEventListener('resize', resize);
-    window.addEventListener('mousemove', e => { target.x = e.clientX; target.y = e.clientY; });
-    window.addEventListener('touchmove', e => { target.x = e.touches[0].clientX; target.y = e.touches[0].clientY; }, {passive:true});
-    for(let i=0;i<30;i++) particles.push({x:Math.random()*window.innerWidth,y:Math.random()*window.innerHeight,vx:(Math.random()-.5)*.5,vy:(Math.random()-.5)*.5,size:Math.random()*2+1});
-    (function loop() {
-        requestAnimationFrame(loop); frame++;
-        current.x += (target.x - current.x) * 0.05;
-        current.y += (target.y - current.y) * 0.05;
-        ctx.fillStyle = 'rgba(5,5,16,0.05)';
-        ctx.fillRect(0,0,width,height);
-        ctx.save(); ctx.translate(current.x, current.y); ctx.rotate(frame*0.003);
-        for(let i=0;i<8;i++){
-            ctx.save(); ctx.rotate(i*(Math.PI*2/8));
-            ctx.strokeStyle=`hsla(${(frame+i*20)%360},100%,50%,0.25)`; ctx.lineWidth=1.5;
-            ctx.beginPath(); ctx.moveTo(10,0); ctx.lineTo(60+Math.sin(frame*.05)*20,18); ctx.lineTo(60+Math.sin(frame*.05)*20,-18); ctx.closePath(); ctx.stroke(); ctx.restore();
-        }
-        ctx.restore();
-        particles.forEach(p=>{
-            p.x+=p.vx; p.y+=p.vy;
-            if(p.x<0||p.x>width) p.vx*=-1;
-            if(p.y<0||p.y>height) p.vy*=-1;
-            const dx=current.x-p.x, dy=current.y-p.y, dist=Math.hypot(dx,dy);
-            if(dist<220){ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,Math.PI*2);ctx.fillStyle=`rgba(0,243,255,${.25*(1-dist/220)})`;ctx.fill();}
-        });
-    })();
-})();
-
-// ==================== INIT ====================
-window.onload = () => {
-    checkPersistence();
-    waitForLib();
-    setupKeyboard();
-    if(window.FeistTheme) FeistTheme.mount('#themeSwitcherMount');
-    if(!localStorage.getItem('feist_visited')) {
-        expandHelp();
-        localStorage.setItem('feist_visited', '1');
-    }
-    loadLibrary();
-    const params = new URLSearchParams(window.location.search);
-    const pdfUrl = params.get('pdf');
-    if (pdfUrl) {
-        loadPDFFromUrl(pdfUrl, params.get('title'));
-    }
-    const articleId = params.get('article');
-    if (articleId) {
-        loadArticleIntoReader(articleId, false);
-    }
-};
-
-function waitForLib() {
-    if(window.appReady) loadEdgeVoices();
-    else setTimeout(waitForLib, 100);
-}
-
-// ==================== PLATFORM TABS ====================
-function setPlatform(id, el) {
-    document.querySelectorAll('.ptab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.platform-inst').forEach(d => d.classList.remove('active'));
-    el.classList.add('active');
-    document.getElementById('inst-'+id).classList.add('active');
-}
-
-// ==================== AUDIO UNLOCK ====================
-function unlockAudioPlayback() {
-    if(audioUnlocked) return;
-    audioUnlocked = true;
-    audioPlayer.muted = true;
-    const p = audioPlayer.play();
-    if(p && p.catch) p.catch(() => {});
-    audioPlayer.pause();
-    audioPlayer.muted = false;
-}
-
-// --- VOICE LOADING ---
-function triggerVoiceLoad() {
-    const statusEl = document.getElementById('voiceLoadStatus');
-    if(voiceLoadAttempted && voices.length > 0) {
-        if(statusEl) {
-            statusEl.textContent = `✅ ${voices.length} voices already loaded`;
-            statusEl.style.color = '#00ff41';
-        }
-        return;
-    }
-    if(statusEl) {
-        statusEl.textContent = '⏳ Triggering browser voice loader...';
-        statusEl.style.color = 'orange';
-    }
-    voiceLoadAttempted = true;
-    const utterance = new SpeechSynthesisUtterance('');
-    utterance.volume = 0; utterance.rate = 10;
-
-    utterance.onstart = () => {
-        if (window.speechSynthesis) speechSynthesis.cancel();
-        setTimeout(() => {
-            loadBrowserVoices();
-            const cnt = voices.length;
-            if(statusEl) {
-                statusEl.textContent = cnt > 0 ? `✅ ${cnt} voices loaded` : '⚠ No voices found — try Read Aloud in Edge first';
-                statusEl.style.color = cnt > 0 ? '#00ff41' : 'orange';
-            }
-            renderVoiceMapping();
-        }, 200);
-    };
-
-    utterance.onerror = () => {
-        loadBrowserVoices();
-        const cnt = voices.length;
-        if(statusEl) {
-            statusEl.textContent = cnt > 0 ? `✅ ${cnt} voices loaded` : '⚠ No browser voices found';
-            statusEl.style.color = cnt > 0 ? '#00ff41' : 'orange';
-        }
-    };
-    if (window.speechSynthesis) speechSynthesis.speak(utterance);
-}
-
-// ==================== VOICE CATALOG ====================
-const catalogByShortName = {};
-(window.VOICE_CATALOG || []).forEach(v => { catalogByShortName[v.shortName] = v; });
-
-function accentForLocale(locale) {
-    const hit = (window.VOICE_CATALOG || []).find(v => v.locale === locale);
-    return hit ? hit.accent : (locale || 'Unknown');
-}
-
-function annotateVoice(v) {
-    const meta = catalogByShortName[v.ShortName];
-    return {
-        ...v,
-        accent: meta ? meta.accent : accentForLocale(v.Locale),
-        priority: meta ? meta.priority : null,
-    };
-}
-
-function sortVoicesByPriority(list) {
-    const order = window.VOICE_PRIORITY_ORDER || [];
-    return list.sort((a, b) => {
-        const ai = a.priority ? order.indexOf(a.priority) : 999;
-        const bi = b.priority ? order.indexOf(b.priority) : 999;
-        if(ai !== bi) return ai - bi;
-        const an = a.FriendlyName || a.ShortName || '';
-        const bn = b.FriendlyName || b.ShortName || '';
-        return an.localeCompare(bn);
-    });
-}
-
-async function loadEdgeVoices() {
-    try {
-        const manager = await window.VoicesManager.create();
-        let edgeVoices;
-        if(Array.isArray(manager.voices)) edgeVoices = manager.voices;
-        else if(typeof manager.getVoices === 'function') edgeVoices = manager.getVoices();
-        else if(typeof manager.find === 'function') edgeVoices = manager.find({});
-        else edgeVoices = [];
-
-        if(!edgeVoices || edgeVoices.length === 0) throw new Error('No Edge voices array available');
-        voices = sortVoicesByPriority(edgeVoices.map(annotateVoice));
-        settings.useBrowserTTS = false;
-    } catch(e) {
-        console.warn('Edge-TTS voice listing unavailable, using bundled catalog', e);
-        const fallback = (window.VOICE_CATALOG || []).map(v => ({
-            ShortName: v.shortName, FriendlyName: v.name, Gender: v.gender, Locale: v.locale
-        }));
-        voices = sortVoicesByPriority(fallback.map(annotateVoice));
-        settings.useBrowserTTS = false;
-    }
-    initializeDefaultVoiceMapping();
-}
-
-function loadBrowserVoices() {
-    settings.useBrowserTTS = true;
-    if (!window.speechSynthesis) return;
-    const bv = speechSynthesis.getVoices();
-    if(!bv.length) return;
-
-    const femaleKeywords = ['female','woman','girl','samantha','victoria','zira','karen','moira','tessa','fiona','nicky','allison','ava','susan'];
-    const childKeywords = ['child','kid','junior'];
-
-    voices = bv.map(v => {
-        const nameLow = v.name.toLowerCase();
-        const isFemale = femaleKeywords.some(k => nameLow.includes(k));
-        const isChild = childKeywords.some(k => nameLow.includes(k));
-        return annotateVoice({
-            ShortName: v.name,
-            FriendlyName: v.name,
-            Gender: isFemale ? 'Female' : 'Male',
-            AgeGroup: isChild ? 'Child' : 'Adult',
-            Locale: v.lang,
-            _native: v
-        });
-    });
-
-    voices = sortVoicesByPriority(voices);
-    settings.voicesLoaded = true;
-    if(!voiceMapping.narrator && voices.length > 0) voiceMapping.narrator = voices[0].ShortName;
-}
-
-function initializeDefaultVoiceMapping() {
-    if(voices.length === 0) return;
-    const femaleEN = voices.find(v => (v.Gender || '').toLowerCase() === 'female' && v.Locale && v.Locale.startsWith('en'));
-    voiceMapping.narrator = femaleEN ? femaleEN.ShortName : voices[0].ShortName;
-}
-
-function autoAssignVoices() {
-    const spkrs = [...detectedSpkrs];
-    const females = voices.filter(v => (v.Gender || '').toLowerCase() === 'female' && v.Locale && v.Locale.startsWith('en'));
-    const males = voices.filter(v => (v.Gender || '').toLowerCase() === 'male' && v.Locale && v.Locale.startsWith('en'));
-    const shuffle = arr => [...arr].sort(() => Math.random() - 0.5);
-    const fPool = shuffle(females);
-    const mPool = shuffle(males);
-    let fi = 0, mi = 0;
-    spkrs.forEach((spkr, idx) => {
-        if(voiceMapping[spkr]) return;
-        if(spkr === 'narrator') {
-            voiceMapping[spkr] = fPool[fi % fPool.length]?.ShortName || voices[0]?.ShortName;
-            fi++;
-        } else if(idx % 2 === 0 && mPool.length) {
-            voiceMapping[spkr] = mPool[mi % mPool.length]?.ShortName;
-            mi++;
-        } else {
-            voiceMapping[spkr] = fPool[fi % fPool.length]?.ShortName;
-            fi++;
-        }
-    });
-    clearAudioCache();
-}
-
-function renderVoiceMapping() {
-    const container = document.getElementById('voiceMappingContainer');
-    const engineDiv = document.getElementById('engineStatus');
-    if (!container || !engineDiv) return;
-    container.innerHTML = '';
-    engineDiv.innerHTML = '';
-
-    const badge = document.createElement('div');
-    badge.className = 'engine-badge ' + (settings.useBrowserTTS ? 'browser' : 'edge');
-    badge.innerText = settings.useBrowserTTS ? '🌐 BROWSER TTS — ' + voices.length + ' voices' : '⚡ EDGE-TTS — ' + voices.length + ' voices';
-    engineDiv.appendChild(badge);
-
-    const toggleBtn = document.createElement('button');
-    toggleBtn.className = 'btn';
-    toggleBtn.style.cssText = 'width:100%; font-size:0.7rem;';
-    toggleBtn.innerText = settings.useBrowserTTS ? '⚡ SWITCH TO EDGE-TTS' : '🌐 SWITCH TO BROWSER TTS';
-    toggleBtn.onclick = () => {
-        settings.useBrowserTTS = !settings.useBrowserTTS;
-        clearAudioCache();
-        if(settings.useBrowserTTS) loadBrowserVoices();
-        else loadEdgeVoices();
-        renderVoiceMapping();
-    };
-    engineDiv.appendChild(toggleBtn);
-
-    const spkrs = [...detectedSpkrs].sort((a,b) => a==='narrator'?-1:b==='narrator'?1:a.localeCompare(b));
-
-    spkrs.forEach(spkr => {
-        const card = buildCharCard(spkr);
-        container.appendChild(card);
-    });
-
-    renderCharRow(spkrs);
-
-    const hbVoicesBtn = document.getElementById('hamburgerVoicesBtn');
-    if(hbVoicesBtn) hbVoicesBtn.style.display = '';
-}
-
-function renderCharRow(spkrs) {
-    const row = document.getElementById('charRow');
-    if(!row) return;
-    row.innerHTML = '';
-    if(spkrs.length === 0 || spkrs.length > 5) return;
-    spkrs.forEach(spkr => {
-        const chip = document.createElement('button');
-        chip.className = 'char-chip';
-        const meta = voices.find(v => v.ShortName === voiceMapping[spkr]);
-        const label = spkr === 'narrator' ? '📖 Narrator' : '💬 ' + spkr;
-        chip.innerHTML = `<span class="cc-name">${label}</span><span class="cc-voice">${meta ? (meta.FriendlyName || meta.ShortName) : 'choose…'}</span>`;
-        chip.onclick = () => openVoicePicker(spkr);
-        row.appendChild(chip);
-    });
-}
-
-function buildCharCard(spkr) {
-    const card = document.createElement('div');
-    card.className = 'char-card';
-    card.id = 'char-card-' + spkr.replace(/\s+/g,'_');
-
-    const nameRow = document.createElement('div');
-    nameRow.className = 'char-name';
-    nameRow.innerText = spkr === 'narrator' ? '📖 NARRATOR' : '💬 ' + spkr.toUpperCase();
-    card.appendChild(nameRow);
-
-    const trigger = document.createElement('div');
-    trigger.className = 'voice-trigger';
-    trigger.onclick = () => openVoicePicker(spkr);
-
-    const meta = voices.find(v => v.ShortName === voiceMapping[spkr]);
-    const info = document.createElement('div');
-    info.className = 'vt-info';
-    info.innerHTML = `<span class="vt-name">${meta ? (meta.FriendlyName || meta.ShortName) : 'Choose a voice…'}</span><span class="vt-accent">${meta ? meta.accent : ''}</span>`;
-
-    const dot = document.createElement('div');
-    dot.className = 'voice-status-dot';
-    updateStatusDot(dot, spkr, voiceMapping[spkr]);
-
-    trigger.appendChild(info);
-    trigger.appendChild(dot);
-    card.appendChild(trigger);
-    return card;
-}
-
-// ==================== VOICE PICKER ====================
-let vpCurrentSpkr = null;
-let vpShowAll = false;
-
-function openVoicePicker(spkr) {
-    vpCurrentSpkr = spkr;
-    vpShowAll = false;
-    document.getElementById('vpTitle').innerText = 'Voice for ' + (spkr === 'narrator' ? 'Narrator' : spkr);
-    renderVoicePickerBody();
-    document.getElementById('voicePickerBackdrop').classList.add('open');
-    document.getElementById('voicePicker').classList.add('open');
-}
-
-function closeVoicePicker() {
-    document.getElementById('voicePickerBackdrop').classList.remove('open');
-    document.getElementById('voicePicker').classList.remove('open');
-    vpCurrentSpkr = null;
-}
-
-function renderVoicePickerBody() {
-    const body = document.getElementById('vpBody');
-    body.innerHTML = '';
-    if(!vpCurrentSpkr) return;
-
-    const order = window.VOICE_PRIORITY_ORDER || [];
-    const groups = {};
-    voices.forEach(v => {
-        const key = v.priority || v.accent || 'Other';
-        (groups[key] || (groups[key] = [])).push(v);
-    });
-
-    const priorityKeys = order.filter(k => groups[k]);
-    const restKeys = Object.keys(groups).filter(k => !order.includes(k)).sort();
-
-    const renderGroup = key => {
-        const head = document.createElement('div');
-        head.className = 'vp-group-head';
-        head.innerText = key;
-        body.appendChild(head);
-        groups[key].forEach(v => body.appendChild(renderVoiceRow(v)));
-    };
-
-    priorityKeys.forEach(renderGroup);
-
-    if(vpShowAll) {
-        restKeys.forEach(renderGroup);
-    } else if(restKeys.length) {
-        const more = document.createElement('button');
-        more.className = 'vp-showmore';
-        more.innerText = `Show ${restKeys.length} more accents ▾`;
-        more.onclick = () => { vpShowAll = true; renderVoicePickerBody(); };
-        body.appendChild(more);
-    }
-}
-
-function renderVoiceRow(v) {
-    const row = document.createElement('div');
-    row.className = 'vp-voice-row';
-
-    const dot = document.createElement('div');
-    dot.className = 'voice-status-dot';
-    updateStatusDot(dot, vpCurrentSpkr, v.ShortName);
-
-    const isSelected = voiceMapping[vpCurrentSpkr] === v.ShortName;
-    const main = document.createElement('div');
-    main.className = 'vp-voice-main';
-    main.innerHTML = `<span class="vn${isSelected ? ' selected' : ''}">${v.FriendlyName || v.ShortName}</span><span class="va">${v.accent || ''}</span>`;
-    main.onclick = () => {
-        voiceMapping[vpCurrentSpkr] = v.ShortName;
-        clearAudioCache();
-        saveState();
-        closeVoicePicker();
-        renderVoiceMapping();
-    };
-
-    const testBtn = document.createElement('button');
-    testBtn.className = 'vp-test-btn';
-    testBtn.innerText = '🔊 Test';
-    testBtn.onclick = async (e) => {
-        e.stopPropagation();
-        const spkrAtClick = vpCurrentSpkr;
-        testBtn.innerText = '⏳';
-        const worked = await previewVoice(v.ShortName, spkrAtClick);
-        testBtn.innerText = '🔊 Test';
-        voiceStatusMemory[v.ShortName] = worked ? 'working' : 'broken';
-        localStorage.setItem('feist_voiceStatus', JSON.stringify(voiceStatusMemory));
-        updateStatusDot(dot, spkrAtClick, v.ShortName);
-    };
-
-    row.appendChild(dot);
-    row.appendChild(main);
-    row.appendChild(testBtn);
-    return row;
-}
-
-function detectChapterBreak(line) {
-    return /^(={3,}|-{3,}|#{1,3}\s|chapter\s+\d+)/i.test(line);
-}
-
-function escapeHtml(value) {
-    return String(value == null ? '' : value).replace(/[&<>"']/g, ch => ({
-        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-    })[ch]);
-}
-
-let cardMap = {};
-fetch('../edge-voices.json').then(r => r.json()).then(list => {
-    list.forEach(v => { cardMap[v.card.toUpperCase()] = v.shortName; });
-}).catch(e => console.warn('edge-voices.json not loaded', e));
-
-function resolveCard(token) {
-    if(!token) return null;
-    const t = token.trim();
-    return cardMap[t.toUpperCase()] || t;
-}
-
-const SPKR_REGEX = /\[(?:SPKR:\s*)?([A-Za-z0-9_ -]{1,30})(?:\|\s*([^\]]+))?\]/gi;
-
-function detectSpkrs(text) {
-    const matches = text.matchAll(SPKR_REGEX);
-    for(const match of matches) {
-        const name = match[1].trim();
-        if(!name || /^\d+$/.test(name)) continue;
-        detectedSpkrs.add(name);
-        if(match[2] && !voiceMapping[name]) voiceMapping[name] = resolveCard(match[2]);
-    }
-}
-
-function parseTextWithSpkrs(text) {
-    const segs = [];
-    const lines = text.split('\n');
-    let currentSpkr = 'narrator';
-    let chapterNum = 1;
-    let chapterTitle = null;
-
-    lines.forEach(line => {
-        line = line.trim();
-        if(!line) return;
-
-        if(detectChapterBreak(line)) {
-            chapterNum++;
-            chapterTitle = line.replace(/^#{1,3}\s*/, '').replace(/^[=\-]+$/, '').trim() || null;
-            return;
-        }
-
-        const spkrMatch = line.match(/^\[(?:SPKR:\s*)?([A-Za-z0-9_ -]{1,30})(?:\|\s*([^\]]+))?\]/i);
-        if(spkrMatch) {
-            const potentialName = spkrMatch[1].trim();
-            if(potentialName && !/^\d+$/.test(potentialName)) {
-                currentSpkr = potentialName;
-                detectedSpkrs.add(currentSpkr);
-                if(spkrMatch[2] && !voiceMapping[currentSpkr]) {
-                    voiceMapping[currentSpkr] = resolveCard(spkrMatch[2]);
-                }
-                line = line.replace(/^\[[^\]]+\]\s*/, '').trim();
-            }
-        }
-
-        if(line) {
-            segs.push({ spkr: currentSpkr, text: line, chapter: String(chapterNum), chapterTitle });
-            currentSpkr = 'narrator';
-        }
-    });
-    return segs;
-}
-
-function renderParsedSegments(parsedSegments) {
-    let html = '';
-    let currentChapter = null;
-    parsedSegments.forEach(seg => {
-        const safeChapter = escapeHtml(seg.chapter);
-        const safeTitle = escapeHtml(seg.chapterTitle || (seg.chapter === '1' ? 'Begin' : `Chapter ${seg.chapter}`));
-        const safeSpkr = escapeHtml(seg.spkr);
-        const safeText = escapeHtml(seg.text);
-        if(seg.chapter !== currentChapter) {
-            if(currentChapter !== null) html += '</div></article>';
-            currentChapter = seg.chapter;
-            html += `<article class="chapter" data-chapter="${safeChapter}"><h2>${safeTitle}</h2><div class="chapter-content">`;
-        }
-        if(seg.spkr !== 'narrator') {
-            html += `<div class="spkr-block" data-chapter="${safeChapter}">`;
-            html += `<div class="spkr-tag">${safeSpkr}</div>`;
-            html += `<p data-spkr="${safeSpkr}" data-text="${safeText}">${safeText}</p>`;
-            html += '</div>';
-        } else {
-            html += `<p class="narrator" data-spkr="narrator" data-text="${safeText}">${safeText}</p>`;
-        }
-    });
-    if(currentChapter !== null) html += '</div></article>';
-    return html;
-}
-
-// ==================== PLAYBACK ====================
-async function play() {
-    if(currentSegmentIndex >= segments.length) { currentSegmentIndex = 0; }
-    isPlaying = true;
-    document.getElementById('playBtn').innerText = '⏳';
-    const seg = segments[currentSegmentIndex];
-    highlight(seg);
-    try {
-        if(settings.useBrowserTTS) await playWithBrowserTTS(seg);
-        else await playWithEdgeTTS(seg);
-    } catch(e) {
-        console.error('Playback error:', e);
-        if(!settings.useBrowserTTS) {
-            settings.useBrowserTTS = true;
-            loadBrowserVoices();
-            renderVoiceMapping();
-            console.warn('Edge-TTS kept failing after a retry -- switched to browser voices for this session. Re-open the VOICES panel to switch back.');
-            try { await playWithBrowserTTS(seg); } catch(e2) { handlePlayError(e2); }
-        } else { handlePlayError(e); }
-    }
-}
-
-function handlePlayError(e) {
-    isPlaying = false;
-    const playBtn = document.getElementById('playBtn');
-    if (playBtn) playBtn.innerText = '⚠ ERR';
-    console.error('Playback failed: ' + (e?.message || e?.error || 'unknown'));
-}
-
-// Keeps up to PRELOAD_LOOKAHEAD segments synthesized ahead of playback so
-// the next speaker's audio is usually already sitting in cache by the time
-// it's needed, instead of the player stalling on a live TTS round-trip
-// every time the speaker changes.
-async function preloadSegment(idx) {
-    if(idx < 0 || idx >= segments.length || settings.useBrowserTTS || !window.EdgeTTS) return;
-    if(audioCache[idx] || audioCachePending[idx]) return;
-
-    const seg = segments[idx];
-    if(!seg || !seg.text || !seg.text.trim()) return;
-
-    const gen = audioCacheGen;
-    audioCachePending[idx] = true;
-    try {
-        const voice = voiceMapping[seg.spkr] || voiceMapping.narrator || voices[0]?.ShortName;
-        const blob = await synthesizeSegmentAudio(seg.text, voice, edgeTTSOpts());
-        if(blob && gen === audioCacheGen) audioCache[idx] = URL.createObjectURL(blob);
-    } finally {
-        delete audioCachePending[idx];
-    }
-}
-
-function preloadAhead(fromIdx) {
-    for (let i = 1; i <= PRELOAD_LOOKAHEAD; i++) preloadSegment(fromIdx + i);
-}
-
-async function playWithEdgeTTS(seg) {
-    if(!seg || !seg.text || !seg.text.trim()) {
-        throw new Error('Segment text is empty');
-    }
-
-    let url = audioCache[currentSegmentIndex];
-    if(url) {
-        delete audioCache[currentSegmentIndex];
-    } else {
-        const voice = voiceMapping[seg.spkr] || voiceMapping.narrator || voices[0]?.ShortName;
-        const blob = await synthesizeSegmentAudio(seg.text, voice, edgeTTSOpts());
-        if(!blob) throw new Error('NoAudioReceived');
-        url = URL.createObjectURL(blob);
-    }
-
-    if(!url) throw new Error('Audio URL is empty');
-
-    preloadAhead(currentSegmentIndex);
-
-    audioPlayer.src = url;
-    audioPlayer.volume = settings.volume;
-    audioPlayer.playbackRate = 1.0;
-    audioPlayer.onended = () => {
-        try { URL.revokeObjectURL(url); } catch(e) {}
-        if(!isPlaying) return;
-        currentSegmentIndex++;
-        saveState(); updateProgress();
-        if(currentSegmentIndex < segments.length) play();
-        else {
-            isPlaying = false;
-            const playBtn = document.getElementById('playBtn');
-            if (playBtn) playBtn.innerText = '▶ PLAY';
-        }
-    };
-
-    audioPlayer.onerror = () => {
-        const mediaErr = audioPlayer.error;
-        const codeNames = {1:'ABORTED',2:'NETWORK',3:'DECODE',4:'SRC_NOT_SUPPORTED'};
-        const detail = mediaErr
-            ? `${codeNames[mediaErr.code] || mediaErr.code}: ${mediaErr.message || 'no message'}`
-            : 'no MediaError available';
-
-        console.error('Edge-TTS audio error — ' + detail);
-        isPlaying = false;
-        const playBtn = document.getElementById('playBtn');
-        if (playBtn) playBtn.innerText = '⚠ ERR';
-    };
-
-    window.dispatchEvent(new CustomEvent('FeistTech_Audio_Start', { detail: { chapter: seg.chapter } }));
-    await audioPlayer.play();
-    const playBtn = document.getElementById('playBtn');
-    if (playBtn) playBtn.innerText = '⏸ PAUSE';
-    updateMediaSession(seg);
 }
 
 function formatEdgePct(val) {
@@ -741,109 +282,105 @@ function flashBtnText(btn, text, dur = 2500) {
     setTimeout(() => { btn.innerText = original; }, dur);
 }
 
-async function synthesizeAndDownloadChapter(chapterNum, btn) {
-    const chapterSegments = segments.filter(seg => seg.chapter === chapterNum);
-    if(chapterSegments.length === 0) return;
+async function synthesizeSegmentForExport(seg) {
+    const voice = String(voiceMapping[seg.spkr] || voiceMapping.narrator || voices[0]?.ShortName || 'en-US-AriaNeural');
+    // Deliberately conservative: the chunk synthesizer performs one retry only.
+    // Export never silently substitutes a browser/robot voice.
+    const blob = await synthesizeSegmentAudio(seg.text, voice, edgeTTSOpts());
+    if(!blob) throw new Error('NoAudioReceived for segment ' + (seg.index + 1));
+    return { blob, voice };
+}
 
-    const audioBlobs = [];
-    for (let i = 0; i < chapterSegments.length; i++) {
-        const seg = chapterSegments[i];
-        const voice = String(voiceMapping[seg.spkr] || voiceMapping.narrator || voices[0]?.ShortName || 'en-US-AriaNeural');
+function exportSegmentFilename(seg, ordinal, voice) {
+    const story = safeFilePart(storyTitleFromContent());
+    const chapter = safeFilePart(seg.chapterTitle || ('chapter_' + seg.chapter));
+    const actor = safeFilePart(cleanVoiceActorName({ShortName:voice, FriendlyName:voice}));
+    return String(ordinal + 1).padStart(4, '0') + '_' + actor + '_' + story + '_' + chapter + '.mp3';
+}
 
-        if(btn) btn.innerText = `⏳ Ch ${chapterNum}: ${i + 1} / ${chapterSegments.length}`;
+async function chooseStoryExportDirectory() {
+    if(!window.showDirectoryPicker) return null;
+    const root = await window.showDirectoryPicker({mode:'readwrite'});
+    return root.getDirectoryHandle(safeFilePart(storyTitleFromContent()), {create:true});
+}
 
-        const blob = await synthesizeSegmentAudio(seg.text, voice, edgeTTSOpts());
-        if(blob) audioBlobs.push(blob);
-        else console.warn(`Ch ${chapterNum} segment ${i + 1} produced no audio after retry -- skipped.`);
+async function writeBlobFile(dir, name, blob) {
+    const handle = await dir.getFileHandle(name, {create:true});
+    const writable = await handle.createWritable();
+    await writable.write(blob);
+    await writable.close();
+}
 
-        await new Promise(resolve => setTimeout(resolve, 200));
+async function exportSegmentsToFolder(targetSegments, btn) {
+    if(!targetSegments.length) return;
+    if(settings.useBrowserTTS) throw new Error('Switch to Edge or local neural TTS before MP3 export.');
+
+    let dir = null;
+    try { dir = await chooseStoryExportDirectory(); }
+    catch(e) { if(e?.name === 'AbortError') throw e; }
+
+    const chapterBlobs = new Map();
+    for(let i=0; i<targetSegments.length; i++) {
+        const seg = targetSegments[i];
+        if(btn) btn.innerText = `⏳ Segment ${i+1} / ${targetSegments.length}`;
+        const {blob, voice} = await synthesizeSegmentForExport(seg);
+        const name = exportSegmentFilename(seg, i, voice);
+
+        if(dir) await writeBlobFile(dir, name, blob);
+        else {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a'); a.href=url; a.download=name; a.click();
+            setTimeout(()=>URL.revokeObjectURL(url), 10000);
+        }
+        const key = String(seg.chapter);
+        if(!chapterBlobs.has(key)) chapterBlobs.set(key, []);
+        chapterBlobs.get(key).push(blob);
+        await new Promise(resolve => setTimeout(resolve, 250));
     }
 
-    if(audioBlobs.length === 0) throw new Error('NoAudioReceived');
-
-    const finalBlob = new Blob(audioBlobs, { type: 'audio/mp3' });
-    const url = URL.createObjectURL(finalBlob);
-    const a = document.createElement('a');
-    a.href = url;
-
-    let safeTitle = chapterSegments[0].chapterTitle || `Chapter_${chapterNum}`;
-    safeTitle = safeTitle.replace(/[^a-z0-9]/gi, '_');
-
-    a.download = `FeistTech_${safeTitle}.mp3`;
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 10000);
+    // Also write one stitched MP3 per chapter, while preserving every numbered segment.
+    for(const [chapter, blobs] of chapterBlobs) {
+        const chapterBlob = new Blob(blobs, {type:'audio/mp3'});
+        const name = safeFilePart(storyTitleFromContent()) + '_chapter_' + safeFilePart(chapter) + '_FULL.mp3';
+        if(dir) await writeBlobFile(dir, name, chapterBlob);
+    }
 }
 
 async function saveCurrentChapterAudio() {
     const btn = document.getElementById('saveChapterBtn');
-    if (segments.length === 0) {
-        flashBtnText(btn, "⚠ Load a story first");
-        return;
-    }
-    if (settings.useBrowserTTS) {
-        flashBtnText(btn, "⚠ Needs Edge-TTS — switch in VOICES panel");
-        return;
-    }
-
+    if(!segments.length) { flashBtnText(btn, '⚠ Load a story first'); return; }
     const targetChapter = segments[currentSegmentIndex].chapter;
-    const originalText = btn ? btn.innerText : '';
-    if (btn) {
-        btn.innerText = `⏳ Starting Ch ${targetChapter}...`;
-        btn.disabled = true;
-    }
-
+    const chapterSegments = segments.filter(s => s.chapter === targetChapter);
+    const original = btn?.innerText || '';
+    if(btn) btn.disabled = true;
     try {
-        await synthesizeAndDownloadChapter(targetChapter, btn);
-        if (btn) btn.innerText = "✅ CHAPTER SAVED";
-    } catch (e) {
-        console.error("Chapter audio generation failed:", e);
-        if (btn) btn.innerText = "❌ ERROR";
+        await exportSegmentsToFolder(chapterSegments, btn);
+        if(btn) btn.innerText = '✅ CHAPTER EXPORTED';
+    } catch(e) {
+        console.error('Chapter export failed:', e);
+        if(btn) btn.innerText = e?.name === 'AbortError' ? original : '❌ ' + (e?.message || 'ERROR');
     } finally {
-        setTimeout(() => {
-            if (btn) {
-                btn.innerText = originalText;
-                btn.disabled = false;
-            }
-        }, 3000);
+        setTimeout(()=>{ if(btn){btn.innerText=original;btn.disabled=false;} }, 3000);
     }
 }
 
 async function saveAllChaptersAudio() {
     const btn = document.getElementById('saveAllBtn');
-    if (segments.length === 0) {
-        flashBtnText(btn, "⚠ Load a story first");
-        return;
-    }
-    if (settings.useBrowserTTS) {
-        flashBtnText(btn, "⚠ Needs Edge-TTS — switch in VOICES panel");
-        return;
-    }
-
-    const chapters = [...new Set(segments.map(s => s.chapter))];
-    const originalText = btn ? btn.innerText : '';
-    if (btn) btn.disabled = true;
-
+    if(!segments.length) { flashBtnText(btn, '⚠ Load a story first'); return; }
+    const original = btn?.innerText || '';
+    if(btn) btn.disabled = true;
     try {
-        for (let c = 0; c < chapters.length; c++) {
-            if (btn) btn.innerText = `⏳ Chapter ${c + 1} / ${chapters.length}...`;
-            await synthesizeAndDownloadChapter(chapters[c], btn);
-            await new Promise(resolve => setTimeout(resolve, 400));
-        }
-        if (btn) btn.innerText = "✅ ALL CHAPTERS SAVED";
-    } catch (e) {
-        console.error("Full-book audio generation failed:", e);
-        if (btn) btn.innerText = "❌ ERROR";
+        await exportSegmentsToFolder(segments, btn);
+        if(btn) btn.innerText = '✅ MANUSCRIPT EXPORTED';
+    } catch(e) {
+        console.error('Manuscript export failed:', e);
+        if(btn) btn.innerText = e?.name === 'AbortError' ? original : '❌ ' + (e?.message || 'ERROR');
     } finally {
-        setTimeout(() => {
-            if (btn) {
-                btn.innerText = originalText;
-                btn.disabled = false;
-            }
-        }, 3000);
+        setTimeout(()=>{ if(btn){btn.innerText=original;btn.disabled=false;} }, 3000);
     }
 }
 
-async function playWithBrowserTTS(seg) {
+async function playWithBrowserTTS(seg, generation) {
     return new Promise((resolve, reject) => {
         if(speechSynthesis.speaking || speechSynthesis.pending) speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(seg.text);
@@ -860,7 +397,7 @@ async function playWithBrowserTTS(seg) {
         };
         utterance.onend = () => {
             nativeTTSActive = false; hideTTSStatus();
-            if(!isPlaying) { resolve(); return; }
+            if(!isPlaying || generation !== playbackGeneration) { resolve(); return; }
             currentSegmentIndex++; saveState(); updateProgress();
             if(currentSegmentIndex < segments.length) play();
             else {
@@ -876,10 +413,128 @@ async function playWithBrowserTTS(seg) {
             reject(e);
         };
         setTimeout(() => {
+            if(generation !== playbackGeneration) { resolve(); return; }
             try { speechSynthesis.speak(utterance); updateMediaSession(seg); }
             catch(e) { nativeTTSActive = false; reject(e); }
         }, 50);
     });
+}
+
+async function play() {
+    if(!segments.length) return;
+    if(currentSegmentIndex >= segments.length) currentSegmentIndex = 0;
+
+    const generation = ++playbackGeneration;
+    isPlaying = true;
+    const playBtn = document.getElementById('playBtn');
+    if(playBtn) playBtn.innerText = '⏳';
+
+    const seg = segments[currentSegmentIndex];
+    highlight(seg);
+
+    try {
+        if(settings.useBrowserTTS) await playWithBrowserTTS(seg, generation);
+        else await playWithEdgeTTS(seg, generation);
+    } catch(e) {
+        if(generation !== playbackGeneration) return;
+        console.error('Playback error:', e);
+        if(!settings.useBrowserTTS) {
+            settings.useBrowserTTS = true;
+            loadBrowserVoices();
+            renderVoiceMapping();
+            showTTSStatus('⚠ Edge-TTS failed, switched to browser voices — Export needs Edge-TTS again', 5000);
+            try { await playWithBrowserTTS(seg, generation); }
+            catch(e2) { handlePlayError(e2, generation); }
+        } else {
+            handlePlayError(e, generation);
+        }
+    }
+}
+
+function handlePlayError(e, generation = playbackGeneration) {
+    if(generation !== playbackGeneration) return;
+    isPlaying = false;
+    const playBtn = document.getElementById('playBtn');
+    if(playBtn) playBtn.innerText = '⚠ ERR';
+    showTTSStatus('Playback failed: ' + (e?.message || e?.error || 'unknown'), 4000);
+}
+
+function preloadAhead(currentIndex) {
+    if(settings.useBrowserTTS || !window.EdgeTTS) return;
+    const gen = audioCacheGen;
+    for(let offset = 1; offset <= PRELOAD_LOOKAHEAD; offset++) {
+        const idx = currentIndex + offset;
+        if(idx >= segments.length || audioCache[idx] || audioCachePending[idx]) continue;
+        const seg = segments[idx];
+        if(!seg || !String(seg.text || '').trim()) continue;
+        const voice = voiceMapping[seg.spkr] || voiceMapping.narrator || voices[0]?.ShortName || 'en-US-AriaNeural';
+        audioCachePending[idx] = (async () => {
+            try {
+                const blob = await synthesizeSegmentAudio(seg.text, voice, edgeTTSOpts());
+                if(blob && gen === audioCacheGen) audioCache[idx] = URL.createObjectURL(blob);
+            } catch(e) {
+                console.warn('Preload failed for segment', idx, e?.message || e);
+            } finally {
+                delete audioCachePending[idx];
+            }
+        })();
+    }
+}
+
+async function playWithEdgeTTS(seg, generation) {
+    if(!seg || !String(seg.text || '').trim()) throw new Error('Segment text is empty');
+
+    let url = audioCache[currentSegmentIndex] || null;
+    if(url) delete audioCache[currentSegmentIndex];
+
+    if(!url) {
+        const voice = voiceMapping[seg.spkr] || voiceMapping.narrator || voices[0]?.ShortName || 'en-US-AriaNeural';
+        const blob = await synthesizeSegmentAudio(seg.text, voice, edgeTTSOpts());
+        if(!blob) throw new Error('NoAudioReceived');
+        url = URL.createObjectURL(blob);
+    }
+
+    if(generation !== playbackGeneration) { URL.revokeObjectURL(url); return; }
+
+    if(currentAudioUrl) URL.revokeObjectURL(currentAudioUrl);
+    currentAudioUrl = url;
+    preloadAhead(currentSegmentIndex);
+
+    audioPlayer.src = url;
+    audioPlayer.volume = settings.volume;
+    audioPlayer.playbackRate = 1.0;
+
+    audioPlayer.onended = () => {
+        if(currentAudioUrl === url) currentAudioUrl = null;
+        URL.revokeObjectURL(url);
+        if(!isPlaying || generation !== playbackGeneration) return;
+        currentSegmentIndex++;
+        saveState();
+        updateProgress();
+        if(currentSegmentIndex < segments.length) play();
+        else {
+            isPlaying = false;
+            const btn = document.getElementById('playBtn');
+            if(btn) btn.innerText = '▶ PLAY';
+        }
+    };
+
+    audioPlayer.onerror = () => {
+        if(generation !== playbackGeneration) return;
+        const mediaErr = audioPlayer.error;
+        const codeNames = {1:'ABORTED',2:'NETWORK',3:'DECODE',4:'SRC_NOT_SUPPORTED'};
+        const detail = mediaErr
+            ? `${codeNames[mediaErr.code] || mediaErr.code}: ${mediaErr.message || 'no message'}`
+            : 'no MediaError available';
+        handlePlayError(new Error('Edge-TTS audio error — ' + detail), generation);
+    };
+
+    window.dispatchEvent(new CustomEvent('FeistTech_Audio_Start', {detail:{chapter:seg.chapter}}));
+    await audioPlayer.play();
+    if(generation !== playbackGeneration) return;
+    const btn = document.getElementById('playBtn');
+    if(btn) btn.innerText = '⏸ PAUSE';
+    updateMediaSession(seg);
 }
 
 // ==================== CONTROLS ====================
@@ -898,22 +553,25 @@ function togglePlay() {
         if(!audioPlayer.paused) {
             audioPlayer.pause(); isPlaying = false;
             if (playBtn) playBtn.innerText = '▶ PLAY';
-        } else if(audioPlayer.src && audioPlayer.src !== window.location.href) {
+        } else if(isPlaying && audioPlayer.src && audioPlayer.src !== window.location.href) {
             audioPlayer.play(); isPlaying = true;
             if (playBtn) playBtn.innerText = '⏸ PAUSE';
-        } else { play(); }
+        } else if(audioPlayer.src && audioPlayer.src !== window.location.href && currentAudioUrl) {
+            audioPlayer.play(); isPlaying = true;
+            if (playBtn) playBtn.innerText = '⏸ PAUSE';
+        } else if(isPlaying) { stopPlayback(); }
+        else { play(); }
     }
 }
 
 function stopPlayback() {
+    playbackGeneration++;
     isPlaying = false;
-    if(settings.useBrowserTTS) {
-        speechSynthesis.cancel();
-    } else {
-        audioPlayer.pause();
-        audioPlayer.removeAttribute('src');
-        audioPlayer.load();
-    }
+    if(window.speechSynthesis) speechSynthesis.cancel();
+    audioPlayer.pause();
+    audioPlayer.removeAttribute('src');
+    audioPlayer.load();
+    if(currentAudioUrl) { URL.revokeObjectURL(currentAudioUrl); currentAudioUrl = null; }
     const playBtn = document.getElementById('playBtn');
     if (playBtn) playBtn.innerText = '▶ PLAY';
     hideTTSStatus();
@@ -921,6 +579,7 @@ function stopPlayback() {
 }
 
 function skipSegment(dir) {
+    if(!segments.length) return;
     stopPlayback();
     currentSegmentIndex = Math.max(0, Math.min(segments.length - 1, currentSegmentIndex + dir));
     saveState();
@@ -928,7 +587,7 @@ function skipSegment(dir) {
 }
 
 function jumpToChapter(v) {
-    if(!v || isNaN(parseInt(v))) return;
+    if(!v || isNaN(parseInt(v)) || !segments[parseInt(v)]) return;
     stopPlayback();
     currentSegmentIndex = parseInt(v);
     saveState();
@@ -940,6 +599,110 @@ function updateStatusDot(dot, spkr, voiceName) {
     const status = voiceStatusMemory[voiceName] || 'unknown';
     dot.className = 'voice-status-dot ' + status;
     dot.title = status === 'working' ? '✓ Verified working' : status === 'broken' ? '✗ Not working (geo-locked or unavailable)' : 'Unknown — click ▶ to test';
+}
+
+function cleanVoiceActorName(v) {
+    let name = String(v?.FriendlyName || v?.name || v?.ShortName || v?.shortName || 'Voice');
+    name = name.replace(/^Microsoft\s+/i, '').replace(/\s+Online\s*\(Natural\).*$/i, '').replace(/\s+Neural$/i, '');
+    const short = String(v?.ShortName || v?.shortName || '');
+    const m = short.match(/^[a-z]{2,3}-[A-Z]{2}-([A-Za-z]+)Neural$/);
+    if(m && (/^Microsoft/i.test(String(v?.FriendlyName || '')) || name === short)) name = m[1];
+    return name.trim();
+}
+
+function safeFilePart(s) {
+    return String(s || 'Untitled').trim().replace(/[^a-z0-9._-]+/gi, '_').replace(/^_+|_+$/g, '') || 'Untitled';
+}
+
+function storyTitleFromContent(fallback='Untitled') {
+    const heading = document.querySelector('#storyContainer h1, #storyContainer article h2');
+    return (heading?.textContent || currentStoryTitle || fallback || 'Untitled').trim();
+}
+
+// ==================== VOICE MAPPING ====================
+function getAvailableVoices() {
+    if (Array.isArray(voices) && voices.length) {
+        return voices.map(v => ({
+            ShortName: v.ShortName || v.shortName || v.name,
+            FriendlyName: v.FriendlyName || v.name || v.ShortName || v.shortName,
+            Gender: v.Gender || v.gender || '',
+            Locale: v.Locale || v.locale || ''
+        })).filter(v => v.ShortName);
+    }
+    return (window.VOICE_CATALOG || []).map(v => ({
+        ShortName: v.shortName,
+        FriendlyName: v.name || v.shortName,
+        Gender: v.gender || '',
+        Locale: v.locale || ''
+    })).filter(v => v.ShortName);
+}
+
+function autoAssignVoices() {
+    const available = getAvailableVoices();
+    if (!available.length) return;
+    const speakers = [...detectedSpkrs];
+    speakers.forEach((spkr, i) => {
+        if (!voiceMapping[spkr]) voiceMapping[spkr] = available[i % available.length].ShortName;
+    });
+}
+
+function setSpeakerVoice(spkr, voiceName) {
+    voiceMapping[spkr] = voiceName || null;
+    clearAudioCache();
+    saveState();
+    renderVoiceMapping();
+}
+
+function renderVoiceMapping() {
+    const container = document.getElementById('voiceMappingContainer');
+    if (!container) return;
+    const available = getAvailableVoices();
+    if (available.length) autoAssignVoices();
+
+    container.replaceChildren();
+    [...detectedSpkrs].forEach(spkr => {
+        const row = document.createElement('div');
+        row.className = 'voice-map-row';
+
+        const label = document.createElement('span');
+        label.className = 'voice-map-speaker';
+        label.textContent = spkr === 'narrator' ? 'Narrator' : spkr;
+
+        const select = document.createElement('select');
+        select.className = 'voice-select';
+        select.setAttribute('aria-label', 'Voice for ' + label.textContent);
+
+        const empty = document.createElement('option');
+        empty.value = '';
+        empty.textContent = available.length ? 'Choose voice…' : 'Voices loading…';
+        select.appendChild(empty);
+
+        available.forEach(v => {
+            const opt = document.createElement('option');
+            opt.value = v.ShortName;
+            opt.textContent = [cleanVoiceActorName(v), v.Gender, v.Locale].filter(Boolean).join(' · ');
+            select.appendChild(opt);
+        });
+
+        select.value = voiceMapping[spkr] || '';
+        select.onchange = () => setSpeakerVoice(spkr, select.value);
+
+        const preview = document.createElement('button');
+        preview.type = 'button';
+        preview.className = 'btn';
+        preview.textContent = '▶';
+        preview.title = 'Preview voice';
+        preview.onclick = async () => {
+            const voiceName = select.value || voiceMapping[spkr];
+            if (!voiceName) return;
+            const ok = await previewVoice(voiceName, spkr);
+            voiceStatusMemory[voiceName] = ok ? 'working' : 'broken';
+            try { localStorage.setItem('feist_voiceStatus', JSON.stringify(voiceStatusMemory)); } catch(e) {}
+        };
+
+        row.append(label, select, preview);
+        container.appendChild(row);
+    });
 }
 
 // ==================== VOICE PREVIEW ====================
@@ -955,7 +718,20 @@ const SAMPLE_SENTENCES = [
     "Golden leaves drifted slowly across the quiet, empty street.",
     "Is it true that the bridge collapsed during the flood?",
     "The chef added a pinch of saffron to the simmering broth.",
-    "Nobody expected the negotiations to end so abruptly."
+    "Nobody expected the negotiations to end so abruptly.",
+    "The lantern swung above the doorway while rain rattled against the glass.",
+    "I knew the answer before he finished asking the question.",
+    "By sunrise, every boat in the harbor had turned toward open water.",
+    "Please leave the papers on my desk and close the door behind you.",
+    "There was a long silence before Maisey finally began to speak.",
+    "Luke counted the footsteps in the corridor, waiting for the lock to turn.",
+    "Andrew read the telegram twice, then folded it carefully into his coat.",
+    "The train crossed the river just as the first lights appeared in the city.",
+    "We can try again tomorrow, but tonight the road belongs to the storm.",
+    "A small brass key rested beneath the book where no one thought to look.",
+    "She laughed softly and said, Are you always this certain?",
+    "At half past midnight the telephone rang for the third and final time.",
+    "Beyond the garden wall, church bells marked the beginning of another day."
 ];
 let lastSampleIndex = -1;
 function pickRandomSentence() {
@@ -1221,7 +997,7 @@ function resumeSession() {
     syncDeckSpeedControls();
     initReader(c, true);
     if(p) {
-        currentSegmentIndex = Math.max(0, parseInt(p));
+        currentSegmentIndex = Math.max(0, Math.min(segments.length - 1, parseInt(p) || 0));
         setTimeout(() => {
             if(segments[currentSegmentIndex]) highlight(segments[currentSegmentIndex]);
         }, 400);
@@ -1288,7 +1064,7 @@ function loadSlot(id) {
     const slots = getSaveSlots();
     const slot = slots.find(s => s.id === id);
     if(!slot) return;
-    currentSegmentIndex = slot.progress;
+    currentSegmentIndex = Math.max(0, Math.min(segments.length - 1, slot.progress));
     voiceMapping = {...(slot.voiceMapping || {})};
     if(slot.settings) settings = {...settings, ...slot.settings};
     if(slot.spkrs) detectedSpkrs = new Set(slot.spkrs);
@@ -1330,6 +1106,7 @@ function loadFromPaste() {
 
 function handleFileSelect(input) {
     if (!input.files || !input.files[0]) return;
+    currentStoryTitle = input.files[0].name.replace(/\.[^.]+$/, '') || 'Untitled';
     const r = new FileReader();
     r.onload = e => {
         const text = e.target.result;
@@ -1358,6 +1135,7 @@ async function parseAndLoadPDF(arrayBuffer) {
 
 async function handlePDFSelect(input) {
     if (!input.files || !input.files[0]) return;
+    currentStoryTitle = input.files[0].name.replace(/\.[^.]+$/, '') || 'Untitled';
     showTTSStatus('⏳ Parsing PDF...', 0);
     try {
         const arrayBuffer = await input.files[0].arrayBuffer();
@@ -1460,6 +1238,7 @@ async function loadArticleIntoReader(id, pushState) {
         hideTTSStatus();
     }
     const text = article.content || '';
+    currentStoryTitle = article.title || currentStoryTitle;
     detectSpkrs(text);
     const parsed = parseTextWithSpkrs(text);
     const html = renderParsedSegments(parsed);
@@ -1480,6 +1259,7 @@ function toggleLibrary() { document.getElementById('libraryPanel')?.classList.to
 
 function initReader(html, isResume=false) {
     if(!html) return;
+    stopPlayback();
     clearAudioCache();
     const storyEl = document.getElementById('storyContainer');
     if (storyEl) storyEl.innerHTML = html;
@@ -1502,8 +1282,9 @@ function processContent() {
         if(!txt) return;
         const spkr = p.dataset.spkr || 'narrator';
         const ch = p.closest('article')?.dataset.chapter || '1';
-        segments.push({ index: i, element: p, text: txt, chapter: ch, spkr });
-        p.onclick = () => { currentSegmentIndex = i; stopPlayback(); play(); };
+        const index = segments.length;
+        segments.push({ index, element: p, text: txt, chapter: ch, spkr });
+        p.onclick = () => { stopPlayback(); currentSegmentIndex = index; play(); };
     });
 }
 
@@ -1518,7 +1299,10 @@ function populateChapters() {
             const firstIdx = segments.findIndex(s => s.chapter === seg.chapter);
             const art = document.querySelector(`article[data-chapter="${seg.chapter}"] h2`);
             const title = art ? art.innerText : `Chapter ${seg.chapter}`;
-            sel.innerHTML += `<option value="${firstIdx}">${title}</option>`;
+            const option = document.createElement('option');
+            option.value = firstIdx;
+            option.textContent = title;
+            sel.appendChild(option);
         }
     });
 }
@@ -1577,6 +1361,7 @@ function startNewStory() {
     detectedSpkrs = new Set(['narrator']);
     const storyEl = document.getElementById('storyContainer');
     if (storyEl) storyEl.innerHTML = EMPTY_STATE_HTML;
+    localStorage.removeItem('feist_content');
     populateChapters();
     renderVoiceMapping();
     const banner = document.getElementById('resumeBanner');
