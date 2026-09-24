@@ -423,6 +423,123 @@ async function playWithBrowserTTS(seg, generation) {
     });
 }
 
+async function play() {
+    if(!segments.length) return;
+    if(currentSegmentIndex >= segments.length) currentSegmentIndex = 0;
+
+    const generation = ++playbackGeneration;
+    isPlaying = true;
+    const playBtn = document.getElementById('playBtn');
+    if(playBtn) playBtn.innerText = '⏳';
+
+    const seg = segments[currentSegmentIndex];
+    highlight(seg);
+
+    try {
+        if(settings.useBrowserTTS) await playWithBrowserTTS(seg, generation);
+        else await playWithEdgeTTS(seg, generation);
+    } catch(e) {
+        if(generation !== playbackGeneration) return;
+        console.error('Playback error:', e);
+        if(!settings.useBrowserTTS) {
+            settings.useBrowserTTS = true;
+            loadBrowserVoices();
+            renderVoiceMapping();
+            showTTSStatus('⚠ Edge-TTS failed, switched to browser voices — Export needs Edge-TTS again', 5000);
+            try { await playWithBrowserTTS(seg, generation); }
+            catch(e2) { handlePlayError(e2, generation); }
+        } else {
+            handlePlayError(e, generation);
+        }
+    }
+}
+
+function handlePlayError(e, generation = playbackGeneration) {
+    if(generation !== playbackGeneration) return;
+    isPlaying = false;
+    const playBtn = document.getElementById('playBtn');
+    if(playBtn) playBtn.innerText = '⚠ ERR';
+    showTTSStatus('Playback failed: ' + (e?.message || e?.error || 'unknown'), 4000);
+}
+
+function preloadAhead(currentIndex) {
+    if(settings.useBrowserTTS || !window.EdgeTTS) return;
+    const gen = audioCacheGen;
+    for(let offset = 1; offset <= PRELOAD_LOOKAHEAD; offset++) {
+        const idx = currentIndex + offset;
+        if(idx >= segments.length || audioCache[idx] || audioCachePending[idx]) continue;
+        const seg = segments[idx];
+        if(!seg || !String(seg.text || '').trim()) continue;
+        const voice = voiceMapping[seg.spkr] || voiceMapping.narrator || voices[0]?.ShortName || 'en-US-AriaNeural';
+        audioCachePending[idx] = (async () => {
+            try {
+                const blob = await synthesizeSegmentAudio(seg.text, voice, edgeTTSOpts());
+                if(blob && gen === audioCacheGen) audioCache[idx] = URL.createObjectURL(blob);
+            } catch(e) {
+                console.warn('Preload failed for segment', idx, e?.message || e);
+            } finally {
+                delete audioCachePending[idx];
+            }
+        })();
+    }
+}
+
+async function playWithEdgeTTS(seg, generation) {
+    if(!seg || !String(seg.text || '').trim()) throw new Error('Segment text is empty');
+
+    let url = audioCache[currentSegmentIndex] || null;
+    if(url) delete audioCache[currentSegmentIndex];
+
+    if(!url) {
+        const voice = voiceMapping[seg.spkr] || voiceMapping.narrator || voices[0]?.ShortName || 'en-US-AriaNeural';
+        const blob = await synthesizeSegmentAudio(seg.text, voice, edgeTTSOpts());
+        if(!blob) throw new Error('NoAudioReceived');
+        url = URL.createObjectURL(blob);
+    }
+
+    if(generation !== playbackGeneration) { URL.revokeObjectURL(url); return; }
+
+    if(currentAudioUrl) URL.revokeObjectURL(currentAudioUrl);
+    currentAudioUrl = url;
+    preloadAhead(currentSegmentIndex);
+
+    audioPlayer.src = url;
+    audioPlayer.volume = settings.volume;
+    audioPlayer.playbackRate = 1.0;
+
+    audioPlayer.onended = () => {
+        if(currentAudioUrl === url) currentAudioUrl = null;
+        URL.revokeObjectURL(url);
+        if(!isPlaying || generation !== playbackGeneration) return;
+        currentSegmentIndex++;
+        saveState();
+        updateProgress();
+        if(currentSegmentIndex < segments.length) play();
+        else {
+            isPlaying = false;
+            const btn = document.getElementById('playBtn');
+            if(btn) btn.innerText = '▶ PLAY';
+        }
+    };
+
+    audioPlayer.onerror = () => {
+        if(generation !== playbackGeneration) return;
+        const mediaErr = audioPlayer.error;
+        const codeNames = {1:'ABORTED',2:'NETWORK',3:'DECODE',4:'SRC_NOT_SUPPORTED'};
+        const detail = mediaErr
+            ? `${codeNames[mediaErr.code] || mediaErr.code}: ${mediaErr.message || 'no message'}`
+            : 'no MediaError available';
+        handlePlayError(new Error('Edge-TTS audio error — ' + detail), generation);
+    };
+
+    window.dispatchEvent(new CustomEvent('FeistTech_Audio_Start', {detail:{chapter:seg.chapter}}));
+    await audioPlayer.play();
+    if(generation !== playbackGeneration) return;
+    const btn = document.getElementById('playBtn');
+    if(btn) btn.innerText = '⏸ PAUSE';
+    updateMediaSession(seg);
+}
+
 // ==================== CONTROLS ====================
 function togglePlay() {
     unlockAudioPlayback();
