@@ -83,7 +83,7 @@ function clsAsOf(sites,date){
 function setPaint(){
  const extrude=mode==='holo';
  for(const name of ['areas-3d','detail-3d','all-buildings-3d'])if(map.getLayer(name))map.setLayoutProperty(name,'visibility',name.startsWith('areas')&&(selected||overviewBuildingsReady)?'none':extrude?'visible':'none');
- for(const name of ['areas-flat','detail-flat'])if(map.getLayer(name))map.setLayoutProperty(name,'visibility',name.startsWith('areas')&&selected?'none':extrude?'none':'visible');
+ for(const name of ['areas-flat','detail-flat','all-buildings-flat'])if(map.getLayer(name))map.setLayoutProperty(name,'visibility',name.startsWith('areas')&&selected?'none':extrude?'none':'visible');
  map.easeTo({pitch:extrude?viewPitch:0,bearing:extrude?-18:0,duration:650});
  $('holoButton').classList.toggle('active',extrude);$('flatButton').classList.toggle('active',!extrude);
  $('holoButton').setAttribute('aria-pressed',String(extrude));$('flatButton').setAttribute('aria-pressed',String(!extrude));
@@ -134,6 +134,7 @@ async function loadOverviewBuildings(){
  }
  overviewBuildingsReady=true;
  map.addSource('all-buildings',{type:'geojson',data:annotatedAllBuildings()});
+ map.addLayer({id:'all-buildings-flat',type:'fill',source:'all-buildings',layout:{visibility:mode==='flat'?'visible':'none'},paint:{'fill-color':['get','color'],'fill-opacity':.76}});
  map.addLayer({id:'all-buildings-3d',type:'fill-extrusion',source:'all-buildings',layout:{visibility:selected||mode!=='holo'?'none':'visible'},paint:{'fill-extrusion-color':['get','color'],'fill-extrusion-opacity':.68,'fill-extrusion-height':['get','displayHeight'],'fill-extrusion-base':0}});
  map.setLayoutProperty('areas-3d','visibility','none');refresh();
 }
@@ -147,6 +148,7 @@ async function show(slug){
  document.querySelectorAll('[data-slug]').forEach(b=>b.classList.toggle('active',b.dataset.slug===slug));
  if(map.getLayer('areas-3d'))map.setLayoutProperty('areas-3d','visibility',slug||overviewBuildingsReady?'none':mode==='holo'?'visible':'none');
  if(map.getLayer('all-buildings-3d'))map.setLayoutProperty('all-buildings-3d','visibility',mode!=='holo'?'none':'visible');
+ if(map.getLayer('all-buildings-flat'))map.setLayoutProperty('all-buildings-flat','visibility',mode==='flat'?'visible':'none');
  if(map.getLayer('areas-flat'))map.setLayoutProperty('areas-flat','visibility',slug?'none':mode==='flat'?'visible':'none');
  if(!slug){map.flyTo({center:[34.44,31.51],zoom:11.5,pitch:mode==='holo'?viewPitch:0,bearing:mode==='holo'?-18:0});refresh();closeMenu();return}
  $('status').textContent='Loading '+slug.replaceAll('-',' ')+' buildings…';
