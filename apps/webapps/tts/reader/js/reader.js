@@ -56,6 +56,7 @@ let currentSegmentIndex = 0;
 let voiceMapping = { narrator: null };
 let detectedSpkrs = new Set(['narrator']);
 let voiceStatusMemory = {}; // { voiceName: 'working'|'broken' }
+let currentStoryTitle = 'Untitled';
 let settings = { speed: 1.0, volume: 1.0, useBrowserTTS: false, voicesLoaded: false };
 const audioPlayer = document.getElementById('audioPlayer');
 let nativeTTSActive = false;
@@ -281,105 +282,101 @@ function flashBtnText(btn, text, dur = 2500) {
     setTimeout(() => { btn.innerText = original; }, dur);
 }
 
-async function synthesizeAndDownloadChapter(chapterNum, btn) {
-    const chapterSegments = segments.filter(seg => seg.chapter === chapterNum);
-    if(chapterSegments.length === 0) return;
+async function synthesizeSegmentForExport(seg) {
+    const voice = String(voiceMapping[seg.spkr] || voiceMapping.narrator || voices[0]?.ShortName || 'en-US-AriaNeural');
+    // Deliberately conservative: the chunk synthesizer performs one retry only.
+    // Export never silently substitutes a browser/robot voice.
+    const blob = await synthesizeSegmentAudio(seg.text, voice, edgeTTSOpts());
+    if(!blob) throw new Error('NoAudioReceived for segment ' + (seg.index + 1));
+    return { blob, voice };
+}
 
-    const audioBlobs = [];
-    for (let i = 0; i < chapterSegments.length; i++) {
-        const seg = chapterSegments[i];
-        const voice = String(voiceMapping[seg.spkr] || voiceMapping.narrator || voices[0]?.ShortName || 'en-US-AriaNeural');
+function exportSegmentFilename(seg, ordinal, voice) {
+    const story = safeFilePart(storyTitleFromContent());
+    const chapter = safeFilePart(seg.chapterTitle || ('chapter_' + seg.chapter));
+    const actor = safeFilePart(cleanVoiceActorName({ShortName:voice, FriendlyName:voice}));
+    return String(ordinal + 1).padStart(4, '0') + '_' + actor + '_' + story + '_' + chapter + '.mp3';
+}
 
-        if(btn) btn.innerText = `⏳ Ch ${chapterNum}: ${i + 1} / ${chapterSegments.length}`;
+async function chooseStoryExportDirectory() {
+    if(!window.showDirectoryPicker) return null;
+    const root = await window.showDirectoryPicker({mode:'readwrite'});
+    return root.getDirectoryHandle(safeFilePart(storyTitleFromContent()), {create:true});
+}
 
-        const blob = await synthesizeSegmentAudio(seg.text, voice, edgeTTSOpts());
-        if(blob) audioBlobs.push(blob);
-        else console.warn(`Ch ${chapterNum} segment ${i + 1} produced no audio after retry -- skipped.`);
+async function writeBlobFile(dir, name, blob) {
+    const handle = await dir.getFileHandle(name, {create:true});
+    const writable = await handle.createWritable();
+    await writable.write(blob);
+    await writable.close();
+}
 
-        await new Promise(resolve => setTimeout(resolve, 200));
+async function exportSegmentsToFolder(targetSegments, btn) {
+    if(!targetSegments.length) return;
+    if(settings.useBrowserTTS) throw new Error('Switch to Edge or local neural TTS before MP3 export.');
+
+    let dir = null;
+    try { dir = await chooseStoryExportDirectory(); }
+    catch(e) { if(e?.name === 'AbortError') throw e; }
+
+    const chapterBlobs = new Map();
+    for(let i=0; i<targetSegments.length; i++) {
+        const seg = targetSegments[i];
+        if(btn) btn.innerText = `⏳ Segment ${i+1} / ${targetSegments.length}`;
+        const {blob, voice} = await synthesizeSegmentForExport(seg);
+        const name = exportSegmentFilename(seg, i, voice);
+
+        if(dir) await writeBlobFile(dir, name, blob);
+        else {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a'); a.href=url; a.download=name; a.click();
+            setTimeout(()=>URL.revokeObjectURL(url), 10000);
+        }
+        const key = String(seg.chapter);
+        if(!chapterBlobs.has(key)) chapterBlobs.set(key, []);
+        chapterBlobs.get(key).push(blob);
+        await new Promise(resolve => setTimeout(resolve, 250));
     }
 
-    if(audioBlobs.length === 0) throw new Error('NoAudioReceived');
-
-    const finalBlob = new Blob(audioBlobs, { type: 'audio/mp3' });
-    const url = URL.createObjectURL(finalBlob);
-    const a = document.createElement('a');
-    a.href = url;
-
-    let safeTitle = chapterSegments[0].chapterTitle || `Chapter_${chapterNum}`;
-    safeTitle = safeTitle.replace(/[^a-z0-9]/gi, '_');
-
-    a.download = `FeistTech_${safeTitle}.mp3`;
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 10000);
+    // Also write one stitched MP3 per chapter, while preserving every numbered segment.
+    for(const [chapter, blobs] of chapterBlobs) {
+        const chapterBlob = new Blob(blobs, {type:'audio/mp3'});
+        const name = safeFilePart(storyTitleFromContent()) + '_chapter_' + safeFilePart(chapter) + '_FULL.mp3';
+        if(dir) await writeBlobFile(dir, name, chapterBlob);
+    }
 }
 
 async function saveCurrentChapterAudio() {
     const btn = document.getElementById('saveChapterBtn');
-    if (segments.length === 0) {
-        flashBtnText(btn, "⚠ Load a story first");
-        return;
-    }
-    if (settings.useBrowserTTS) {
-        flashBtnText(btn, "⚠ Needs Edge-TTS — switch in VOICES panel");
-        return;
-    }
-
+    if(!segments.length) { flashBtnText(btn, '⚠ Load a story first'); return; }
     const targetChapter = segments[currentSegmentIndex].chapter;
-    const originalText = btn ? btn.innerText : '';
-    if (btn) {
-        btn.innerText = `⏳ Starting Ch ${targetChapter}...`;
-        btn.disabled = true;
-    }
-
+    const chapterSegments = segments.filter(s => s.chapter === targetChapter);
+    const original = btn?.innerText || '';
+    if(btn) btn.disabled = true;
     try {
-        await synthesizeAndDownloadChapter(targetChapter, btn);
-        if (btn) btn.innerText = "✅ CHAPTER SAVED";
-    } catch (e) {
-        console.error("Chapter audio generation failed:", e);
-        if (btn) btn.innerText = "❌ ERROR";
+        await exportSegmentsToFolder(chapterSegments, btn);
+        if(btn) btn.innerText = '✅ CHAPTER EXPORTED';
+    } catch(e) {
+        console.error('Chapter export failed:', e);
+        if(btn) btn.innerText = e?.name === 'AbortError' ? original : '❌ ' + (e?.message || 'ERROR');
     } finally {
-        setTimeout(() => {
-            if (btn) {
-                btn.innerText = originalText;
-                btn.disabled = false;
-            }
-        }, 3000);
+        setTimeout(()=>{ if(btn){btn.innerText=original;btn.disabled=false;} }, 3000);
     }
 }
 
 async function saveAllChaptersAudio() {
     const btn = document.getElementById('saveAllBtn');
-    if (segments.length === 0) {
-        flashBtnText(btn, "⚠ Load a story first");
-        return;
-    }
-    if (settings.useBrowserTTS) {
-        flashBtnText(btn, "⚠ Needs Edge-TTS — switch in VOICES panel");
-        return;
-    }
-
-    const chapters = [...new Set(segments.map(s => s.chapter))];
-    const originalText = btn ? btn.innerText : '';
-    if (btn) btn.disabled = true;
-
+    if(!segments.length) { flashBtnText(btn, '⚠ Load a story first'); return; }
+    const original = btn?.innerText || '';
+    if(btn) btn.disabled = true;
     try {
-        for (let c = 0; c < chapters.length; c++) {
-            if (btn) btn.innerText = `⏳ Chapter ${c + 1} / ${chapters.length}...`;
-            await synthesizeAndDownloadChapter(chapters[c], btn);
-            await new Promise(resolve => setTimeout(resolve, 400));
-        }
-        if (btn) btn.innerText = "✅ ALL CHAPTERS SAVED";
-    } catch (e) {
-        console.error("Full-book audio generation failed:", e);
-        if (btn) btn.innerText = "❌ ERROR";
+        await exportSegmentsToFolder(segments, btn);
+        if(btn) btn.innerText = '✅ MANUSCRIPT EXPORTED';
+    } catch(e) {
+        console.error('Manuscript export failed:', e);
+        if(btn) btn.innerText = e?.name === 'AbortError' ? original : '❌ ' + (e?.message || 'ERROR');
     } finally {
-        setTimeout(() => {
-            if (btn) {
-                btn.innerText = originalText;
-                btn.disabled = false;
-            }
-        }, 3000);
+        setTimeout(()=>{ if(btn){btn.innerText=original;btn.disabled=false;} }, 3000);
     }
 }
 
@@ -604,6 +601,24 @@ function updateStatusDot(dot, spkr, voiceName) {
     dot.title = status === 'working' ? '✓ Verified working' : status === 'broken' ? '✗ Not working (geo-locked or unavailable)' : 'Unknown — click ▶ to test';
 }
 
+function cleanVoiceActorName(v) {
+    let name = String(v?.FriendlyName || v?.name || v?.ShortName || v?.shortName || 'Voice');
+    name = name.replace(/^Microsoft\s+/i, '').replace(/\s+Online\s*\(Natural\).*$/i, '').replace(/\s+Neural$/i, '');
+    const short = String(v?.ShortName || v?.shortName || '');
+    const m = short.match(/^[a-z]{2,3}-[A-Z]{2}-([A-Za-z]+)Neural$/);
+    if(m && (/^Microsoft/i.test(String(v?.FriendlyName || '')) || name === short)) name = m[1];
+    return name.trim();
+}
+
+function safeFilePart(s) {
+    return String(s || 'Untitled').trim().replace(/[^a-z0-9._-]+/gi, '_').replace(/^_+|_+$/g, '') || 'Untitled';
+}
+
+function storyTitleFromContent(fallback='Untitled') {
+    const heading = document.querySelector('#storyContainer h1, #storyContainer article h2');
+    return (heading?.textContent || currentStoryTitle || fallback || 'Untitled').trim();
+}
+
 // ==================== VOICE MAPPING ====================
 function getAvailableVoices() {
     if (Array.isArray(voices) && voices.length) {
@@ -665,7 +680,7 @@ function renderVoiceMapping() {
         available.forEach(v => {
             const opt = document.createElement('option');
             opt.value = v.ShortName;
-            opt.textContent = [v.FriendlyName, v.Gender, v.Locale].filter(Boolean).join(' · ');
+            opt.textContent = [cleanVoiceActorName(v), v.Gender, v.Locale].filter(Boolean).join(' · ');
             select.appendChild(opt);
         });
 
@@ -703,7 +718,20 @@ const SAMPLE_SENTENCES = [
     "Golden leaves drifted slowly across the quiet, empty street.",
     "Is it true that the bridge collapsed during the flood?",
     "The chef added a pinch of saffron to the simmering broth.",
-    "Nobody expected the negotiations to end so abruptly."
+    "Nobody expected the negotiations to end so abruptly.",
+    "The lantern swung above the doorway while rain rattled against the glass.",
+    "I knew the answer before he finished asking the question.",
+    "By sunrise, every boat in the harbor had turned toward open water.",
+    "Please leave the papers on my desk and close the door behind you.",
+    "There was a long silence before Maisey finally began to speak.",
+    "Luke counted the footsteps in the corridor, waiting for the lock to turn.",
+    "Andrew read the telegram twice, then folded it carefully into his coat.",
+    "The train crossed the river just as the first lights appeared in the city.",
+    "We can try again tomorrow, but tonight the road belongs to the storm.",
+    "A small brass key rested beneath the book where no one thought to look.",
+    "She laughed softly and said, Are you always this certain?",
+    "At half past midnight the telephone rang for the third and final time.",
+    "Beyond the garden wall, church bells marked the beginning of another day."
 ];
 let lastSampleIndex = -1;
 function pickRandomSentence() {
@@ -1078,6 +1106,7 @@ function loadFromPaste() {
 
 function handleFileSelect(input) {
     if (!input.files || !input.files[0]) return;
+    currentStoryTitle = input.files[0].name.replace(/\.[^.]+$/, '') || 'Untitled';
     const r = new FileReader();
     r.onload = e => {
         const text = e.target.result;
@@ -1106,6 +1135,7 @@ async function parseAndLoadPDF(arrayBuffer) {
 
 async function handlePDFSelect(input) {
     if (!input.files || !input.files[0]) return;
+    currentStoryTitle = input.files[0].name.replace(/\.[^.]+$/, '') || 'Untitled';
     showTTSStatus('⏳ Parsing PDF...', 0);
     try {
         const arrayBuffer = await input.files[0].arrayBuffer();
@@ -1208,6 +1238,7 @@ async function loadArticleIntoReader(id, pushState) {
         hideTTSStatus();
     }
     const text = article.content || '';
+    currentStoryTitle = article.title || currentStoryTitle;
     detectSpkrs(text);
     const parsed = parseTextWithSpkrs(text);
     const html = renderParsedSegments(parsed);
