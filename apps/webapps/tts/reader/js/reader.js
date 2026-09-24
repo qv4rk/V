@@ -3,7 +3,7 @@ function detectSpkrs(text) {
     if (!text || typeof text !== 'string') return;
     const matches = text.matchAll(/\[SPKR:\s*([^\]]+)\]/gi);
     for(const match of matches) {
-        if (match && match) detectedSpkrs.add(match.trim());
+        if (match && match[1]) detectedSpkrs.add(match[1].trim());
     }
 }
 
