@@ -4,6 +4,12 @@ on:
   push:
     branches: [main]
 
+# Only one build may write generated files back to main at a time.
+# A newer push cancels an older run before both can race at git push.
+concurrency:
+  group: build-deploy-main
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -36,7 +42,12 @@ jobs:
           git diff --cached --quiet && echo "Nothing to commit" || \
             git commit -m "auto: regenerate articles and events [skip ci]"
 
-      - name: Push
-        run: git push
+      - name: Push generated files safely
+        run: |
+          # Another commit may have landed while this build was running.
+          # Rebase the generated-files commit onto the latest main, then push.
+          git fetch origin main
+          git rebase origin/main
+          git push origin HEAD:main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
