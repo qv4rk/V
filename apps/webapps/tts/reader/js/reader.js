@@ -862,9 +862,11 @@ function pickRandomSentence() {
 
 async function previewVoice(voiceName, spkr) {
     const previewText = pickRandomSentence();
-    console.info('Voice preview route', { voice: voiceName, browserMode: settings.useBrowserTTS, edgeLoaded: !!window.EdgeTTS });
+    const looksLikeEdgeVoice = /^[a-z]{2,3}-[A-Z]{2}-.+Neural$/.test(String(voiceName || ''));
+    const useEdgePreview = !!window.EdgeTTS && looksLikeEdgeVoice;
+    console.info('Voice preview route', { voice: voiceName, engine: useEdgePreview ? 'edge' : 'browser', browserMode: settings.useBrowserTTS, edgeLoaded: !!window.EdgeTTS });
     return new Promise(resolve => {
-        if(settings.useBrowserTTS || !window.EdgeTTS) {
+        if(!useEdgePreview) {
             console.info('Voice preview using browser speechSynthesis', { voice: voiceName });
             const u = new SpeechSynthesisUtterance(previewText);
             const v = speechSynthesis.getVoices().find(v => v.name === voiceName);
@@ -881,9 +883,11 @@ async function previewVoice(voiceName, spkr) {
         } else {
             (async () => {
                 try {
-                    const tts = new window.EdgeTTS(String(previewText), voiceName, { rate: formatEdgePct(settings.speed), pitch:'+0Hz', volume: formatEdgePct(settings.volume) });
+                    const tts = new window.EdgeTTS(String(previewText), String(voiceName), edgeTTSOpts());
                     const result = await tts.synthesize();
-                    console.info('Voice preview using EdgeTTS', { voice: voiceName, audioBytes: result?.audio?.byteLength || 0 });
+                    const bytes = result?.audio?.byteLength || 0;
+                    console.info('Voice preview using EdgeTTS', { voice: voiceName, audioBytes: bytes });
+                    if(!bytes) { resolve(false); return; }
                     const blob = new Blob([result.audio], { type:'audio/mp3' });
                     const url = URL.createObjectURL(blob);
                     const tmp = new Audio(url);
@@ -891,7 +895,10 @@ async function previewVoice(voiceName, spkr) {
                     tmp.onended = () => { URL.revokeObjectURL(url); resolve(true); };
                     tmp.onerror = () => { URL.revokeObjectURL(url); resolve(false); };
                     await tmp.play();
-                } catch(e) { resolve(false); }
+                } catch(e) {
+                    console.warn('Edge voice preview failed', { voice: voiceName, error: e?.message || String(e) });
+                    resolve(false);
+                }
             })();
         }
     });
