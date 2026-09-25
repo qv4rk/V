@@ -787,8 +787,10 @@ function pickRandomSentence() {
 
 async function previewVoice(voiceName, spkr) {
     const previewText = pickRandomSentence();
+    console.info('Voice preview route', { voice: voiceName, browserMode: settings.useBrowserTTS, edgeLoaded: !!window.EdgeTTS });
     return new Promise(resolve => {
         if(settings.useBrowserTTS || !window.EdgeTTS) {
+            console.info('Voice preview using browser speechSynthesis', { voice: voiceName });
             const u = new SpeechSynthesisUtterance(previewText);
             const v = speechSynthesis.getVoices().find(v => v.name === voiceName);
             if(v) u.voice = v;
@@ -806,6 +808,7 @@ async function previewVoice(voiceName, spkr) {
                 try {
                     const tts = new window.EdgeTTS(String(previewText), voiceName, { rate: formatEdgePct(settings.speed), pitch:'+0Hz', volume: formatEdgePct(settings.volume) });
                     const result = await tts.synthesize();
+                    console.info('Voice preview using EdgeTTS', { voice: voiceName, audioBytes: result?.audio?.byteLength || 0 });
                     const blob = new Blob([result.audio], { type:'audio/mp3' });
                     const url = URL.createObjectURL(blob);
                     const tmp = new Audio(url);
