@@ -177,7 +177,14 @@ async function synthesizeSegmentAudio(text, voice, opts) {
     for(const chunk of chunks) {
         try {
             const resolvedVoice = String(voice || 'en-US-AriaNeural');
-            const tts = new window.EdgeTTS(String(chunk), resolvedVoice, opts || {});
+            const edgeOpts = opts || {};
+            const tts = new window.EdgeTTS({
+                voice: resolvedVoice,
+                text: String(chunk),
+                rate: edgeOpts.rate || '+0%',
+                pitch: edgeOpts.pitch || '+0Hz',
+                volume: edgeOpts.volume || '+0%'
+            });
             const result = await tts.synthesize();
             const bytes = result?.audio?.byteLength || 0;
             console.info('Edge manuscript direct', { voice: resolvedVoice, audioBytes: bytes, chunkChars: String(chunk).length });
@@ -883,7 +890,14 @@ async function previewVoice(voiceName, spkr) {
         } else {
             (async () => {
                 try {
-                    const tts = new window.EdgeTTS(String(previewText), String(voiceName), edgeTTSOpts());
+                    const previewOpts = edgeTTSOpts();
+                    const tts = new window.EdgeTTS({
+                        voice: String(voiceName),
+                        text: String(previewText),
+                        rate: previewOpts.rate || '+0%',
+                        pitch: previewOpts.pitch || '+0Hz',
+                        volume: previewOpts.volume || '+0%'
+                    });
                     const result = await tts.synthesize();
                     const bytes = result?.audio?.byteLength || 0;
                     console.info('Voice preview using EdgeTTS', { voice: voiceName, audioBytes: bytes });
