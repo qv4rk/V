@@ -409,11 +409,17 @@ async function playWithBrowserTTS(seg, generation) {
         if(selectedVoice) utterance.voice = selectedVoice;
         utterance.rate = parseFloat(settings.speed);
         utterance.volume = parseFloat(settings.volume);
+        const browserSegIndex = currentSegmentIndex;
+        utterance.onboundary = e => { if(e.name === 'word' || e.charIndex >= 0) rsvpSyncBrowserBoundary(browserSegIndex, e.charIndex || 0); };
         utterance.onstart = () => {
             nativeTTSActive = true;
             const playBtn = document.getElementById('playBtn');
             if (playBtn) playBtn.innerText = '⏸ PAUSE';
             showTTSStatus(`🎙 ${seg.spkr}`, 0);
+            if(document.getElementById('rsvpOverlay')?.classList.contains('open')){
+                if(!rsvpQueue.length || !rsvpQueue.some(e=>e.segIdx===browserSegIndex)) rsvpBuildQueueFrom(browserSegIndex);
+                rsvpPlaying=true; const rb=document.getElementById('rsvpPlayBtn'); if(rb) rb.innerText='⏸ PAUSE RSVP';
+            }
         };
         utterance.onend = () => {
             nativeTTSActive = false; hideTTSStatus();
@@ -552,6 +558,12 @@ async function playWithEdgeTTS(seg, generation) {
     window.dispatchEvent(new CustomEvent('FeistTech_Audio_Start', {detail:{chapter:seg.chapter}}));
     await audioPlayer.play();
     if(generation !== playbackGeneration) return;
+    if(document.getElementById('rsvpOverlay')?.classList.contains('open')){
+        if(!rsvpQueue.length || !rsvpQueue.some(e=>e.segIdx===currentSegmentIndex)) rsvpBuildQueueFrom(currentSegmentIndex);
+        rsvpPlaying=true; rsvpAudioSyncActive=true;
+        const rb=document.getElementById('rsvpPlayBtn'); if(rb) rb.innerText='⏸ PAUSE RSVP';
+        rsvpAudioSyncTick();
+    }
     const btn = document.getElementById('playBtn');
     if(btn) btn.innerText = '⏸ PAUSE';
     updateMediaSession(seg);
@@ -1532,9 +1544,13 @@ function openRsvp() {
     const overlay = document.getElementById('rsvpOverlay');
     if (overlay) overlay.classList.add('open');
     rsvpShowWord();
-    rsvpPlaying = false;
+    rsvpPlaying = !!isPlaying;
     const playBtn = document.getElementById('rsvpPlayBtn');
-    if (playBtn) playBtn.innerText = '▶ START';
+    if (playBtn) playBtn.innerText = rsvpPlaying ? '⏸ PAUSE RSVP' : '▶ START';
+    if (rsvpPlaying && !settings.useBrowserTTS && audioPlayer && !audioPlayer.paused) {
+        rsvpAudioSyncActive = true;
+        rsvpAudioSyncTick();
+    }
 }
 
 function closeRsvp() {
@@ -1552,24 +1568,47 @@ function rsvpPlay() {
     if(rsvpPos >= rsvpQueue.length) rsvpPos = 0;
     rsvpPlaying = true;
     const playBtn = document.getElementById('rsvpPlayBtn');
-    if (playBtn) playBtn.innerText = '⏸ PAUSE';
-    rsvpTick();
+    if (playBtn) playBtn.innerText = '⏸ PAUSE RSVP';
+    if (isPlaying && !settings.useBrowserTTS && audioPlayer && !audioPlayer.paused) {
+        rsvpAudioSyncActive = true; rsvpAudioSyncTick(); return;
+    }
+    if (isPlaying && settings.useBrowserTTS) { rsvpAudioSyncActive = false; return; }
+    rsvpAudioSyncActive = false; rsvpTick();
 }
-
 function rsvpPause() {
-    rsvpPlaying = false;
+    rsvpPlaying = false; rsvpAudioSyncActive = false;
     if(rsvpTimer) { clearTimeout(rsvpTimer); rsvpTimer = null; }
-    const btn = document.getElementById('rsvpPlayBtn');
-    if(btn) btn.innerText = '▶ START';
+    const btn = document.getElementById('rsvpPlayBtn'); if(btn) btn.innerText = '▶ START';
 }
-
+let rsvpAudioSyncActive = false;
+function rsvpFirstIndexForSegment(segIdx) { return rsvpQueue.findIndex(entry => entry.segIdx === segIdx); }
+function rsvpAudioSyncTick() {
+    if (!rsvpAudioSyncActive || !rsvpPlaying || settings.useBrowserTTS) return;
+    if (!audioPlayer || audioPlayer.paused || !Number.isFinite(audioPlayer.duration) || audioPlayer.duration <= 0) {
+        requestAnimationFrame(rsvpAudioSyncTick); return;
+    }
+    const first = rsvpFirstIndexForSegment(currentSegmentIndex); if (first < 0) return;
+    let count = 0; for (let i=first;i<rsvpQueue.length && rsvpQueue[i].segIdx===currentSegmentIndex;i++) count++;
+    if (!count) return;
+    const progress=Math.max(0,Math.min(.999999,audioPlayer.currentTime/audioPlayer.duration));
+    const target=first+Math.min(count-1,Math.floor(progress*count));
+    if(target!==rsvpPos){rsvpPos=target;rsvpShowWord();}
+    requestAnimationFrame(rsvpAudioSyncTick);
+}
+function rsvpSyncBrowserBoundary(segIdx,charIndex) {
+    if(!rsvpPlaying || !settings.useBrowserTTS) return;
+    const first=rsvpFirstIndexForSegment(segIdx); if(first<0)return;
+    const text=String(segments[segIdx]?.text||'');
+    const upto=text.slice(0,Math.max(0,charIndex));
+    const wordOffset=upto.trim()?upto.trim().split(/\s+/).length:0;
+    let count=0; for(let i=first;i<rsvpQueue.length&&rsvpQueue[i].segIdx===segIdx;i++)count++;
+    rsvpPos=first+Math.min(Math.max(0,count-1),wordOffset); rsvpShowWord();
+}
 function rsvpTick() {
-    if(!rsvpPlaying) return;
-    if(rsvpPos >= rsvpQueue.length) { rsvpPause(); return; }
-    rsvpShowWord();
-    rsvpPos++;
-    const msPerWord = 60000 / rsvpWpm;
-    rsvpTimer = setTimeout(rsvpTick, msPerWord);
+    if(!rsvpPlaying)return;
+    if(rsvpPos>=rsvpQueue.length){rsvpPause();return;}
+    rsvpShowWord(); rsvpPos++;
+    rsvpTimer=setTimeout(rsvpTick,60000/rsvpWpm);
 }
 
 function rsvpShowWord() {
