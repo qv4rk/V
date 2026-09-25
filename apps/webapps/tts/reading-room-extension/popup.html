@@ -1,0 +1,11 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Reading Room</title>
+<style>
+body{font:14px system-ui,sans-serif;width:340px;margin:0;padding:16px;background:#111;color:#eee}h1{font-size:18px;margin:0 0 4px}.sub{color:#999;margin:0 0 14px}.row{display:flex;gap:8px;align-items:center;margin:10px 0}select,button{background:#222;color:#eee;border:1px solid #555;border-radius:7px;padding:8px}select{flex:1}button{cursor:pointer}.primary{width:100%;padding:11px;font-weight:700}.voice{display:grid;grid-template-columns:30px 1fr;gap:8px;align-items:center;margin:7px 0}.voice label{font-weight:700}.status{font-size:12px;color:#aaa;min-height:18px;margin-top:8px}
+</style></head><body>
+<h1>FeistTech Reading Room</h1><p class="sub">Portable narrator prototype</p>
+<div class="row"><label for="count">Narrators</label><select id="count"><option value="1">1 narrator</option><option value="2">2 narrators</option><option value="3">3 narrators</option></select></div>
+<div id="voices"></div>
+<div class="row"><button id="stop">■ Stop</button><button id="refresh">↻ Refresh voices</button></div>
+<button class="primary" id="read">▶ Read this page</button><div class="status" id="status"></div>
+<script src="popup.js"></script></body></html>
