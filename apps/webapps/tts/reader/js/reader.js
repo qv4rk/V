@@ -177,12 +177,25 @@ async function synthesizeSegmentAudio(text, voice, opts) {
     for(const chunk of chunks) {
         // Use the exact EdgeTTS synthesis path proven by the voice-preview button.
         try {
-            const tts = new window.EdgeTTS(String(chunk), String(voice || 'en-US-AriaNeural'), opts || {});
+            const resolvedVoice = String(voice || 'en-US-AriaNeural');
+            const resolvedOpts = opts || {};
+            // Control probe: use the same synthesis path as the working side-panel
+            // preview before the manuscript request. This tells the debugger whether
+            // Edge itself/state or the manuscript payload is the point of divergence.
+            const probeText = 'At half past midnight the telephone rang for the third and final time.';
+            const probe = await new window.EdgeTTS(probeText, resolvedVoice, resolvedOpts).synthesize();
+            const probeBytes = probe?.audio?.byteLength || 0;
+            console.info('Edge probe', { voice: resolvedVoice, probeBytes, chunkChars: String(chunk).length });
+            if(!probeBytes) throw new Error('ProbeNoAudio');
+
+            const tts = new window.EdgeTTS(String(chunk), resolvedVoice, resolvedOpts);
             const result = await tts.synthesize();
-            if(!result?.audio?.byteLength) throw new Error('NoAudioReceived');
+            const chunkBytes = result?.audio?.byteLength || 0;
+            console.info('Edge manuscript', { voice: resolvedVoice, chunkBytes, chunkChars: String(chunk).length });
+            if(!chunkBytes) throw new Error('NoAudioReceived');
             blobs.push(new Blob([result.audio], {type:'audio/mp3'}));
         } catch(e) {
-            console.warn('Edge-TTS chunk failed:', e?.message || e, chunk.slice(0,60));
+            console.warn('Edge-TTS chunk failed:', e?.message || e, 'voice=' + String(voice || ''), 'chars=' + String(chunk).length, chunk.slice(0,60));
             return null;
         }
     }
