@@ -38,11 +38,11 @@
         if(e.shiftKey && (e.ctrlKey||e.metaKey) && e.code==='KeyD'){ e.preventDefault(); window.toggleDebugPanel(); }
     });
     window.copyDebugReport=()=>{
-        const report='=== FeistTech Reader v10.3 Debug Report ===\n'+new Date().toISOString()+'\n\n'+logs.join('\n');
+        const report='=== FeistTech Reader v10.4 Debug Report ===\n'+new Date().toISOString()+'\n\n'+logs.join('\n');
         navigator.clipboard.writeText(report).then(()=>{
             const btns=document.querySelectorAll('#uni-debug-panel button');
             btns[0].innerText='✅ COPIED!';setTimeout(()=>btns[0].innerText='📋 COPY FOR AI',2000);
         });
     };
-    addLog('system','FeistTech Reader v10.3 — Debugger Ready.');
+    addLog('system','FeistTech Reader v10.4 — Debugger Ready.');
 })();
