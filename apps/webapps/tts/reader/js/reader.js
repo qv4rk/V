@@ -659,6 +659,8 @@ function renderVoiceMapping() {
     if(!container || !engineDiv) return;
     container.innerHTML = '';
     engineDiv.innerHTML = '';
+    const available = getAvailableVoices();
+    if(available.length) autoAssignVoices();
 
     const badge = document.createElement('div');
     badge.className = 'engine-badge ' + (settings.useBrowserTTS ? 'browser' : 'edge');
