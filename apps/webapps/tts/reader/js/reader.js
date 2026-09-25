@@ -711,41 +711,115 @@ function renderVoiceMapping() {
         label.className = 'voice-map-speaker';
         label.textContent = spkr === 'narrator' ? 'Narrator' : spkr;
 
-        const select = document.createElement('select');
-        select.className = 'voice-select';
-        select.setAttribute('aria-label', 'Voice for ' + label.textContent);
+        const picker = document.createElement('button');
+        picker.type = 'button';
+        picker.className = 'btn';
+        picker.style.cssText = 'flex:1;text-align:left;min-width:0;';
+        const selected = available.find(v => v.ShortName === voiceMapping[spkr]);
+        picker.textContent = selected ? [cleanVoiceActorName(selected), selected.accent || selected.Locale].filter(Boolean).join(' · ') : 'Choose voice…';
+        picker.onclick = () => openReaderVoicePicker(spkr);
 
-        const empty = document.createElement('option');
-        empty.value = '';
-        empty.textContent = available.length ? 'Choose voice…' : 'Voices loading…';
-        select.appendChild(empty);
-
-        available.forEach(v => {
-            const opt = document.createElement('option');
-            opt.value = v.ShortName;
-            opt.textContent = [cleanVoiceActorName(v), v.Gender, v.Locale].filter(Boolean).join(' · ');
-            select.appendChild(opt);
-        });
-
-        select.value = voiceMapping[spkr] || '';
-        select.onchange = () => setSpeakerVoice(spkr, select.value);
+        const dot = document.createElement('span');
+        dot.style.cssText = 'width:10px;height:10px;border-radius:50%;background:#666;display:inline-block;flex:0 0 auto;';
+        updateStatusDot(dot, spkr, voiceMapping[spkr]);
 
         const preview = document.createElement('button');
         preview.type = 'button';
         preview.className = 'btn';
         preview.textContent = '▶';
-        preview.title = 'Preview voice';
+        preview.title = 'Preview selected voice';
         preview.onclick = async () => {
-            const voiceName = select.value || voiceMapping[spkr];
+            const voiceName = voiceMapping[spkr];
             if (!voiceName) return;
             const ok = await previewVoice(voiceName, spkr);
             voiceStatusMemory[voiceName] = ok ? 'working' : 'broken';
             try { localStorage.setItem('feist_voiceStatus', JSON.stringify(voiceStatusMemory)); } catch(e) {}
+            updateStatusDot(dot, spkr, voiceName);
         };
 
-        row.append(label, select, preview);
+        row.append(label, picker, dot, preview);
         container.appendChild(row);
     });
+}
+
+
+let readerVpSpeaker = null;
+let readerVpShowAll = false;
+
+function openReaderVoicePicker(spkr) {
+    readerVpSpeaker = spkr;
+    readerVpShowAll = false;
+    const title = document.getElementById('vpTitle');
+    if(title) title.textContent = 'Voice for ' + (spkr === 'narrator' ? 'Narrator' : spkr);
+    renderReaderVoicePicker();
+    document.getElementById('voicePickerBackdrop')?.classList.add('open');
+    document.getElementById('voicePicker')?.classList.add('open');
+}
+
+function closeVoicePicker() {
+    document.getElementById('voicePickerBackdrop')?.classList.remove('open');
+    document.getElementById('voicePicker')?.classList.remove('open');
+    readerVpSpeaker = null;
+}
+
+function renderReaderVoicePicker() {
+    const body = document.getElementById('vpBody');
+    if(!body) return;
+    body.innerHTML = '';
+    const available = getAvailableVoices();
+    if(!readerVpSpeaker || !available.length) {
+        body.innerHTML = '<p style="color:#888;font-size:0.85rem;">Loading voices…</p>';
+        return;
+    }
+    const groups = {};
+    available.forEach(v => {
+        const locale = String(v.Locale || '');
+        const country = locale.includes('-') ? locale.split('-').slice(1).join('-') : (locale || 'Other');
+        const key = [country, v.accent || locale || 'Other'].filter(Boolean).join(' — ');
+        (groups[key] || (groups[key] = [])).push(v);
+    });
+    const keys = Object.keys(groups).sort((a,b)=>a.localeCompare(b));
+    const visible = readerVpShowAll ? keys : keys.slice(0,12);
+    visible.forEach(key => {
+        const head = document.createElement('div');
+        head.className = 'vp-group-head';
+        head.textContent = key;
+        body.appendChild(head);
+        groups[key].forEach(v => {
+            const row = document.createElement('div');
+            row.className = 'vp-voice-row';
+            const main = document.createElement('div');
+            main.className = 'vp-voice-main';
+            const selected = voiceMapping[readerVpSpeaker] === v.ShortName;
+            main.innerHTML = '<span class="vn' + (selected ? ' selected' : '') + '">' + cleanVoiceActorName(v) + '</span><span class="va">' + [v.Gender,v.Locale].filter(Boolean).join(' · ') + '</span>';
+            main.onclick = () => { setSpeakerVoice(readerVpSpeaker, v.ShortName); closeVoicePicker(); };
+            const dot = document.createElement('span');
+            dot.style.cssText = 'width:10px;height:10px;border-radius:50%;background:#666;display:inline-block;margin:0 6px;';
+            updateStatusDot(dot, readerVpSpeaker, v.ShortName);
+            const test = document.createElement('button');
+            test.className = 'vp-test-btn';
+            test.textContent = '🔊 Test';
+            test.onclick = async e => {
+                e.stopPropagation();
+                test.textContent = '⏳';
+                const ok = await previewVoice(v.ShortName, readerVpSpeaker);
+                voiceStatusMemory[v.ShortName] = ok ? 'working' : 'broken';
+                try { localStorage.setItem('feist_voiceStatus', JSON.stringify(voiceStatusMemory)); } catch(err) {}
+                updateStatusDot(dot, readerVpSpeaker, v.ShortName);
+                test.textContent = ok ? '✓ Test' : '✗ Test';
+                setTimeout(()=>{ test.textContent='🔊 Test'; },1400);
+            };
+            row.append(main,dot,test);
+            body.appendChild(row);
+        });
+    });
+    if(!readerVpShowAll && keys.length > visible.length) {
+        const more = document.createElement('button');
+        more.className = 'vp-showmore';
+        more.textContent = 'Show ' + (keys.length-visible.length) + ' more country/accent groups ▾';
+        more.onclick = () => { readerVpShowAll=true; renderReaderVoicePicker(); };
+        body.appendChild(more);
+    }
 }
 
 // ==================== VOICE PREVIEW ====================
