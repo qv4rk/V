@@ -748,6 +748,28 @@ function renderVoiceMapping() {
 let readerVpSpeaker = null;
 let readerVpShowAll = false;
 
+function voiceLocaleLabels(locale) {
+    const raw = String(locale || '').trim();
+    if(!raw) return { country: 'Unknown', language: 'Unknown' };
+    const normalized = raw.replace('_', '-');
+    const parts = normalized.split('-');
+    const languageCode = parts[0].toLowerCase();
+    const regionCode = parts.length > 1 ? parts[1].toUpperCase() : '';
+    let language = languageCode.toUpperCase();
+    let country = regionCode || 'Unknown';
+    try {
+        if(typeof Intl !== 'undefined' && Intl.DisplayNames) {
+            const languageNames = new Intl.DisplayNames(['en'], {type:'language'});
+            language = languageNames.of(languageCode) || language;
+            if(regionCode) {
+                const regionNames = new Intl.DisplayNames(['en'], {type:'region'});
+                country = regionNames.of(regionCode) || country;
+            }
+        }
+    } catch(e) {}
+    return { country, language };
+}
+
 function openReaderVoicePicker(spkr) {
     readerVpSpeaker = spkr;
     readerVpShowAll = false;
@@ -775,9 +797,8 @@ function renderReaderVoicePicker() {
     }
     const groups = {};
     available.forEach(v => {
-        const locale = String(v.Locale || '');
-        const country = locale.includes('-') ? locale.split('-').slice(1).join('-') : (locale || 'Other');
-        const key = [country, v.accent || locale || 'Other'].filter(Boolean).join(' — ');
+        const labels = voiceLocaleLabels(v.Locale);
+        const key = labels.country + ' — ' + labels.language;
         (groups[key] || (groups[key] = [])).push(v);
     });
     const keys = Object.keys(groups).sort((a,b)=>a.localeCompare(b));
@@ -793,7 +814,8 @@ function renderReaderVoicePicker() {
             const main = document.createElement('div');
             main.className = 'vp-voice-main';
             const selected = voiceMapping[readerVpSpeaker] === v.ShortName;
-            main.innerHTML = '<span class="vn' + (selected ? ' selected' : '') + '">' + cleanVoiceActorName(v) + '</span><span class="va">' + [v.Gender,v.Locale].filter(Boolean).join(' · ') + '</span>';
+            const labels = voiceLocaleLabels(v.Locale);
+            main.innerHTML = '<span class="vn' + (selected ? ' selected' : '') + '">' + cleanVoiceActorName(v) + '</span><span class="va">' + [v.Gender, labels.country, labels.language].filter(Boolean).join(' · ') + '</span>';
             main.onclick = () => { setSpeakerVoice(readerVpSpeaker, v.ShortName); closeVoicePicker(); };
             const dot = document.createElement('span');
             dot.style.cssText = 'width:10px;height:10px;border-radius:50%;background:#666;display:inline-block;margin:0 6px;';
@@ -818,7 +840,7 @@ function renderReaderVoicePicker() {
     if(!readerVpShowAll && keys.length > visible.length) {
         const more = document.createElement('button');
         more.className = 'vp-showmore';
-        more.textContent = 'Show ' + (keys.length-visible.length) + ' more country/accent groups ▾';
+        more.textContent = 'Show ' + (keys.length-visible.length) + ' more country/language groups ▾';
         more.onclick = () => { readerVpShowAll=true; renderReaderVoicePicker(); };
         body.appendChild(more);
     }
