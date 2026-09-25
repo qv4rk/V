@@ -1,16 +1,12 @@
-# FeistTech Reading Room — portable extension prototype
+# FeistTech Reading Room extension v0.2
 
-Manifest V3 browser extension prototype.
+Kiwi test build.
 
-## Current behavior
-- Reads paragraph text from the current page.
+- Select any open HTTP/HTTPS tab.
 - Choose 1, 2, or 3 narrators.
-- Narrators rotate once per paragraph: A; A/B; or A/B/C.
-- Uses browser speech synthesis for the first portable prototype.
-- Stop control cancels current narration.
+- Narrators rotate by paragraph.
+- The extension models the page as sections of three paragraphs for later MP3 export/merge.
+- Voice labels hide raw locale codes and translate locale into readable language/country when the browser exposes it.
 
-## Load unpacked
-Open your Chromium browser's Extensions page, enable Developer mode, choose **Load unpacked**, and select this folder.
-
-## Next integration
-Port the Reading Room Edge-TTS voice catalog/synthesis adapter into a shared core, add readable country/language grouping, RSVP synchronization, paragraph highlighting, pause/resume, and an embeddable website module.
+## Audio export plan
+The current browser SpeechSynthesis API plays audio but does not expose encoded MP3 bytes. The next engine step is to reuse Reading Room's working Edge-TTS synthesis path. That gives us the same per-section MP3 download architecture as the main Reading Room: three-paragraph section files, then page-level merge/export.
