@@ -175,11 +175,18 @@ async function synthesizeSegmentAudio(text, voice, opts) {
     if(!chunks.length) return null;
     const blobs = [];
     for(const chunk of chunks) {
-        const audio = await synthesizeEdgeChunk(chunk, voice, opts);
-        if(audio) blobs.push(new Blob([audio], {type:'audio/mp3'}));
-        else console.warn('Dropped a TTS chunk with no audio after retry:', chunk.slice(0,60));
+        // Use the exact EdgeTTS synthesis path proven by the voice-preview button.
+        try {
+            const tts = new window.EdgeTTS(String(chunk), String(voice || 'en-US-AriaNeural'), opts || {});
+            const result = await tts.synthesize();
+            if(!result?.audio?.byteLength) throw new Error('NoAudioReceived');
+            blobs.push(new Blob([result.audio], {type:'audio/mp3'}));
+        } catch(e) {
+            console.warn('Edge-TTS chunk failed:', e?.message || e, chunk.slice(0,60));
+            return null;
+        }
     }
-    return blobs.length ? new Blob(blobs, {type:'audio/mp3'}) : null;
+    return new Blob(blobs, {type:'audio/mp3'});
 }
 
 // Lookahead Cache for seamless pre-buffering
