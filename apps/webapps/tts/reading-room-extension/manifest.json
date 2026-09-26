@@ -1,11 +1,1 @@
-{
-  "manifest_version": 3,
-  "name": "FeistTech Reading Room",
-  "version": "0.2.0",
-  "description": "Read webpage paragraphs with one, two, or three alternating narrators.",
-  "permissions": ["tabs", "activeTab", "scripting", "storage"],
-  "host_permissions": ["<all_urls>"],
-  "action": {"default_title": "Open Reading Room", "default_popup": "popup.html"},
-  "background": {"service_worker": "background.js"},
-  "content_scripts": [{"matches": ["<all_urls>"], "js": ["content.js"], "run_at": "document_idle"}]
-}
+{"manifest_version":3,"name":"FeistTech Reading Room","version":"0.3.0","description":"Portable Reading Room for webpages, Google Docs, YouTube transcripts, pasted text and files.","permissions":["tabs","activeTab","scripting","storage"],"host_permissions":["<all_urls>"],"action":{"default_title":"Open Reading Room","default_popup":"popup.html"},"background":{"service_worker":"background.js"},"content_scripts":[{"matches":["<all_urls>"],"js":["content.js"],"run_at":"document_idle"}]}
