@@ -9,8 +9,8 @@
   const KEY_PREFIX = CONFIG.storagePrefix || 'unified_';
 
   const LOG_KEY = KEY_PREFIX + 'feisttech_met_daily_log';
-  const CAP_KEY = KEY_PREFIX + 'feisttech_met_daily_cap';
-  const CAP_MIGRATION_KEY = KEY_PREFIX + 'feisttech_met_cap_150_reviewed';
+  const LEGACY_CAP_KEY = KEY_PREFIX + 'feisttech_met_daily_cap';
+  const CAP_KEY = KEY_PREFIX + 'feisttech_met_daily_cap_user_v2';
   const QUICKADD_KEY = KEY_PREFIX + 'feisttech_met_accessible_quickadd';
   const QUICKADD_CACHE_KEY = KEY_PREFIX + 'feisttech_met_accessible_quickadd_cache';
   const METHIO_KEY = KEY_PREFIX + 'feisttech_met_methioninase_log';
@@ -75,17 +75,17 @@
     } catch (e) { logByDay = {}; }
     log = logByDay[viewDate] || (logByDay[viewDate] = []);
 
-    // Older builds showed 150 mg by default. A saved 150 cannot be
-    // distinguished from that legacy value, so ask once for confirmation.
-    // Food and methioninase logs use separate keys and are untouched.
+    // The old key could contain the former 150 mg preset. Only a value
+    // explicitly saved under the new key can display 150 mg. Preserve
+    // other existing personal limits; food logs retain their own key.
     let savedCap = localStorage.getItem(CAP_KEY);
-    if (savedCap !== null && Number(savedCap) === 150 &&
-        localStorage.getItem(CAP_MIGRATION_KEY) !== '1') {
-      localStorage.removeItem(CAP_KEY);
-      savedCap = null;
-    }
-    if (localStorage.getItem(CAP_MIGRATION_KEY) !== '1') {
-      localStorage.setItem(CAP_MIGRATION_KEY, '1');
+    if (savedCap === null) {
+      const legacy = localStorage.getItem(LEGACY_CAP_KEY);
+      const legacyNumber = legacy === null ? NaN : Number(legacy);
+      if (Number.isFinite(legacyNumber) && legacyNumber > 0 && legacyNumber !== 150) {
+        savedCap = legacy;
+        localStorage.setItem(CAP_KEY, legacy);
+      }
     }
     const cap = savedCap === null ? NaN : Number(savedCap);
     if (Number.isFinite(cap) && cap > 0) dailyCap = cap;
