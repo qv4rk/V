@@ -42,7 +42,7 @@ body {
 
 /* ── Nav ── */
 .site-nav {
-  position: sticky; top: 0; z-index: 50;
+  position: relative; z-index: 50;
   background: rgba(5,8,16,.97);
   border-bottom: 1px solid var(--border);
   backdrop-filter: blur(12px);
@@ -215,12 +215,14 @@ article {
   #tts-voice { display: none; }
 }
 </style>
+<script src="/site.js" defer></script>
 </head>
 <body>
 
 <nav class="site-nav">
-  <a href="../index.html" class="nav-btn">← Home</a>
-  <a href="../Manifold%20Atlas.html#node-n02" class="nav-btn atlas">◆ View on Atlas</a>
+  <a href="/reader/?article=n02" class="nav-btn" title="Listen or download the MP3">📖 Reading Room</a>
+  <a href="/sky/#node-n02" class="nav-btn atlas" title="Globe, date dial and the sky from this place on that day">🌍 Globe &amp; sky</a>
+  <a href="/atlas/?event=n02" class="nav-btn">🗺 Street map</a>
   <span class="nav-spacer"></span>
   <button class="nav-btn" onclick="launchRSVP()">⚡ RSVP</button>
 </nav>

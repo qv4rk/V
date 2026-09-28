@@ -26,5 +26,6 @@
     "qing-dynasty",
     "chinese-workers",
     "tanka"
-  ]
+  ],
+  "voice": "zh-CN-XiaoxiaoNeural"
 }

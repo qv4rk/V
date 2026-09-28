@@ -173,6 +173,9 @@ window.MA = window.MA || {};
       if (this.sky && typeof this.sky.zoom === 'number') {
         params.set('zoom', this.sky.zoom.toFixed(2));
       }
+      if (this.activeEclipse != null && this.eclipses) {
+        params.set('eclipse', this.eclipses[this.activeEclipse].iso.slice(0, 10));
+      }
       const url = window.location.pathname + '?' + params.toString() + window.location.hash;
       history.replaceState(history.state, '', url);
     }
@@ -491,6 +494,20 @@ window.MA = window.MA || {};
         });
       }
 
+      this._bindEclipses();
+
+      // Star figures: Western → Chinese → both
+      const cultures = ['western', 'chinese', 'both'];
+      const cBtn = document.getElementById('culture-btn');
+      try { MA.skyCulture = localStorage.getItem('ma-sky-culture') || 'western'; } catch (e) { MA.skyCulture = 'western'; }
+      const showCulture = () => { if (cBtn) cBtn.textContent = '✶ ' + MA.skyCulture.toUpperCase(); };
+      showCulture();
+      if (cBtn) cBtn.addEventListener('click', () => {
+        MA.skyCulture = cultures[(cultures.indexOf(MA.skyCulture) + 1) % cultures.length];
+        try { localStorage.setItem('ma-sky-culture', MA.skyCulture); } catch (e) {}
+        showCulture();
+      });
+
       document.getElementById('play-btn').addEventListener('click', () => {
         this.playing = !this.playing;
         document.getElementById('play-btn').textContent = this.playing ? '⏸' : '▶';
@@ -589,7 +606,12 @@ window.MA = window.MA || {};
           <div class="nl-date">${fmtArticleDate(art.date)}</div>
           <div class="nl-title">${art.title}</div>
           <div class="nl-loc">${(art.location.name||'').toUpperCase()}</div>
+          <div class="nl-go">
+            <a href="/reader/?article=${encodeURIComponent(art.id)}" title="Read and listen in the Reading Room" aria-label="Reading Room">📖</a>
+            <button type="button" title="Globe, date dial and sky from this place" aria-label="Globe and sky">🌍</button>
+          </div>
         `;
+        li.querySelector('.nl-go a').addEventListener('click', ev => ev.stopPropagation());
         li.addEventListener('click', () => {
           // If a search is active, reading Prev/Next should walk the
           // filtered result set, not the full chronological list.
@@ -670,15 +692,11 @@ window.MA = window.MA || {};
         : '';
       bodyEl.innerHTML = excerptHtml + mdToHtml(art.content || '');
       // Article link
-      if (art.article_url) {
-        const link = document.createElement('a');
-        link.href = art.article_url;
-        link.target = '_blank';
-        link.rel = 'noopener';
-        link.className = 'article-link-btn';
-        link.textContent = 'Read Full Article with TTS →';
-        bodyEl.appendChild(link);
-      }
+      const listen = document.createElement('a');
+      listen.href = '/reader/?article=' + encodeURIComponent(art.id);
+      listen.className = 'article-link-btn';
+      listen.textContent = '📖 Open in the Reading Room (listen · download MP3) →';
+      bodyEl.appendChild(listen);
 
       // Connections
       const chipsHost = root.querySelector('.conn-chips');
@@ -705,8 +723,97 @@ window.MA = window.MA || {};
     }
 
     /* ── Master time setter ── */
+    /* ── Eclipses: the full 2000 BCE – 3000 CE catalogue in data/eclipses.json
+       (built by tools/build_eclipses.js with Astronomy Engine). Picking one
+       sets the dial to the exact minute of greatest eclipse, turns the globe
+       to where the Moon's shadow falls, and stands the sky's observer there. ── */
+    _bindEclipses() {
+      const sel = document.getElementById('ecl-select');
+      if (!sel) return;
+      this.eclipses = null;
+      const load = () => this.eclipses ? Promise.resolve(this.eclipses)
+        : fetch('/data/eclipses.json').then(r => r.json()).then(rows => {
+            this.eclipses = rows.map(r => ({ type: r[0], kind: r[1], iso: r[2], lat: r[3], lon: r[4],
+              jd: MA.jd(new Date(r[2])) }));
+            return this.eclipses;
+          });
+      const label = e => {
+        const d = MA.dj(e.jd), y = d.getUTCFullYear();
+        const yr = y <= 0 ? (1 - y) + ' BCE' : String(y);
+        const md = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
+        return md + ', ' + yr + ' · ' + e.kind + ' ' + (e.type === 'S' ? 'solar' : 'lunar');
+      };
+      // Show the eclipses around the dial's current date (the list would be
+      // 24,000 long otherwise).
+      const fill = () => load().then(list => {
+        let i = list.findIndex(e => e.jd >= this.jd - 1);
+        if (i < 0) i = list.length - 1;
+        const from = Math.max(0, i - 20), to = Math.min(list.length, i + 40);
+        sel.innerHTML = '<option value="">Pick an eclipse…</option>' + list.slice(from, to)
+          .map((e, k) => '<option value="' + (from + k) + '">' + label(e) + '</option>').join('');
+        if (this.activeEclipse != null) sel.value = String(this.activeEclipse);
+      });
+      sel.addEventListener('focus', fill);
+      sel.addEventListener('mousedown', fill);
+      sel.addEventListener('change', () => { if (sel.value !== '') this.showEclipse(+sel.value); });
+      const step = dir => load().then(list => {
+        let i = this.activeEclipse != null ? this.activeEclipse + dir
+          : dir > 0 ? list.findIndex(e => e.jd > this.jd + 0.01)
+          : list.length - 1 - [...list].reverse().findIndex(e => e.jd < this.jd - 0.01);
+        if (i >= 0 && i < list.length) this.showEclipse(i);
+      });
+      document.getElementById('ecl-prev').addEventListener('click', () => step(-1));
+      document.getElementById('ecl-next').addEventListener('click', () => step(1));
+
+      const iso = new URLSearchParams(window.location.search).get('eclipse');
+      if (iso) load().then(list => {
+        const i = list.findIndex(e => e.iso.slice(0, 10) === iso.slice(0, 10));
+        if (i >= 0) this.showEclipse(i);
+      });
+    }
+
+    showEclipse(i) {
+      const e = this.eclipses[i];
+      this.activeEclipse = i;
+      this.playing = false;
+      document.getElementById('play-btn').textContent = '▶';
+      this.setDate(e.jd);
+      this.earth.setEclipse(e);
+      // Solar: stand under the shadow. Lunar: stand where the Moon is overhead
+      // (opposite the Sun), the middle of the half of Earth that sees it.
+      let lat = e.lat, lon = e.lon;
+      if (lat == null) {
+        const sub = this.earth._subsolar();
+        if (sub) { lat = -sub[1]; lon = sub[0] > 0 ? sub[0] - 180 : sub[0] + 180; }
+      }
+      if (lat != null) {
+        if (this.view === 'atrium') this.setView('atlas');
+        this.earth.setSpin(false);
+        this.earth.flyTo(lat, lon);
+        const name = (e.type === 'S' ? 'SOLAR' : 'LUNAR') + ' ECLIPSE · ' + e.kind.toUpperCase();
+        this.sky.setObserver(lat, lon, name);
+        if (this.skyBg) this.skyBg.setObserver(lat, lon, name);
+      }
+      const sel = document.getElementById('ecl-select');
+      if (sel && ![...sel.options].some(o => o.value === String(i))) {
+        const o = document.createElement('option');
+        o.value = String(i);
+        o.textContent = MA.fmtDate ? MA.fmtDate(e.jd) + ' · ' + e.kind : e.iso;
+        sel.appendChild(o);
+      }
+      if (sel) sel.value = String(i);
+      const url = new URL(window.location.href);
+      url.searchParams.set('eclipse', e.iso.slice(0, 10));
+      history.replaceState(history.state, '', url);
+    }
+
     setDate(jdt) {
       this.jd = jdt;
+      if (this.activeEclipse != null && this.eclipses &&
+          Math.abs(this.eclipses[this.activeEclipse].jd - jdt) > 0.5) {
+        this.activeEclipse = null;
+        this.earth.setEclipse(null);
+      }
       this.atriumDial.setDate(jdt);
       this.cornerDial.setDate(jdt);
       this.earth.setDate(jdt);

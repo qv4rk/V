@@ -129,6 +129,32 @@ window.MA = window.MA || {};
     return { x: pp.x - ep.x, y: pp.y - ep.y, z: pp.z - ep.z, dist: 0 };
   };
 
+  /* Precise positions via Astronomy Engine (vendor/astronomy-engine), when
+     loaded.  Everything is returned in the J2000 equatorial frame, the same
+     frame as the star catalogue, so bodies, stars and the observer's zenith
+     all line up for any date -- including thousands of years back, where
+     precession would otherwise shift the sky by tens of degrees. */
+  MA.precise = function(jdt, lat, lon) {
+    const A = window.Astronomy;
+    if (!A) return null;
+    const t = A.MakeTime(MA.dj(jdt));
+    const obs = new A.Observer(lat, lon, 0);
+    const toDeg = e => ({ ra: e.ra * 15, dec: e.dec, dist: e.dist });
+    const zen = A.EquatorFromVector(A.RotateVector(A.Rotation_HOR_EQJ(t, obs),
+      A.VectorFromHorizon(new A.Spherical(90, 0, 1), t, '')));
+    const body = b => toDeg(A.Equator(b, t, obs, false, true));
+    return {
+      zenith: toDeg(zen),
+      sun: body(A.Body.Sun),
+      moon: body(A.Body.Moon),
+      moonPhase: A.MoonPhase(t) / 360,
+      planets: {
+        mer: body(A.Body.Mercury), ven: body(A.Body.Venus), mar: body(A.Body.Mars),
+        jup: body(A.Body.Jupiter), sat: body(A.Body.Saturn)
+      }
+    };
+  };
+
   // Ecliptic to equatorial
   MA.ecl2eq = function(ecl, jdt) {
     const T = MA.julianCenturies(jdt);

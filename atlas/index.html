@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Atlas · FeistTech</title>
+<meta name="description" content="Every FeistTech article on one map: a globe that becomes a street map as you zoom in.">
+<link rel="stylesheet" href="/vendor/maplibre-gl-5/maplibre-gl.css">
+<link rel="stylesheet" href="/vendor/google-fonts/fonts.css">
+<style>
+  :root {
+    --bg: #07080b; --panel: rgba(12, 14, 19, .94); --line: #23262f;
+    --text: #e4e2dc; --muted: #8d9099; --gold: #c9a84c;
+    --serif: "Cormorant Garamond", Georgia, serif;
+    --mono: "Space Mono", ui-monospace, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); font-family: var(--sans); overflow: hidden; }
+  #map { position: fixed; inset: 0; }
+
+  .hud {
+    position: fixed; left: 12px; bottom: 12px; z-index: 5; max-width: calc(100vw - 24px);
+    background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
+    padding: 8px 12px; font-size: 12px; color: var(--muted);
+    display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+  }
+  .hud b { color: var(--gold); font-family: var(--mono); font-weight: 400; font-size: 11px; letter-spacing: .1em; }
+  .hud button { background: none; border: 1px solid var(--line); color: var(--text); border-radius: 5px; padding: 3px 8px; font-size: 12px; cursor: pointer; }
+  .hud button:hover { border-color: var(--gold); }
+  .legend { display: none; gap: 8px; align-items: center; }
+  .legend.on { display: flex; }
+  .legend i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 3px; vertical-align: -1px; }
+
+  .panel {
+    position: fixed; z-index: 6; top: 12px; right: 12px; bottom: 12px; width: 380px;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+    display: flex; flex-direction: column; transform: translateX(calc(100% + 24px));
+    transition: transform .3s cubic-bezier(.2,.8,.2,1);
+  }
+  .panel.open { transform: none; }
+  .panel header { display: flex; justify-content: space-between; align-items: start; gap: 8px; padding: 16px 16px 8px; }
+  .panel .meta { font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--gold); }
+  .panel h1 { font-family: var(--serif); font-weight: 400; font-size: 26px; line-height: 1.15; margin: 6px 0 0; }
+  .panel .place { color: var(--muted); font-size: 12px; margin-top: 6px; }
+  .panel .close { background: none; border: 0; color: var(--muted); font-size: 18px; cursor: pointer; padding: 2px 6px; }
+  .panel .body { padding: 8px 16px 16px; overflow: auto; font-size: 14px; line-height: 1.6; }
+  .actions { display: flex; gap: 8px; margin: 14px 0; }
+  .actions a {
+    flex: 1; text-align: center; text-decoration: none; font-size: 13px; padding: 8px 10px; border-radius: 6px;
+    border: 1px solid var(--line); color: var(--text);
+  }
+  .actions a.primary { background: var(--gold); border-color: var(--gold); color: #111; }
+  .links h2 { font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-weight: 400; margin: 18px 0 6px; }
+  .links a { display: block; color: var(--text); text-decoration: none; padding: 6px 0; border-top: 1px solid var(--line); font-size: 13px; }
+  .links a:hover { color: var(--gold); }
+
+  .maplibregl-ctrl-group { background: var(--panel) !important; border: 1px solid var(--line); }
+  .maplibregl-ctrl-group button + button { border-top: 1px solid var(--line) !important; }
+  .maplibregl-ctrl-icon { filter: invert(.85); }
+  .maplibregl-ctrl-attrib { background: #0009 !important; color: #888; }
+  .maplibregl-ctrl-attrib a { color: #aaa; }
+
+  @media (max-width: 640px) {
+    .panel { top: auto; left: 0; right: 0; bottom: 0; width: auto; max-height: 62vh; border-radius: 14px 14px 0 0; transform: translateY(105%); }
+    .hud { bottom: auto; top: 30px; font-size: 11px; }
+  }
+</style>
+<script src="/site.js" data-mode="tab" defer></script>
+</head>
+<body>
+<div id="map" aria-label="Map of FeistTech articles"></div>
+
+<div class="hud" id="hud">
+  <b>THE ATLAS</b>
+  <span id="hint">Drag to spin · scroll or pinch to zoom in to street level</span>
+  <button id="toGaza" type="button">Gaza damage</button>
+  <span class="legend" id="legend">
+    <span><i style="background:#c0392b"></i>Destroyed</span>
+    <span><i style="background:#e0793a"></i>Severe</span>
+    <span><i style="background:#d4b83f"></i>Moderate</span>
+    <span><i style="background:#8a9a5b"></i>Possible</span>
+  </span>
+</div>
+
+<aside class="panel" id="panel" aria-live="polite">
+  <header>
+    <div>
+      <div class="meta" id="pMeta"></div>
+      <h1 id="pTitle"></h1>
+      <div class="place" id="pPlace"></div>
+    </div>
+    <button class="close" id="pClose" aria-label="Close">✕</button>
+  </header>
+  <div class="body" id="pBody"></div>
+</aside>
+
+<script src="/vendor/maplibre-gl-5/maplibre-gl.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  var DAMAGE_COLORS = ['match', ['get', 'cls'], 1, '#c0392b', 2, '#e0793a', 3, '#d4b83f', 4, '#8a9a5b', '#59606e'];
+  var BUILDING_ZOOM = 14;
+
+  var map = new maplibregl.Map({
+    container: 'map',
+    style: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
+    center: [30, 30], zoom: 1.6,
+    hash: 'view',
+    attributionControl: { compact: true },
+    maxPitch: 70
+  });
+  map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'bottom-right');
+
+  var events = [], byId = {};
+  var panel = document.getElementById('panel');
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function dateLabel(d) {
+    if (!d || !d.year) return '';
+    var y = d.year < 0 ? (-d.year) + ' BCE' : String(d.year);
+    return d.month > 1 || d.day > 1
+      ? new Date(Date.UTC(2000, d.month - 1, d.day)).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' }) + ', ' + y
+      : y;
+  }
+
+  // ── Article nodes: one layer, so the globe and the flat map light the same points ──
+  function addEventLayers() {
+    var points = { type: 'FeatureCollection', features: events.map(function (e) {
+      return { type: 'Feature', id: events.indexOf(e),
+        geometry: { type: 'Point', coordinates: [e.location.lon, e.location.lat] },
+        properties: { id: e.id, title: e.title.split(/[:,]/)[0], color: e.nodeColor || '#c9a84c' } };
+    }) };
+    var lines = { type: 'FeatureCollection', features: [] };
+    events.forEach(function (e) {
+      (e.connections || []).forEach(function (cid) {
+        var o = byId[cid];
+        if (o && e.id < cid) lines.features.push({ type: 'Feature', properties: {},
+          geometry: { type: 'LineString', coordinates: [[e.location.lon, e.location.lat], [o.location.lon, o.location.lat]] } });
+      });
+    });
+
+    map.addSource('links', { type: 'geojson', data: lines });
+    map.addLayer({ id: 'links', type: 'line', source: 'links',
+      paint: { 'line-color': '#c9a84c', 'line-width': 1,
+        'line-opacity': ['interpolate', ['linear'], ['zoom'], 2, 0.3, 8, 0.15, 11, 0] } });
+
+    map.addSource('events', { type: 'geojson', data: points });
+    map.addLayer({ id: 'event-glow', type: 'circle', source: 'events',
+      paint: { 'circle-color': ['get', 'color'], 'circle-blur': 1, 'circle-opacity': 0.55,
+        'circle-radius': ['interpolate', ['linear'], ['zoom'], 1, 12, 8, 22, 14, 30] } });
+    map.addLayer({ id: 'event-dot', type: 'circle', source: 'events',
+      paint: { 'circle-color': ['get', 'color'], 'circle-stroke-color': '#fff',
+        'circle-stroke-width': ['case', ['boolean', ['feature-state', 'active'], false], 2, 0.6],
+        'circle-radius': ['interpolate', ['linear'], ['zoom'], 1, 3.5, 8, 6, 14, 8] } });
+    map.addLayer({ id: 'event-label', type: 'symbol', source: 'events', minzoom: 3.5,
+      layout: { 'text-field': ['get', 'title'], 'text-size': 11, 'text-offset': [0, 1.2], 'text-anchor': 'top',
+        'text-font': ['Montserrat Medium', 'Open Sans Bold', 'Noto Sans Regular'] },
+      paint: { 'text-color': '#e4e2dc', 'text-halo-color': '#000', 'text-halo-width': 1.2 } });
+
+    map.on('click', 'event-dot', function (ev) { openEvent(ev.features[0].properties.id, true); });
+    map.on('mouseenter', 'event-dot', function () { map.getCanvas().style.cursor = 'pointer'; });
+    map.on('mouseleave', 'event-dot', function () { map.getCanvas().style.cursor = ''; });
+  }
+
+  var activeIdx = null;
+  function openEvent(id, push) {
+    var e = byId[id];
+    if (!e) return;
+    if (activeIdx !== null) map.setFeatureState({ source: 'events', id: activeIdx }, { active: false });
+    activeIdx = events.indexOf(e);
+    map.setFeatureState({ source: 'events', id: activeIdx }, { active: true });
+
+    document.getElementById('pMeta').textContent = [dateLabel(e.date), e.type].filter(Boolean).join(' · ');
+    document.getElementById('pTitle').textContent = e.title;
+    document.getElementById('pPlace').textContent = e.location.name || '';
+    var linked = (e.connections || []).map(function (c) { return byId[c]; }).filter(Boolean);
+    document.getElementById('pBody').innerHTML =
+      '<p>' + esc(e.excerpt) + '</p>' +
+      '<div class="actions"><a class="primary" href="/articles/' + esc(e.id) + '.html">Read</a>' +
+      '<a href="/reader/?article=' + encodeURIComponent(e.id) + '" title="Reading Room: listen or download MP3">📖 Listen</a>' +
+      '<a href="/sky/#node-' + encodeURIComponent(e.id) + '" title="Globe, date dial and the sky from this place on that day">🌍 Sky</a></div>' +
+      (linked.length ? '<div class="links"><h2>Connected</h2>' + linked.map(function (o) {
+        return '<a href="?event=' + encodeURIComponent(o.id) + '" data-event="' + esc(o.id) + '">' + esc(o.title) + '</a>';
+      }).join('') + '</div>' : '');
+    panel.classList.add('open');
+
+    if (push) {
+      var url = new URL(location.href);
+      url.searchParams.set('event', id);
+      history.pushState({ event: id }, '', url.pathname + url.search + location.hash);
+    }
+    var mobile = innerWidth <= 640;
+    map.flyTo({ center: [e.location.lon, e.location.lat], zoom: Math.max(map.getZoom(), 5.5), duration: 1600,
+      padding: mobile ? { bottom: innerHeight * 0.5 } : { right: 400 }, essential: true });
+  }
+  function closeEvent(push) {
+    panel.classList.remove('open');
+    if (activeIdx !== null) map.setFeatureState({ source: 'events', id: activeIdx }, { active: false });
+    activeIdx = null;
+    if (push) {
+      var url = new URL(location.href);
+      url.searchParams.delete('event');
+      history.pushState({}, '', url.pathname + url.search + location.hash);
+    }
+  }
+  document.getElementById('pClose').addEventListener('click', function () { closeEvent(true); });
+  document.getElementById('pBody').addEventListener('click', function (ev) {
+    var a = ev.target.closest('[data-event]');
+    if (a) { ev.preventDefault(); openEvent(a.dataset.event, true); }
+  });
+  addEventListener('popstate', function () {
+    var id = new URLSearchParams(location.search).get('event');
+    id ? openEvent(id, false) : closeEvent(false);
+  });
+
+  // ── Gaza: neighbourhood outlines at city zoom, buildings at street zoom ──
+  var loaded = {}, buildings = { type: 'FeatureCollection', features: [] }, neighbourhoods = null;
+
+  function addGazaLayers() {
+    map.addSource('hoods', { type: 'geojson', data: '/gaza-damage/data/neighborhood-overview.json' });
+    map.addLayer({ id: 'hood-line', type: 'line', source: 'hoods', minzoom: 9,
+      paint: { 'line-color': '#c9a84c', 'line-opacity': ['interpolate', ['linear'], ['zoom'], 9, 0.2, 13, 0.6], 'line-width': 1 } });
+    map.addLayer({ id: 'hood-label', type: 'symbol', source: 'hoods', minzoom: 11, maxzoom: BUILDING_ZOOM + 1,
+      layout: { 'text-field': ['get', 'name'], 'text-size': 12, 'text-font': ['Montserrat Medium', 'Open Sans Bold', 'Noto Sans Regular'] },
+      paint: { 'text-color': '#c9a84c', 'text-halo-color': '#000', 'text-halo-width': 1.2 } });
+
+    map.addSource('buildings', { type: 'geojson', data: buildings });
+    map.addLayer({ id: 'dmg', type: 'fill-extrusion', source: 'buildings', minzoom: BUILDING_ZOOM - 0.5,
+      paint: { 'fill-extrusion-color': DAMAGE_COLORS, 'fill-extrusion-height': ['get', 'h'], 'fill-extrusion-opacity': 0.85 } },
+      firstSymbolLayer());
+
+    fetch('/gaza-damage/data/neighborhood-overview.json').then(function (r) { return r.json(); })
+      .then(function (d) { neighbourhoods = d.features; syncBuildings(); });
+    map.on('moveend', syncBuildings);
+  }
+
+  function firstSymbolLayer() {
+    var layers = map.getStyle().layers;
+    for (var i = 0; i < layers.length; i++) if (layers[i].type === 'symbol') return layers[i].id;
+  }
+
+  function bboxOf(f) {
+    var xs = [], ys = [];
+    f.geometry.coordinates[0].forEach(function (c) { xs.push(c[0]); ys.push(c[1]); });
+    return [Math.min.apply(0, xs), Math.min.apply(0, ys), Math.max.apply(0, xs), Math.max.apply(0, ys)];
+  }
+
+  function syncBuildings() {
+    var z = map.getZoom();
+    document.getElementById('legend').classList.toggle('on', z >= 11 && inGaza());
+    if (!neighbourhoods || z < BUILDING_ZOOM) return;
+    var b = map.getBounds();
+    neighbourhoods.forEach(function (f) {
+      var slug = f.properties.slug, bb = bboxOf(f);
+      if (loaded[slug] || bb[2] < b.getWest() || bb[0] > b.getEast() || bb[3] < b.getSouth() || bb[1] > b.getNorth()) return;
+      loaded[slug] = true;
+      fetch('/gaza-damage/data/' + slug + '_buildings.geojson').then(function (r) { return r.json(); }).then(function (d) {
+        d.features.forEach(function (bf) {
+          var sites = bf.properties.damage_sites || [];
+          var cls = sites.length ? Math.min.apply(0, sites.map(function (s) { return s.latest_class || 9; })) : 0;
+          buildings.features.push({ type: 'Feature', geometry: bf.geometry,
+            properties: { cls: cls, h: cls === 1 ? 1.5 : (bf.properties.height_m || 9) } });
+        });
+        map.getSource('buildings').setData(buildings);
+      });
+    });
+  }
+
+  function inGaza() {
+    var c = map.getCenter();
+    return c.lng > 34.2 && c.lng < 34.6 && c.lat > 31.2 && c.lat < 31.62;
+  }
+
+  document.getElementById('toGaza').addEventListener('click', function () {
+    closeEvent(true);
+    map.flyTo({ center: [34.455, 31.515], zoom: 15.2, pitch: 55, bearing: -17, duration: 4000, essential: true });
+  });
+
+  function updateHint() {
+    var z = map.getZoom();
+    document.getElementById('hint').textContent = z < 5
+      ? 'Drag to spin · scroll or pinch to zoom in to street level'
+      : z < BUILDING_ZOOM ? 'Keep zooming for streets' + (inGaza() ? ' and buildings' : '') : 'Street level';
+  }
+  map.on('zoom', updateHint);
+  map.on('moveend', updateHint);
+  updateHint();
+
+  var dataReady = fetch('/data/events.json').then(function (r) { return r.json(); });
+  map.on('style.load', function () {
+    map.setProjection({ type: 'globe' });
+    if (map.setSky) map.setSky({ 'atmosphere-blend': ['interpolate', ['linear'], ['zoom'], 0, 1, 5, 1, 7, 0] });
+    addGazaLayers();
+    dataReady.then(function (evs) {
+      events = evs.filter(function (e) { return e.location && (e.location.lat || e.location.lon); });
+      events.forEach(function (e) { byId[e.id] = e; });
+      addEventLayers();
+      var id = new URLSearchParams(location.search).get('event');
+      if (id) openEvent(id, false);
+    });
+  });
+})();
+</script>
+</body>
+</html>

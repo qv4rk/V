@@ -22,5 +22,6 @@
     "resource-extraction",
     "qing-dynasty",
     "chinese-peasants"
-  ]
+  ],
+  "voice": "zh-CN-XiaoxiaoNeural"
 }

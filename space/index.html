@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Space · FeistTech</title>
+<meta name="description" content="Follow ʻOumuamua, satellites and the hypothetical Planet Nine, and watch any eclipse of the last 5,000 years from the side.">
+<link rel="stylesheet" href="/vendor/google-fonts/fonts.css">
+<style>
+  :root {
+    --panel: rgba(10, 12, 18, .9); --line: #262a35; --text: #e4e2dc; --muted: #8d9099;
+    --gold: #c9a84c; --cyan: #6fc3d8; --red: #e0664f;
+    --mono: "Space Mono", ui-monospace, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --serif: "Cormorant Garamond", Georgia, serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #020308; color: var(--text); font-family: var(--sans); }
+  canvas { display: block; }
+  #labels { position: fixed; inset: 0; pointer-events: none; overflow: hidden; }
+  .lbl { position: absolute; transform: translate(8px, -50%); font: 10px var(--mono); letter-spacing: .06em; white-space: nowrap; color: var(--muted); text-shadow: 0 0 4px #000; }
+  .lbl.hi { color: var(--gold); font-size: 11px; }
+  .lbl.spec { color: var(--red); }
+
+  .tabs {
+    position: fixed; top: 34px; left: 50%; transform: translateX(-50%); z-index: 5;
+    display: flex; gap: 2px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 3px;
+    max-width: calc(100vw - 24px); overflow-x: auto;
+  }
+  .tabs button { background: none; border: 0; color: var(--muted); font-size: 12px; padding: 6px 11px; border-radius: 6px; cursor: pointer; white-space: nowrap; }
+  .tabs button.on { background: #ffffff12; color: var(--gold); }
+
+  .panel {
+    position: fixed; z-index: 5; left: 12px; top: 84px; width: 330px; max-height: calc(100vh - 170px); overflow: auto;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; font-size: 13px; line-height: 1.55;
+  }
+  .panel h1 { font: 400 22px/1.2 var(--serif); margin: 0 0 6px; }
+  .panel h2 { font: 10px var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--gold); margin: 16px 0 6px; font-weight: 400; }
+  .panel p { margin: 0 0 8px; color: #c9c7c0; }
+  .panel .muted { color: var(--muted); font-size: 12px; }
+  .readout { font: 11px/1.7 var(--mono); color: var(--text); }
+  .readout b { color: var(--gold); font-weight: 400; }
+  .tag { display: inline-block; font: 9px var(--mono); letter-spacing: .1em; padding: 2px 6px; border-radius: 3px; margin-right: 4px; }
+  .tag.known { background: #6fc3d822; color: var(--cyan); }
+  .tag.spec { background: #e0664f22; color: var(--red); }
+  label.row { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; align-items: center; font-size: 12px; color: var(--muted); margin: 8px 0; }
+  label.row input[type=range] { grid-column: 1 / -1; width: 100%; accent-color: var(--red); }
+  label.row output { font: 11px var(--mono); color: var(--text); }
+  select, .btn { background: #0b0d12; color: var(--text); border: 1px solid var(--line); border-radius: 6px; font-size: 12px; padding: 6px 8px; }
+  .btn { cursor: pointer; }
+  .btn:hover { border-color: var(--gold); }
+  a { color: var(--gold); }
+
+  .timebar {
+    position: fixed; z-index: 5; left: 50%; bottom: 12px; transform: translateX(-50%); width: min(720px, calc(100vw - 24px));
+    background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px;
+    display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+  }
+  .timebar .date { font: 13px var(--mono); color: var(--gold); min-width: 190px; }
+  .timebar .speeds { display: flex; gap: 4px; flex-wrap: wrap; }
+  .timebar .speeds .btn.on { border-color: var(--gold); color: var(--gold); }
+  .timebar input[type=range] { flex: 1; min-width: 160px; accent-color: var(--gold); }
+
+  @media (max-width: 700px) {
+    .panel { top: auto; bottom: 110px; left: 8px; right: 8px; width: auto; max-height: 34vh; }
+    .panel.collapsed .body { display: none; }
+    .tabs { top: 30px; }
+  }
+</style>
+<script type="importmap">{ "imports": { "three": "/vendor/three/three.module.min.js" } }</script>
+<script src="/vendor/astronomy-engine/astronomy-engine.min.js"></script>
+<script src="/vendor/satellite-js/satellite.min.js"></script>
+<script src="/vendor/topojson-client/topojson-client.min.js"></script>
+<script src="/site.js" data-mode="tab" defer></script>
+</head>
+<body>
+<nav class="tabs" id="tabs" aria-label="Views">
+  <button data-view="system">Solar system</button>
+  <button data-view="oumuamua">ʻOumuamua</button>
+  <button data-view="nine">Planet Nine</button>
+  <button data-view="eclipse">Eclipse side view</button>
+  <button data-view="satellites">Satellites</button>
+</nav>
+<aside class="panel" id="panel"></aside>
+<div id="labels"></div>
+<div class="timebar" id="timebar">
+  <span class="date" id="date">—</span>
+  <button class="btn" id="play" aria-label="Play or pause">⏸</button>
+  <div class="speeds" id="speeds"></div>
+  <input type="range" id="scrub" hidden>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from '/vendor/three/OrbitControls.js';
+
+const A = window.Astronomy;
+const DEG = Math.PI / 180;
+const AU_KM = 149597870.7, RE_KM = 6371, AU_RE = AU_KM / RE_KM;
+const RM_RE = 1737.4 / RE_KM, RS_RE = 696000 / RE_KM;
+
+// ── Renderer, camera, controls ──
+const renderer = new THREE.WebGLRenderer({ antialias: true, logarithmicDepthBuffer: true });
+renderer.setPixelRatio(Math.min(2, devicePixelRatio));
+renderer.setSize(innerWidth, innerHeight);
+document.body.prepend(renderer.domElement);
+const camera = new THREE.PerspectiveCamera(45, innerWidth / innerHeight, 0.01, 1e7);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+addEventListener('resize', () => {
+  renderer.setSize(innerWidth, innerHeight);
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+});
+
+let scene = new THREE.Scene();
+const labelsEl = document.getElementById('labels');
+let labels = [];
+function label(text, obj, cls) {
+  const el = document.createElement('div');
+  el.className = 'lbl ' + (cls || '');
+  el.textContent = text;
+  labelsEl.appendChild(el);
+  const l = { el, obj };
+  labels.push(l);
+  return l;
+}
+const _v = new THREE.Vector3();
+function drawLabels() {
+  for (const l of labels) {
+    l.obj.getWorldPosition(_v);
+    _v.project(camera);
+    const vis = _v.z < 1 && Math.abs(_v.x) < 1.1 && Math.abs(_v.y) < 1.1 && l.obj.visible !== false;
+    l.el.style.display = vis ? '' : 'none';
+    if (vis) {
+      l.el.style.left = ((_v.x + 1) / 2 * innerWidth) + 'px';
+      l.el.style.top = ((1 - _v.y) / 2 * innerHeight) + 'px';
+    }
+  }
+}
+
+// ── Coordinates ──
+// Astronomy Engine gives J2000 vectors with z toward the north pole of the
+// frame; three.js is y-up, so (x, y, z) -> (x, z, -y).
+const T3 = v => new THREE.Vector3(v.x, v.z, -v.y);
+const ECL = A.Rotation_EQJ_ECL();
+const toEcl = v => A.RotateVector(ECL, v);
+// Solar-system distances are compressed so Mercury (0.4 AU) and a
+// Planet Nine at hundreds of AU fit on one screen.
+const squash = r => 10 * Math.log2(1 + r / 0.4);
+function sysPos(v) {
+  const r = Math.hypot(v.x, v.y, v.z) || 1e-9;
+  const k = squash(r) / r;
+  return T3({ x: v.x * k, y: v.y * k, z: v.z * k });
+}
+
+// Keplerian orbit (ecliptic J2000) -> position in AU for anomaly
+function orbitPoint(el, E) {
+  let x, y;
+  if (el.e < 1) {
+    x = el.a * (Math.cos(E) - el.e);
+    y = el.a * Math.sqrt(1 - el.e * el.e) * Math.sin(E);
+  } else { // hyperbola: E is the hyperbolic anomaly H
+    x = el.a * (Math.cosh(E) - el.e);   // a < 0
+    y = -el.a * Math.sqrt(el.e * el.e - 1) * Math.sinh(E);
+  }
+  const cw = Math.cos(el.w * DEG), sw = Math.sin(el.w * DEG);
+  const cO = Math.cos(el.O * DEG), sO = Math.sin(el.O * DEG);
+  const ci = Math.cos(el.i * DEG), si = Math.sin(el.i * DEG);
+  const xp = x * cw - y * sw, yp = x * sw + y * cw;
+  return { x: xp * cO - yp * ci * sO, y: xp * sO + yp * ci * cO, z: yp * si };
+}
+
+// ʻOumuamua (1I/2017 U1), JPL Small-Body Database heliocentric elements
+const OUMUAMUA = { q: 0.2559115812, e: 1.201133796, i: 122.7417062, O: 24.59690691, w: 241.8105360, tp: 2458006.007 };
+OUMUAMUA.a = OUMUAMUA.q / (1 - OUMUAMUA.e);
+function oumuamuaAt(date) {
+  const jd = date.getTime() / 864e5 + 2440587.5;
+  const n = 0.01720209895 / Math.sqrt(-OUMUAMUA.a * OUMUAMUA.a * OUMUAMUA.a);
+  const M = n * (jd - OUMUAMUA.tp);
+  let H = Math.asinh(M / OUMUAMUA.e);
+  for (let k = 0; k < 30; k++) H -= (OUMUAMUA.e * Math.sinh(H) - H - M) / (OUMUAMUA.e * Math.cosh(H) - 1);
+  const p = orbitPoint(OUMUAMUA, H);
+  // speed from vis-viva, km/s
+  const r = Math.hypot(p.x, p.y, p.z);
+  const v = Math.sqrt(0.0002959122 * (2 / r - 1 / OUMUAMUA.a)) * AU_KM / 86400;
+  return { p, r, v };
+}
+
+// Planet Nine: published estimate (Brown & Batygin 2021) and the hypothesis
+const NINE_PUBLISHED = { a: 380, e: 0.2, i: 16, O: 97, w: 150 };
+const hypo = { tilt: 50, period: 12000, e: 0.35, O: 97, phase: 180 };
+
+// ── Shared state ──
+const params = new URLSearchParams(location.search);
+let view = params.get('view') || 'system';
+let date = new Date();
+let playing = true;
+let speed = 1; // days per second (views override)
+const dateEl = document.getElementById('date');
+const panel = document.getElementById('panel');
+let update = () => {};
+
+function fmtDate(d, withTime) {
+  const y = d.getUTCFullYear();
+  const ys = y <= 0 ? (1 - y) + ' BCE' : String(y);
+  const md = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
+  return md + ', ' + ys + (withTime ? ' · ' + d.toISOString().slice(11, 16) + ' UT' : '');
+}
+
+function setSpeeds(list, def) {
+  const box = document.getElementById('speeds');
+  box.innerHTML = '';
+  list.forEach(([name, s]) => {
+    const b = document.createElement('button');
+    b.className = 'btn' + (s === def ? ' on' : '');
+    b.textContent = name;
+    b.onclick = () => { speed = s; [...box.children].forEach(c => c.classList.toggle('on', c === b)); };
+    box.appendChild(b);
+  });
+  speed = def;
+}
+document.getElementById('play').onclick = () => {
+  playing = !playing;
+  document.getElementById('play').textContent = playing ? '⏸' : '▶';
+};
+
+function reset() {
+  scene = new THREE.Scene();
+  labels.forEach(l => l.el.remove());
+  labels = [];
+  document.getElementById('scrub').hidden = true;
+  controls.minDistance = 0.01;
+  controls.maxDistance = 1e6;
+}
+
+function starfield(radius) {
+  const g = new THREE.BufferGeometry(), pts = [];
+  for (let k = 0; k < 3000; k++) {
+    const u = Math.random() * 2 - 1, t = Math.random() * Math.PI * 2, s = Math.sqrt(1 - u * u);
+    pts.push(radius * s * Math.cos(t), radius * u, radius * s * Math.sin(t));
+  }
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
+  return new THREE.Points(g, new THREE.PointsMaterial({ color: 0x8890a0, size: 1.2, sizeAttenuation: false }));
+}
+function line(points, color, opacity, dashed) {
+  const g = new THREE.BufferGeometry().setFromPoints(points);
+  const m = dashed
+    ? new THREE.LineDashedMaterial({ color, transparent: true, opacity, dashSize: 1.2, gapSize: 0.8 })
+    : new THREE.LineBasicMaterial({ color, transparent: true, opacity });
+  const l = new THREE.Line(g, m);
+  if (dashed) l.computeLineDistances();
+  return l;
+}
+function dot(size, color) {
+  return new THREE.Mesh(new THREE.SphereGeometry(size, 24, 16), new THREE.MeshBasicMaterial({ color }));
+}
+
+// ════════════ Solar system (also the base for ʻOumuamua and Planet Nine) ════════════
+const PLANETS = [
+  ['Mercury', 'Mercury', 87.97, 0xb0b0b8, 0.35], ['Venus', 'Venus', 224.7, 0xe8d090, 0.55],
+  ['Earth', 'Earth', 365.26, 0x5aa7e0, 0.6], ['Mars', 'Mars', 686.98, 0xe05840, 0.45],
+  ['Jupiter', 'Jupiter', 4332.6, 0xd4956a, 1.2], ['Saturn', 'Saturn', 10759, 0xe8d870, 1.05],
+  ['Uranus', 'Uranus', 30687, 0x9fe0e8, 0.8], ['Neptune', 'Neptune', 60190, 0x5a7ee8, 0.8],
+  ['Pluto', 'Pluto', 90560, 0xc8b8a8, 0.3],
+];
+
+function buildSystem(opts) {
+  reset();
+  scene.add(starfield(4000));
+  const sun = dot(2.2, 0xffd76a);
+  scene.add(sun);
+  label('SUN', sun, 'hi');
+
+  const bodies = PLANETS.map(([name, body, period, color, size]) => {
+    const pts = [];
+    const t0 = A.MakeTime(date);
+    for (let k = 0; k <= 180; k++) pts.push(sysPos(toEcl(A.HelioVector(A.Body[body], t0.AddDays(period * k / 180)))));
+    scene.add(line(pts, color, 0.28));
+    const m = dot(size, color);
+    scene.add(m);
+    label(name.toUpperCase(), m);
+    return { body, m };
+  });
+
+  // Distance rings for scale
+  [1, 10, 100, 1000].forEach(r => {
+    const pts = [];
+    for (let k = 0; k <= 128; k++) pts.push(sysPos({ x: r * Math.cos(k / 64 * Math.PI), y: r * Math.sin(k / 64 * Math.PI), z: 0 }));
+    scene.add(line(pts, 0x444a58, 0.35, true));
+    const anchor = new THREE.Object3D();
+    anchor.position.copy(sysPos({ x: r, y: 0, z: 0 }));
+    scene.add(anchor);
+    label(r + ' AU', anchor);
+  });
+
+  // ʻOumuamua path 1990-2060
+  const oPts = [];
+  for (let H = -3.5; H <= 3.5; H += 0.01) oPts.push(sysPos(orbitPoint(OUMUAMUA, H)));
+  scene.add(line(oPts, 0x6fc3d8, opts.oumuamua ? 0.9 : 0.4));
+  const oum = dot(0.4, 0x6fc3d8);
+  scene.add(oum);
+  label('ʻOUMUAMUA', oum, opts.oumuamua ? 'hi' : '');
+
+  // Planet Nine: published and hypothesis
+  const nineGroup = new THREE.Group();
+  scene.add(nineGroup);
+  const drawNine = () => {
+    nineGroup.clear();
+    labels.filter(l => l.nine).forEach(l => l.el.remove());
+    labels = labels.filter(l => !l.nine);
+    const ell = (el, color, op) => {
+      const pts = [];
+      for (let k = 0; k <= 256; k++) pts.push(sysPos(orbitPoint(el, k / 128 * Math.PI)));
+      nineGroup.add(line(pts, color, op));
+    };
+    ell(NINE_PUBLISHED, 0x9aa4b8, 0.55);
+    const pubAnchor = new THREE.Object3D();
+    pubAnchor.position.copy(sysPos(orbitPoint(NINE_PUBLISHED, Math.PI)));
+    nineGroup.add(pubAnchor);
+    label('PLANET NINE · PUBLISHED ESTIMATE', pubAnchor).nine = true;
+
+    const a = Math.pow(hypo.period, 2 / 3);
+    const h = { a, e: hypo.e, i: hypo.tilt, O: hypo.O, w: 150 };
+    ell(h, 0xe0664f, 0.9);
+    const p = dot(1.1, 0xe0664f);
+    p.position.copy(sysPos(orbitPoint(h, hypo.phase * DEG)));
+    nineGroup.add(p);
+    label('PLANET NINE · HYPOTHESIS', p, 'spec').nine = true;
+    // where it crosses the planets' plane (ascending / descending nodes)
+    [0, 180].forEach(nu => {
+      const n = dot(0.6, 0xe0664f);
+      // node points: argument of latitude 0 and 180
+      const E = 2 * Math.atan(Math.sqrt((1 - h.e) / (1 + h.e)) * Math.tan(((nu - h.w) * DEG) / 2));
+      n.position.copy(sysPos(orbitPoint(h, E)));
+      nineGroup.add(n);
+    });
+    return h;
+  };
+  let hypoOrbit = drawNine();
+
+  camera.position.copy(opts.cam);
+  controls.target.set(0, 0, 0);
+
+  update = () => {
+    const t = A.MakeTime(date);
+    bodies.forEach(b => b.m.position.copy(sysPos(toEcl(A.HelioVector(A.Body[b.body], t)))));
+    const o = oumuamuaAt(date);
+    oum.position.copy(sysPos(o.p));
+    if (opts.onUpdate) opts.onUpdate({ o, t });
+  };
+  return { redrawNine: () => { hypoOrbit = drawNine(); return hypoOrbit; } };
+}
+
+const VIEWS = {};
+
+VIEWS.system = () => {
+  buildSystem({ cam: new THREE.Vector3(0, 70, 95) });
+  setSpeeds([['1 day/s', 1], ['1 month/s', 30], ['1 year/s', 365], ['10 yr/s', 3650]], 30);
+  panel.innerHTML = `
+    <h1>The solar system, today</h1>
+    <p>Every planet sits where it really is on the date below, from Astronomy Engine's ephemeris. Drag to turn, scroll to zoom.</p>
+    <p class="muted">Distances are compressed (logarithmic) so the inner planets and objects hundreds of AU out share one screen. The dashed rings mark 1, 10, 100 and 1,000 AU.</p>
+    <div class="readout" id="ro"></div>`;
+};
+
+VIEWS.oumuamua = () => {
+  date = new Date(Date.UTC(2017, 9, 19));
+  buildSystem({
+    cam: new THREE.Vector3(10, 30, 40), oumuamua: true,
+    onUpdate: ({ o }) => {
+      document.getElementById('ro').innerHTML =
+        `Distance from Sun <b>${o.r.toFixed(2)} AU</b><br>Speed <b>${o.v.toFixed(1)} km/s</b><br>` +
+        `Light-travel time <b>${(o.r * 499 / 3600).toFixed(2)} h</b>`;
+    }
+  });
+  setSpeeds([['1 day/s', 1], ['1 week/s', 7], ['1 month/s', 30], ['1 year/s', 365]], 7);
+  panel.innerHTML = `
+    <h1>ʻOumuamua</h1>
+    <p><span class="tag known">OBSERVED</span> The first object known to come from another star system. Pan-STARRS on Haleakalā spotted it on 19 Oct 2017, 40 days after its closest pass by the Sun.</p>
+    <p>Its path is a hyperbola: it came in steeply from above the planets (tilt 123°, moving backwards relative to them), swung around the Sun inside Mercury's orbit, and is leaving for good. No telescope can see it now, so this position is calculated from its measured orbit.</p>
+    <p class="muted">Orbit: JPL Small-Body Database (e = 1.2011, q = 0.256 AU). The name is Hawaiian for a scout, or "a messenger from afar arriving first".</p>
+    <h2>Right now in this view</h2>
+    <div class="readout" id="ro"></div>
+    <p style="margin-top:10px"><button class="btn" id="goNow">Jump to today</button> <button class="btn" id="goPeri">Closest to Sun (9 Sep 2017)</button></p>`;
+  document.getElementById('goNow').onclick = () => { date = new Date(); };
+  document.getElementById('goPeri').onclick = () => { date = new Date(Date.UTC(2017, 8, 9, 12)); };
+};
+
+VIEWS.nine = () => {
+  const sys = buildSystem({ cam: new THREE.Vector3(0, 60, 190) });
+  setSpeeds([['1 yr/s', 365], ['100 yr/s', 36525], ['1,000 yr/s', 365250]], 36525);
+  const sync = () => {
+    const h = sys.redrawNine();
+    const peri = h.a * (1 - h.e), aph = h.a * (1 + h.e);
+    document.getElementById('nine-ro').innerHTML =
+      `Orbit size <b>${Math.round(h.a)} AU</b> (Pluto: 39)<br>` +
+      `Closest / farthest <b>${Math.round(peri)} / ${Math.round(aph)} AU</b><br>` +
+      `Tilt to the planets' plane <b>${h.i}°</b><br>` +
+      `Crosses the planets' plane every <b>${Math.round(hypo.period / 2).toLocaleString()} years</b>`;
+    const u = new URL(location.href);
+    ['tilt', 'period', 'e', 'phase'].forEach(k => u.searchParams.set(k, hypo[k]));
+    history.replaceState(null, '', u);
+  };
+  ['tilt', 'period', 'e', 'phase'].forEach(k => { if (params.has(k)) hypo[k] = +params.get(k); });
+  panel.innerHTML = `
+    <h1>Planet Nine</h1>
+    <p><span class="tag known">EVIDENCE</span> A handful of very distant objects beyond Neptune have orbits bunched in the same direction and tilted the same way. In 2016 Konstantin Batygin and Mike Brown (Caltech) showed that an unseen planet could herd them like that.</p>
+    <p><span class="tag known">PUBLISHED ESTIMATE</span> <span style="color:#9aa4b8">grey orbit</span> — about 6 Earth masses, ~380 AU out, tilted ~16°, one lap every ~7,400 years (Brown &amp; Batygin 2021). It would be faint and slow, which is why no survey has caught it yet. Some astronomers think the bunching could be a sampling bias instead; the Vera C. Rubin Observatory should settle it.</p>
+    <h2><span class="tag spec">HYPOTHESIS</span> A steeper tilt</h2>
+    <p><span style="color:var(--red)">Red orbit</span> — this site's idea: Planet Nine rides a much steeper tilt, which keeps it far from where surveys look, and it sweeps through the planets' plane on a long cycle (roughly 12,000–30,000 years), perhaps lining up with major shifts in Earth's environment.</p>
+    <label class="row">Tilt <output id="o-tilt"></output><input type="range" id="tilt" min="0" max="90" step="1"></label>
+    <label class="row">Cycle (years per orbit) <output id="o-period"></output><input type="range" id="period" min="4000" max="40000" step="500"></label>
+    <label class="row">Stretch (eccentricity) <output id="o-e"></output><input type="range" id="e" min="0" max="0.8" step="0.01"></label>
+    <label class="row">Where along its orbit <output id="o-phase"></output><input type="range" id="phase" min="0" max="359" step="1"></label>
+    <div class="readout" id="nine-ro"></div>
+    <h2>What would test it</h2>
+    <p class="muted">Earth's ice-age rhythm already has a measured pacemaker: small cycles in Earth's own orbit and tilt (the Milankovitch cycles, about 23,000, 41,000 and 100,000 years). The last glacial period ended about 11,700 years ago. A planet hundreds of AU away pulls on Earth only very weakly, so a link would most likely run through something it disturbs, such as sending comets inward as it crosses the planets' plane. Crater ages and ice-core dust records are the kind of evidence that could support or rule that out.</p>
+    <p class="muted">Astronomers: the link to this exact orbit is shareable. Tell us where it goes wrong — <a href="mailto:info@feisttech.com?subject=Planet%20Nine%20hypothesis">info@feisttech.com</a>.</p>`;
+  ['tilt', 'period', 'e', 'phase'].forEach(k => {
+    const inp = document.getElementById(k), out = document.getElementById('o-' + k);
+    const fmt = () => out.textContent = k === 'tilt' || k === 'phase' ? hypo[k] + '°' : k === 'period' ? (+hypo[k]).toLocaleString() + ' yr' : hypo[k];
+    inp.value = hypo[k]; fmt();
+    inp.oninput = () => { hypo[k] = +inp.value; fmt(); sync(); };
+  });
+  sync();
+};
+
+// ════════════ Earth scenes: eclipse side view and satellites ════════════
+let landLines = null;
+async function loadLand() {
+  if (landLines) return landLines;
+  const topo = await fetch('/vendor/world-atlas/land-110m.json').then(r => r.json());
+  const land = topojson.feature(topo, topo.objects.land);
+  const pts = [];
+  const push = ring => {
+    for (let k = 1; k < ring.length; k++) {
+      [ring[k - 1], ring[k]].forEach(([lon, lat]) => {
+        const c = Math.cos(lat * DEG);
+        pts.push(1.002 * c * Math.cos(lon * DEG), 1.002 * c * Math.sin(lon * DEG), 1.002 * Math.sin(lat * DEG));
+      });
+    }
+  };
+  land.features.forEach(f => {
+    const polys = f.geometry.type === 'Polygon' ? [f.geometry.coordinates] : f.geometry.coordinates;
+    polys.forEach(p => p.forEach(push));
+  });
+  landLines = pts;
+  return pts;
+}
+
+// Earth built in Earth-fixed coordinates, then turned to its true
+// orientation (precession + nutation + sidereal time) for the moment.
+function makeEarth() {
+  const g = new THREE.Group();
+  g.matrixAutoUpdate = false;
+  g.add(new THREE.Mesh(new THREE.SphereGeometry(1, 64, 48),
+    new THREE.MeshStandardMaterial({ color: 0x1b3a5c, roughness: 0.9 })));
+  loadLand().then(pts => {
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
+    g.add(new THREE.LineSegments(geo, new THREE.LineBasicMaterial({ color: 0xc9a84c, transparent: true, opacity: 0.8 })));
+  });
+  return g;
+}
+function orientEarth(g, t) {
+  const gast = A.SiderealTime(t) * 15 * DEG;
+  const R = A.Rotation_EQD_EQJ(t);
+  const fixedToEqj = v => {
+    const eqd = { x: v.x * Math.cos(gast) - v.y * Math.sin(gast), y: v.x * Math.sin(gast) + v.y * Math.cos(gast), z: v.z, t };
+    return T3(A.RotateVector(R, new A.Vector(eqd.x, eqd.y, eqd.z, t)));
+  };
+  const ex = fixedToEqj({ x: 1, y: 0, z: 0 }), ey = fixedToEqj({ x: 0, y: 1, z: 0 }), ez = fixedToEqj({ x: 0, y: 0, z: 1 });
+  g.matrix.makeBasis(ex, ey, ez);
+}
+
+let eclipses = null;
+const loadEclipses = () => eclipses ? Promise.resolve(eclipses) :
+  fetch('/data/eclipses.json').then(r => r.json()).then(rows => (eclipses = rows.map(r => ({ type: r[0], kind: r[1], iso: r[2], lat: r[3], lon: r[4], t: new Date(r[2]) }))));
+
+VIEWS.eclipse = async () => {
+  reset();
+  scene.add(starfield(3e5));
+  scene.add(new THREE.AmbientLight(0xffffff, 0.08));
+  const sunLight = new THREE.DirectionalLight(0xfff4dd, 2.4);
+  scene.add(sunLight, sunLight.target);
+  const earth = makeEarth();
+  scene.add(earth);
+  const moon = new THREE.Mesh(new THREE.SphereGeometry(RM_RE, 48, 32), new THREE.MeshStandardMaterial({ color: 0xbdbab0, roughness: 1 }));
+  scene.add(moon);
+  const sun = dot(RS_RE, 0xffe28a);
+  scene.add(sun);
+  label('EARTH', earth.children[0]);
+  label('MOON', moon);
+  const sunArrow = new THREE.Object3D();
+  scene.add(sunArrow);
+  label('→ SUN · 23,500 EARTH-WIDTHS AWAY', sunArrow, 'hi');
+
+  const shadowMat = (c, o) => new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: o, depthWrite: false, side: THREE.DoubleSide });
+  const moonUmbra = new THREE.Mesh(new THREE.BufferGeometry(), shadowMat(0x000000, 0.55));
+  const moonPen = new THREE.Mesh(new THREE.BufferGeometry(), shadowMat(0x6fc3d8, 0.08));
+  const earthUmbra = new THREE.Mesh(new THREE.BufferGeometry(), shadowMat(0x7a1a10, 0.22));
+  const earthPen = new THREE.Mesh(new THREE.BufferGeometry(), shadowMat(0x6fc3d8, 0.05));
+  scene.add(moonUmbra, moonPen, earthUmbra, earthPen);
+  const hit = dot(0.03, 0xff3b1f);
+  scene.add(hit);
+
+  // A cone/frustum from `from` along unit `dir`, radius r0 at the start and r1 after `len`.
+  function shadow(mesh, from, dir, r0, r1, len) {
+    mesh.geometry.dispose();
+    mesh.geometry = new THREE.CylinderGeometry(Math.max(r1, 0.0001), r0, len, 64, 1, true);
+    mesh.geometry.translate(0, len / 2, 0);
+    mesh.position.copy(from);
+    mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir);
+  }
+
+  let current = null, offsetMin = 0;
+  const scrub = document.getElementById('scrub');
+  scrub.hidden = false; scrub.min = -240; scrub.max = 240; scrub.step = 1; scrub.value = 0;
+  scrub.oninput = () => { offsetMin = +scrub.value; playing = false; document.getElementById('play').textContent = '▶'; };
+  setSpeeds([['real time', 1 / 1440], ['1 min/s', 1 / 1440 * 60], ['10 min/s', 10 / 1440]], 10 / 1440);
+
+  panel.innerHTML = `
+    <h1>An eclipse, from the side</h1>
+    <p>Earth, Moon and Sun at their true sizes and true distances for the chosen minute, with the shadows they cast. Drag to walk around the alignment; scroll to zoom.</p>
+    <p class="muted">Black cone: the Moon's full shadow (totality). Blue: its partial shadow. Red: Earth's shadow, which the Moon crosses in a lunar eclipse. The red dot marks where the Moon's shadow axis meets Earth.</p>
+    <h2>Pick an eclipse</h2>
+    <p><select id="ecl" style="width:100%"></select></p>
+    <p><button class="btn" id="prev">◀ Earlier</button> <button class="btn" id="next">Later ▶</button></p>
+    <p><button class="btn" id="close">Close up</button> <button class="btn" id="side">Whole alignment</button></p>
+    <div class="readout" id="ro"></div>
+    <p class="muted" style="margin-top:8px">Catalogue: all 23,992 eclipses from 2000 BCE to 3000 CE, computed with Astronomy Engine; totals match NASA's Five Millennium Canon.</p>`;
+
+  const list = await loadEclipses();
+  const sel = document.getElementById('ecl');
+  const fill = i => {
+    const from = Math.max(0, i - 30), to = Math.min(list.length, i + 60);
+    sel.innerHTML = list.slice(from, to).map((e, k) =>
+      `<option value="${from + k}">${fmtDate(e.t)} · ${e.kind} ${e.type === 'S' ? 'solar' : 'lunar'}</option>`).join('');
+    sel.value = String(i);
+  };
+  let idx = list.findIndex(e => e.t > new Date());
+  const want = params.get('date');
+  if (want) { const j = list.findIndex(e => e.iso.slice(0, 10) === want); if (j >= 0) idx = j; }
+
+  const choose = i => {
+    idx = Math.max(0, Math.min(list.length - 1, i));
+    current = list[idx];
+    offsetMin = -90; scrub.value = offsetMin;
+    playing = true; document.getElementById('play').textContent = '⏸';
+    fill(idx);
+    const u = new URL(location.href);
+    u.searchParams.set('view', 'eclipse'); u.searchParams.set('date', current.iso.slice(0, 10));
+    history.replaceState(null, '', u);
+    placeCamera();
+  };
+  sel.onchange = () => choose(+sel.value);
+  document.getElementById('prev').onclick = () => choose(idx - 1);
+  document.getElementById('next').onclick = () => choose(idx + 1);
+  document.getElementById('side').onclick = () => placeCamera(true);
+  document.getElementById('close').onclick = () => placeCamera(false);
+
+  let sunDir = new THREE.Vector3(1, 0, 0), moonPos = new THREE.Vector3(60, 0, 0);
+  // Close up: look across the shadow where it lands (Earth for a solar
+  // eclipse, the Moon for a lunar one). Whole: Earth, Moon and the cones.
+  function placeCamera(wide) {
+    compute();
+    const up = new THREE.Vector3(0, 1, 0);
+    const side = new THREE.Vector3().crossVectors(sunDir, up).normalize();
+    const lunar = current && current.type === 'L';
+    const focus = wide ? moonPos.clone().multiplyScalar(0.5) : lunar ? moonPos.clone() : new THREE.Vector3();
+    const dist = wide ? 80 : lunar ? 4 : 6;
+    controls.target.copy(focus);
+    camera.position.copy(focus).addScaledVector(side, dist).addScaledVector(up, dist * 0.25)
+      .addScaledVector(sunDir, lunar || wide ? 0 : dist * 0.35);
+  }
+
+  function compute() {
+    if (!current) return;
+    const d = new Date(current.t.getTime() + offsetMin * 60000);
+    date = d;
+    const t = A.MakeTime(d);
+    const s = A.GeoVector(A.Body.Sun, t, true), m = A.GeoMoon(t);
+    const sunP = T3(s).multiplyScalar(AU_RE);
+    moonPos = T3(m).multiplyScalar(AU_RE);
+    sunDir = sunP.clone().normalize();
+    sun.position.copy(sunP);
+    moon.position.copy(moonPos);
+    sunLight.position.copy(sunDir).multiplyScalar(500);
+    orientEarth(earth, t);
+    sunArrow.position.copy(sunDir).multiplyScalar(40);
+
+    // Moon's shadow (away from the Sun)
+    const toSun = sunP.clone().sub(moonPos), dsm = toSun.length(), away = toSun.clone().normalize().negate();
+    const umbraLen = dsm * RM_RE / (RS_RE - RM_RE);
+    shadow(moonUmbra, moonPos, away, RM_RE, 0, umbraLen);
+    shadow(moonPen, moonPos, away, RM_RE, RM_RE + 75 * (RS_RE + RM_RE) / dsm, 75);
+    // Earth's shadow
+    const dse = sunP.length(), awayE = sunDir.clone().negate();
+    shadow(earthUmbra, new THREE.Vector3(), awayE, 1, 0, dse / (RS_RE - 1));
+    shadow(earthPen, new THREE.Vector3(), awayE, 1, 1 + 80 * (RS_RE + 1) / dse, 80);
+
+    // Only the shadow that makes this eclipse
+    const lunar = current.type === 'L';
+    moonUmbra.visible = moonPen.visible = !lunar;
+    earthUmbra.visible = earthPen.visible = lunar;
+    // Inside Earth's shadow the Moon goes coppery red (sunlight bent
+    // through Earth's atmosphere is all that reaches it)
+    const along = moonPos.dot(awayE);
+    const off = moonPos.clone().addScaledVector(awayE, -along).length();
+    const umbraR = 1 - along * (RS_RE - 1) / dse, penR = 1 + along * (RS_RE + 1) / dse;
+    const depth = along > 0 ? Math.max(0, Math.min(1, (penR - off) / (penR - umbraR + RM_RE))) : 0;
+    moon.material.color.setRGB(0.74 - 0.62 * depth, 0.73 - 0.68 * depth, 0.69 - 0.66 * depth);
+    moon.material.emissive.setRGB(0.28 * depth * depth, 0.06 * depth * depth, 0.02 * depth * depth);
+
+    // Where the Moon's shadow axis meets Earth (if it does)
+    const oc = moonPos.clone(), b = oc.dot(away), c = oc.lengthSq() - 1, disc = b * b - c;
+    hit.visible = disc > 0 && b < 0;
+    if (hit.visible) hit.position.copy(moonPos).addScaledVector(away, -b - Math.sqrt(disc));
+
+    const sep = Math.acos(Math.max(-1, Math.min(1, sunP.clone().normalize().dot(moonPos.clone().normalize())))) / DEG;
+    document.getElementById('ro').innerHTML =
+      `<b>${current.kind.toUpperCase()} ${current.type === 'S' ? 'SOLAR' : 'LUNAR'} ECLIPSE</b><br>` +
+      `Greatest eclipse ${fmtDate(current.t, true)}<br>` +
+      `Showing ${offsetMin >= 0 ? '+' : '−'}${Math.abs(Math.round(offsetMin))} min from peak<br>` +
+      `Moon–Sun angle from Earth's centre <b>${(current.type === 'S' ? sep : 180 - sep).toFixed(2)}°</b>` +
+      (current.lat != null ? `<br>Shadow centre at peak <b>${current.lat.toFixed(1)}°, ${current.lon.toFixed(1)}°</b>` : '');
+  }
+
+  choose(idx);
+  update = dtDays => {
+    if (playing) {
+      offsetMin += dtDays * 1440;
+      if (offsetMin > 240) offsetMin = -240;
+      scrub.value = offsetMin;
+    }
+    compute();
+  };
+  update.fixedTime = true;
+};
+
+VIEWS.satellites = async () => {
+  reset();
+  date = new Date();
+  scene.add(starfield(3e5));
+  scene.add(new THREE.AmbientLight(0xffffff, 0.25));
+  const sunLight = new THREE.DirectionalLight(0xfff4dd, 2.2);
+  scene.add(sunLight);
+  const earth = makeEarth();
+  scene.add(earth);
+  camera.position.set(0, 2.2, 4.2);
+  controls.target.set(0, 0, 0);
+  controls.minDistance = 1.2;
+  setSpeeds([['live', 1 / 86400], ['1 min/s', 60 / 86400], ['10 min/s', 600 / 86400]], 60 / 86400);
+
+  panel.innerHTML = `
+    <h1>Satellites</h1>
+    <p>Crewed stations and the brightest satellites, placed from today's orbital elements published by CelesTrak (from US Space Force tracking). Earth is turned to its real orientation, lit by the real Sun.</p>
+    <p><select id="grp"><option value="stations">Space stations</option><option value="visual">100 brightest</option><option value="gps-ops">GPS</option><option value="weather">Weather</option></select></p>
+    <div class="readout" id="ro">Loading…</div>`;
+
+  const group = new THREE.Group();
+  scene.add(group);
+  let sats = [];
+  async function load(g) {
+    group.clear();
+    labels.forEach(l => l.el.remove()); labels = [];
+    document.getElementById('ro').textContent = 'Loading…';
+    try {
+      const txt = await fetch('https://celestrak.org/NORAD/elements/gp.php?GROUP=' + g + '&FORMAT=tle').then(r => r.text());
+      const lines = txt.trim().split(/\r?\n/);
+      sats = [];
+      for (let k = 0; k + 2 < lines.length; k += 3) {
+        const satrec = satellite.twoline2satrec(lines[k + 1], lines[k + 2]);
+        const m = dot(g === 'stations' ? 0.018 : 0.012, g === 'stations' ? 0xc9a84c : 0x6fc3d8);
+        group.add(m);
+        const s = { name: lines[k].trim(), satrec, m };
+        if (sats.length < 12) label(s.name, m, /ISS|TIANGONG|CSS/.test(s.name) ? 'hi' : '');
+        sats.push(s);
+      }
+      // ISS / first object's orbit track
+      if (sats[0]) {
+        const pts = [];
+        for (let mnt = 0; mnt <= 95; mnt += 1) {
+          const p = satellite.propagate(sats[0].satrec, new Date(date.getTime() + mnt * 60000)).position;
+          if (p) pts.push(eci(p, new Date(date.getTime() + mnt * 60000)));
+        }
+        group.add(line(pts, 0xc9a84c, 0.5));
+      }
+      document.getElementById('ro').innerHTML = `<b>${sats.length}</b> objects · source CelesTrak`;
+    } catch (e) {
+      document.getElementById('ro').textContent = 'Could not reach CelesTrak right now.';
+    }
+  }
+  // satellite.js positions are in km, in Earth's equator-of-date frame
+  function eci(p, d) {
+    const t = A.MakeTime(d);
+    return T3(A.RotateVector(A.Rotation_EQD_EQJ(t), new A.Vector(p.x / RE_KM, p.y / RE_KM, p.z / RE_KM, t)));
+  }
+  document.getElementById('grp').onchange = e => load(e.target.value);
+  load('stations');
+
+  update = () => {
+    const t = A.MakeTime(date);
+    orientEarth(earth, t);
+    sunLight.position.copy(T3(A.GeoVector(A.Body.Sun, t, true)).normalize().multiplyScalar(50));
+    for (const s of sats) {
+      const pv = satellite.propagate(s.satrec, date);
+      s.m.visible = !!(pv && pv.position);
+      if (s.m.visible) s.m.position.copy(eci(pv.position, date));
+    }
+  };
+};
+
+// ── View switching and main loop ──
+const tabs = document.getElementById('tabs');
+function show(v) {
+  if (!VIEWS[v]) v = 'system';
+  view = v;
+  [...tabs.children].forEach(b => b.classList.toggle('on', b.dataset.view === v));
+  const u = new URL(location.href);
+  u.searchParams.set('view', v);
+  if (v !== 'eclipse') u.searchParams.delete('date');
+  if (v !== 'nine') ['tilt', 'period', 'e', 'phase'].forEach(k => u.searchParams.delete(k));
+  history.replaceState(null, '', u);
+  update = () => {};
+  VIEWS[v]();
+}
+tabs.onclick = e => { const b = e.target.closest('button'); if (b) show(b.dataset.view); };
+
+let last = performance.now();
+function frame(now) {
+  const dt = Math.min(0.1, (now - last) / 1000);
+  last = now;
+  const days = playing ? dt * speed : 0;
+  if (update.fixedTime) update(days);
+  else {
+    date = new Date(date.getTime() + days * 864e5);
+    update(days);
+  }
+  dateEl.textContent = fmtDate(date, view === 'eclipse' || view === 'satellites');
+  controls.update();
+  renderer.render(scene, camera);
+  drawLabels();
+  requestAnimationFrame(frame);
+}
+show(view);
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

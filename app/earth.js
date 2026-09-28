@@ -13,7 +13,7 @@ window.MA = window.MA || {};
 (function(MA){
   'use strict';
 
-  const COASTLINE_URL = 'https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/land-110m.json';
+  const COASTLINE_URL = '/vendor/world-atlas/land-110m.json';
   const MIN_ZOOM = 0.7, MAX_ZOOM = 6;
 
   // Major annual meteor showers — real active windows (month/day, no year:
@@ -75,6 +75,8 @@ window.MA = window.MA || {};
 
     setNodes(nodes) { this.nodes = nodes || []; }
     setDate(jdt)    { this.jd = jdt; }
+    // {lat, lon, kind, type} of an eclipse to draw the Moon's shadow for, or null
+    setEclipse(e)   { this.eclipse = e; }
     setSpin(on)     { this.spin = !!on; }
     setActive(node) { this.activeNode = node; }
     // Pass a Set of IDs to highlight; null clears the filter (all nodes full opacity).
@@ -474,6 +476,9 @@ window.MA = window.MA || {};
         ctx.restore();
       }
 
+      // Night side and the Moon's shadow for the selected moment
+      this._renderDaylight(cx, cy, R);
+
       // Sphere outline
       ctx.strokeStyle = theme.dim;
       ctx.lineWidth = 1;
@@ -505,6 +510,101 @@ window.MA = window.MA || {};
       ctx.fillText(`λ ${(-this.rotation[0]).toFixed(1)}°  φ ${(-this.rotation[1]).toFixed(1)}°`,
                    cx, cy + R + 18);
       ctx.textAlign = 'left';
+    }
+
+    // Where the Sun is overhead right now (needs Astronomy Engine).
+    _subsolar() {
+      const A = window.Astronomy;
+      if (!A) return null;
+      const t = A.MakeTime(MA.dj(this.jd));
+      const eq = A.Equator(A.Body.Sun, t, new A.Observer(0, 0, 0), true, true);
+      let lon = (eq.ra - A.SiderealTime(t)) * 15;
+      lon = ((lon + 540) % 360) - 180;
+      return [lon, eq.dec];
+    }
+
+    _renderDaylight(cx, cy, R) {
+      const ctx = this.ctx;
+      const sub = this._subsolar();
+      if (!sub) return;
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(cx, cy, R, 0, Math.PI*2);
+      ctx.clip();
+      // Night hemisphere: everything more than 90 deg from the subsolar point
+      const anti = [sub[0] > 0 ? sub[0] - 180 : sub[0] + 180, -sub[1]];
+      ctx.fillStyle = 'rgba(0, 4, 16, 0.55)';
+      ctx.beginPath();
+      this.path(d3.geoCircle().center(anti).radius(90)());
+      ctx.fill();
+      // Twilight band
+      ctx.fillStyle = 'rgba(0, 4, 16, 0.18)';
+      ctx.beginPath();
+      this.path(d3.geoCircle().center(anti).radius(96)());
+      ctx.fill();
+
+      // Solar eclipse: penumbra (partial) and umbra (total/annular) where
+      // the Moon's shadow falls at greatest eclipse.
+      const e = this.eclipse;
+      if (e && e.type === 'S' && e.lat != null) {
+        const c = [e.lon, e.lat];
+        [[35, 0.10], [20, 0.16], [8, 0.24]].forEach(([r, a]) => {
+          ctx.fillStyle = 'rgba(0,0,0,' + a + ')';
+          ctx.beginPath();
+          this.path(d3.geoCircle().center(c).radius(r)());
+          ctx.fill();
+        });
+        ctx.fillStyle = e.kind === 'annular' ? 'rgba(255,170,60,0.9)' : 'rgba(0,0,0,0.95)';
+        ctx.strokeStyle = 'rgba(255,220,150,0.9)';
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        this.path(d3.geoCircle().center(c).radius(0.9)());
+        ctx.fill();
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    _renderHologram(n, p, color) {
+      const ctx = this.ctx;
+      const h = 70 + 8 * Math.sin(performance.now() * 0.002);
+      const top = p.y - h;
+      ctx.save();
+      const beam = ctx.createLinearGradient(0, p.y, 0, top);
+      beam.addColorStop(0, color + 'cc');
+      beam.addColorStop(1, color + '00');
+      ctx.fillStyle = beam;
+      ctx.beginPath();
+      ctx.moveTo(p.x - 2, p.y);
+      ctx.lineTo(p.x - 14, top);
+      ctx.lineTo(p.x + 14, top);
+      ctx.lineTo(p.x + 2, p.y);
+      ctx.closePath();
+      ctx.fill();
+
+      const title = (n.title || '').split(/[:,]/)[0].slice(0, 32);
+      const date = n.date ? (n.date.year < 0 ? (-n.date.year) + ' BCE' : String(n.date.year)) : '';
+      ctx.font = "11px 'Cormorant Garamond', Georgia, serif";
+      const w = Math.max(ctx.measureText(title).width, 40) + 20;
+      const bx = p.x - w / 2, by = top - 34;
+      ctx.globalAlpha = 0.85;
+      ctx.fillStyle = 'rgba(8, 14, 24, 0.75)';
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1;
+      ctx.shadowBlur = 16; ctx.shadowColor = color;
+      ctx.beginPath();
+      ctx.rect(bx, by, w, 30);
+      ctx.fill();
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+      ctx.globalAlpha = 1;
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#f2ead6';
+      ctx.fillText(title, p.x, by + 13);
+      ctx.fillStyle = color;
+      ctx.font = "9px 'Space Mono', monospace";
+      ctx.fillText(date, p.x, by + 25);
+      ctx.restore();
     }
 
     _renderNodes(theme) {
@@ -556,6 +656,10 @@ window.MA = window.MA || {};
         ctx.beginPath();
         ctx.arc(p.x, p.y, r * 0.42, 0, Math.PI*2);
         ctx.fill();
+
+        // Hologram: a light column rising from the node with its title
+        // floating at the top, so the selected article reads at a glance.
+        if (isActive) this._renderHologram(n, p, color);
 
         // Ring on active
         if (isActive) {

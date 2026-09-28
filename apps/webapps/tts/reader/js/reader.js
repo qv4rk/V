@@ -1392,6 +1392,12 @@ async function loadArticleIntoReader(id, pushState) {
     }
     const text = article.content || '';
     currentStoryTitle = article.title || currentStoryTitle;
+    // Each article carries the narrator accent for its place (Irish,
+    // Arabic, Chinese, Hebrew...); fall back to the reader's default.
+    if (article.voice) {
+        voiceMapping.narrator = article.voice;
+        if (typeof renderVoiceMapping === 'function') renderVoiceMapping();
+    }
     detectSpkrs(text);
     const parsed = parseTextWithSpkrs(text);
     const html = renderParsedSegments(parsed);
