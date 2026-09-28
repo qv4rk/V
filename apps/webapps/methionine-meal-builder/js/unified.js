@@ -10,6 +10,7 @@
 
   const LOG_KEY = KEY_PREFIX + 'feisttech_met_daily_log';
   const CAP_KEY = KEY_PREFIX + 'feisttech_met_daily_cap';
+  const CAP_MIGRATION_KEY = KEY_PREFIX + 'feisttech_met_cap_150_reviewed';
   const QUICKADD_KEY = KEY_PREFIX + 'feisttech_met_accessible_quickadd';
   const QUICKADD_CACHE_KEY = KEY_PREFIX + 'feisttech_met_accessible_quickadd_cache';
   const METHIO_KEY = KEY_PREFIX + 'feisttech_met_methioninase_log';
@@ -74,7 +75,18 @@
     } catch (e) { logByDay = {}; }
     log = logByDay[viewDate] || (logByDay[viewDate] = []);
 
-    const savedCap = localStorage.getItem(CAP_KEY);
+    // Older builds showed 150 mg by default. A saved 150 cannot be
+    // distinguished from that legacy value, so ask once for confirmation.
+    // Food and methioninase logs use separate keys and are untouched.
+    let savedCap = localStorage.getItem(CAP_KEY);
+    if (savedCap !== null && Number(savedCap) === 150 &&
+        localStorage.getItem(CAP_MIGRATION_KEY) !== '1') {
+      localStorage.removeItem(CAP_KEY);
+      savedCap = null;
+    }
+    if (localStorage.getItem(CAP_MIGRATION_KEY) !== '1') {
+      localStorage.setItem(CAP_MIGRATION_KEY, '1');
+    }
     const cap = savedCap === null ? NaN : Number(savedCap);
     if (Number.isFinite(cap) && cap > 0) dailyCap = cap;
     try {
