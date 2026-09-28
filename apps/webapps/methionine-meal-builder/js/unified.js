@@ -235,10 +235,10 @@
     const pct = total / dailyCap;
     if (pct > 1) return 'over';
     if (pct >= 0.8) return 'caution';
-    return 'safe';
+    return 'within';
   }
   function statusLabel(status) {
-    return status === 'unset' ? 'Daily limit not set' : (status === 'safe' ? 'Within limit' : (status === 'caution' ? 'Close to the limit' : 'Over the limit'));
+    return status === 'unset' ? 'Daily limit not set' : (status === 'within' ? 'Within limit' : (status === 'caution' ? 'Close to the limit' : 'Over the limit'));
   }
 
   // ── Big total ──
@@ -250,7 +250,7 @@
 
     const pill = document.getElementById('statusPill');
     pill.className = 'statusPill ' + status;
-    pill.textContent = status === 'unset' ? 'SET DAILY LIMIT' : (status === 'safe' ? 'WITHIN LIMIT' : (status === 'caution' ? 'CLOSE TO LIMIT' : 'OVER LIMIT'));
+    pill.textContent = status === 'unset' ? 'SET DAILY LIMIT' : (status === 'within' ? 'WITHIN LIMIT' : (status === 'caution' ? 'CLOSE TO LIMIT' : 'OVER LIMIT'));
 
     const big = document.getElementById('bigTotal');
     big.className = 'bigTotal ' + status;
@@ -259,7 +259,7 @@
     const pct = hasCap ? Math.min(100, (total / dailyCap) * 100) : 0;
     const fill = document.getElementById('bigBarFill');
     fill.style.width = pct + '%';
-    fill.className = 'bigBarFill' + (status !== 'safe' ? ' ' + status : '');
+    fill.className = 'bigBarFill' + (status !== 'within' ? ' ' + status : '');
 
     document.getElementById('bigSubline').textContent =
       hasCap ? `${fmt(total)} mg used ${dayPhrase()} · ${fmt(remaining)} mg remaining against your limit` : `${fmt(total)} mg logged ${dayPhrase()} · Enter your daily limit below`;
@@ -958,7 +958,7 @@
       ? ' Your daily limit is set by your care team.'
       : ' Enter your own daily limit to see the comparison. You can change it later.';
     return [
-      { icon: '🔢', title: 'Your Daily Total', text: `This big number shows how much methionine you've eaten today. Green means safe, yellow means getting close, red means you're over your limit.${capLine}` },
+      { icon: '🔢', title: 'Your Daily Total', text: `This big number shows how much methionine you've eaten today. Green means below your entered limit, yellow means approaching it, and red means over it.${capLine}` },
       { icon: '🍽️', title: 'Quick Add', text: 'Tap any food button below to pick a portion, then tap Add.' },
       { icon: '↩️', title: 'Made A Mistake?', text: 'Tap "Undo Last Add" any time to remove the food you just added.' },
       { icon: '📅', title: 'Other Days', text: 'Use the ◀ / ▶ arrows above your daily total to review or fix a previous day. Food and methioninase are both tracked separately per day, so today\'s total is never mixed with an earlier one.' },
