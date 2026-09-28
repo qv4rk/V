@@ -37,14 +37,15 @@ input[type=range]{width:100%;accent-color:#5fe0e8;margin-top:14px;cursor:pointer
 <div id="map" aria-label="Gaza City damage map"></div>
 <button class="sidebar-toggle" id="menuToggle" aria-expanded="false" aria-controls="sidebar">☰ Neighborhoods</button>
 <aside class="sidebar" id="sidebar" aria-label="Neighborhood and page menu">
- <header><button class="sidebar-close" id="menuClose" type="button" aria-label="Close neighborhood menu">✕ Close</button><h1>Gaza City · Damage Over Time</h1><p>15 neighborhoods · UNOSAT satellite assessments joined to OpenStreetMap building footprints · heights visually exaggerated; most source heights are estimates. Edges mark source coverage, not a boundary of damage.</p></header>
+ <header><button class="sidebar-close" id="menuClose" type="button" aria-label="Close neighborhood menu">✕ Close</button><h1>Gaza City · Damage Over Time</h1><p>15 neighborhoods · UNOSAT satellite damage assessments and OpenStreetMap building footprints.</p></header>
  <nav class="nav" id="nav">
   <div class="section-label">Views</div>
   <button id="allButton" type="button">◈ All neighborhoods</button>
   <div class="section-label">Building-level views</div>
   <div id="neighborhoodButtons"></div>
   <div class="section-label">Elsewhere</div>
-  <a href="../gaspi5/checkpoints.html" style="color:#91eaf1;padding:8px">◎ Checkpoint locations</a>
+  <button id="checkpointToggle" type="button" aria-pressed="false">◎ Checkpoints layer</button>
+  <a href="../gaspi5/checkpoints.html" style="color:#91eaf1;padding:8px">Open checkpoint reference page ↗</a>
   <a href="../gaspi5/" style="color:#91eaf1;padding:8px">← GASPI</a>
   <a href="../" style="color:#91eaf1;padding:8px">← FeistTech home</a>
  </nav>
@@ -62,7 +63,11 @@ input[type=range]{width:100%;accent-color:#5fe0e8;margin-top:14px;cursor:pointer
  <input id="timeSlider" type="range" min="0" max="14" value="14" aria-label="Satellite assessment date">
  <label for="heightSlider" style="display:flex;gap:8px;align-items:center;font-size:.72rem;color:#bfd0da">Projection height <input id="heightSlider" type="range" min="10" max="500" step="10" value="250" style="flex:1;margin:0"><output id="heightValue" for="heightSlider">250×</output></label>
  <div class="legend" id="legend"></div>
- <div style="font-size:.65rem;color:#afc3cc">*Height before the first record is an illustrative projection; no assessment does not establish that a building was intact.</div>
+ <div style="font-size:.65rem;color:#afc3cc;line-height:1.45">
+  Sources: <a href="https://unosat.org/products/4047" target="_blank" rel="noopener" style="color:#91eaf1">UNOSAT/OCHA Gaza damage assessment</a>
+  · building footprints © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener" style="color:#91eaf1">OpenStreetMap contributors</a>
+  · checkpoints: <a href="https://github.com/btselem/map-data/blob/master/s9/checkpoints_all.geojson" target="_blank" rel="noopener" style="color:#91eaf1">B’Tselem map-data</a>.
+ </div>
  </div>
 </div>
 <script>
@@ -71,7 +76,7 @@ const PALETTE = ['#3c5660','#ff5b68','#ff9b54','#ffcc61','#c6d77a','#858998'];
 const $ = id => document.getElementById(id);
 const map = new maplibregl.Map({container:'map',style:'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',center:[34.44,31.51],zoom:11.5,pitch:58,maxPitch:85,bearing:-18});
 map.addControl(new maplibregl.NavigationControl(), 'bottom-right');
-let overview, dates=[], index=0, selected=null, detail=null, mode='holo', viewPitch=58, loadToken=0, timer=null, playDirection=1;
+let overview, dates=[], index=0, selected=null, detail=null, mode='holo', viewPitch=58, loadToken=0, timer=null, playDirection=1, checkpointsVisible=false;
 const DAMAGED_FILTER=['==',['get','eventualDamage'],true];
 let HEIGHT_EXAGGERATION=250; // Visual projection scale; source height_m remains in metres.
 let antikythera=null;
@@ -89,6 +94,12 @@ function clsAsOf(sites,date){
 function applyDamageFocus(){
  for(const id of ['all-buildings-3d','all-buildings-flat','detail-3d','detail-flat'])if(map.getLayer(id))map.setFilter(id,DAMAGED_FILTER);
  if(overviewBuildingsReady&&map.getSource('all-buildings'))map.getSource('all-buildings').setData(annotatedAllBuildings());
+}
+function setCheckpointVisibility(){
+ const visibility=checkpointsVisible?'visible':'none';
+ for(const id of ['checkpoints-halo','checkpoints-points','checkpoints-labels'])if(map.getLayer(id))map.setLayoutProperty(id,'visibility',visibility);
+ $('checkpointToggle').classList.toggle('active',checkpointsVisible);
+ $('checkpointToggle').setAttribute('aria-pressed',String(checkpointsVisible));
 }
 function setPaint(){
  const extrude=mode==='holo';
@@ -194,6 +205,7 @@ $('holoButton').onclick=()=>{mode='holo';setPaint()};
 $('flatButton').onclick=()=>{mode='flat';setPaint()};
 $('sideButton').onclick=()=>{mode='holo';viewPitch=viewPitch>=80?58:85;setPaint();$('sideButton').classList.toggle('active',viewPitch>=80);$('sideButton').setAttribute('aria-pressed',String(viewPitch>=80));$('sideButton').textContent=viewPitch>=80?'↗ Angled view':'↗ Side view'};
 $('fullscreenButton').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen()}catch(e){$('status').textContent='Full screen is unavailable in this browser; use its menu to expand the page.'}};
+$('checkpointToggle').onclick=()=>{checkpointsVisible=!checkpointsVisible;setCheckpointVisibility();};
 document.addEventListener('fullscreenchange',()=>$('fullscreenButton').textContent=document.fullscreenElement?'⛶ Exit full screen':'⛶ Full screen');
 function closeMenu(){if(innerWidth<=700){$('sidebar').classList.remove('open');$('menuToggle').setAttribute('aria-expanded','false');$('menuToggle').textContent='☰ Neighborhoods'}}
 $('menuToggle').onclick=()=>{const open=$('sidebar').classList.toggle('open');$('menuToggle').setAttribute('aria-expanded',String(open));$('menuToggle').textContent=open?'✕ Close menu':'☰ Neighborhoods'};
@@ -214,9 +226,16 @@ Promise.all([mapReady,fetch('data/neighborhood-overview.json').then(r=>{if(!r.ok
  map.addSource('areas',{type:'geojson',data:annotatedOverview()});
  map.addLayer({id:'areas-flat',type:'fill',source:'areas',layout:{visibility:'none'},paint:{'fill-color':['get','color'],'fill-opacity':.45}});
  map.addLayer({id:'areas-3d',type:'fill-extrusion',source:'areas',paint:{'fill-extrusion-color':['get','color'],'fill-extrusion-height':['get','remaining'],'fill-extrusion-opacity':.42}});
+ fetch('../gaspi5/data/checkpoints-selected.geojson').then(r=>{if(!r.ok)throw Error('Checkpoint HTTP '+r.status);return r.json()}).then(data=>{
+  map.addSource('checkpoints',{type:'geojson',data});
+  map.addLayer({id:'checkpoints-halo',type:'circle',source:'checkpoints',layout:{visibility:'none'},paint:{'circle-radius':8,'circle-color':'#62e5ee','circle-opacity':.18,'circle-stroke-width':1,'circle-stroke-color':'#baf9ff'}});
+  map.addLayer({id:'checkpoints-points',type:'circle',source:'checkpoints',layout:{visibility:'none'},paint:{'circle-radius':4,'circle-color':'#62e5ee','circle-stroke-width':1.5,'circle-stroke-color':'#06131a'}});
+  map.addLayer({id:'checkpoints-labels',type:'symbol',source:'checkpoints',layout:{visibility:'none','text-field':['get','name'],'text-size':11,'text-offset':[0,1.15],'text-anchor':'top','text-allow-overlap':false},paint:{'text-color':'#dffcff','text-halo-color':'#071219','text-halo-width':1.5}});
+  map.on('click','checkpoints-points',e=>{const p=e.features[0].properties;new maplibregl.Popup().setLngLat(e.features[0].geometry.coordinates).setHTML('<strong>'+p.name+'</strong><br>'+p.category+'<br><a href="'+p.source_url+'" target="_blank" rel="noopener">Source: B’Tselem</a>').addTo(map)});
+ }).catch(e=>console.warn('Checkpoint layer unavailable:',e));
  map.on('click','areas-3d',e=>show(e.features[0].properties.slug));
  map.on('click','areas-flat',e=>show(e.features[0].properties.slug));
- $('legend').innerHTML='<span><i style="background:#3c5660"></i>Before first damage assessment*</span><span><i style="background:#ff5b68"></i>Destroyed</span><span><i style="background:#ff9b54"></i>Severe</span><span><i style="background:#ffcc61"></i>Moderate</span><span><i style="background:#c6d77a"></i>Possible</span>';
+ $('legend').innerHTML='<span><i style="background:#ff5b68"></i>Destroyed</span><span><i style="background:#ff9b54"></i>Severe</span><span><i style="background:#ffcc61"></i>Moderate</span><span><i style="background:#c6d77a"></i>Possible</span>';
  show(new URLSearchParams(location.search).get('neighborhood')&&SLUGS.includes(new URLSearchParams(location.search).get('neighborhood'))?new URLSearchParams(location.search).get('neighborhood'):null);
  loadOverviewBuildings();
 }).catch(e=>$('status').textContent='Map data could not load: '+e.message);

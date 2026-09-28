@@ -190,12 +190,12 @@ body {
   border-radius: 999px;
   margin-bottom: 0.8rem;
 }
-.statusPill.safe { background: var(--safe-bg); color: var(--safe); }
+.statusPill.within { background: var(--safe-bg); color: var(--safe); }
 .statusPill.caution { background: var(--caution-bg); color: var(--caution); }
 .statusPill.over { background: var(--over-bg); color: var(--over); }
 
 .bigTotal { font-size: 3.8rem; font-weight: 800; line-height: 1; color: var(--ink); }
-.bigTotal.safe { color: var(--safe); }
+.bigTotal.within { color: var(--safe); }
 .bigTotal.caution { color: var(--caution); }
 .bigTotal.over { color: var(--over); }
 .bigTotalUnit { font-size: 1.6rem; font-weight: 700; color: var(--ink-dim); }
@@ -288,7 +288,7 @@ body {
 }
 @media (min-width: 768px) { .toast { bottom: 1.2rem; } }
 .toast[hidden] { display: none; }
-.toast.safe { background: var(--safe); }
+.toast.within { background: var(--safe); }
 .toast.caution { background: var(--caution); }
 .toast.over { background: var(--over); }
 
