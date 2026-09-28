@@ -29,7 +29,7 @@
   let logByDay = {};
   let viewDate = null; // set in loadState(); an ISO date, never in the future
   let log = [];
-  let dailyCap = CONFIG.defaultCap || 150;
+  let dailyCap = null; // Set by the user; no clinical limit is assumed.
   let quickAddFoods = DEFAULT_QUICKADD.slice();
   let quickAddCache = {};
   let lastAction = null; // { id, delta, wasNew } — what "Undo Last Add" should reverse
@@ -74,8 +74,9 @@
     } catch (e) { logByDay = {}; }
     log = logByDay[viewDate] || (logByDay[viewDate] = []);
 
-    const cap = parseFloat(localStorage.getItem(CAP_KEY));
-    if (!isNaN(cap) && cap > 0) dailyCap = cap;
+    const savedCap = localStorage.getItem(CAP_KEY);
+    const cap = savedCap === null ? NaN : Number(savedCap);
+    if (Number.isFinite(cap) && cap > 0) dailyCap = cap;
     try {
       const saved = JSON.parse(localStorage.getItem(QUICKADD_KEY) || 'null');
       if (Array.isArray(saved) && saved.length) quickAddFoods = saved;
@@ -230,37 +231,38 @@
   }
 
   function statusFor(total) {
-    if (dailyCap <= 0) return 'safe';
+    if (dailyCap === null) return 'unset';
     const pct = total / dailyCap;
     if (pct > 1) return 'over';
     if (pct >= 0.8) return 'caution';
     return 'safe';
   }
   function statusLabel(status) {
-    return status === 'safe' ? 'Safe' : (status === 'caution' ? 'Close to the limit' : 'Over the limit');
+    return status === 'unset' ? 'Daily limit not set' : (status === 'safe' ? 'Within limit' : (status === 'caution' ? 'Close to the limit' : 'Over the limit'));
   }
 
   // ── Big total ──
   function renderTotal() {
     const total = totalMet();
     const status = statusFor(total);
-    const remaining = Math.max(0, dailyCap - total);
+    const hasCap = dailyCap !== null;
+    const remaining = hasCap ? Math.max(0, dailyCap - total) : null;
 
     const pill = document.getElementById('statusPill');
     pill.className = 'statusPill ' + status;
-    pill.textContent = status === 'safe' ? 'SAFE' : (status === 'caution' ? 'CLOSE TO LIMIT' : 'OVER LIMIT');
+    pill.textContent = status === 'unset' ? 'SET DAILY LIMIT' : (status === 'safe' ? 'WITHIN LIMIT' : (status === 'caution' ? 'CLOSE TO LIMIT' : 'OVER LIMIT'));
 
     const big = document.getElementById('bigTotal');
     big.className = 'bigTotal ' + status;
-    big.innerHTML = fmt(total) + '<span class="bigTotalUnit"> / ' + fmt(dailyCap) + ' mg</span>';
+    big.innerHTML = fmt(total) + '<span class="bigTotalUnit">' + (hasCap ? ' / ' + fmt(dailyCap) : '') + ' mg</span>';
 
-    const pct = dailyCap > 0 ? Math.min(100, (total / dailyCap) * 100) : 0;
+    const pct = hasCap ? Math.min(100, (total / dailyCap) * 100) : 0;
     const fill = document.getElementById('bigBarFill');
     fill.style.width = pct + '%';
     fill.className = 'bigBarFill' + (status !== 'safe' ? ' ' + status : '');
 
     document.getElementById('bigSubline').textContent =
-      `${fmt(total)} mg used ${dayPhrase()} · ${fmt(remaining)} mg still safe to eat`;
+      hasCap ? `${fmt(total)} mg used ${dayPhrase()} · ${fmt(remaining)} mg remaining against your limit` : `${fmt(total)} mg logged ${dayPhrase()} · Enter your daily limit below`;
 
     const macroLine = document.getElementById('macroLine');
     if (macroLine) {
@@ -816,8 +818,9 @@
     if (!('speechSynthesis' in window)) { showToast('Voice reading is not supported on this device.', 'over'); return; }
     const total = totalMet();
     const status = statusFor(total);
-    const remaining = Math.max(0, dailyCap - total);
-    const text = `${fmt(total)} milligrams used ${dayPhrase()}, out of ${fmt(dailyCap)}. ${fmt(remaining)} milligrams still safe to eat. Status: ${statusLabel(status)}.`;
+    const text = dailyCap === null
+      ? `${fmt(total)} milligrams logged ${dayPhrase()}. Daily limit not set.`
+      : `${fmt(total)} milligrams used ${dayPhrase()}, out of ${fmt(dailyCap)}. ${fmt(Math.max(0, dailyCap - total))} milligrams remaining against your limit. Status: ${statusLabel(status)}.`;
     const utter = new SpeechSynthesisUtterance(text);
     utter.rate = 0.9;
     window.speechSynthesis.cancel();
@@ -833,7 +836,7 @@
     const sulfurTotal = total + totalCys();
     const lines = [];
     lines.push(`Methionine log — ${viewDate}${viewDate === todayISO() ? ' (Today)' : ''}`);
-    lines.push(`Methionine: ${fmt(total)} / ${fmt(dailyCap)} mg (${statusLabel(statusFor(total))})`);
+    lines.push(`Methionine: ${fmt(total)} mg${dailyCap === null ? ' (daily limit not set)' : ` / ${fmt(dailyCap)} mg (${statusLabel(statusFor(total))})`}`);
     lines.push(`Total sulfur amino acids (Met + Cys): ${fmt(sulfurTotal)} mg` + (hasAnyCysMissing() ? ' (incomplete — cystine not measured for every item)' : ''));
     lines.push(`Calories: ${fmt(totalField('cal'))} kcal · Protein: ${fmt(totalField('protein'))} g · Fat: ${fmt(totalField('fat'))} g · Carbs: ${fmt(totalField('carbs'))} g`);
     lines.push('');
@@ -871,7 +874,7 @@
     const lines = [];
     lines.push('CLINICAL COMPLIANCE SUMMARY — Methionine Restriction Log');
     lines.push(`Generated ${new Date().toLocaleString()}`);
-    lines.push(`Daily methionine ceiling: ${fmt(dailyCap)} mg`);
+    lines.push(`Daily methionine limit: ${dailyCap === null ? 'Not set' : fmt(dailyCap) + ' mg'}`);
     lines.push('');
     if (!dates.length) {
       lines.push('(no days logged yet)');
@@ -887,7 +890,7 @@
       const status = statusFor(met);
       const entry = methio[d];
       sumMet += met;
-      if (status !== 'over') withinLimitDays++;
+      if (dailyCap !== null && status !== 'over') withinLimitDays++;
       if (entry && entry.took) tookDays++;
       const methioCell = entry ? (entry.took ? 'Yes' + (entry.time ? ` @${entry.time}` : '') : 'No') : 'Not logged';
       lines.push(
@@ -896,7 +899,7 @@
     });
     lines.push('');
     lines.push(`Average methionine: ${fmt(sumMet / dates.length)} mg/day across ${dates.length} day(s) logged`);
-    lines.push(`Days within limit: ${withinLimitDays} / ${dates.length}`);
+    lines.push(dailyCap === null ? 'Days within limit: unavailable until a daily limit is entered' : `Days within limit: ${withinLimitDays} / ${dates.length}`);
     lines.push(`Methioninase taken: ${tookDays} / ${dates.length} day(s) logged`);
     return lines.join('\n');
   }
@@ -953,7 +956,7 @@
   function tutorialSteps() {
     const capLine = CONFIG.lockCap
       ? ' Your daily limit is set by your care team.'
-      : ' Tap "Change daily limit" if that number ever needs to change.';
+      : ' Enter your own daily limit to see the comparison. You can change it later.';
     return [
       { icon: '🔢', title: 'Your Daily Total', text: `This big number shows how much methionine you've eaten today. Green means safe, yellow means getting close, red means you're over your limit.${capLine}` },
       { icon: '🍽️', title: 'Quick Add', text: 'Tap any food button below to pick a portion, then tap Add.' },
@@ -1005,7 +1008,7 @@
 
   // ── Cap editing ──
   function openCapEdit() {
-    document.getElementById('capEditInput').value = dailyCap;
+    document.getElementById('capEditInput').value = dailyCap === null ? '' : dailyCap;
     document.getElementById('capEditRow').hidden = true;
     document.getElementById('capEditFormWrap').hidden = false;
     document.getElementById('capEditInput').focus();
@@ -1016,8 +1019,17 @@
   }
   function saveCapEdit(e) {
     if (e) e.preventDefault();
-    const num = parseFloat(document.getElementById('capEditInput').value);
-    if (!isNaN(num) && num > 0) { dailyCap = num; saveCap(); renderAll(); }
+    const raw = document.getElementById('capEditInput').value.trim();
+    const num = Number(raw);
+    if (!raw || !Number.isFinite(num) || num <= 0) {
+      document.getElementById('capEditInput').setCustomValidity('Enter a number greater than zero.');
+      document.getElementById('capEditInput').reportValidity();
+      return;
+    }
+    document.getElementById('capEditInput').setCustomValidity('');
+    dailyCap = num;
+    saveCap();
+    renderAll();
     closeCapEdit();
   }
 
@@ -1145,6 +1157,8 @@
       document.getElementById('btnEditCap').addEventListener('click', openCapEdit);
       document.getElementById('capEditForm').addEventListener('submit', saveCapEdit);
       document.getElementById('btnCapCancel').addEventListener('click', closeCapEdit);
+      document.getElementById('capEditInput').addEventListener('input', e => e.target.setCustomValidity(''));
+      if (dailyCap === null) openCapEdit();
     }
 
     document.getElementById('searchForm').addEventListener('submit', e => {
