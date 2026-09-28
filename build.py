@@ -177,7 +177,7 @@ body {
 
 /* ── Nav ── */
 .site-nav {
-  position: sticky; top: 0; z-index: 50;
+  position: relative; z-index: 50;
   background: rgba(5,8,16,.97);
   border-bottom: 1px solid var(--border);
   backdrop-filter: blur(12px);
@@ -350,12 +350,13 @@ article {
   #tts-voice { display: none; }
 }
 </style>
+<script src="/site.js" defer></script>
 </head>
 <body>
 
 <nav class="site-nav">
-  <a href="../index.html" class="nav-btn">← Home</a>
-  <a href="../Manifold%20Atlas.html#node-__ID__" class="nav-btn atlas">◆ View on Atlas</a>
+  <a href="/atlas/?event=__ID__" class="nav-btn atlas">◆ See on the map</a>
+  <a href="/reader/?article=__ID__" class="nav-btn">🎧 Reading Room</a>
   <span class="nav-spacer"></span>
   <button class="nav-btn" onclick="launchRSVP()">⚡ RSVP</button>
 </nav>
@@ -580,6 +581,105 @@ def escape_html_attr(s):
 
 # ── Core builder ─────────────────────────────────────────────────────────────
 
+def sync_reading_room(parsed, all_events):
+    """Pipe every node into the Reading Room library so it never needs a
+    manual publish step. Existing article JSON keeps its `published` date;
+    articles published by hand (no node file) stay in the manifest."""
+    rr_dir = os.path.join(DATA_DIR, 'reading-room')
+    art_dir = os.path.join(rr_dir, 'articles')
+    os.makedirs(art_dir, exist_ok=True)
+    manifest_path = os.path.join(rr_dir, 'manifest.json')
+    ids = []
+    if os.path.exists(manifest_path):
+        with open(manifest_path, encoding='utf-8') as f:
+            ids = json.load(f)
+    tags_by_id = {e['id']: e['tags'] for e in all_events}
+    today = datetime.date.today().isoformat()
+
+    for eid, (fm, body) in parsed.items():
+        path = os.path.join(art_dir, f'{eid}.json')
+        old = {}
+        if os.path.exists(path):
+            with open(path, encoding='utf-8') as f:
+                old = json.load(f)
+        article = {
+            'id': eid,
+            'title': fm.get('title', ''),
+            'published': old.get('published') or str(fm.get('published') or today),
+            'excerpt': fm.get('excerpt', ''),
+            'content': body,
+        }
+        if fm.get('date'):
+            article['date'] = fm['date']
+        if fm.get('location'):
+            article['location'] = fm['location']
+        tags = tags_by_id.get(eid) or fm.get('tags')
+        if tags:
+            article['tags'] = tags
+        article = {**old, **article}
+        if article != old:
+            with open(path, 'w', encoding='utf-8') as f:
+                json.dump(article, f, ensure_ascii=False, indent=2)
+        if eid not in ids:
+            ids.append(eid)
+
+    with open(manifest_path, 'w', encoding='utf-8') as f:
+        json.dump(ids, f, indent=2)
+        f.write('\n')
+    print(f'Reading Room library: {len(ids)} articles')
+
+
+ARTICLE_INDEX_TMPL = """<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>All articles · FeistTech</title>
+<link rel="stylesheet" href="/vendor/google-fonts/fonts.css">
+<style>
+  body { margin: 0; background: #0b0c10; color: #e4e2dc; font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 760px; margin: 0 auto; padding: 40px 16px 64px; }
+  h1 { font: 400 30px/1.2 "Cormorant Garamond", Georgia, serif; margin: 0 0 24px; }
+  ol { list-style: none; margin: 0; padding: 0; }
+  li { border-top: 1px solid #23262f; }
+  li a { display: grid; grid-template-columns: 6.5em 1fr; gap: 12px; padding: 12px 0; text-decoration: none; color: inherit; }
+  li a:hover b { color: #c9a84c; }
+  time { font: 11px "Space Mono", monospace; color: #c9a84c; padding-top: 3px; }
+  b { font-weight: 500; }
+  small { display: block; color: #8d9099; font-size: 12px; }
+</style>
+<script src="/site.js" defer></script>
+</head>
+<body>
+<main>
+<h1>All articles</h1>
+<ol>
+__ITEMS__
+</ol>
+</main>
+</body>
+</html>
+"""
+
+
+def write_article_index(all_events):
+    """articles/index.html: every article in historical order."""
+    def key(e):
+        d = e['date']
+        return (d['year'], d['month'], d['day'])
+    items = []
+    for e in sorted(all_events, key=key):
+        year = e['date']['year']
+        label = f'{-year} BCE' if year < 0 else str(year)
+        items.append(
+            f'<li><a href="{e["id"]}.html"><time>{label}</time>'
+            f'<span><b>{escape_html_attr(e["title"])}</b>'
+            f'<small>{escape_html_attr(e["location"]["name"])}</small></span></a></li>'
+        )
+    with open(os.path.join(ARTICLES_DIR, 'index.html'), 'w', encoding='utf-8') as f:
+        f.write(ARTICLE_INDEX_TMPL.replace('__ITEMS__', '\n'.join(items)))
+
+
 def build():
     os.makedirs(DATA_DIR, exist_ok=True)
     os.makedirs(ARTICLES_DIR, exist_ok=True)
@@ -708,12 +808,17 @@ def build():
         json.dump(all_events, f, ensure_ascii=False, indent=2)
     print(f'\nWrote {len(all_events)} events to {events_path}')
 
+    sync_reading_room(parsed, all_events)
+    write_article_index(all_events)
+
     # ── Write sitemap.xml ────────────────────────────────────────────────────
     today = datetime.date.today().isoformat()
     # Always include the main app pages
     static_urls = [
         SITE_URL + '/',
-        SITE_URL + '/Manifold%20Atlas.html',
+        SITE_URL + '/atlas/',
+        SITE_URL + '/articles/',
+        SITE_URL + '/reader/',
     ]
     all_urls = static_urls + sitemap_urls
     sitemap_lines = ['<?xml version="1.0" encoding="UTF-8"?>',
