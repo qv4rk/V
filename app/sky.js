@@ -13,7 +13,7 @@ window.MA = window.MA || {};
 (function(MA){
   'use strict';
 
-  const CDN = 'https://cdn.jsdelivr.net/gh/ofrohn/d3-celestial@master/data/';
+  const CDN = '/vendor/d3-celestial/';
 
   class SkyDome {
     constructor(canvas, getTheme) {
@@ -41,14 +41,18 @@ window.MA = window.MA || {};
       if (this.data || this.loading) return;
       this.loading = true;
       try {
-        const [sr, cr] = await Promise.all([
+        const [sr, cr, cnr] = await Promise.all([
           fetch(CDN + 'stars.6.json'),
-          fetch(CDN + 'constellations.lines.json')
+          fetch(CDN + 'constellations.lines.json'),
+          fetch(CDN + 'constellations.lines.cn.json').catch(() => null)
         ]);
         const [stars, cons] = await Promise.all([sr.json(), cr.json()]);
+        let cn = [];
+        try { cn = cnr && cnr.ok ? (await cnr.json()).features : []; } catch (e) {}
         this.data = {
           stars: stars.features,
-          cons:  cons.features
+          cons:  cons.features,
+          consCn: cn
         };
       } catch (e) {
         console.warn('Sky: failed to load celestial data', e);
@@ -191,8 +195,9 @@ window.MA = window.MA || {};
 
       // Compute observer-centered RA/Dec
       const lst = MA.calcLST(this.jd, this.observerLon);
-      const ra0 = (lst + this.raOff + 360) % 360;
-      const dec0 = Math.max(-89, Math.min(89, this.observerLat + this.decOff));
+      const P = MA.precise(this.jd, this.observerLat, this.observerLon);
+      const ra0 = ((P ? P.zenith.ra : lst) + this.raOff + 360) % 360;
+      const dec0 = Math.max(-89, Math.min(89, (P ? P.zenith.dec : this.observerLat) + this.decOff));
 
       const proj = (ra, dec) => this._proj(ra, dec, ra0, dec0, sc, cx, cy);
 
@@ -239,22 +244,28 @@ window.MA = window.MA || {};
 
       // Constellation lines
       ctx.save();
-      ctx.strokeStyle = theme.cons;
-      ctx.lineWidth = 0.8;
-      this.data.cons.forEach(feat => {
-        if (!feat.geometry || feat.geometry.type !== 'MultiLineString') return;
-        feat.geometry.coordinates.forEach(line => {
-          ctx.beginPath();
-          let started = false;
-          line.forEach(c => {
-            const pt = proj(c[0], c[1]);
-            if (pt) {
-              started ? ctx.lineTo(pt.x, pt.y) : (ctx.moveTo(pt.x, pt.y), started = true);
-            }
+      // Star figures: Western (IAU), Chinese (the 3 enclosures & 28 mansions), or both
+      const culture = MA.skyCulture || 'western';
+      const drawLines = (features, color, width) => {
+        ctx.strokeStyle = color;
+        ctx.lineWidth = width;
+        features.forEach(feat => {
+          if (!feat.geometry || feat.geometry.type !== 'MultiLineString') return;
+          feat.geometry.coordinates.forEach(line => {
+            ctx.beginPath();
+            let started = false;
+            line.forEach(c => {
+              const pt = proj(c[0], c[1]);
+              if (pt) {
+                started ? ctx.lineTo(pt.x, pt.y) : (ctx.moveTo(pt.x, pt.y), started = true);
+              }
+            });
+            if (started) ctx.stroke();
           });
-          if (started) ctx.stroke();
         });
-      });
+      };
+      if (culture !== 'chinese') drawLines(this.data.cons, theme.cons, 0.8);
+      if (culture !== 'western' && this.data.consCn) drawLines(this.data.consCn, 'rgba(230, 90, 70, 0.55)', 0.8);
       ctx.restore();
 
       // Constellation names
@@ -262,7 +273,7 @@ window.MA = window.MA || {};
       ctx.fillStyle = theme.cons;
       ctx.font = "9px 'Cinzel', serif";
       ctx.textAlign = 'center';
-      if (this.mode === 'full') this.data.cons.forEach(feat => {
+      if (this.mode === 'full' && culture !== 'chinese') this.data.cons.forEach(feat => {
         if (!feat.geometry || !feat.properties) return;
         const coords = feat.geometry.coordinates;
         if (!coords || !coords[0] || coords[0].length < 2) return;
@@ -328,7 +339,7 @@ window.MA = window.MA || {};
 
       // Sun
       const sunGeo = { x:-earthEcl.x, y:-earthEcl.y, z:-earthEcl.z };
-      const sunEq = MA.ecl2eq(sunGeo, this.jd);
+      const sunEq = P ? P.sun : MA.ecl2eq(sunGeo, this.jd);
       const sp = proj(sunEq.ra, sunEq.dec);
       if (sp) {
         const g = ctx.createRadialGradient(sp.x, sp.y, 0, sp.x, sp.y, 26);
@@ -350,10 +361,10 @@ window.MA = window.MA || {};
       const moonLon = MA.moonEclLon(this.jd);
       const moonLonR = moonLon * MA.d2r;
       const moonEcl = { x: Math.cos(moonLonR)*0.0026, y: Math.sin(moonLonR)*0.0026, z: 0 };
-      const moonEq = MA.ecl2eq(moonEcl, this.jd);
+      const moonEq = P ? P.moon : MA.ecl2eq(moonEcl, this.jd);
       const mp = proj(moonEq.ra, moonEq.dec);
       if (mp) {
-        const phase = MA.moonPhase(this.jd);
+        const phase = P ? P.moonPhase : MA.moonPhase(this.jd);
         const illum = (1 - Math.cos(phase * 2 * Math.PI)) / 2;
         const r = 9;
         ctx.fillStyle = '#e8e8d8';
@@ -371,8 +382,7 @@ window.MA = window.MA || {};
       // Planets
       MA.PLANETS.forEach(p => {
         if (p.id === 'ter') return;
-        const v = MA.geoVec(p, this.jd);
-        const eq = MA.ecl2eq(v, this.jd);
+        const eq = P && P.planets[p.id] ? P.planets[p.id] : MA.ecl2eq(MA.geoVec(p, this.jd), this.jd);
         const pt = proj(eq.ra, eq.dec);
         if (!pt) return;
         const r = 3;

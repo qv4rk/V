@@ -183,7 +183,8 @@
     document.getElementById('pBody').innerHTML =
       '<p>' + esc(e.excerpt) + '</p>' +
       '<div class="actions"><a class="primary" href="/articles/' + esc(e.id) + '.html">Read</a>' +
-      '<a href="/reader/?article=' + encodeURIComponent(e.id) + '">Listen in Reading Room</a></div>' +
+      '<a href="/reader/?article=' + encodeURIComponent(e.id) + '" title="Reading Room: listen or download MP3">📖 Listen</a>' +
+      '<a href="/sky/#node-' + encodeURIComponent(e.id) + '" title="Globe, date dial and the sky from this place on that day">🌍 Sky</a></div>' +
       (linked.length ? '<div class="links"><h2>Connected</h2>' + linked.map(function (o) {
         return '<a href="?event=' + encodeURIComponent(o.id) + '" data-event="' + esc(o.id) + '">' + esc(o.title) + '</a>';
       }).join('') + '</div>' : '');

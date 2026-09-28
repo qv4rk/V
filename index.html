@@ -72,10 +72,10 @@
     <section>
       <h2 class="label">Explore</h2>
       <ul>
-        <li><a href="/atlas/">The Atlas<small>Globe to street, every article on one map</small></a></li>
+        <li><a href="/sky/">Globe &amp; sky<small>Stars from any node on its day, 5,000 years of eclipses</small></a></li>
+        <li><a href="/atlas/">Street map<small>Globe to street level</small></a></li>
         <li><a href="/gaza/">Gaza damage<small>Building damage over time</small></a></li>
         <li><a href="/gaspi/">The Great GASPI<small>West Bank and Gaza territories</small></a></li>
-        <li><a href="/sky/">Sky &amp; time dial<small>The original Manifold Atlas</small></a></li>
       </ul>
     </section>
     <section>
@@ -114,8 +114,8 @@
     document.getElementById('latest-excerpt').textContent = a.excerpt || '';
     var go = document.getElementById('latest-go');
     go.innerHTML = '';
-    [['Read', read.href], ['Listen', '/reader/?article=' + encodeURIComponent(a.id)]]
-      .concat(a.location ? [['See on the map', '/atlas/?event=' + encodeURIComponent(a.id)]] : [])
+    [['Read', read.href], ['📖 Listen', '/reader/?article=' + encodeURIComponent(a.id)]]
+      .concat(a.location ? [['🌍 Globe & sky', '/sky/#node-' + encodeURIComponent(a.id)]] : [])
       .forEach(function (l) {
         var x = document.createElement('a');
         x.href = l[1];

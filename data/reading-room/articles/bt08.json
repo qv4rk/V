@@ -21,5 +21,6 @@
     "eviction",
     "rack-renting",
     "institution-eats-its-own"
-  ]
+  ],
+  "voice": "en-IE-EmilyNeural"
 }

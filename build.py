@@ -355,8 +355,9 @@ article {
 <body>
 
 <nav class="site-nav">
-  <a href="/atlas/?event=__ID__" class="nav-btn atlas">◆ See on the map</a>
-  <a href="/reader/?article=__ID__" class="nav-btn">🎧 Reading Room</a>
+  <a href="/reader/?article=__ID__" class="nav-btn" title="Listen or download the MP3">📖 Reading Room</a>
+  <a href="/sky/#node-__ID__" class="nav-btn atlas" title="Globe, date dial and the sky from this place on that day">🌍 Globe &amp; sky</a>
+  <a href="/atlas/?event=__ID__" class="nav-btn">🗺 Street map</a>
   <span class="nav-spacer"></span>
   <button class="nav-btn" onclick="launchRSVP()">⚡ RSVP</button>
 </nav>
@@ -581,6 +582,30 @@ def escape_html_attr(s):
 
 # ── Core builder ─────────────────────────────────────────────────────────────
 
+# Narrator voice per article: the reader speaks English with the accent of
+# the place the article is about. A node can override with `voice:`.
+VOICE_BY_LANG = {'ar': 'ar-SA-HamedNeural', 'he': 'he-IL-AvriNeural', 'zh': 'zh-CN-XiaoxiaoNeural'}
+VOICE_BY_PLACE = [
+    ('en-IE-EmilyNeural', ('dublin', 'county ', 'ireland', 'irish', 'kilrush', 'thurles', 'howth', 'maynooth')),
+    ('zh-CN-XiaoxiaoNeural', ('china', 'chinese', 'guangzhou', 'canton', 'pearl river', 'yunnan', 'lingdingyang', 'lintin', 'beijing')),
+    ('ar-SA-HamedNeural', ('palestine', 'jerusalem', 'nablus', 'safed', 'gaza', 'jenin', 'tulkarm', 'jezreel', 'syria',
+                           'cairo', 'egypt', 'algiers', 'algeria', 'judea', 'idumea', 'levant')),
+]
+
+
+def pick_voice(fm):
+    if fm.get('voice'):
+        return fm['voice']
+    lang = fm.get('lang', 'en')
+    if lang in VOICE_BY_LANG:
+        return VOICE_BY_LANG[lang]
+    place = ((fm.get('location') or {}).get('name') or '').lower()
+    for voice, words in VOICE_BY_PLACE:
+        if any(w in place for w in words):
+            return voice
+    return None
+
+
 def sync_reading_room(parsed, all_events):
     """Pipe every node into the Reading Room library so it never needs a
     manual publish step. Existing article JSON keeps its `published` date;
@@ -616,6 +641,9 @@ def sync_reading_room(parsed, all_events):
         tags = tags_by_id.get(eid) or fm.get('tags')
         if tags:
             article['tags'] = tags
+        voice = pick_voice(fm)
+        if voice:
+            article['voice'] = voice
         article = {**old, **article}
         if article != old:
             with open(path, 'w', encoding='utf-8') as f:
@@ -642,7 +670,10 @@ ARTICLE_INDEX_TMPL = """<!DOCTYPE html>
   h1 { font: 400 30px/1.2 "Cormorant Garamond", Georgia, serif; margin: 0 0 24px; }
   ol { list-style: none; margin: 0; padding: 0; }
   li { border-top: 1px solid #23262f; }
-  li a { display: grid; grid-template-columns: 6.5em 1fr; gap: 12px; padding: 12px 0; text-decoration: none; color: inherit; }
+  li { display: flex; align-items: center; gap: 8px; }
+  li a.row { flex: 1; display: grid; grid-template-columns: 6.5em 1fr; gap: 12px; padding: 12px 0; text-decoration: none; color: inherit; }
+  li a.go { text-decoration: none; font-size: 16px; padding: 6px; border-radius: 6px; }
+  li a.go:hover { background: #ffffff12; }
   li a:hover b { color: #c9a84c; }
   time { font: 11px "Space Mono", monospace; color: #c9a84c; padding-top: 3px; }
   b { font-weight: 500; }
@@ -672,9 +703,11 @@ def write_article_index(all_events):
         year = e['date']['year']
         label = f'{-year} BCE' if year < 0 else str(year)
         items.append(
-            f'<li><a href="{e["id"]}.html"><time>{label}</time>'
+            f'<li><a class="row" href="{e["id"]}.html"><time>{label}</time>'
             f'<span><b>{escape_html_attr(e["title"])}</b>'
-            f'<small>{escape_html_attr(e["location"]["name"])}</small></span></a></li>'
+            f'<small>{escape_html_attr(e["location"]["name"])}</small></span></a>'
+            f'<a class="go" href="/reader/?article={e["id"]}" title="Reading Room: listen or download MP3" aria-label="Reading Room">📖</a>'
+            f'<a class="go" href="/sky/#node-{e["id"]}" title="Globe, date dial and sky from this place" aria-label="Globe and sky">🌍</a></li>'
         )
     with open(os.path.join(ARTICLES_DIR, 'index.html'), 'w', encoding='utf-8') as f:
         f.write(ARTICLE_INDEX_TMPL.replace('__ITEMS__', '\n'.join(items)))

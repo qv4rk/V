@@ -45,5 +45,6 @@
     }
   },
   "lang": "en",
-  "article_url": "articles/n01.html"
+  "article_url": "articles/n01.html",
+  "voice": "ar-SA-HamedNeural"
 }

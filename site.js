@@ -22,10 +22,10 @@
       ['Hoffect', '/hoffect/', 'Oncology research dossier'],
     ]},
     { title: 'Explore', items: [
-      ['The Atlas', '/atlas/', 'Globe to street: every article on one map'],
+      ['Street map', '/atlas/', 'Globe to street level, Gaza building damage'],
       ['Gaza damage', '/gaza/', 'Building-level damage over time'],
       ['The Great GASPI', '/gaspi/', 'West Bank and Gaza territories'],
-      ['Sky & time dial', '/sky/', 'The original Manifold Atlas'],
+      ['Globe & sky', '/sky/', 'Date dial, stars from any node, 5,000 years of eclipses'],
     ]},
     { title: 'Tools', items: [
       ['Methionine', '/methionine/', 'Meal builder and tracker'],
