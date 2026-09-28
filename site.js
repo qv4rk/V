@@ -32,7 +32,7 @@
       ['Natal chart', '/natal/', 'Planet positions for any birth sky'],
       ['Eigenstate Roll', '/eigenstate/', 'Dice and probability oracle'],
       ['Signature Trends', '/trends/', 'Category and geography trends'],
-      ['Solar System', '/solsys/', '3D orbital model'],
+      ['Space', '/space/', 'ʻOumuamua, satellites, Planet Nine, eclipses from the side'],
       ['Kaleidoscope studio', '/omniscope/', 'Omniscope, hologram, font forges'],
       ['Gallery', '/gallery/', 'Generative art'],
     ]},
