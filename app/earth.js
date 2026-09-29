@@ -410,11 +410,11 @@ window.MA = window.MA || {};
 
       // Outer atmospheric halo
       const halo = ctx.createRadialGradient(cx, cy, R*0.95, cx, cy, R*1.20);
-      halo.addColorStop(0, theme.accent + '22');
-      halo.addColorStop(0.7, 'rgba(0,0,0,0)');
+      halo.addColorStop(0, 'rgba(120,170,255,0.16)');
+      halo.addColorStop(0.5, 'rgba(0,0,0,0)');
       ctx.fillStyle = halo;
       ctx.beginPath();
-      ctx.arc(cx, cy, R*1.22, 0, Math.PI*2);
+      ctx.arc(cx, cy, R*1.12, 0, Math.PI*2);
       ctx.fill();
 
       // Sphere disk (land fill if theme paints it)

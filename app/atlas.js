@@ -191,10 +191,9 @@ window.MA = window.MA || {};
         // of sitting on their placeholder "-" until the user interacts.
         this.setDate(this.jd);
       }
-      if (params.has('view')) {
-        const v = params.get('view');
-        if (v === 'atrium' || v === 'atlas' || v === 'sky') this.setView(v);
-      }
+      // Open straight onto the globe; the big dial is one tap away (corner dial).
+      const v = params.get('view');
+      this.setView(v === 'atrium' || v === 'sky' ? v : 'atlas');
       if (params.has('rot') && this.earth && Array.isArray(this.earth.rotation)) {
         const parts = params.get('rot').split(',').map(Number);
         if (parts.length === 2 && parts.every(n => !isNaN(n))) {
@@ -364,9 +363,16 @@ window.MA = window.MA || {};
         this.setView(this.view === 'sky' ? 'atlas' : 'sky');
       };
       document.getElementById('corner-dial').addEventListener('dblclick', () => {
-        // Quick return to atrium
+        // Bring the dial front and centre
         this.setView('atrium');
       });
+      // Eclipse catalogue on both dials: markers where the Sun must be for
+      // each eclipse in the coming year; crank until the hands line up.
+      fetch('/data/eclipses.json').then(r => r.json()).then(rows => {
+        const list = rows.map(r => ({ type: r[0], kind: r[1], jd: MA.jd(new Date(r[2])) }));
+        this.atriumDial.setEclipses(list);
+        this.cornerDial.setEclipses(list);
+      }).catch(() => {});
 
       // Atrium "Enter" button
       document.getElementById('enter-btn').addEventListener('click', () => {

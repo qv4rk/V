@@ -57,7 +57,7 @@
   backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
   border: 1px solid var(--ft-line); border-top: 0; border-radius: 0 0 8px 8px;
   color: var(--ft-gold); font-family: var(--ft-mono); font-size: 10px;
-  letter-spacing: .14em; padding: 4px 12px 5px; cursor: pointer; opacity: .8;
+  letter-spacing: .14em; padding: 6px 14px 7px; cursor: pointer; opacity: 1; font-size: 11px; border-color: #c9a84c66;
 }
 .ft-tab:hover, .ft-tab:focus-visible { opacity: 1; }
 
