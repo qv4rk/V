@@ -16,7 +16,7 @@
   }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 15px; line-height: 1.55; }
-  main { max-width: 880px; margin: 0 auto; padding: 56px 16px 40px; }
+  main { max-width: 1040px; margin: 0 auto; padding: 56px 16px 40px; }
   a { color: inherit; }
 
   .intro { font-family: var(--serif); font-size: clamp(24px, 4vw, 32px); line-height: 1.25; margin: 0 0 40px; max-width: 30ch; }
@@ -31,7 +31,7 @@
   .latest .go a { color: var(--gold); text-decoration: none; }
   .latest .go a:hover { text-decoration: underline; }
 
-  .cols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; }
+  .cols { display: grid; grid-template-columns: repeat(4, 1fr); gap: 28px; }
   .cols ul { list-style: none; margin: 0; padding: 0; }
   .cols li a { display: block; padding: 6px 0; text-decoration: none; font-size: 14px; }
   .cols li a:hover { color: var(--gold); }
@@ -86,6 +86,15 @@
         <li><a href="/natal/">Natal chart<small>Planet positions for any birth sky</small></a></li>
         <li><a href="/eigenstate/">Eigenstate Roll<small>Dice and probability oracle</small></a></li>
         <li class="more"><a href="#" data-ft-search>All tools →</a></li>
+      </ul>
+    </section>
+    <section>
+      <h2 class="label">Kaleidoscope</h2>
+      <ul>
+        <li><a href="/omniscope/">Omniscope<small>Kaleidoscope pattern synth</small></a></li>
+        <li><a href="/apps/webapps/kalidascope/fontforge5.html">Font Forge 5<small>Build a typeface</small></a></li>
+        <li><a href="/apps/webapps/kalidascope/klidascopetopgunforge.html">Top Gun Forge<small>Pattern forge</small></a></li>
+        <li class="more"><a href="#" onclick="document.querySelector('.ft-bar [aria-controls]').click();return false">All 7 studios →</a></li>
       </ul>
     </section>
   </div>

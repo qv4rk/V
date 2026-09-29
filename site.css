@@ -57,17 +57,17 @@
   backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
   border: 1px solid var(--ft-line); border-top: 0; border-radius: 0 0 8px 8px;
   color: var(--ft-gold); font-family: var(--ft-mono); font-size: 10px;
-  letter-spacing: .14em; padding: 4px 12px 5px; cursor: pointer; opacity: .8;
+  letter-spacing: .14em; padding: 6px 14px 7px; cursor: pointer; opacity: 1; font-size: 11px; border-color: #c9a84c66;
 }
 .ft-tab:hover, .ft-tab:focus-visible { opacity: 1; }
 
 /* ── Directory menu ── */
 .ft-menu {
   position: fixed; z-index: 2147483001; top: 48px; left: 16px;
-  width: min(640px, calc(100vw - 32px)); max-height: calc(100vh - 64px); overflow: auto;
+  width: min(840px, calc(100vw - 32px)); max-height: calc(100vh - 64px); overflow: auto;
   background: var(--ft-panel); border: 1px solid var(--ft-line); border-radius: 10px;
   box-shadow: 0 16px 48px #000a; padding: 18px 20px;
-  display: none; grid-template-columns: repeat(3, 1fr); gap: 8px 24px;
+  display: none; grid-template-columns: repeat(4, 1fr); gap: 8px 24px;
   color: var(--ft-text);
 }
 .ft-menu.open { display: grid; }

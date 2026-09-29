@@ -191,10 +191,9 @@ window.MA = window.MA || {};
         // of sitting on their placeholder "-" until the user interacts.
         this.setDate(this.jd);
       }
-      if (params.has('view')) {
-        const v = params.get('view');
-        if (v === 'atrium' || v === 'atlas' || v === 'sky') this.setView(v);
-      }
+      // Open straight onto the globe; the big dial is one tap away (corner dial).
+      const v = params.get('view');
+      this.setView(v === 'atrium' || v === 'sky' ? v : 'atlas');
       if (params.has('rot') && this.earth && Array.isArray(this.earth.rotation)) {
         const parts = params.get('rot').split(',').map(Number);
         if (parts.length === 2 && parts.every(n => !isNaN(n))) {
@@ -205,6 +204,34 @@ window.MA = window.MA || {};
       if (params.has('zoom') && this.sky) {
         const z = parseFloat(params.get('zoom'));
         if (!isNaN(z)) this.sky.zoom = Math.max(0.45, Math.min(4, z));
+      }
+      // Arriving through a portal from Space or the street map
+      if (params.has('t')) {
+        const d = new Date(+params.get('t'));
+        if (!isNaN(d)) this.setDate(MA.jd(d));
+      }
+      if (params.has('gz') && this.earth) {
+        const gz = parseFloat(params.get('gz'));
+        if (!isNaN(gz)) { this.earth.setZoom(gz); this.earth.setSpin(false); }
+      }
+      if (this.earth) this.earth.onZoomPast = dir => this._portal(dir);
+    }
+
+    /* ── Portals: zooming the globe out past its smallest size opens Space
+       at the same moment, looking at the same side of Earth; zooming in past
+       its largest opens the street map on the same spot. ── */
+    _portal(dir) {
+      if (this.view !== 'atlas' || !window.FTPortal) return;
+      const e = this.earth;
+      const lat = +(-e.rotation[1]).toFixed(3), lon = +(((-e.rotation[0] + 540) % 360) - 180).toFixed(3);
+      const t = Math.round(MA.dj(this.jd).getTime());
+      const radiusPx = e.scale * e.zoom;
+      if (dir === 'out') {
+        const frac = (radiusPx / (e.H / 2)).toFixed(3);
+        FTPortal.go(`/space/?view=system&focus=earth&t=${t}&geo=${lat},${lon}&frac=${frac}`);
+      } else {
+        const z = Math.max(1.5, Math.log2(2 * Math.PI * radiusPx / 512)).toFixed(2);
+        FTPortal.go(`/atlas/?t=${t}#view=${z}/${lat}/${lon}`);
       }
     }
 
@@ -336,9 +363,16 @@ window.MA = window.MA || {};
         this.setView(this.view === 'sky' ? 'atlas' : 'sky');
       };
       document.getElementById('corner-dial').addEventListener('dblclick', () => {
-        // Quick return to atrium
+        // Bring the dial front and centre
         this.setView('atrium');
       });
+      // Eclipse catalogue on both dials: markers where the Sun must be for
+      // each eclipse in the coming year; crank until the hands line up.
+      fetch('/data/eclipses.json').then(r => r.json()).then(rows => {
+        const list = rows.map(r => ({ type: r[0], kind: r[1], jd: MA.jd(new Date(r[2])) }));
+        this.atriumDial.setEclipses(list);
+        this.cornerDial.setEclipses(list);
+      }).catch(() => {});
 
       // Atrium "Enter" button
       document.getElementById('enter-btn').addEventListener('click', () => {

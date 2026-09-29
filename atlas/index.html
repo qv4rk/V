@@ -67,6 +67,7 @@
   }
 </style>
 <script src="/site.js" data-mode="tab" defer></script>
+<script src="/portal.js"></script>
 </head>
 <body>
 <div id="map" aria-label="Map of FeistTech articles"></div>
@@ -293,6 +294,37 @@
   updateHint();
 
   var dataReady = fetch('/data/events.json').then(function (r) { return r.json(); });
+  // Portal back up to the globe & sky: zooming out to the whole world hands
+  // over to the globe at the same spot and moment.
+  var portalTime = (window.FTPortal && FTPortal.time()) || new Date();
+  if (window.FTPortal && FTPortal.arrived) {
+    map.scrollZoom.disable(); map.touchZoomRotate.disable();
+    (function wake() {
+      FTPortal.ready() ? (map.scrollZoom.enable(), map.touchZoomRotate.enable()) : setTimeout(wake, 150);
+    })();
+  }
+  function toGlobe() {
+    var c = map.getCenter();
+    FTPortal.go('/sky/?view=atlas&t=' + portalTime.getTime() + '&gz=5.5&rot=' +
+      (-c.lng).toFixed(2) + ',' + (-c.lat).toFixed(2));
+  }
+  // Once the whole Earth is in view, zooming out any further opens the globe.
+  var OUT = 1.9, zoomStart = null;
+  map.on('zoomstart', function () { zoomStart = map.getZoom(); });
+  map.on('zoomend', function (e) {
+    if (e.originalEvent && window.FTPortal && map.getZoom() < OUT && map.getZoom() < zoomStart - 0.05) toGlobe();
+  });
+  map.getCanvasContainer().addEventListener('wheel', function (e) {
+    if (e.deltaY > 0 && map.getZoom() < OUT && window.FTPortal) toGlobe();
+  }, { passive: true });
+  var pinch0 = null;
+  map.getCanvasContainer().addEventListener('touchmove', function (e) {
+    if (e.touches.length !== 2 || !window.FTPortal) { pinch0 = null; return; }
+    var d = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+    if (pinch0 === null) pinch0 = d;
+    if (d < pinch0 * 0.8 && map.getZoom() < OUT) toGlobe();
+  }, { passive: true });
+
   map.on('style.load', function () {
     map.setProjection({ type: 'globe' });
     if (map.setSky) map.setSky({ 'atmosphere-blend': ['interpolate', ['linear'], ['zoom'], 0, 1, 5, 1, 7, 0] });

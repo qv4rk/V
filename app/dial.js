@@ -480,10 +480,47 @@ window.MA = window.MA || {};
     }
 
     /* ── Public API ── */
+    setEclipses(list) { this._eclipses = list; this._eclKey = null; this.setDate(this.jd); }
+
+    // Markers for every eclipse in the next 12 months, placed at the Sun's
+    // longitude at that eclipse (solar: filled, under the Sun hand; lunar:
+    // ring, opposite). Crank the dial: when the Sun hand reaches a marker and
+    // the Moon hand sits on it (solar) or across (lunar), that is the eclipse
+    // -- the same trick the Antikythera's Saros dial encodes.
+    _drawEclipses(jdt) {
+      if (!this._eclipses) return;
+      const key = Math.floor(jdt / 5);
+      if (key === this._eclKey) return;
+      this._eclKey = key;
+      if (!this._eclG) this._eclG = el('g', { class: 'dial-eclipses' }, this.svg);
+      const g = this._eclG;
+      while (g.firstChild) g.removeChild(g.firstChild);
+      const cx = this.center, cy = this.center, r = this.center * 0.62, big = this.mode === 'atrium';
+      let lo = 0, hi = this._eclipses.length;
+      while (lo < hi) { const m = (lo + hi) >> 1; if (this._eclipses[m].jd < jdt - 2) lo = m + 1; else hi = m; }
+      const MON = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+      for (let i = lo; i < this._eclipses.length && this._eclipses[i].jd < jdt + 366; i++) {
+        const e = this._eclipses[i];
+        const lon = (MA.sunEclLon(e.jd) + (e.type === 'L' ? 180 : 0)) % 360;
+        const near = Math.abs(e.jd - jdt) < 1.5;
+        const gg = el('g', { transform: `rotate(${lon} ${cx} ${cy})` }, g);
+        el('circle', { cx, cy: cy - r, r: (big ? 7 : 3.2) * (near ? 1.6 : 1),
+          fill: e.type === 'S' ? '#111' : 'none', stroke: near ? '#ff5a3c' : '#c9a84c',
+          'stroke-width': big ? 1.6 : 1 }, gg);
+        if (big) {
+          const t = el('text', { x: cx, y: cy - r - 11, 'text-anchor': 'middle', 'font-size': 9,
+            fill: near ? '#ff5a3c' : '#8a7a50', 'font-family': 'Space Mono, monospace' }, gg);
+          const d = MA.dj(e.jd);
+          t.textContent = (e.type === 'S' ? 'SOLAR ' : 'LUNAR ') + MON[d.getUTCMonth()] + ' ' + d.getUTCDate();
+        }
+      }
+    }
+
     setDate(jdt) {
       this.jd = jdt;
       const cx = this.center, cy = this.center;
       const R = this.center * 0.96;
+      this._drawEclipses(jdt);
 
       // Compute ecliptic longitudes
       const sunL  = MA.sunEclLon(jdt);          // 0..360 deg, ecliptic
