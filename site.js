@@ -33,8 +33,16 @@
       ['Eigenstate Roll', '/eigenstate/', 'Dice and probability oracle'],
       ['Signature Trends', '/trends/', 'Category and geography trends'],
       ['Space', '/space/', 'ʻOumuamua, satellites, Planet Nine, eclipses from the side'],
-      ['Kaleidoscope studio', '/omniscope/', 'Omniscope, hologram, font forges'],
       ['Gallery', '/gallery/', 'Generative art'],
+    ]},
+    { title: 'Kaleidoscope', items: [
+      ['Omniscope', '/omniscope/', 'Kaleidoscope pattern synth'],
+      ['Hologram', '/apps/webapps/kalidascope/hologram.html', 'Holographic canvas'],
+      ['Constellation Tracer', '/apps/webapps/kalidascope/constellation-tracer.html', 'Draw with the stars'],
+      ['Font Forge 5', '/apps/webapps/kalidascope/fontforge5.html', 'Build a typeface'],
+      ['Top Gun Forge', '/apps/webapps/kalidascope/klidascopetopgunforge.html', 'Pattern forge'],
+      ['Vector Fonts', '/apps/webapps/kalidascope/vectorfontskalidascope.html', 'Kaleidoscope lettering'],
+      ['Edgescope', '/apps/webapps/kalidascope/edgescopepatternspall3.html', 'Edge-pattern studio'],
     ]},
   ];
 

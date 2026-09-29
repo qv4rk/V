@@ -104,6 +104,10 @@ window.MA = window.MA || {};
     }
 
     setZoom(z) {
+      // Pushing past either limit hands off to the next page (Space when
+      // zooming out, the street map when zooming in) -- see atlas.js.
+      if (this.onZoomPast && z < MIN_ZOOM * 0.92) this.onZoomPast('out');
+      if (this.onZoomPast && z > MAX_ZOOM * 1.08) this.onZoomPast('in');
       this.zoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, z));
       this._buildProjection();
     }
@@ -145,6 +149,7 @@ window.MA = window.MA || {};
       // Mouse wheel / trackpad: zoom the globe in place.
       c.addEventListener('wheel', e => {
         e.preventDefault();
+        if (window.FTPortal && FTPortal.arrived && !FTPortal.ready()) return;   // settle after a portal
         this.setZoom(this.zoom * (1 - e.deltaY * 0.0015));
         this.spin = false;
       }, { passive:false });
@@ -168,6 +173,7 @@ window.MA = window.MA || {};
         if (e.touches.length === 2 && this._pinch) {
           e.preventDefault();
           const d = pinchDist(e.touches[0], e.touches[1]);
+          if (window.FTPortal && FTPortal.arrived && !FTPortal.ready()) return;
           this.setZoom(this._pinch.zoom0 * (d / this._pinch.dist0));
           this.spin = false;
         } else if (this.dragging && e.touches.length === 1) {

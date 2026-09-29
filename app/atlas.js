@@ -206,6 +206,34 @@ window.MA = window.MA || {};
         const z = parseFloat(params.get('zoom'));
         if (!isNaN(z)) this.sky.zoom = Math.max(0.45, Math.min(4, z));
       }
+      // Arriving through a portal from Space or the street map
+      if (params.has('t')) {
+        const d = new Date(+params.get('t'));
+        if (!isNaN(d)) this.setDate(MA.jd(d));
+      }
+      if (params.has('gz') && this.earth) {
+        const gz = parseFloat(params.get('gz'));
+        if (!isNaN(gz)) { this.earth.setZoom(gz); this.earth.setSpin(false); }
+      }
+      if (this.earth) this.earth.onZoomPast = dir => this._portal(dir);
+    }
+
+    /* ── Portals: zooming the globe out past its smallest size opens Space
+       at the same moment, looking at the same side of Earth; zooming in past
+       its largest opens the street map on the same spot. ── */
+    _portal(dir) {
+      if (this.view !== 'atlas' || !window.FTPortal) return;
+      const e = this.earth;
+      const lat = +(-e.rotation[1]).toFixed(3), lon = +(((-e.rotation[0] + 540) % 360) - 180).toFixed(3);
+      const t = Math.round(MA.dj(this.jd).getTime());
+      const radiusPx = e.scale * e.zoom;
+      if (dir === 'out') {
+        const frac = (radiusPx / (e.H / 2)).toFixed(3);
+        FTPortal.go(`/space/?view=system&focus=earth&t=${t}&geo=${lat},${lon}&frac=${frac}`);
+      } else {
+        const z = Math.max(1.5, Math.log2(2 * Math.PI * radiusPx / 512)).toFixed(2);
+        FTPortal.go(`/atlas/?t=${t}#view=${z}/${lat}/${lon}`);
+      }
     }
 
     /* ── Share ── */

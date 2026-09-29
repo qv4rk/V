@@ -72,6 +72,7 @@
 <script src="/vendor/satellite-js/satellite.min.js"></script>
 <script src="/vendor/topojson-client/topojson-client.min.js"></script>
 <script src="/site.js" data-mode="tab" defer></script>
+<script src="/portal.js"></script>
 </head>
 <body>
 <nav class="tabs" id="tabs" aria-label="Views">
@@ -93,6 +94,8 @@
 <script type="module">
 import * as THREE from 'three';
 import { OrbitControls } from '/vendor/three/OrbitControls.js';
+import { makeCosmos } from './cosmos.js';
+import { makePlanet, loadLandMask } from './planets.js';
 
 const A = window.Astronomy;
 const DEG = Math.PI / 180;
@@ -107,6 +110,12 @@ document.body.prepend(renderer.domElement);
 const camera = new THREE.PerspectiveCamera(45, innerWidth / innerHeight, 0.01, 1e7);
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
+// Let momentum from the previous page die out before zoom responds here
+if (window.FTPortal && FTPortal.arrived) {
+  controls.enableZoom = false;
+  const wake = () => FTPortal.ready() ? (controls.enableZoom = true) : setTimeout(wake, 150);
+  addEventListener('load', () => setTimeout(wake, 150));
+}
 addEventListener('resize', () => {
   renderer.setSize(innerWidth, innerHeight);
   camera.aspect = innerWidth / innerHeight;
@@ -194,7 +203,7 @@ const hypo = { tilt: 50, period: 12000, e: 0.35, O: 97, phase: 180 };
 // ── Shared state ──
 const params = new URLSearchParams(location.search);
 let view = params.get('view') || 'system';
-let date = new Date();
+let date = (window.FTPortal && FTPortal.time()) || new Date();
 let playing = true;
 let speed = 1; // days per second (views override)
 const dateEl = document.getElementById('date');
@@ -257,6 +266,41 @@ function dot(size, color) {
 }
 
 // ════════════ Solar system (also the base for ʻOumuamua and Planet Nine) ════════════
+// ── The real sky, shared by every view: one copy, following the camera ──
+const cosmosReady = makeCosmos(5e5);
+let cosmos = null, skyCulture = 'western';
+try { skyCulture = localStorage.getItem('ma-sky-culture') || 'western'; } catch (e) {}
+// The backdrop is built in the ecliptic frame; the Earth views (eclipse,
+// satellites) use Earth's equator, so tilt it by the obliquity there.
+function addCosmos(equatorial) {
+  const target = scene;
+  cosmosReady.then(c => {
+    cosmos = c;
+    c.setCulture(skyCulture);
+    c.group.rotation.x = equatorial ? 23.4392911 * DEG : 0;
+    target.add(c.group);
+  });
+}
+const landMaskReady = loadLandMask(window.topojson).catch(() => null);
+
+// Earth's true orientation (precession, nutation, sidereal time) as a rotation
+// from its own frame (three.js sphere: +X Greenwich, +Y north) to the scene.
+// eclFrame: true for the solar-system views (ecliptic), false for Earth views.
+function earthQuat(t, eclFrame) {
+  const gast = A.SiderealTime(t) * 15 * DEG, R = A.Rotation_EQD_EQJ(t);
+  const img = (x, y, z) => {
+    const v = A.RotateVector(R, new A.Vector(x * Math.cos(gast) - y * Math.sin(gast), x * Math.sin(gast) + y * Math.cos(gast), z, t));
+    return T3(eclFrame ? toEcl(v) : v);
+  };
+  const ex = img(1, 0, 0), ey = img(0, 1, 0), ez = img(0, 0, 1);
+  return new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(ex, ez, ey.negate()));
+}
+const geoToLocal = (lat, lon) => new THREE.Vector3(
+  Math.cos(lat * DEG) * Math.cos(lon * DEG), Math.sin(lat * DEG), -Math.cos(lat * DEG) * Math.sin(lon * DEG));
+function localToGeo(v) {
+  return { lat: Math.asin(Math.max(-1, Math.min(1, v.y))) / DEG, lon: Math.atan2(-v.z, v.x) / DEG };
+}
+
 const PLANETS = [
   ['Mercury', 'Mercury', 87.97, 0xb0b0b8, 0.35], ['Venus', 'Venus', 224.7, 0xe8d090, 0.55],
   ['Earth', 'Earth', 365.26, 0x5aa7e0, 0.6], ['Mars', 'Mars', 686.98, 0xe05840, 0.45],
@@ -267,21 +311,34 @@ const PLANETS = [
 
 function buildSystem(opts) {
   reset();
-  scene.add(starfield(4000));
-  const sun = dot(2.2, 0xffd76a);
+  addCosmos();
+  const sun = dot(2.2, 0xfff1c0);
   scene.add(sun);
+  const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTexture(), color: 0xffc860,
+    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
+  glow.scale.set(16, 16, 1);
+  scene.add(glow);
   label('SUN', sun, 'hi');
+  scene.add(new THREE.PointLight(0xfff4e0, 2.2, 0, 0));
+  scene.add(new THREE.AmbientLight(0x404a60, 0.35));
 
   const bodies = PLANETS.map(([name, body, period, color, size]) => {
     const pts = [];
     const t0 = A.MakeTime(date);
     for (let k = 0; k <= 180; k++) pts.push(sysPos(toEcl(A.HelioVector(A.Body[body], t0.AddDays(period * k / 180)))));
     scene.add(line(pts, color, 0.28));
-    const m = dot(size, color);
-    scene.add(m);
-    label(name.toUpperCase(), m);
-    return { body, m };
+    const entry = { name, body, size, m: new THREE.Group() };
+    scene.add(entry.m);
+    const build = land => {
+      const p = makePlanet(name, size, name.length * 7, name === 'Earth' ? land : undefined);
+      entry.m.add(p.group);
+      entry.p = p;
+    };
+    name === 'Earth' ? landMaskReady.then(build) : build();
+    label(name.toUpperCase(), entry.m);
+    return entry;
   });
+  planetsForPick = bodies;
 
   // Distance rings for scale
   [1, 10, 100, 1000].forEach(r => {
@@ -341,27 +398,168 @@ function buildSystem(opts) {
 
   camera.position.copy(opts.cam);
   controls.target.set(0, 0, 0);
+  focus = null;
 
   update = () => {
     const t = A.MakeTime(date);
-    bodies.forEach(b => b.m.position.copy(sysPos(toEcl(A.HelioVector(A.Body[b.body], t)))));
+    bodies.forEach(b => {
+      b.m.position.copy(sysPos(toEcl(A.HelioVector(A.Body[b.body], t))));
+      if (b.p) {
+        b.p.update(date, b.m.position.clone().negate().normalize());
+        if (b.name === 'Earth') { b.p.tilt.quaternion.copy(earthQuat(t, true)); b.p.spin.rotation.y = 0; }
+      }
+    });
     const o = oumuamuaAt(date);
     oum.position.copy(sysPos(o.p));
+    followFocus();
     if (opts.onUpdate) opts.onUpdate({ o, t });
   };
   return { redrawNine: () => { hypoOrbit = drawNine(); return hypoOrbit; } };
 }
 
+function glowTexture() {
+  const c = document.createElement('canvas');
+  c.width = c.height = 128;
+  const g = c.getContext('2d'), grad = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+  grad.addColorStop(0, 'rgba(255,255,255,1)'); grad.addColorStop(0.2, 'rgba(255,220,150,.6)');
+  grad.addColorStop(1, 'rgba(255,160,60,0)');
+  g.fillStyle = grad; g.fillRect(0, 0, 128, 128);
+  return new THREE.CanvasTexture(c);
+}
+
+// ── Focus: tap a planet to fly to it and ride along ──
+let planetsForPick = [], focus = null, fly = null, lastEarthDist = Infinity;
+function setFocus(entry) {
+  focus = entry;
+  if (!entry) return;
+  const dist = entry.size * 7;
+  fly = { t0: performance.now(), from: controls.target.clone(), cam: camera.position.clone(), dist };
+  lastEarthDist = Infinity;
+  if (speed > 1) document.querySelector('#speeds .btn')?.click();   // slow to 1 hour/s
+}
+function followFocus() {
+  if (!focus) return;
+  const p = focus.m.position;
+  if (fly) {
+    const u = Math.min(1, (performance.now() - fly.t0) / 1400), e = u < 0.5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2;
+    const dir = fly.cam.clone().sub(p).normalize();
+    controls.target.lerpVectors(fly.from, p, e);
+    camera.position.lerpVectors(fly.cam, p.clone().addScaledVector(dir, fly.dist), e);
+    if (u >= 1) fly = null;
+    return;
+  }
+  const delta = p.clone().sub(controls.target);
+  controls.target.add(delta);
+  camera.position.add(delta);
+  if (focus.name === 'Earth' && focus.p) earthPortal();
+}
+// Zooming close enough to Earth hands over to the Globe & sky page: same
+// moment, same side of Earth facing you, same apparent size.
+function earthPortal() {
+  const e = focus.m.position, d = camera.position.distanceTo(e);
+  const frac = focus.size / (d * Math.tan(camera.fov * DEG / 2));
+  const closing = d < lastEarthDist - 1e-4;
+  lastEarthDist = d;
+  if (frac < 0.62 || !closing || !window.FTPortal) return;
+  const local = camera.position.clone().sub(e).normalize().applyQuaternion(focus.p.tilt.quaternion.clone().invert());
+  const g = localToGeo(local);
+  const gz = Math.max(0.72, frac / 0.76).toFixed(2);
+  FTPortal.go(`/sky/?view=atlas&t=${date.getTime()}&gz=${gz}&rot=${(-g.lon).toFixed(2)},${(-g.lat).toFixed(2)}`);
+}
+{
+  const ray = new THREE.Raycaster(), ptr = new THREE.Vector2();
+  let down = null;
+  renderer.domElement.addEventListener('pointerdown', e => { down = [e.clientX, e.clientY]; });
+  renderer.domElement.addEventListener('pointerup', e => {
+    if (!down || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 6 || !planetsForPick.length) return;
+    ptr.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
+    ray.setFromCamera(ptr, camera);
+    // generous hit test: nearest planet whose screen position is within 22px
+    let best = null, bd = 22;
+    const v = new THREE.Vector3();
+    planetsForPick.forEach(b => {
+      v.copy(b.m.position).project(camera);
+      if (v.z > 1) return;
+      const dx = (v.x - ptr.x) * innerWidth / 2, dy = (v.y - ptr.y) * innerHeight / 2, d = Math.hypot(dx, dy);
+      if (d < bd) { bd = d; best = b; }
+    });
+    if (best) setFocus(best);
+  });
+}
+
 const VIEWS = {};
 
 VIEWS.system = () => {
-  buildSystem({ cam: new THREE.Vector3(0, 70, 95) });
-  setSpeeds([['1 day/s', 1], ['1 month/s', 30], ['1 year/s', 365], ['10 yr/s', 3650]], 30);
+  const cultures = ['western', 'chinese', 'both'];
+  buildSystem({
+    cam: new THREE.Vector3(0, 70, 95),
+    onUpdate: ({ t }) => {
+      const ro = document.getElementById('ro');
+      if (!ro || !cosmos) return;
+      const fwd = controls.target.clone().sub(camera.position).normalize();
+      const down = new THREE.Vector3(0, -1, 0).applyQuaternion(camera.quaternion);
+      const elon = A.SunPosition(t).elon;
+      const q = Math.floor(((elon % 360) + 360) % 360 / 90);
+      const north = ['spring', 'summer', 'autumn', 'winter'][q], south = ['autumn', 'winter', 'spring', 'summer'][q];
+      const earth = planetsForPick.find(b => b.name === 'Earth');
+      const sunFromEarth = earth ? earth.m.position.clone().negate().normalize() : fwd;
+      ro.innerHTML =
+        `Looking toward <b>${cosmos.nearest(fwd)}</b><br>` +
+        `Below you <b>${cosmos.nearest(down)}</b><br>` +
+        `Up is the planets' north (ecliptic pole), toward <b>Draco</b><br>` +
+        `From Earth the Sun is in <b>${cosmos.nearest(sunFromEarth)}</b><br>` +
+        `Earth: <b>${north}</b> in the north, <b>${south}</b> in the south` +
+        (focus ? `<br>Riding along with <b>${focus.name}</b>` : '');
+    }
+  });
+  setSpeeds([['1 hour/s', 1 / 24], ['1 day/s', 1], ['1 month/s', 30], ['1 year/s', 365], ['10 yr/s', 3650]], 30);
   panel.innerHTML = `
-    <h1>The solar system, today</h1>
-    <p>Every planet sits where it really is on the date below, from Astronomy Engine's ephemeris. Drag to turn, scroll to zoom.</p>
-    <p class="muted">Distances are compressed (logarithmic) so the inner planets and objects hundreds of AU out share one screen. The dashed rings mark 1, 10, 100 and 1,000 AU.</p>
-    <div class="readout" id="ro"></div>`;
+    <h1>The solar system</h1>
+    <p>Every planet sits where it really is on the date below. The stars behind are the real sky: the same catalogue and constellations as the Globe &amp; sky, so wherever you fly, Scorpius is where it truly is.</p>
+    <p><b>Tap a planet</b> to fly to it. Keep zooming into Earth and you land on the globe, at this same moment.</p>
+    <p><button class="btn" id="whole">Whole system</button> <button class="btn" id="goEarth">Go to Earth</button> <button class="btn" id="culture"></button></p>
+    <div class="readout" id="ro"></div>
+    <p class="muted" style="margin-top:8px">Planets are drawn larger than life and distances are compressed (logarithmic) so everything fits; dashed rings mark 1, 10, 100 and 1,000 AU. Each planet's tilt and spin are real: Uranus rolls on its side, Venus and Uranus turn backwards.</p>`;
+  const cBtn = document.getElementById('culture');
+  const showC = () => { cBtn.textContent = '✶ ' + skyCulture[0].toUpperCase() + skyCulture.slice(1); };
+  showC();
+  cBtn.onclick = () => {
+    skyCulture = cultures[(cultures.indexOf(skyCulture) + 1) % 3];
+    try { localStorage.setItem('ma-sky-culture', skyCulture); } catch (e) {}
+    if (cosmos) cosmos.setCulture(skyCulture);
+    showC();
+  };
+  document.getElementById('whole').onclick = () => {
+    focus = null; fly = null;
+    controls.target.set(0, 0, 0);
+    camera.position.set(0, 70, 95);
+  };
+  document.getElementById('goEarth').onclick = () => setFocus(planetsForPick.find(b => b.name === 'Earth'));
+
+  // Arriving from the globe: same moment, same side of Earth, same size
+  if (params.get('focus') === 'earth') {
+    const earth = planetsForPick.find(b => b.name === 'Earth');
+    const [lat, lon] = (params.get('geo') || '0,0').split(',').map(Number);
+    const frac = Math.max(0.2, +params.get('frac') || 0.5);
+    playing = false;
+    document.getElementById('play').textContent = '▶';
+    document.querySelector('#speeds .btn')?.click();
+    update();
+    const t = A.MakeTime(date);
+    const dir = geoToLocal(lat, lon).applyQuaternion(earthQuat(t, true));
+    const d = earth.size / (frac * Math.tan(camera.fov * DEG / 2));
+    focus = earth;
+    controls.target.copy(earth.m.position);
+    camera.position.copy(earth.m.position).addScaledVector(dir, d);
+    lastEarthDist = 0;   // only a fresh zoom-in reopens the globe
+    params.delete('focus');
+  } else if (params.get('focus')) {
+    const want = params.get('focus').toLowerCase();
+    const p = planetsForPick.find(b => b.name.toLowerCase() === want);
+    if (p) { update(); focus = p; controls.target.copy(p.m.position);
+      camera.position.copy(p.m.position).add(new THREE.Vector3(p.size * 2.5, p.size * 1.2, p.size * 4)); }
+    params.delete('focus');
+  }
 };
 
 VIEWS.oumuamua = () => {
@@ -480,7 +678,7 @@ const loadEclipses = () => eclipses ? Promise.resolve(eclipses) :
 
 VIEWS.eclipse = async () => {
   reset();
-  scene.add(starfield(3e5));
+  addCosmos(true);
   scene.add(new THREE.AmbientLight(0xffffff, 0.08));
   const sunLight = new THREE.DirectionalLight(0xfff4dd, 2.4);
   scene.add(sunLight, sunLight.target);
@@ -642,7 +840,7 @@ VIEWS.eclipse = async () => {
 VIEWS.satellites = async () => {
   reset();
   date = new Date();
-  scene.add(starfield(3e5));
+  addCosmos(true);
   scene.add(new THREE.AmbientLight(0xffffff, 0.25));
   const sunLight = new THREE.DirectionalLight(0xfff4dd, 2.2);
   scene.add(sunLight);
@@ -740,6 +938,7 @@ function frame(now) {
   }
   dateEl.textContent = fmtDate(date, view === 'eclipse' || view === 'satellites');
   controls.update();
+  if (cosmos) cosmos.group.position.copy(camera.position);
   renderer.render(scene, camera);
   drawLabels();
   requestAnimationFrame(frame);
