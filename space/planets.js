@@ -211,6 +211,77 @@ export async function loadLandMask(topojson) {
   };
 }
 
+// ── Real imagery (see vendor/planet-textures/README.md for credits) ──
+let TEX = '/vendor/planet-textures/';
+export function setTextureBase(url) { TEX = url; }
+const loader = new THREE.TextureLoader();
+const tex = (file, srgb = true) => {
+  const t = loader.load(TEX + file);
+  if (srgb) t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = 4;
+  return t;
+};
+const imgCache = {};
+function loadImage(file) {
+  return imgCache[file] || (imgCache[file] = new Promise((res, rej) => {
+    const im = new Image(); im.crossOrigin = 'anonymous';
+    im.onload = () => res(im); im.onerror = rej; im.src = TEX + file;
+  }));
+}
+// Recolour one of the Earth/Moon samples into another world: grey level ->
+// colour ramp, optional ice caps. Mars is Earth's own relief map in rust.
+async function recolor(file, ramp, opts = {}) {
+  const im = await loadImage(file);
+  const W = opts.w || 1024, H = W / 2, c = document.createElement('canvas');
+  c.width = W; c.height = H;
+  const g = c.getContext('2d');
+  g.drawImage(im, 0, 0, W, H);
+  const d = g.getImageData(0, 0, W, H), px = d.data, R = ramp.map(hex);
+  for (let j = 0; j < H; j++) {
+    const lat = 90 - (j + 0.5) / H * 180;
+    for (let i = 0; i < W; i++) {
+      const o = (j * W + i) * 4;
+      let v = opts.alpha ? px[o + 3] / 255 : (px[o] * 0.3 + px[o + 1] * 0.59 + px[o + 2] * 0.11) / 255;
+      if (opts.gamma) v = Math.pow(v, opts.gamma);
+      const f = Math.min(R.length - 1.001, v * (R.length - 1)), k = Math.floor(f);
+      let col = mix(R[k], R[k + 1], f - k);
+      if (opts.caps && Math.abs(lat) > opts.caps - v * 6) col = mix(col, [242, 238, 232], 0.9);
+      px[o] = col[0]; px[o + 1] = col[1]; px[o + 2] = col[2];
+    }
+  }
+  g.putImageData(d, 0, 0);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+
+const TEXTURED = {
+  Moon:    body => { body.material.map = tex('moon.jpg'); body.material.bumpMap = tex('lunar_bumpmap.jpg', false); body.material.bumpScale = 3; },
+  Mercury: async body => { body.material.map = await recolor('moon.jpg', [0x2a2522, 0x6e655c, 0xb3a898, 0xe0d6c8], { gamma: 1.1 });
+             body.material.bumpMap = tex('lunar_bumpmap.jpg', false); body.material.bumpScale = 3; },
+  Mars:    async body => { body.material.map = await recolor('earth-topology.png',
+             [0x5a2414, 0x8a3a1c, 0xb4582c, 0xc98a55, 0xe0b890], { caps: 80, gamma: 0.8 });
+             body.material.bumpMap = tex('earth-topology.png', false); body.material.bumpScale = 6; },
+  Venus:   async body => { body.material.map = await recolor('clouds.png', [0xd6b67a, 0xe2c68c, 0xefd9a8, 0xfbf0d0], { alpha: true, w: 128 }); body.material.bumpMap = null; },
+  Pluto:   async body => { body.material.map = await recolor('moon.jpg', [0x4a3428, 0x8a6a50, 0xcdb49a, 0xf2e6d6], { gamma: 0.9 }); },
+};
+
+// Earth: daylight Blue Marble, city lights on the night side, a glint on the
+// oceans, and a separate cloud layer.
+const EARTH_VERT = `varying vec2 vUv; varying vec3 vN; varying vec3 vW;
+void main(){ vUv = uv; vN = normalize(mat3(modelMatrix) * normal); vec4 w = modelMatrix * vec4(position,1.0); vW = w.xyz;
+gl_Position = projectionMatrix * viewMatrix * w; }`;
+const EARTH_FRAG = `uniform sampler2D day; uniform sampler2D night; uniform sampler2D water; uniform vec3 sunDir;
+varying vec2 vUv; varying vec3 vN; varying vec3 vW;
+void main(){ vec3 N = normalize(vN); float d = dot(N, sunDir); float lit = smoothstep(-0.15, 0.2, d);
+vec3 dayC = texture2D(day, vUv).rgb; vec3 nightC = texture2D(night, vUv).rgb;
+float w = texture2D(water, vUv).r; vec3 V = normalize(cameraPosition - vW); vec3 H = normalize(sunDir + V);
+float spec = pow(max(dot(N, H), 0.0), 40.0) * w * 0.55 * lit;
+vec3 col = dayC * (0.04 + 1.05 * max(d, 0.0)) + nightC * (1.0 - lit) * 1.6 + vec3(1.0, 0.95, 0.85) * spec;
+gl_FragColor = vec4(col, 1.0);
+#include <colorspace_fragment>
+}`;
+
 export function makePlanet(name, radius, seed = 1, extra) {
   const look = PLANET_LOOKS[name];
   const outer = new THREE.Group();          // positioned in orbit
@@ -234,6 +305,19 @@ export function makePlanet(name, radius, seed = 1, extra) {
   }
   if (look.ring) tilt.add(ringMesh(look.ring, radius));
 
+  let earthMat = null, clouds = null;
+  if (name === 'Earth') {
+    earthMat = new THREE.ShaderMaterial({ vertexShader: EARTH_VERT, fragmentShader: EARTH_FRAG, uniforms: {
+      day: { value: tex('earth-blue-marble.jpg') }, night: { value: tex('earth-night.jpg') },
+      water: { value: tex('earth-water.png', false) }, sunDir: { value: new THREE.Vector3(1, 0, 0) } } });
+    body.material = earthMat;
+    clouds = new THREE.Mesh(new THREE.SphereGeometry(radius * 1.008, 64, 48), new THREE.MeshStandardMaterial({
+      map: tex('clouds.png'), transparent: true, opacity: 0.85, depthWrite: false, roughness: 1 }));
+    spin.add(clouds);
+  } else if (TEXTURED[name]) {
+    Promise.resolve(TEXTURED[name](body)).then(() => { body.material.needsUpdate = true; }).catch(() => {});
+  }
+
   return {
     group: outer, body, look, tilt, spin,
     // hours since J2000 -> spin angle; sun direction for the atmosphere glow
@@ -241,6 +325,8 @@ export function makePlanet(name, radius, seed = 1, extra) {
       const hours = (date.getTime() - 946728000000) / 3.6e6;
       spin.rotation.y = (hours / look.day) * Math.PI * 2;
       if (atmo) atmo.material.uniforms.sunDir.value.copy(sunDirFromPlanet);
+      if (earthMat) earthMat.uniforms.sunDir.value.copy(sunDirFromPlanet);
+      if (clouds) clouds.rotation.y = hours * 0.004;   // clouds drift slowly against the ground
     },
   };
 }
