@@ -96,6 +96,7 @@ import * as THREE from 'three';
 import { OrbitControls } from '/vendor/three/OrbitControls.js';
 import { makeCosmos } from './cosmos.js';
 import { makePlanet, loadLandMask } from './planets.js';
+import { attachGestures } from './gestures.js';
 
 const A = window.Astronomy;
 const DEG = Math.PI / 180;
@@ -110,6 +111,7 @@ document.body.prepend(renderer.domElement);
 const camera = new THREE.PerspectiveCamera(45, innerWidth / innerHeight, 0.01, 1e7);
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
+const gestures = attachGestures(controls, () => camera, renderer.domElement, () => { focus = null; fly = null; });
 // Let momentum from the previous page die out before zoom responds here
 if (window.FTPortal && FTPortal.arrived) {
   controls.enableZoom = false;
@@ -517,6 +519,7 @@ VIEWS.system = () => {
     <h1>The solar system</h1>
     <p>Every planet sits where it really is on the date below. The stars behind are the real sky: the same catalogue and constellations as the Globe &amp; sky, so wherever you fly, Scorpius is where it truly is.</p>
     <p><b>Tap a planet</b> to fly to it. Keep zooming into Earth and you land on the globe, at this same moment.</p>
+    <p class="muted">1 finger orbits · 2 fingers zoom, pan and <b>twist to roll</b> · <b>3 fingers turn where you're looking</b>; a 3-finger tap levels the view. On a computer: Shift+drag looks around, Q/E roll, R levels.</p>
     <p><button class="btn" id="whole">Whole system</button> <button class="btn" id="goEarth">Go to Earth</button> <button class="btn" id="culture"></button></p>
     <div class="readout" id="ro"></div>
     <p class="muted" style="margin-top:8px">Planets are drawn larger than life and distances are compressed (logarithmic) so everything fits; dashed rings mark 1, 10, 100 and 1,000 AU. Each planet's tilt and spin are real: Uranus rolls on its side, Venus and Uranus turn backwards.</p>`;
@@ -533,6 +536,7 @@ VIEWS.system = () => {
     focus = null; fly = null;
     controls.target.set(0, 0, 0);
     camera.position.set(0, 70, 95);
+    gestures.level();
   };
   document.getElementById('goEarth').onclick = () => setFocus(planetsForPick.find(b => b.name === 'Earth'));
 
