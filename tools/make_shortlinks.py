@@ -24,6 +24,7 @@ SHORTLINKS = {
     'trends':     '/apps/webapps/signature-trends/',
     'solsys':     '/apps/webapps/solsys.html',
     'omniscope':  '/apps/webapps/kalidascope/omniscope.html',
+    'axial':      '/apps/webapps/kalidascope/axial.html',
     'keyforge':   '/apps/webapps/keyforge-sand-plate/',
     'veil':       '/apps/webapps/veil-of-babel/',
 }

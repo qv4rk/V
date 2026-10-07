@@ -36,8 +36,10 @@
       ['Gallery', '/gallery/', 'Generative art'],
     ]},
     { title: 'Kaleidoscope', items: [
+      ['Studios', '/kaleidoscope/', 'All kaleidoscope instruments, plates from the bench'],
+      ['Axial', '/axial/', 'Depth kaleidoscope, camera and time warp'],
       ['Omniscope', '/omniscope/', 'Kaleidoscope pattern synth'],
-      ['Hologram', '/apps/webapps/kalidascope/hologram.html', 'Holographic canvas'],
+      ['Hologram', '/apps/webapps/kalidascope/hologram.html', 'Earlier holographic canvas'],
       ['Constellation Tracer', '/apps/webapps/kalidascope/constellation-tracer.html', 'Draw with the stars'],
       ['Font Forge 5', '/apps/webapps/kalidascope/fontforge5.html', 'Build a typeface'],
       ['Top Gun Forge', '/apps/webapps/kalidascope/klidascopetopgunforge.html', 'Pattern forge'],

@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <title>Axial — FeistTech</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #000;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: white;
+            touch-action: none;
+        }
+        
+        canvas {
+            display: block;
+            background-color: transparent;
+        }
+
+        #ui-container {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            display: flex;
+            gap: 10px;
+            z-index: 500;
+        }
+        button {
+            background-color: rgba(0, 0, 0, 0.6);
+            border: 1px solid #00FFFF;
+            color: #00FFFF;
+            padding: 10px 15px;
+            cursor: pointer;
+            font-size: 14px;
+            border-radius: 5px;
+            transition: all 0.2s;
+            backdrop-filter: blur(4px);
+            text-transform: uppercase;
+            font-weight: bold;
+            letter-spacing: 1px;
+            box-shadow: 0 0 5px rgba(0, 255, 255, 0.2);
+        }
+        button:hover {
+            background-color: #00FFFF;
+            color: #111;
+            box-shadow: 0 0 15px #00FFFF;
+        }
+        button.active {
+            background-color: #FF00FF;
+            color: white;
+            border-color: #FF00FF;
+            box-shadow: 0 0 20px #FF00FF;
+        }
+        
+        #hud {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #444;
+            pointer-events: none;
+            opacity: 1;
+            transition: opacity 0.5s;
+            z-index: 400;
+        }
+        #hud.hidden { opacity: 0; }
+        #hud p { margin: 0 0 5px 0; font-size: 14px; }
+        #hud strong { color: #00FFFF; min-width: 120px; display: inline-block; }
+
+        #reset-cam-btn {
+            border-color: #FFFF00;
+            color: #FFFF00;
+        }
+        #reset-cam-btn:hover {
+            background-color: #FFFF00;
+            color: #000;
+        }
+
+        /* Help Modal */
+        #help-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 500px;
+            background-color: rgba(10, 10, 10, 0.95);
+            border: 1px solid #00FFFF;
+            border-radius: 10px;
+            z-index: 1000;
+            padding: 25px;
+            display: none;
+            backdrop-filter: blur(10px);
+            color: #eee;
+            box-shadow: 0 0 50px rgba(0, 255, 255, 0.2);
+        }
+        #help-modal h2 { margin-top: 0; color: #00FFFF; }
+        #help-modal ul { list-style-type: none; padding-left: 0; }
+        #help-modal li { font-size: 16px; margin-bottom: 12px; border-bottom: 1px solid #333; padding-bottom: 8px; }
+        #help-modal li strong { color: #00FFFF; width: 140px; display: inline-block; }
+        #help-modal-close {
+            position: absolute;
+            top: 15px; right: 15px; font-size: 24px; color: #fff; cursor: pointer;
+        }
+    </style>
+    <script src="/site.js" data-mode="tab" defer></script>
+</head>
+<body>
+
+    <canvas id="kaleidoscope-canvas"></canvas>
+
+    <div id="ui-container">
+        <button id="save-btn" title="Save Image">💾</button>
+        <button id="fullscreen-btn" title="Fullscreen">⛶</button>
+        <button id="autoplay-btn" title="Autoplay">▶️ Auto</button>
+        <button id="timewarp-btn" title="Time Warp">🌀 Warp</button>
+        <button id="view3d-btn" title="3D Camera Mode">🎲 Cam</button>
+        <button id="reset-cam-btn" title="Reset Camera View">⟲ Reset</button>
+        <button id="help-btn" title="Help">?</button>
+    </div>
+
+    <div id="hud">
+        <p><strong>Pattern:</strong> <span id="hud-pattern">Axial DNA</span></p>
+        <p><strong>Palette:</strong> <span id="hud-palette">Axial DNA</span></p>
+        <p><strong>Mirrors:</strong> <span id="hud-mirrors">9</span></p>
+        <p><strong>Status:</strong> <span id="hud-status">Drawing</span></p>
+        <p><strong>Perspective:</strong> <span id="hud-perspective">Flat</span></p>
+    </div>
+
+    <div id="help-modal">
+        <div id="help-modal-close">&times;</div>
+        <h2>Axial</h2>
+        <ul>
+            <li><strong>Drawing:</strong> <span>Drag to draw in 3D space.</span></li>
+            <li><strong>🎲 Cam:</strong> <span>Activate to rotate the universe.</span></li>
+            <li><strong>🌀 Warp:</strong> <span>Animate geometry with math distortion.</span></li>
+            <li><strong>⟲ Reset:</strong> <span>Snap camera back to front view.</span></li>
+        </ul>
+        <h3>2-Finger Gestures</h3>
+        <ul>
+            <li><strong>Swipe H (Top):</strong> <span>Change Pattern</span></li>
+            <li><strong>Swipe H (Bottom):</strong> <span>Change Palette</span></li>
+            <li><strong>Swipe V (Left):</strong> <span>Change Mirrors</span></li>
+            <li><strong>Swipe V (Right):</strong> <span>Change Thickness</span></li>
+        </ul>
+        <h3>Multi-Finger Tap</h3>
+        <ul>
+            <li><strong>3-Finger:</strong> <span>Toggle HUD</span></li>
+            <li><strong>4-Finger:</strong> <span>Clear Universe</span></li>
+            <li><strong>5-Finger:</strong> <span>Save PNG</span></li>
+        </ul>
+    </div>
+
+    <script>
+    // ===================================================================
+    // HOLOGRAPHIC 3D ENGINE
+    // ===================================================================
+
+    // --- CONFIGURATION ---
+    const MAX_HISTORY = 1200; // Point cloud limit for performance
+    const FOCAL_LENGTH = 800; // For 3D projection
+
+    const MIRRORS = { min: 2, max: 36, current: 9 };
+    const THICKNESS = { min: 1, max: 50, current: 2 }; 
+    const STAMP_SIZE = { min: 5, max: 200, current: 100 };
+
+    // --- SETUP ---
+    const canvas = document.getElementById('kaleidoscope-canvas');
+    const ctx = canvas.getContext('2d');
+    
+    // UI Elements
+    const saveBtn = document.getElementById('save-btn');
+    const fullscreenBtn = document.getElementById('fullscreen-btn');
+    const autoplayBtn = document.getElementById('autoplay-btn');
+    const timewarpBtn = document.getElementById('timewarp-btn');
+    const view3dBtn = document.getElementById('view3d-btn');
+    const resetCamBtn = document.getElementById('reset-cam-btn');
+    const helpBtn = document.getElementById('help-btn');
+    const helpModal = document.getElementById('help-modal');
+    const helpModalClose = document.getElementById('help-modal-close');
+    const hud = document.getElementById('hud');
+
+    // --- COLOR PALETTES ---
+    const colorPalettes = {
+        "Axial DNA": ["#FF00FF", "#00FFFF", "#FFFF00", "#FF0000", "#00FF00", "#0000FF"],
+        "Cyberpunk": ["#FF00FF", "#00FFFF", "#FFFF00"],
+        "Neon Blue": ["#00FFFF", "#0088FF", "#FFFFFF"], 
+        "Sunset": ["#FFC371", "#FF5F6D", "#A43931"],
+        "Ocean": ["#00C9FF", "#92FE9D", "#1D2B64"],
+        "Forest": ["#2E7D32", "#43A047", "#66BB6A"],
+    };
+    const paletteNames = Object.keys(colorPalettes);
+
+    // --- STATE ---
+    let controls = {
+        patternIndex: 0,
+        paletteIndex: 0,
+        mirrors: MIRRORS.current,
+        thickness: THICKNESS.current,
+        stampSize: STAMP_SIZE.current,
+        
+        // Input States
+        isMenuVisible: true,
+        isDrawing: false,
+        lastPoint: { x: 0, y: 0 },
+        touchSpeed: 0,
+        
+        // Mode States
+        autoplay: false,
+        timeWarp: false,
+        view3D: false,
+        
+        // Animation
+        warpTime: 0,
+        time: 0,
+        
+        // 3D Camera State
+        camX: 0,
+        camY: 0,
+        camZ: 0, // Not strictly used for rotation but useful for future
+        rotX: 0,
+        rotY: 0,
+        
+        // Color State
+        globalColorTick: 0 
+    };
+
+    // HISTORY BUFFER: Stores 3D points
+    // { x, y, z, pIdx, palIdx, size, speed, thickness, colorTick }
+    let stampHistory = []; 
+
+    // --- PATTERNS (3D AWARE) ---
+    // These drawing functions now receive projected coordinates, but we can assume they draw 'flat' billboards at those coords.
+    // The Z-depth is handled by the main render loop layering.
+    
+    const patterns = [
+        {
+            name: "Axial DNA",
+            draw: (ctx, x, y, size, speed, color) => {
+                const rungs = 5;
+                ctx.strokeStyle = color;
+                ctx.beginPath();
+                ctx.moveTo(x - size/2, y - size/2);
+                ctx.lineTo(x + size/2, y + size/2);
+                ctx.moveTo(x + size/2, y - size/2);
+                ctx.lineTo(x - size/2, y + size/2);
+                ctx.stroke();
+                // Draw circle for 'rung' feel
+                ctx.beginPath();
+                ctx.arc(x, y, size/2, 0, Math.PI*2);
+                ctx.stroke();
+            }
+        },
+        {
+            name: "Golden Spiral",
+            draw: (ctx, x, y, size, speed, color) => {
+                const turns = 2; 
+                ctx.strokeStyle = color;
+                ctx.beginPath();
+                for (let i = 0; i < 20; i++) {
+                    const angle = i * 0.5;
+                    const r = (size/20) * i;
+                    const px = x + Math.cos(angle) * r;
+                    const py = y + Math.sin(angle) * r;
+                    if(i===0) ctx.moveTo(px, py);
+                    else ctx.lineTo(px, py);
+                }
+                ctx.stroke();
+            }
+        },
+        {
+            name: "Lorenz Cloud",
+            draw: (ctx, x, y, size, speed, color) => {
+                // Simplified visualization
+                ctx.strokeStyle = color;
+                ctx.beginPath();
+                ctx.arc(x, y, size * 0.1, 0, Math.PI*2);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.arc(x + size*0.2, y + size*0.2, size * 0.05, 0, Math.PI*2);
+                ctx.stroke();
+            }
+        },
+        {
+            name: "Bell Curve",
+            draw: (ctx, x, y, size, speed, color) => {
+                ctx.strokeStyle = color;
+                ctx.beginPath();
+                ctx.moveTo(x - size/2, y);
+                ctx.quadraticCurveTo(x, y - size, x + size/2, y);
+                ctx.stroke();
+            }
+        },
+        {
+            name: "Mandelbrot Box",
+            draw: (ctx, x, y, size, speed, color) => {
+                ctx.fillStyle = color;
+                ctx.globalAlpha = 0.6;
+                ctx.fillRect(x - size/4, y - size/4, size/2, size/2);
+                ctx.globalAlpha = 1.0;
+            }
+        },
+        {
+            name: "Rotating Notch",
+            draw: (ctx, x, y, size, speed, color) => {
+                 ctx.strokeStyle = color;
+                 ctx.beginPath();
+                 ctx.arc(x, y, size/2, 0, Math.PI*2);
+                 ctx.stroke();
+                 ctx.beginPath();
+                 ctx.moveTo(x, y);
+                 ctx.lineTo(x + size/2, y);
+                 ctx.stroke();
+            }
+        }
+    ];
+
+    // --- 3D MATH & PROJECTION ---
+
+    function rotate3D(x, y, z, pitch, yaw) {
+        // Pitch (Rotate around X)
+        let y1 = y * Math.cos(pitch) - z * Math.sin(pitch);
+        let z1 = y * Math.sin(pitch) + z * Math.cos(pitch);
+        
+        // Yaw (Rotate around Y)
+        let x2 = x * Math.cos(yaw) - z1 * Math.sin(yaw);
+        let z2 = x * Math.sin(yaw) + z1 * Math.cos(yaw);
+        
+        return { x: x2, y: y1, z: z2 };
+    }
+
+    function project3D(x, y, z) {
+        // Perspective projection
+        // We push everything back by 'dist' so it's in front of camera
+        const cameraDist = 1000;
+        const scale = FOCAL_LENGTH / (FOCAL_LENGTH + z + cameraDist);
+        return {
+            x: canvas.width/2 + x * scale,
+            y: canvas.height/2 + y * scale,
+            scale: scale
+        };
+    }
+
+    // --- LOGIC ---
+    
+    function cycleUp(current, max) { return (current + 1) % max; }
+    function cycleDown(current, max) { return (current - 1 + max) % max; }
+    function adjust(current, range, dir) { 
+        return Math.max(range.min, Math.min(range.max, current + dir)); 
+    }
+
+    // Get smooth color from palette
+    function getSmoothColor(palIdx, tick) {
+        const pal = colorPalettes[paletteNames[palIdx]];
+        // Slow down the cycling: divide tick by 20
+        const slowTick = tick / 20; 
+        const idx = Math.floor(slowTick) % pal.length;
+        const nextIdx = (idx + 1) % pal.length;
+        // Interpolation could go here, but for now we just slow it down
+        // to prevent epilepsy.
+        return pal[idx];
+    }
+
+    function recordStamp(x, y) {
+        if (stampHistory.length > MAX_HISTORY) {
+            stampHistory.shift(); 
+        }
+        
+        // Convert screen X/Y to 3D world coordinates (at z=0)
+        // This assumes drawing happens on the z=0 plane relative to camera rotation
+        // Actually, to make drawing intuitive, we project from screen BACK to world.
+        // For simplicity: We store raw screen coords relative to center, and treat them as World X/Y at Z=0.
+        
+        const cx = canvas.width / 2;
+        const cy = canvas.height / 2;
+        
+        // Use current color tick
+        controls.globalColorTick++;
+
+        // Add depth based on Time if we want a "Tunnel" effect naturally?
+        // Let's keep Z=0 for drawing, but Time Warp will modify Z.
+        // OR: Allow drawing to stack? 
+        // Let's implement "Temporal Depth": The Z is 0. 
+        // But in the render loop, we can optionally shift Z based on age.
+        
+        stampHistory.push({
+            x: x - cx,
+            y: y - cy,
+            z: 0, // Flat plane drawing
+            pIdx: controls.patternIndex,
+            palIdx: controls.paletteIndex,
+            size: controls.stampSize,
+            speed: controls.touchSpeed,
+            thickness: controls.thickness,
+            colorTick: controls.globalColorTick
+        });
+    }
+
+    function clearCanvas() {
+        stampHistory = [];
+        controls.globalColorTick = 0;
+    }
+
+    // --- MAIN RENDER LOOP (The Heart of the Hologram) ---
+    function animate() {
+        controls.time++;
+        
+        // 1. Clear Screen
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // 2. Handle Autoplay Generation
+        if (controls.autoplay) {
+            const autoSpeed = 100 + Math.sin(controls.time * 0.01) * 50;
+            const r = canvas.width * 0.25;
+            const ax = canvas.width / 2 + Math.sin(controls.time * 0.02) * r;
+            const ay = canvas.height / 2 + Math.cos(controls.time * 0.03) * r;
+            controls.touchSpeed = autoSpeed;
+            recordStamp(ax, ay);
+        }
+
+        // 3. Update Warp Physics
+        if (controls.timeWarp) {
+            controls.warpTime += 0.05;
+        }
+
+        // 4. Render All History Points in 3D
+        // We don't use ctx.translate/rotate for the mirrors anymore.
+        // We manually calculate mirror positions in 3D space.
+        
+        const cx = canvas.width / 2;
+        const cy = canvas.height / 2;
+        const angleSlice = (Math.PI * 2) / controls.mirrors;
+        
+        // Convert rotation to radians
+        const pitch = controls.rotX * (Math.PI / 180);
+        const yaw = controls.rotY * (Math.PI / 180);
+
+        stampHistory.forEach((stamp, index) => {
+            // A. Apply Time Warp (Physics Distortion)
+            let wx = stamp.x;
+            let wy = stamp.y;
+            let wz = stamp.z;
+
+            // Intrinsic Depth: Make older stamps recede slightly (Tunnel Effect)
+            // This fixes "Flat Board". History = Depth.
+            // Index 0 is old. stampHistory.length is new.
+            // Let's map index to Z. 
+            // Newest at Z=0. Oldest at Z = -2000.
+            const age = stampHistory.length - 1 - index;
+            wz -= age * 2; // Delve 2 pixels per step
+
+            if (controls.timeWarp) {
+                let dist = Math.sqrt(wx*wx + wy*wy);
+                let angle = Math.atan2(wy, wx);
+                
+                // Spiral Twist
+                let warpAngle = angle + (controls.warpTime * 50) / (dist + 1);
+                // Pulse Wave (Z-axis manipulation!)
+                let warpZ = wz + Math.sin(dist * 0.02 - controls.warpTime) * 100;
+                
+                wx = dist * Math.cos(warpAngle);
+                wy = dist * Math.sin(warpAngle);
+                wz = warpZ;
+            }
+
+            // B. Kaleidoscope Mirroring (Virtual Geometry)
+            // We duplicate the point for every mirror
+            for (let m = 0; m < controls.mirrors; m++) {
+                // Calculate Mirror rotation
+                let mAngle = m * angleSlice;
+                
+                // Rotate point around Z-axis for kaleidoscope effect
+                // (Standard 2D rotation math applied to x/y)
+                let kx = wx * Math.cos(mAngle) - wy * Math.sin(mAngle);
+                let ky = wx * Math.sin(mAngle) + wy * Math.cos(mAngle);
+                let kz = wz; // Z doesn't change on mirror rotate usually
+                
+                // Alternate Mirror Flip (if even)
+                if (m % 2 === 0) {
+                    // Flip relative to slice? 
+                    // Simple flip:
+                    kx = -kx; // Flip X before rotation... wait, simplify:
+                    // Just accept the standard rotation for now to save FPS
+                }
+
+                // C. Camera Rotation (The 5th Dimension View)
+                // Rotate the entire universe
+                let rotated = rotate3D(kx, ky, kz, pitch, yaw);
+
+                // D. Perspective Projection
+                let proj = project3D(rotated.x, rotated.y, rotated.z);
+
+                // E. Draw
+                // Scale stamp size by perspective
+                let drawSize = stamp.size * proj.scale;
+                
+                // Opacity fade for far items
+                ctx.globalAlpha = Math.max(0, Math.min(1, proj.scale));
+                
+                // Get Smooth Color
+                let color = getSmoothColor(stamp.palIdx, stamp.colorTick);
+                
+                const pat = patterns[stamp.pIdx];
+                pat.draw(ctx, proj.x, proj.y, drawSize, stamp.speed, color);
+            }
+        });
+        
+        ctx.globalAlpha = 1.0;
+
+        requestAnimationFrame(animate);
+    }
+    
+    // Start Engine
+    animate();
+
+    // --- INPUT HANDLING ---
+    
+    // HUD Update
+    function updateHUD() {
+        if (!controls.isMenuVisible) { hud.classList.add('hidden'); return; }
+        hud.classList.remove('hidden');
+        document.getElementById('hud-pattern').textContent = patterns[controls.patternIndex].name;
+        document.getElementById('hud-palette').textContent = paletteNames[controls.paletteIndex];
+        document.getElementById('hud-mirrors').textContent = controls.mirrors;
+        
+        let status = "Drawing";
+        if (controls.view3D) status = "CAMERA MV";
+        else if (controls.timeWarp) status = "TIME WARP";
+        document.getElementById('hud-status').textContent = status;
+        
+        document.getElementById('hud-perspective').textContent = 
+            `X:${Math.floor(controls.rotX)} Y:${Math.floor(controls.rotY)}`;
+            
+        // Toggle button states
+        if(controls.view3D) view3dBtn.classList.add('active'); else view3dBtn.classList.remove('active');
+        if(controls.timeWarp) timewarpBtn.classList.add('active'); else timewarpBtn.classList.remove('active');
+        if(controls.autoplay) autoplayBtn.classList.add('active'); else autoplayBtn.classList.remove('active');
+    }
+
+    // Resize
+    window.addEventListener('resize', () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    });
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    // Mouse
+    canvas.addEventListener('mousedown', e => {
+        controls.isDrawing = true;
+        controls.lastPoint = { x: e.clientX, y: e.clientY };
+    });
+    
+    canvas.addEventListener('mousemove', e => {
+        if (!controls.isDrawing) return;
+        
+        // Mode Branching
+        if (controls.view3D) {
+            // Rotate Camera
+            const dx = e.clientX - controls.lastPoint.x;
+            const dy = e.clientY - controls.lastPoint.y;
+            controls.rotY += dx * 0.5;
+            controls.rotX -= dy * 0.5;
+        } else {
+            // Draw
+            const dist = Math.hypot(e.clientX - controls.lastPoint.x, e.clientY - controls.lastPoint.y);
+            if (dist > 5) { // Throttling
+                controls.touchSpeed = dist * 2;
+                recordStamp(e.clientX, e.clientY);
+            }
+        }
+        controls.lastPoint = { x: e.clientX, y: e.clientY };
+        updateHUD();
+    });
+    
+    canvas.addEventListener('mouseup', () => controls.isDrawing = false);
+
+    // Touch
+    let twoFingerStart = null;
+    canvas.addEventListener('touchstart', e => {
+        e.preventDefault();
+        if (e.touches.length === 1) {
+            controls.isDrawing = true;
+            controls.lastPoint = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        } else if (e.touches.length === 2) {
+            controls.isDrawing = false;
+            twoFingerStart = {
+                x: (e.touches[0].clientX + e.touches[1].clientX)/2,
+                y: (e.touches[0].clientY + e.touches[1].clientY)/2,
+                ldx: 0, ldy: 0
+            };
+        }
+    }, {passive: false});
+
+    canvas.addEventListener('touchmove', e => {
+        e.preventDefault();
+        if (e.touches.length === 1 && controls.isDrawing) {
+            const t = e.touches[0];
+            if (controls.view3D) {
+                const dx = t.clientX - controls.lastPoint.x;
+                const dy = t.clientY - controls.lastPoint.y;
+                controls.rotY += dx * 0.5;
+                controls.rotX -= dy * 0.5;
+            } else {
+                const dist = Math.hypot(t.clientX - controls.lastPoint.x, t.clientY - controls.lastPoint.y);
+                if(dist > 5) {
+                    controls.touchSpeed = dist * 2;
+                    recordStamp(t.clientX, t.clientY);
+                }
+            }
+            controls.lastPoint = { x: t.clientX, y: t.clientY };
+            updateHUD();
+        } 
+        else if (e.touches.length === 2 && twoFingerStart) {
+            const cx = (e.touches[0].clientX + e.touches[1].clientX)/2;
+            const cy = (e.touches[0].clientY + e.touches[1].clientY)/2;
+            const dx = cx - twoFingerStart.x;
+            const dy = cy - twoFingerStart.y;
+            
+            const sx = dx - twoFingerStart.ldx;
+            const sy = dy - twoFingerStart.ldy;
+            const TH = 30;
+
+            if (Math.abs(sx) > TH) {
+                const dir = sx > 0 ? 1 : -1;
+                if (twoFingerStart.y < window.innerHeight/2) controls.patternIndex = dir > 0 ? cycleUp(controls.patternIndex, patterns.length) : cycleDown(controls.patternIndex, patterns.length);
+                else controls.paletteIndex = dir > 0 ? cycleUp(controls.paletteIndex, paletteNames.length) : cycleDown(controls.paletteIndex, paletteNames.length);
+                twoFingerStart.ldx = dx;
+                updateHUD();
+            }
+            if (Math.abs(sy) > TH) {
+                const dir = sy > 0 ? -1 : 1;
+                if (twoFingerStart.x < window.innerWidth/2) controls.mirrors = adjust(controls.mirrors, MIRRORS, dir);
+                else controls.thickness = adjust(controls.thickness, THICKNESS, dir);
+                twoFingerStart.ldy = dy;
+                updateHUD();
+            }
+        }
+    }, {passive: false});
+
+    canvas.addEventListener('touchend', e => {
+        const total = e.touches.length + e.changedTouches.length;
+        if (e.touches.length === 0) {
+            if (total === 3) { controls.isMenuVisible = !controls.isMenuVisible; updateHUD(); }
+            if (total === 4) clearCanvas();
+            if (total === 5) saveBtn.click();
+        }
+        if (e.touches.length < 2) twoFingerStart = null;
+        if (e.touches.length < 1) controls.isDrawing = false;
+    });
+
+    // --- BUTTONS ---
+    saveBtn.onclick = () => {
+        const a = document.createElement('a');
+        a.download = 'hologram.png';
+        a.href = canvas.toDataURL();
+        a.click();
+    };
+    fullscreenBtn.onclick = () => {
+        if(!document.fullscreenElement) document.documentElement.requestFullscreen();
+        else document.exitFullscreen();
+    };
+    autoplayBtn.onclick = () => {
+        controls.autoplay = !controls.autoplay;
+        updateHUD();
+    };
+    timewarpBtn.onclick = () => {
+        controls.timeWarp = !controls.timeWarp;
+        updateHUD();
+    };
+    view3dBtn.onclick = () => {
+        controls.view3D = !controls.view3D;
+        updateHUD();
+    };
+    resetCamBtn.onclick = () => {
+        controls.rotX = 0;
+        controls.rotY = 0;
+        updateHUD();
+    }
+    helpBtn.onclick = () => helpModal.style.display = 'block';
+    helpModalClose.onclick = () => helpModal.style.display = 'none';
+
+    // Init
+    updateHUD();
+    
+    </script>
+</body>
+</html>
+

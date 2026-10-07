@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kaleidoscope — FeistTech</title>
+<meta name="description" content="Kaleidoscope instruments on FeistTech, and plates exported from the bench at the resolution they were saved.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='44' fill='%23050810'/%3E%3Ccircle cx='50' cy='50' r='36' fill='none' stroke='%23c9a84c' stroke-width='2'/%3E%3Ccircle cx='50' cy='50' r='6' fill='%23c9a84c'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="/vendor/google-fonts/fonts.css">
+<script src="/site.js" defer></script>
+<style>
+  :root {
+    --bg: #0b0c10; --line: #23262f; --text: #e4e2dc; --muted: #8d9099; --gold: #c9a84c;
+    --serif: "Cormorant Garamond", Georgia, serif;
+    --mono: "Space Mono", ui-monospace, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 15px; line-height: 1.55; }
+  a { color: inherit; }
+
+  .hero {
+    position: relative;
+    min-height: 78vh;
+    display: flex;
+    align-items: flex-end;
+    overflow: hidden;
+    border-bottom: 1px solid var(--line);
+  }
+  .field {
+    position: absolute; inset: 0;
+  }
+  .field img {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    animation: hold 28s infinite;
+  }
+  .field img:nth-child(1) { animation-delay: 0s; }
+  .field img:nth-child(2) { animation-delay: 7s; }
+  .field img:nth-child(3) { animation-delay: 14s; }
+  .field img:nth-child(4) { animation-delay: 21s; }
+  @keyframes hold {
+    0% { opacity: 0; }
+    6% { opacity: 0.55; }
+    22% { opacity: 0.55; }
+    28% { opacity: 0; }
+    100% { opacity: 0; }
+  }
+  .veil {
+    position: absolute; inset: 0;
+    background: linear-gradient(to top, #0b0c10 0%, rgba(11,12,16,0.72) 38%, rgba(11,12,16,0.28) 100%);
+  }
+  .hero-copy {
+    position: relative;
+    z-index: 1;
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 80px 16px 36px;
+    width: 100%;
+  }
+  .label { font-family: var(--mono); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--gold); margin: 0 0 10px; font-weight: 400; }
+  h1 { font-family: var(--serif); font-weight: 400; font-size: clamp(40px, 7vw, 68px); line-height: 0.95; margin: 0 0 12px; }
+  .lede { color: var(--muted); max-width: 46ch; margin: 0 0 22px; }
+
+  main { max-width: 1040px; margin: 0 auto; padding: 36px 16px 64px; }
+  h2 { font-family: var(--serif); font-weight: 400; font-size: 28px; margin: 0 0 6px; }
+  .note { color: var(--muted); font-size: 13px; margin: 0 0 18px; max-width: 62ch; }
+
+  .studios { list-style: none; margin: 0 0 48px; padding: 0; border-top: 1px solid var(--line); }
+  .studios a {
+    display: grid;
+    grid-template-columns: 180px 1fr auto;
+    gap: 12px;
+    align-items: baseline;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--line);
+    text-decoration: none;
+  }
+  .studios a:hover { color: var(--gold); }
+  .studios strong { font-weight: 500; }
+  .studios small { color: var(--muted); font-size: 13px; }
+  .studios .go { font-family: var(--mono); font-size: 11px; color: var(--gold); letter-spacing: .06em; }
+  .tag { font-family: var(--mono); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--gold); margin-left: 8px; }
+
+  .plates {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+  }
+  .plate {
+    margin: 0;
+    background: #050608;
+    border: 1px solid var(--line);
+  }
+  .plate button {
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: #000;
+    cursor: zoom-in;
+  }
+  .plate img { display: block; width: 100%; height: auto; }
+  .plate figcaption {
+    display: flex; justify-content: space-between; gap: 8px;
+    padding: 8px 10px;
+    font-family: var(--mono); font-size: 10px; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .viewer {
+    position: fixed; inset: 0; z-index: 50;
+    background: #000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+  .viewer.open { display: flex; }
+  .viewer img { max-width: 100vw; max-height: 100vh; width: auto; height: auto; }
+  .viewer .bar {
+    position: absolute; top: 0; left: 0; right: 0;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 16px;
+    background: linear-gradient(#000c, transparent);
+    font-family: var(--mono); font-size: 11px; color: #ddd;
+  }
+  .viewer button {
+    background: transparent; color: #fff; border: 1px solid #444;
+    padding: 6px 10px; cursor: pointer; font-family: var(--mono); font-size: 11px;
+  }
+
+  footer { max-width: 1040px; margin: 0 auto; padding: 24px 16px 40px; color: var(--muted); font-size: 12px; border-top: 1px solid var(--line); }
+  footer a { text-decoration: none; }
+  footer a:hover { color: var(--gold); }
+
+  @media (max-width: 700px) {
+    .studios a { grid-template-columns: 1fr auto; }
+    .studios small { grid-column: 1 / -1; }
+    .plates { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<section class="hero" aria-label="Plates from the bench">
+  <div class="field" aria-hidden="true">
+    <img src="/kaleidoscope/plates/iris.png" alt="">
+    <img src="/kaleidoscope/plates/crystal.png" alt="">
+    <img src="/kaleidoscope/plates/spectrum.png" alt="">
+    <img src="/kaleidoscope/plates/burst.png" alt="">
+  </div>
+  <div class="veil"></div>
+  <div class="hero-copy">
+    <p class="label">FeistTech</p>
+    <h1>Kaleidoscope</h1>
+    <p class="lede">Eight instruments. The plates under them are exports from the bench, served at the size they were saved.</p>
+  </div>
+</section>
+
+<main>
+  <h2>Studios</h2>
+  <p class="note">Each one is a separate app. Axial is the depth engine: draw on a plane, the history recedes, the camera turns the field.</p>
+  <ul class="studios">
+    <li><a href="/axial/"><strong>Axial</strong><span class="tag">new</span><small>Depth kaleidoscope. Camera, time warp, mirrors.</small><span class="go">Open</span></a></li>
+    <li><a href="/omniscope/"><strong>Omniscope</strong><small>Pattern synth. Multi-touch, each finger keeps its color.</small><span class="go">Open</span></a></li>
+    <li><a href="/apps/webapps/kalidascope/hologram.html"><strong>Hologram</strong><small>Earlier holographic canvas.</small><span class="go">Open</span></a></li>
+    <li><a href="/apps/webapps/kalidascope/constellation-tracer.html"><strong>Constellation Tracer</strong><small>Star fields, zodiac plus Ophiuchus, or the whole sky.</small><span class="go">Open</span></a></li>
+    <li><a href="/apps/webapps/kalidascope/fontforge5.html"><strong>Font Forge 5</strong><small>Vector typeface construction.</small><span class="go">Open</span></a></li>
+    <li><a href="/apps/webapps/kalidascope/klidascopetopgunforge.html"><strong>Top Gun Forge</strong><small>Pattern and glyph forge.</small><span class="go">Open</span></a></li>
+    <li><a href="/apps/webapps/kalidascope/vectorfontskalidascope.html"><strong>Vector Fonts</strong><small>Kaleidoscope lettering.</small><span class="go">Open</span></a></li>
+    <li><a href="/apps/webapps/kalidascope/edgescopepatternspall3.html"><strong>Edgescope</strong><small>Edge-pattern studio.</small><span class="go">Open</span></a></li>
+  </ul>
+
+  <h2>Plates</h2>
+  <p class="note">Still files are the original PNGs. The four motion studies are the original GIFs. Click any of them for the full frame.</p>
+  <div class="plates" id="plates">
+    <figure class="plate"><button type="button" data-full="/kaleidoscope/plates/iris.png" data-cap="Iris"><img src="/kaleidoscope/plates/iris.png" alt="Orange iris lattice with a black center"></button><figcaption><span>Iris</span><span>PNG</span></figcaption></figure>
+    <figure class="plate"><button type="button" data-full="/kaleidoscope/plates/spectrum.png" data-cap="Spectrum"><img src="/kaleidoscope/plates/spectrum.png" alt="Rainbow wire star around a dark center"></button><figcaption><span>Spectrum</span><span>PNG</span></figcaption></figure>
+    <figure class="plate"><button type="button" data-full="/kaleidoscope/plates/crystal.png" data-cap="Crystal"><img src="/kaleidoscope/plates/crystal.png" alt="Cyan crystalline flower on a mesh field"></button><figcaption><span>Crystal</span><span>PNG</span></figcaption></figure>
+    <figure class="plate"><button type="button" data-full="/kaleidoscope/plates/snow.png" data-cap="Snow"><img src="/kaleidoscope/plates/snow.png" alt="Blue snowflake over triangular mesh"></button><figcaption><span>Snow</span><span>PNG</span></figcaption></figure>
+    <figure class="plate"><button type="button" data-full="/kaleidoscope/plates/burst.png" data-cap="Burst"><img src="/kaleidoscope/plates/burst.png" alt="Cyan radial burst on black"></button><figcaption><span>Burst</span><span>PNG</span></figcaption></figure>
+    <figure class="plate"><button type="button" data-full="/kaleidoscope/plates/weave.png" data-cap="Weave"><img src="/kaleidoscope/plates/weave.png" alt="Woven circular mandala in red teal and gold"></button><figcaption><span>Weave</span><span>PNG</span></figcaption></figure>
+    <figure class="plate"><button type="button" data-full="/kaleidoscope/plates/blade.png" data-cap="Blade"><img src="/kaleidoscope/plates/blade.png" alt="Blue wire fan of folded planes"></button><figcaption><span>Blade</span><span>PNG</span></figcaption></figure>
+    <figure class="plate"><button type="button" data-full="/kaleidoscope/plates/cross.png" data-cap="Cross"><img src="/kaleidoscope/plates/cross.png" alt="Magenta and green crossed blades"></button><figcaption><span>Cross</span><span>PNG</span></figcaption></figure>
+    <figure class="plate"><button type="button" data-full="/kaleidoscope/plates/helix.png" data-cap="Helix"><img src="/kaleidoscope/plates/helix.png" alt="White wire helix"></button><figcaption><span>Helix</span><span>PNG</span></figcaption></figure>
+    <figure class="plate"><button type="button" data-full="/kaleidoscope/plates/tunnel.gif" data-cap="Tunnel"><img src="/kaleidoscope/plates/tunnel.gif" alt="Cyan tunnel of fine lines, moving"></button><figcaption><span>Tunnel</span><span>GIF</span></figcaption></figure>
+    <figure class="plate"><button type="button" data-full="/kaleidoscope/plates/ring.gif" data-cap="Ring"><img src="/kaleidoscope/plates/ring.gif" alt="Grey ring of fine lines, moving"></button><figcaption><span>Ring</span><span>GIF</span></figcaption></figure>
+    <figure class="plate"><button type="button" data-full="/kaleidoscope/plates/rust.gif" data-cap="Rust"><img src="/kaleidoscope/plates/rust.gif" alt="Rust-colored ring of fine lines, moving"></button><figcaption><span>Rust</span><span>GIF</span></figcaption></figure>
+    <figure class="plate"><button type="button" data-full="/kaleidoscope/plates/dust.gif" data-cap="Dust"><img src="/kaleidoscope/plates/dust.gif" alt="Sparse colored points on black, moving"></button><figcaption><span>Dust</span><span>GIF</span></figcaption></figure>
+  </div>
+</main>
+
+<footer>
+  <a href="/">FeistTech</a>
+</footer>
+
+<div class="viewer" id="viewer" hidden>
+  <div class="bar">
+    <span id="viewer-cap"></span>
+    <button type="button" id="viewer-close">Close</button>
+  </div>
+  <img id="viewer-img" alt="">
+</div>
+
+<script>
+  var viewer = document.getElementById('viewer');
+  var vimg = document.getElementById('viewer-img');
+  var vcap = document.getElementById('viewer-cap');
+  document.getElementById('plates').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-full]');
+    if (!b) return;
+    vimg.src = b.getAttribute('data-full');
+    vimg.alt = b.getAttribute('data-cap');
+    vcap.textContent = b.getAttribute('data-cap');
+    viewer.hidden = false;
+    viewer.classList.add('open');
+  });
+  function closeViewer() {
+    viewer.classList.remove('open');
+    viewer.hidden = true;
+    vimg.removeAttribute('src');
+  }
+  document.getElementById('viewer-close').addEventListener('click', closeViewer);
+  viewer.addEventListener('click', function (e) { if (e.target === viewer || e.target === vimg) closeViewer(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeViewer(); });
+</script>
+</body>
+</html>
