@@ -22,6 +22,7 @@
       ['Hoffect', '/hoffect/', 'Oncology research dossier'],
     ]},
     { title: 'Explore', items: [
+      ['Scale Orrery', '/orrery/', 'True scale, Moon, eclipses, mission paths'],
       ['Street map', '/atlas/', 'Globe to street level, Gaza building damage'],
       ['Gaza damage', '/gaza/', 'Building-level damage over time'],
       ['The Great GASPI', '/gaspi/', 'West Bank and Gaza territories'],
