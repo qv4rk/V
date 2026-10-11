@@ -162,7 +162,7 @@
       camera.position.copy(OVERVIEW);
       controls.target.set(0, 0, 0);
 
-      let jd = dateToJulianDay(1882, 12, 6, 17, 6);
+      let jd = ECLIPSE_1999.jd;
       let playing = false;
       let focus = '';
       let mode = 'visible';
@@ -244,6 +244,8 @@
 
       setJd(jd);
       $('mode-label').textContent = orrery.setScaleMode(mode);
+      setView('sky');
+      sky.lookAtSun(8);
 
       $('when').addEventListener('change', (ev) => {
         const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(ev.target.value);
@@ -315,6 +317,7 @@
           const y = e.year < 1 ? `${1 - e.year} BCE` : `${e.year}`;
           o.textContent = `${e.name} (${y}, ${e.type})`;
           $('eclipse').appendChild(o);
+          if (e.id === 'eclipse-1999') $('eclipse').value = o.value;
         }
       }).catch(() => {});
       $('eclipse').addEventListener('change', (ev) => {
