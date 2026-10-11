@@ -57,21 +57,22 @@
     </div>
 
     <div class="totalCard">
-      <div class="statusPill safe" id="statusPill">SAFE</div>
-      <div class="bigTotal safe" id="bigTotal">0<span class="bigTotalUnit"> / 150 mg</span></div>
+      <div class="statusPill unset" id="statusPill">SET DAILY LIMIT</div>
+      <div class="bigTotal unset" id="bigTotal">0<span class="bigTotalUnit"> mg</span></div>
       <div class="bigBar"><div class="bigBarFill" id="bigBarFill" style="width:0%"></div></div>
-      <div class="bigSubline" id="bigSubline">0 mg used today · 150 mg still safe to eat</div>
+      <div class="bigSubline" id="bigSubline">0 mg logged today · Enter your daily limit below</div>
       <div class="macroLine" id="macroLine" hidden></div>
       <div class="sulfurLine" id="sulfurLine" hidden></div>
       <div class="estimateWarning" id="estimateWarning" hidden>⚠️ This total includes rough guesses (marked ~) for foods with no lab-measured methionine — not all of this number is verified.</div>
 
       <div id="capEditRow">
-        <button type="button" class="editCapLink" id="btnEditCap">Change daily limit</button>
+        <button type="button" class="editCapLink" id="btnEditCap">Set daily limit</button>
         <span class="capLockedNote" id="capLockedNote" hidden>🔒 Daily limit set by care team</span>
       </div>
       <div id="capEditFormWrap" hidden>
         <form id="capEditForm" class="capEditForm">
-          <input type="number" inputmode="decimal" id="capEditInput" min="1" step="1">
+          <label for="capEditInput">Your daily methionine limit (mg)</label>
+          <input type="number" inputmode="decimal" id="capEditInput" min="0.1" step="any" placeholder="Enter mg" required>
           <button type="submit" class="bigBtn compact">Save</button>
           <button type="button" class="linkBtn" id="btnCapCancel">Cancel</button>
         </form>
@@ -181,10 +182,9 @@
 <script>
   window.UNIFIED_CONFIG = {
     storagePrefix: 'unified_',
-    defaultCap: 150,
     lockCap: false
   };
 </script>
-<script src="../js/unified.js"></script>
+<script src="../js/unified.js?v=20260928-3"></script>
 </body>
 </html>
