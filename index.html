@@ -22,6 +22,15 @@
   .intro { font-family: var(--serif); font-size: clamp(24px, 4vw, 32px); line-height: 1.25; margin: 0 0 40px; max-width: 30ch; }
   .label { font-family: var(--mono); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--gold); margin: 0 0 10px; font-weight: 400; }
 
+  .spotlight { border: 1px solid var(--line); border-radius: 12px; padding: 18px; margin: 0 0 26px; background: linear-gradient(135deg, #10131b, #090b10); }
+  .spotlight h2 { font-family: var(--serif); font-weight: 400; font-size: 28px; margin: 0; line-height: 1.15; }
+  .spotlight h2 a { text-decoration: none; }
+  .spotlight h2 a:hover { color: var(--gold); }
+  .spotlight p { color: var(--muted); margin: 8px 0 14px; max-width: 68ch; }
+  .spotlight .go { display: flex; flex-wrap: wrap; gap: 16px; font-size: 13px; }
+  .spotlight .go a { color: var(--gold); text-decoration: none; }
+  .spotlight .go a:hover { text-decoration: underline; }
+
   .latest { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 18px 0; margin-bottom: 44px; }
   .latest h2 { font-family: var(--serif); font-weight: 400; font-size: 24px; margin: 0; line-height: 1.2; }
   .latest h2 a { text-decoration: none; }
@@ -53,11 +62,18 @@
 <main>
   <p class="intro">Independent research on history, law and geography, and the instruments built to study it.</p>
 
+  <section class="spotlight" aria-labelledby="spotlight-title">
+    <h2 class="label">Featured instrument</h2>
+    <h2 id="spotlight-title"><a href="/orrery/">The Scale Orrery</a></h2>
+    <p>True-scale solar system, Moon geometry, eclipse checks, and the bridge from sky to street map.</p>
+    <div class="go"><a href="/orrery/">Open the Scale Orrery →</a><a href="https://qv4rk.github.io/GrokBotPlayground/atlas-cosmogram/proposals/scale-orrery/">Open full-screen proposal →</a></div>
+  </section>
+
   <section class="latest" aria-labelledby="latest-title">
     <h2 class="label" id="latest-label">Latest</h2>
-    <h2 id="latest-title"><a href="/orrery/">The Scale Orrery</a></h2>
-    <p id="latest-excerpt">True-scale solar system, Moon geometry, eclipse checks, and the bridge from sky to map.</p>
-    <div class="go" id="latest-go"><a href="/orrery/">Open the Scale Orrery →</a></div>
+    <h2 id="latest-title"><a href="/reader/">The Reading Room</a></h2>
+    <p id="latest-excerpt">Every article in one place, with voice narration and speed reading.</p>
+    <div class="go" id="latest-go"><a href="/reader/">Open the Reading Room →</a></div>
   </section>
 
   <div class="cols">
