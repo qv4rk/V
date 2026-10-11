@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scale Orrery · FeistTech</title>
+<meta name="description" content="A true-scale solar system proposal for Atlas/Cosmogram, with Moon, eclipse geometry, Horizons checks, and a path toward mission playback and Earth-to-map zoom.">
+<link rel="stylesheet" href="/vendor/google-fonts/fonts.css">
+<style>
+  :root {
+    --bg:#050810; --panel:#0b0f18; --line:#263044; --text:#e9e5d8; --muted:#9aa4b8; --gold:#c9a84c; --cyan:#7fd7ff;
+    --serif:"Cormorant Garamond", Georgia, serif;
+    --mono:"Space Mono", ui-monospace, Menlo, monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  }
+  * { box-sizing:border-box; }
+  html, body { margin:0; background:var(--bg); color:var(--text); font-family:var(--sans); }
+  body { min-height:100vh; }
+  .hero { padding:72px 18px 32px; max-width:1120px; margin:0 auto; }
+  .kicker { margin:0 0 10px; color:var(--gold); font-family:var(--mono); font-size:11px; letter-spacing:.16em; text-transform:uppercase; }
+  h1 { font-family:var(--serif); font-weight:400; font-size:clamp(38px,7vw,84px); line-height:.94; margin:0; max-width:10ch; }
+  .lede { margin:20px 0 0; color:var(--muted); font-size:clamp(16px,2vw,20px); line-height:1.55; max-width:760px; }
+  .actions { display:flex; flex-wrap:wrap; gap:12px; margin-top:24px; }
+  .actions a { color:var(--text); border:1px solid var(--line); background:#ffffff08; text-decoration:none; padding:10px 13px; border-radius:8px; font-size:14px; }
+  .actions a.primary { border-color:#c9a84c88; color:#ffe2a3; background:#c9a84c14; }
+  .actions a:hover { border-color:var(--gold); }
+  .stage { max-width:1320px; margin:0 auto; padding:0 18px 34px; }
+  .frame-wrap { border:1px solid var(--line); border-radius:14px; overflow:hidden; background:#000; box-shadow:0 24px 80px #0008; }
+  iframe { display:block; width:100%; height:min(76vh,820px); border:0; background:#02040a; }
+  .grid { max-width:1120px; margin:0 auto; padding:10px 18px 70px; display:grid; grid-template-columns:1.05fr .95fr; gap:34px; }
+  h2 { font-family:var(--serif); font-weight:400; font-size:30px; margin:0 0 12px; }
+  p, li { color:var(--muted); line-height:1.58; }
+  ul { margin:0; padding-left:1.1rem; }
+  code { font-family:var(--mono); color:#f2d28a; font-size:.92em; }
+  .card { border-top:1px solid var(--line); padding-top:18px; }
+  .bridge { border:1px solid var(--line); border-radius:12px; padding:18px; background:linear-gradient(180deg,#101624,#080b12); }
+  .steps { counter-reset:item; list-style:none; padding:0; margin:0; }
+  .steps li { counter-increment:item; padding-left:38px; position:relative; margin:0 0 14px; }
+  .steps li::before { content:counter(item); position:absolute; left:0; top:.1rem; width:24px; height:24px; border-radius:50%; border:1px solid #c9a84c88; color:#f2d28a; display:grid; place-items:center; font-family:var(--mono); font-size:12px; }
+  footer { max-width:1120px; margin:0 auto; padding:22px 18px 40px; border-top:1px solid var(--line); color:var(--muted); font-size:12px; }
+  footer a { color:var(--gold); text-decoration:none; }
+  @media (max-width:860px) { .hero { padding-top:52px; } .grid { grid-template-columns:1fr; } iframe { height:70vh; } }
+</style>
+<script src="/site.js" data-mode="tab" defer></script>
+</head>
+<body>
+  <main>
+    <section class="hero">
+      <p class="kicker">Atlas / Cosmogram · Scale Orrery</p>
+      <h1>The sky with the ruler left in.</h1>
+      <p class="lede">A staged solar-system engine for FeistTech: true scale, visible scale, Moon geometry, Jupiter's moons, NASA eclipse checks, and the future mission layer for Apollo, New Horizons, Chandrayaan, Chang'e, and Luna.</p>
+      <div class="actions">
+        <a class="primary" href="https://qv4rk.github.io/GrokBotPlayground/atlas-cosmogram/proposals/scale-orrery/">Open full screen</a>
+        <a href="https://github.com/qv4rk/GrokBotPlayground/tree/main/atlas-cosmogram/proposals/scale-orrery">Source on GitHub</a>
+      </div>
+    </section>
+
+    <section class="stage" aria-label="Scale Orrery live preview">
+      <div class="frame-wrap">
+        <iframe title="Scale Orrery live proposal" src="https://qv4rk.github.io/GrokBotPlayground/atlas-cosmogram/proposals/scale-orrery/"></iframe>
+      </div>
+    </section>
+
+    <section class="grid">
+      <div class="card">
+        <h2>Why it gets its own room</h2>
+        <p>This proposal corrects the live atlas drift and mirror problem by using fuller planetary element rates, a better Moon model, and dated-event checks against known transits, conjunctions, closest approaches, and NASA eclipse presets.</p>
+        <ul>
+          <li><code>setJulianDay(jd)</code> lets the Antikythera dial drive the whole scene.</li>
+          <li>True-scale mode keeps radii and distances in the same unit.</li>
+          <li>Visible mode enlarges bodies while preserving their proportions.</li>
+          <li>The check harness compares the proposal, the old atlas, and published events.</li>
+        </ul>
+      </div>
+      <div class="bridge">
+        <h2>Earth to map handoff</h2>
+        <ol class="steps">
+          <li>Keep Three.js in charge above low orbit: Sun, Earth, Moon, mission paths, shadows.</li>
+          <li>When the camera nears Earth, raycast the globe to get latitude, longitude, altitude, heading, and pitch.</li>
+          <li>Fade from the 3D Earth into a MapLibre or Leaflet map centered on that lat/lon.</li>
+          <li>Pass heading and pitch into the map camera so the motion feels continuous.</li>
+          <li>Fade back out by converting the map center to the matching globe point.</li>
+        </ol>
+        <p>The bridge is not a new atlas. It is a coordinate handoff: globe vector to map coordinate, map coordinate back to globe vector.</p>
+      </div>
+    </section>
+  </main>
+  <footer>
+    FeistTech · staged from GrokBotPlayground · <a href="https://qv4rk.github.io/GrokBotPlayground/atlas-cosmogram/proposals/scale-orrery/">live proposal</a>
+  </footer>
+</body>
+</html>
