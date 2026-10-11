@@ -35,11 +35,11 @@ footer { border-top:1px solid var(--line); margin-top:3rem; padding-bottom:3rem;
 <header><a href="/orrery/">The Scale Orrery</a><nav><a href="/orrery/">Open instrument</a><a href="/">FeistTech</a></nav></header>
 <main>
 <h1>About the Scale Orrery</h1>
-<p class="lede">An interactive solar system with visible and true scale, the Moon, Jupiter's four large moons, dated eclipses, and a view from Earth toward the Sun. Move through time, choose a body, or compare the apparent and physical sizes.</p>
+<p class="lede">An interactive solar system with visible and true scale, the Moon, Jupiter's four large moons, dated eclipses, and an observer sky. Move through time, choose a body, or enter a date and location to look outward from Earth.</p>
 <section>
 <h2>Scale and time</h2>
 <p>Distance and radius share one unit: 15 scene units per astronomical unit. True scale leaves bodies at their physical proportions and adds fixed-size markers so small planets remain findable. Visible scale enlarges planets 1,000 times and the Sun 20 times. The date control and playback drive the scene through Julian Day.</p>
-<p>The Earth-to-Sun view changes to true scale with a one-degree field of view. It opens on the 1882 transit of Venus; eclipse presets set the corresponding date and geometry.</p>
+<p>The Sky view uses the same Julian Day as the orrery. Its latitude and longitude fields place the observer on Earth's ellipsoid; the Sun, Moon, planets, stars, and constellation lines are then projected into the local horizon. The Save PNG button exports the visible objects on a transparent background.</p>
 </section>
 <section>
 <h2>How positions are computed</h2>
@@ -61,9 +61,14 @@ footer { border-top:1px solid var(--line); margin-top:3rem; padding-bottom:3rem;
 </tbody></table></div>
 </section>
 <section>
+<h2>The 1999 eclipse</h2>
+<p>The 11 August 1999 preset opens a ground observer at 45.075° N, 24.3° E at greatest eclipse. Near that instant, the Sun and Moon use NASA's published right ascension, declination, angular sizes, parallax, and hourly rates. Earth rotation and the observer's position shift those geocentric vectors to the local sky. NASA reports the Sun at 59.3° altitude there; the sky calculation gives 59.35°.</p>
+<p><a href="https://eclipse.gsfc.nasa.gov/SEmono/TSE1999/T99Tab1.html">NASA Table 1: geocentric geometry</a> · <a href="https://eclipse.gsfc.nasa.gov/SEmono/TSE1999/T99Tab2.html">NASA Table 2: greatest eclipse location</a></p>
+</section>
+<section>
 <h2>Sources and limits</h2>
-<p>The <a href="https://github.com/qv4rk/GrokBotPlayground/tree/main/atlas-cosmogram/proposals/scale-orrery/">source code</a>, <a href="https://github.com/qv4rk/GrokBotPlayground/blob/main/atlas-cosmogram/proposals/scale-orrery/README.md">technical README</a>, and <a href="https://github.com/qv4rk/GrokBotPlayground/blob/main/atlas-cosmogram/proposals/scale-orrery/check.mjs">check harness</a> document the calculations and fixtures. Planetary elements come from <a href="https://ssd.jpl.nasa.gov/planets/approx_pos.html">JPL Solar System Dynamics</a>; the eclipse catalog is from <a href="https://eclipse.gsfc.nasa.gov/">NASA Eclipse Web Site</a>. Earth and Moon textures are credited in the <a href="https://github.com/qv4rk/GrokBotPlayground/blob/main/atlas-cosmogram/js/textures.js">texture catalog</a>.</p>
-<p>Most planet surfaces are generated color maps, not photographic planetary maps. Jupiter's moons follow circular fitted orbits, so their transits and eclipses are not predicted here. Lunar eclipses appear in the readout without a rendered Earth shadow. Missions and the Earth-to-map transition are separate work and are not present in this instrument.</p>
+<p>The <a href="https://github.com/qv4rk/GrokBotPlayground/tree/main/atlas-cosmogram/proposals/scale-orrery/">source code</a>, <a href="https://github.com/qv4rk/GrokBotPlayground/blob/main/atlas-cosmogram/proposals/scale-orrery/README.md">technical README</a>, and <a href="https://github.com/qv4rk/GrokBotPlayground/blob/main/atlas-cosmogram/proposals/scale-orrery/check.mjs">check harness</a> document the calculations and fixtures. Planetary elements come from <a href="https://ssd.jpl.nasa.gov/planets/approx_pos.html">JPL Solar System Dynamics</a>; the eclipse catalog is from <a href="https://eclipse.gsfc.nasa.gov/">NASA Eclipse Web Site</a>. Earth and Moon textures are credited in the <a href="https://github.com/qv4rk/GrokBotPlayground/blob/main/atlas-cosmogram/js/textures.js">texture catalog</a>. Stars and constellation lines are from Olaf Frohn's <a href="https://github.com/ofrohn/d3-celestial">d3-celestial</a> (BSD 3-Clause; <a href="/orrery/d3-celestial-LICENSE.txt">license</a>), with coordinates rotated for the chosen date and observer.</p>
+<p>Most planet surfaces are generated color maps, not photographic planetary maps. Jupiter's moons follow circular fitted orbits, so their transits and eclipses are not predicted here. Lunar eclipses appear in the readout without a rendered Earth shadow. The 1999 NASA event geometry applies only near that eclipse. Other sky dates use approximate Meeus/JPL calculations and constellation positions, so the display is an astronomical visualization rather than a guarantee of local totality. Missions and the Earth-to-map transition are separate work and are not present in this instrument.</p>
 </section>
 </main>
 <footer><a href="/orrery/">Return to the Scale Orrery</a></footer>
