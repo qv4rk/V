@@ -110,6 +110,8 @@
         <label>Longitude E<input id="sky-lon" type="number" min="-180" max="180" step="0.0001" value="24.3" inputmode="decimal"></label>
       </div>
       <div class="row"><button type="button" id="birth-sky" class="ghost">Show sky at this date and place</button></div>
+      <label class="note" for="sky-fov">Sky field of view <span id="fov-label">8°</span></label>
+      <div class="row"><input id="sky-fov" type="range" min="1" max="90" value="8" aria-label="Sky field of view in degrees"></div>
       <p id="sky-label" class="note" aria-live="polite"></p>
       <p id="moon-label" class="note"></p>
       <p id="mode-label" class="note"></p>
@@ -239,20 +241,28 @@
 
       function earthTowardSun() {
         setView('sky');
-        sky.lookAtSun(8);
+        sky.lookAtSun(3);
+        $('sky-fov').value = '3';
+        $('fov-label').textContent = '3°';
       }
 
       setJd(jd);
       $('mode-label').textContent = orrery.setScaleMode(mode);
       setView('sky');
-      sky.lookAtSun(8);
+      sky.lookAtSun(3);
+      $('sky-fov').value = '3';
+      $('fov-label').textContent = '3°';
 
       $('when').addEventListener('change', (ev) => {
         const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(ev.target.value);
         if (!m) return;
         setJd(dateToJulianDay(+m[1], +m[2], +m[3], +m[4], +m[5]));
         if (focus) frameFocus();
-        if (view === 'sky') sky.lookWide();
+        if (view === 'sky') {
+          sky.lookWide();
+          $('sky-fov').value = '70';
+          $('fov-label').textContent = '70°';
+        }
       });
       $('play').addEventListener('click', () => {
         playing = !playing;
@@ -271,7 +281,15 @@
       });
       $('sunview').addEventListener('click', earthTowardSun);
       $('view-orrery').addEventListener('click', () => setView('orrery'));
-      $('view-sky').addEventListener('click', () => { setView('sky'); sky.lookWide(); });
+      $('view-sky').addEventListener('click', () => {
+        setView('sky'); sky.lookWide();
+        $('sky-fov').value = '70'; $('fov-label').textContent = '70°';
+      });
+      $('sky-fov').addEventListener('input', (event) => {
+        sky.camera.fov = Number(event.target.value);
+        sky.camera.updateProjectionMatrix();
+        $('fov-label').textContent = `${event.target.value}°`;
+      });
       function applyLocation() {
         const lat = Number($('sky-lat').value), lon = Number($('sky-lon').value);
         if (!Number.isFinite(lat) || !Number.isFinite(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180) return;
@@ -281,7 +299,10 @@
       }
       $('sky-lat').addEventListener('change', applyLocation);
       $('sky-lon').addEventListener('change', applyLocation);
-      $('birth-sky').addEventListener('click', () => { applyLocation(); setView('sky'); sky.lookWide(); });
+      $('birth-sky').addEventListener('click', () => {
+        applyLocation(); setView('sky'); sky.lookWide();
+        $('sky-fov').value = '70'; $('fov-label').textContent = '70°';
+      });
       let pointer = null;
       canvas.addEventListener('pointerdown', (event) => {
         if (view !== 'sky') return;
@@ -333,7 +354,9 @@
           $('speed').value = '0.0006944444444444445';
         }
         setView('sky');
-        sky.lookAtSun(8);
+        sky.lookAtSun(3);
+        $('sky-fov').value = '3';
+        $('fov-label').textContent = '3°';
       });
       $('collapse').addEventListener('click', () => $('panel-orrery').classList.toggle('collapsed'));
       window.addEventListener('resize', () => {
