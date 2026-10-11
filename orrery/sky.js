@@ -14,11 +14,11 @@ const PLANETS = ['mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'nep
 const COLORS = { mercury:0xc5c5bb, venus:0xffe6aa, mars:0xe08360,
   jupiter:0xe1c99e, saturn:0xd7c99a, uranus:0x95e0db, neptune:0x739fee };
 
-function eclipticOfDate(lon, lat, distance) {
+function eclipticOfDate(lon, lat, distance, jd) {
   const l = lon * DEG, b = lat * DEG;
   const p = { x:distance * Math.cos(b) * Math.cos(l),
     y:distance * Math.cos(b) * Math.sin(l), z:distance * Math.sin(b) };
-  const e = (23.439291 - 0.0130042 * 0) * DEG;
+  const e = (23.439291 - 0.0130042 * ((jd - 2451545) / 36525)) * DEG;
   return vectorToRaDec({ x:p.x, y:p.y*Math.cos(e)-p.z*Math.sin(e),
     z:p.y*Math.sin(e)+p.z*Math.cos(e) });
 }
@@ -63,6 +63,11 @@ export class ObserverSky {
     lunarMap.colorSpace = THREE.SRGBColorSpace;
     this.moon.material.map = lunarMap;
     this.scene.add(this.sun, this.moon);
+    this.eclipseRim = new THREE.Mesh(
+      new THREE.RingGeometry(1,1.35,64),
+      new THREE.MeshBasicMaterial({ color:0xfff0cb, transparent:true, opacity:0.48,
+        side:THREE.DoubleSide, depthWrite:false }));
+    this.scene.add(this.eclipseRim);
     this.planets = new Map();
     for (const name of PLANETS) {
       const dot = new THREE.Points(
@@ -118,8 +123,8 @@ export class ObserverSky {
 
     const s = sunOfDate(jd), m = moonOfDate(jd);
     const approximate = {
-      sun:{ ...eclipticOfDate(s.lon,0,s.dist), radius:Math.atan2(695700,s.dist*AU_KM)/DEG },
-      moon:{ ...eclipticOfDate(m.lon,m.lat,m.dist/AU_KM),
+      sun:{ ...eclipticOfDate(s.lon,0,s.dist,jd), radius:Math.atan2(695700,s.dist*AU_KM)/DEG },
+      moon:{ ...eclipticOfDate(m.lon,m.lat,m.dist/AU_KM,jd),
         radius:Math.atan2(1737.4,m.dist)/DEG }
     };
     const bodies = {};
@@ -133,6 +138,10 @@ export class ObserverSky {
     }
     const sep = angularSeparation(bodies.sun.vector,bodies.moon.vector);
     const eclipse = sep < bodies.sun.radius + bodies.moon.radius;
+    this.eclipseRim.visible = eclipse && sep < bodies.moon.radius-bodies.sun.radius;
+    this.eclipseRim.position.copy(this.sun.position).multiplyScalar(0.999);
+    this.eclipseRim.lookAt(0,0,0);
+    this.eclipseRim.scale.setScalar(this.sun.scale.x);
     const nearNew = Math.cos((m.lon-s.lon)*DEG) > 0.9;
     this.moon.material.color.setHex(eclipse || nearNew ? 0x111923 : 0xd9d9d6);
     this.moon.material.needsUpdate = true;
