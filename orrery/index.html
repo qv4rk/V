@@ -27,6 +27,13 @@
     }
     .stage-tag a { color: var(--gold-hi); text-decoration:none; background:var(--panel); padding:0.35rem 0.5rem; border:1px solid var(--border); border-radius:3px; }
     .stage-tag a:hover { color:var(--cyan); }
+    .stage-tag button { font:inherit; letter-spacing:inherit; text-transform:inherit; color:var(--gold-hi); background:var(--panel); padding:0.35rem 0.5rem; border:1px solid var(--border); border-radius:3px; cursor:pointer; }
+    .stage-tag button:hover { color:var(--cyan); }
+    .view-btn.active { border-color:var(--cyan); color:var(--cyan); }
+    .coordinates { display:flex; gap:0.4rem; }
+    .coordinates label { flex:1; color:var(--ink-mute); font:0.62rem var(--font-mono); }
+    .coordinates input { margin-top:0.2rem; }
+    @media(max-width:720px) { .panel-orrery { max-height:56vh; overflow:auto; } .stage-tag { flex-wrap:wrap; max-width:76vw; justify-content:flex-end; } }
   </style>
   <script type="importmap">
   {
@@ -42,7 +49,7 @@
   <header class="top-bar">
     <h1 class="title">The Scale Orrery</h1>
   </header>
-  <nav class="stage-tag" aria-label="Orrery links"><a href="/orrery/about/">About &amp; sources</a><a href="/">FeistTech</a></nav>
+  <nav class="stage-tag" aria-label="Orrery links"><button id="save-sky" type="button" title="Download transparent PNG">Save PNG</button><a href="/orrery/about/">About &amp; sources</a><a href="/">FeistTech</a></nav>
   <p id="boot-error" class="boot-error" hidden></p>
 
   <aside id="panel-orrery" class="panel panel-orrery">
@@ -51,13 +58,19 @@
       <button type="button" class="icon-btn" id="collapse" aria-label="Collapse panel">▾</button>
     </div>
     <div class="panel-body">
+      <div class="row">
+        <button type="button" id="view-orrery" class="ghost view-btn active">Orrery</button>
+        <button type="button" id="view-sky" class="ghost view-btn">Sky from Earth</button>
+      </div>
       <p id="date-label" class="dial-date">—</p>
       <div class="row">
         <input id="when" type="datetime-local" step="60" aria-label="Date and time (UT)" />
       </div>
       <div class="row">
         <button type="button" id="play" class="ghost">Play</button>
-        <select id="speed" aria-label="Days per second">
+        <select id="speed" aria-label="Playback speed">
+          <option value="0.0006944444444444445">1 minute/s</option>
+          <option value="0.041666666666666664">1 hour/s</option>
           <option value="1">1 day/s</option>
           <option value="10" selected>10 days/s</option>
           <option value="100">100 days/s</option>
@@ -68,7 +81,7 @@
         <button type="button" id="scale" class="primary">Show true scale</button>
       </div>
       <div class="row">
-        <button type="button" id="sunview" class="ghost">From Earth, look at the Sun</button>
+        <button type="button" id="sunview" class="ghost">View the Sun from Earth</button>
       </div>
       <div class="row">
         <select id="eclipse" aria-label="Eclipse presets"><option value="">Eclipse presets…</option></select>
@@ -92,10 +105,16 @@
           <option value="neptune">Neptune</option>
         </select>
       </div>
+      <div class="row coordinates">
+        <label>Latitude<input id="sky-lat" type="number" min="-90" max="90" step="0.0001" value="45.075" inputmode="decimal"></label>
+        <label>Longitude E<input id="sky-lon" type="number" min="-180" max="180" step="0.0001" value="24.3" inputmode="decimal"></label>
+      </div>
+      <div class="row"><button type="button" id="birth-sky" class="ghost">Show sky at this date and place</button></div>
+      <p id="sky-label" class="note" aria-live="polite"></p>
       <p id="moon-label" class="note"></p>
       <p id="mode-label" class="note"></p>
       <p id="range-label" class="note"></p>
-      <p class="note">Opens on the 1882 transit of Venus. “From Earth, look at the Sun” switches to true scale and a 1° field: Venus is the dot on the disc. Pick a solar eclipse and do the same to see the Moon on the Sun, seen from Earth's centre. Drag to orbit, scroll to zoom. Times are UT.</p>
+      <p class="note">Times are UTC. The 1999 eclipse preset opens at NASA's published point of greatest eclipse. Other sky dates use atlas approximations. Drag to turn; set your birth date and location above for a personal sky view.</p>
     </div>
   </aside>
 
@@ -107,13 +126,15 @@
     import { eclipseGeometry } from 'https://qv4rk.github.io/GrokBotPlayground/atlas-cosmogram/proposals/scale-orrery/moon.js';
     import { dateToJulianDay, jdToCalendar } from 'https://qv4rk.github.io/GrokBotPlayground/atlas-cosmogram/js/ephemeris.js';
     import { MAPS } from 'https://qv4rk.github.io/GrokBotPlayground/atlas-cosmogram/js/textures.js';
+    import { ObserverSky } from './sky.js';
+    import { ECLIPSE_1999 } from './sky-math.js';
 
     const $ = (id) => document.getElementById(id);
     const pad = (n, w = 2) => String(n).padStart(w, '0');
 
     try {
       const canvas = $('globe-canvas');
-      const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, logarithmicDepthBuffer: true });
+      const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, logarithmicDepthBuffer: true, alpha: true, preserveDrawingBuffer: true });
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       renderer.setSize(window.innerWidth, window.innerHeight);
 
@@ -132,6 +153,10 @@
 
       const orrery = new ScaleOrrery();
       scene.add(orrery.group);
+      const sky = new ObserverSky(window.innerWidth, window.innerHeight);
+      let view = 'orrery';
+      let skyLat = ECLIPSE_1999.lat;
+      let skyLon = ECLIPSE_1999.lon;
 
       const OVERVIEW = new THREE.Vector3(0, 70, 120);
       camera.position.copy(OVERVIEW);
@@ -142,6 +167,24 @@
       let focus = '';
       let mode = 'visible';
       const lastFocusPos = new THREE.Vector3();
+
+      function skyStatus() {
+        const state = sky.update(jd, skyLat, skyLon, orrery);
+        const label = $('sky-label');
+        if (view !== 'sky') { label.textContent = ''; return; }
+        const kind = state.total ? 'total eclipse geometry' : state.eclipse ? 'partial eclipse geometry' : 'no solar overlap';
+        label.textContent = `Sun ${state.altitude.toFixed(1)}° above horizon · centers ${state.sep.toFixed(3)}° apart · ${kind}` +
+          (state.exact1999 ? ' · NASA 1999 ephemeris' : ' · approximate positions');
+      }
+
+      function setView(next) {
+        view = next;
+        controls.enabled = next === 'orrery';
+        $('view-orrery').classList.toggle('active', next === 'orrery');
+        $('view-sky').classList.toggle('active', next === 'sky');
+        skyStatus();
+        if (next === 'sky' && window.innerWidth <= 720) $('panel-orrery').classList.add('collapsed');
+      }
 
       function showDate() {
         const c = jdToCalendar(jd + 0.5 / 86400); // the atlas floors minutes; round instead
@@ -170,6 +213,7 @@
         jd = next;
         orrery.setJulianDay(jd);
         showDate();
+        skyStatus();
       }
 
       function setFov(deg) {
@@ -193,17 +237,9 @@
         lastFocusPos.copy(p);
       }
 
-      // From Earth's centre toward the Sun, true scale, a 1 degree field. The
-      // globe's faces point outward, so from inside it draws nothing. The
-      // centre matters: two Earth radii up moves the Moon by about 2 degrees.
       function earthTowardSun() {
-        if (mode !== 'true') $('scale').click();
-        focus = '';
-        $('focus').value = '';
-        const e = orrery.bodyPosition('earth');
-        camera.position.copy(e);
-        controls.target.set(0, 0, 0);
-        setFov(1);
+        setView('sky');
+        sky.lookAtSun(8);
       }
 
       setJd(jd);
@@ -214,6 +250,7 @@
         if (!m) return;
         setJd(dateToJulianDay(+m[1], +m[2], +m[3], +m[4], +m[5]));
         if (focus) frameFocus();
+        if (view === 'sky') sky.lookWide();
       });
       $('play').addEventListener('click', () => {
         playing = !playing;
@@ -227,9 +264,50 @@
       });
       $('focus').addEventListener('change', (ev) => {
         focus = ev.target.value;
+        setView('orrery');
         frameFocus();
       });
       $('sunview').addEventListener('click', earthTowardSun);
+      $('view-orrery').addEventListener('click', () => setView('orrery'));
+      $('view-sky').addEventListener('click', () => { setView('sky'); sky.lookWide(); });
+      function applyLocation() {
+        const lat = Number($('sky-lat').value), lon = Number($('sky-lon').value);
+        if (!Number.isFinite(lat) || !Number.isFinite(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180) return;
+        skyLat = lat;
+        skyLon = lon;
+        skyStatus();
+      }
+      $('sky-lat').addEventListener('change', applyLocation);
+      $('sky-lon').addEventListener('change', applyLocation);
+      $('birth-sky').addEventListener('click', () => { applyLocation(); setView('sky'); sky.lookWide(); });
+      let pointer = null;
+      canvas.addEventListener('pointerdown', (event) => {
+        if (view !== 'sky') return;
+        pointer = { x:event.clientX, y:event.clientY };
+        canvas.setPointerCapture(event.pointerId);
+      });
+      canvas.addEventListener('pointermove', (event) => {
+        if (view !== 'sky' || !pointer) return;
+        sky.rotate(event.clientX-pointer.x, event.clientY-pointer.y);
+        pointer = { x:event.clientX, y:event.clientY };
+      });
+      canvas.addEventListener('pointerup', () => { pointer = null; });
+      $('save-sky').addEventListener('click', () => {
+        const active = view === 'sky' ? sky.scene : scene;
+        const activeCamera = view === 'sky' ? sky.camera : camera;
+        const background = active.background;
+        const clearAlpha = renderer.getClearAlpha();
+        active.background = null;
+        renderer.setClearColor(0x000000, 0);
+        renderer.render(active, activeCamera);
+        const image = canvas.toDataURL('image/png');
+        active.background = background;
+        renderer.setClearAlpha(clearAlpha);
+        const a = document.createElement('a');
+        a.href = image;
+        a.download = `feisttech-${view}-jd-${jd.toFixed(5)}.png`;
+        a.click();
+      });
       fetch('https://qv4rk.github.io/GrokBotPlayground/atlas-cosmogram/data/eclipses.json').then((r) => r.json()).then((list) => {
         for (const e of list) {
           const o = document.createElement('option');
@@ -244,13 +322,22 @@
         setJd(Number(ev.target.value));
         playing = false;
         $('play').textContent = 'Play';
-        if (focus) frameFocus();
+        if (Math.abs(jd - ECLIPSE_1999.jd) < 0.01) {
+          skyLat = ECLIPSE_1999.lat;
+          skyLon = ECLIPSE_1999.lon;
+          $('sky-lat').value = String(skyLat);
+          $('sky-lon').value = String(skyLon);
+          $('speed').value = '0.0006944444444444445';
+        }
+        setView('sky');
+        sky.lookAtSun(8);
       });
       $('collapse').addEventListener('click', () => $('panel-orrery').classList.toggle('collapsed'));
       window.addEventListener('resize', () => {
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
         renderer.setSize(window.innerWidth, window.innerHeight);
+        sky.resize(window.innerWidth, window.innerHeight);
       });
 
       // Deep links: ?focus=earth&mode=true&view=sun
@@ -258,8 +345,8 @@
       if (q.get('jd')) setJd(Number(q.get('jd')));
       if (q.get('mode') === 'true') $('scale').click();
       if (q.get('focus')) { $('focus').value = q.get('focus'); focus = q.get('focus'); frameFocus(); }
-      if (q.get('view') === 'sun') earthTowardSun();
-      window.__orrery = { orrery, camera, controls, setJd, frameFocus, earthTowardSun };
+      if (q.get('view') === 'sun' || q.get('view') === 'sky') earthTowardSun();
+      window.__orrery = { orrery, sky, camera, controls, setJd, frameFocus, earthTowardSun };
 
       const clock = new THREE.Clock();
       renderer.setAnimationLoop(() => {
@@ -273,8 +360,8 @@
           controls.target.add(delta);
           lastFocusPos.copy(p);
         }
-        controls.update();
-        renderer.render(scene, camera);
+        if (view === 'orrery') controls.update();
+        renderer.render(view === 'sky' ? sky.scene : scene, view === 'sky' ? sky.camera : camera);
       });
     } catch (err) {
       console.error(err);
