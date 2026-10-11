@@ -55,9 +55,9 @@
 
   <section class="latest" aria-labelledby="latest-title">
     <h2 class="label" id="latest-label">Latest</h2>
-    <h2 id="latest-title"><a href="/reader/">The Reading Room</a></h2>
-    <p id="latest-excerpt">Every article in one place, with voice narration and speed reading.</p>
-    <div class="go" id="latest-go"><a href="/reader/">Open the Reading Room →</a></div>
+    <h2 id="latest-title"><a href="/orrery/">The Scale Orrery</a></h2>
+    <p id="latest-excerpt">True-scale solar system, Moon geometry, eclipse checks, and the bridge from sky to map.</p>
+    <div class="go" id="latest-go"><a href="/orrery/">Open the Scale Orrery →</a></div>
   </section>
 
   <div class="cols">
@@ -72,6 +72,7 @@
     <section>
       <h2 class="label">Explore</h2>
       <ul>
+        <li><a href="/orrery/">Scale Orrery<small>True scale, Moon, eclipses, mission paths</small></a></li>
         <li><a href="/sky/">Globe &amp; sky<small>Stars from any node on its day, 5,000 years of eclipses</small></a></li>
         <li><a href="/atlas/">Street map<small>Globe to street level</small></a></li>
         <li><a href="/space/">Space<small>ʻOumuamua, satellites, Planet Nine, eclipses from the side</small></a></li>
@@ -103,7 +104,7 @@
 </footer>
 
 <script>
-  // Feature the most recently published article.
+  // Feature the most recently published article when the article manifest is available.
   fetch('/data/reading-room/manifest.json').then(function (r) { return r.json(); }).then(function (ids) {
     return Promise.all(ids.map(function (id) {
       return fetch('/data/reading-room/articles/' + id + '.json').then(function (r) { return r.ok ? r.json() : null; });
