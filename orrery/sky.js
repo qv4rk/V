@@ -109,8 +109,14 @@ export class ObserverSky {
       const v = Math.max(0.35, 1 - 0.11 * (star.mag + 1));
       colors.set([v,v,v],i*3);
     });
-    this.starGeometry.setAttribute('position',new THREE.BufferAttribute(stars,3));
-    this.starGeometry.setAttribute('color',new THREE.BufferAttribute(colors,3));
+    const starPosition = this.starGeometry.getAttribute('position');
+    if (!starPosition || starPosition.array.length !== stars.length) {
+      this.starGeometry.setAttribute('position',new THREE.BufferAttribute(stars,3));
+      this.starGeometry.setAttribute('color',new THREE.BufferAttribute(colors,3));
+    } else {
+      starPosition.array.set(stars);
+      starPosition.needsUpdate = true;
+    }
     const lines = new Float32Array(this.lines.length * 6);
     this.lines.forEach(([a,b],i) => {
       [a,b].forEach(([ra,dec],j) => {
@@ -119,7 +125,13 @@ export class ObserverSky {
         lines.set([d.x*99,d.y*99,d.z*99],i*6+j*3);
       });
     });
-    this.lineGeometry.setAttribute('position',new THREE.BufferAttribute(lines,3));
+    const linePosition = this.lineGeometry.getAttribute('position');
+    if (!linePosition || linePosition.array.length !== lines.length) {
+      this.lineGeometry.setAttribute('position',new THREE.BufferAttribute(lines,3));
+    } else {
+      linePosition.array.set(lines);
+      linePosition.needsUpdate = true;
+    }
 
     const s = sunOfDate(jd), m = moonOfDate(jd);
     const approximate = {
