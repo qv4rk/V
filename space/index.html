@@ -81,6 +81,7 @@
   <button data-view="nine">Planet Nine</button>
   <button data-view="eclipse">Eclipse side view</button>
   <button data-view="satellites">Satellites</button>
+  <button data-view="perseids">Perseid crossing</button>
 </nav>
 <aside class="panel" id="panel"></aside>
 <div id="labels"></div>
@@ -89,6 +90,7 @@
   <button class="btn" id="play" aria-label="Play or pause">⏸</button>
   <div class="speeds" id="speeds"></div>
   <input type="range" id="scrub" hidden>
+  <button class="btn" id="share-view">Share view</button>
 </div>
 
 <script type="module">
@@ -203,8 +205,9 @@ const hypo = { tilt: 50, period: 12000, e: 0.35, O: 97, phase: 180 };
 // ── Shared state ──
 const params = new URLSearchParams(location.search);
 let view = params.get('view') || 'system';
-let date = (window.FTPortal && FTPortal.time()) || new Date();
-let playing = true;
+const sharedTime = Number(params.get('t'));
+let date = Number.isFinite(sharedTime) && sharedTime > 0 ? new Date(sharedTime) : (window.FTPortal && FTPortal.time()) || new Date();
+let playing = !(params.has('t') || params.get('view') === 'perseids');
 let speed = 1; // days per second (views override)
 const dateEl = document.getElementById('date');
 const panel = document.getElementById('panel');
@@ -263,6 +266,49 @@ function line(points, color, opacity, dashed) {
 }
 function dot(size, color) {
   return new THREE.Mesh(new THREE.SphereGeometry(size, 24, 16), new THREE.MeshBasicMaterial({ color }));
+}
+
+// A compact visual of the Perseid stream at Earth's annual crossing. The
+// orange corridor follows Swift–Tuttle's measured orbit near its Earth node;
+// it is a stream/radiant illustration, not a map of individual meteor tracks.
+const SWIFT_STREAM = { a: 26.092, e: 0.9632, i: 113.453, O: 139.381, w: 152.982 };
+const PERSEID_NODE_NU = Math.PI - SWIFT_STREAM.w * DEG;
+function swiftAtTrueAnomaly(nu) {
+  const E = 2 * Math.atan2(Math.sqrt(1 - SWIFT_STREAM.e) * Math.sin(nu / 2),
+    Math.sqrt(1 + SWIFT_STREAM.e) * Math.cos(nu / 2));
+  return orbitPoint(SWIFT_STREAM, E);
+}
+function makePerseidStream() {
+  const group = new THREE.Group();
+  group.name = 'Perseid dust stream · Earth crossing';
+  const path = [];
+  for (let k = -100; k <= 100; k++) path.push(sysPos(swiftAtTrueAnomaly(PERSEID_NODE_NU + k * 0.055 * DEG)));
+  group.add(line(path, 0xffa24a, 0.9));
+
+  const positions = [];
+  // Deterministic seeded cloud keeps the same stream in every shared link.
+  let seed = 109133;
+  const rand = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
+  const inc = SWIFT_STREAM.i * DEG, node = SWIFT_STREAM.O * DEG;
+  const normal = new THREE.Vector3(Math.sin(inc) * Math.sin(node), -Math.sin(inc) * Math.cos(node), Math.cos(inc));
+  for (let k = 0; k < 3200; k++) {
+    // Dense near the node, thinning along the orbit on either side.
+    const u = (rand() + rand() + rand() - 1.5) * 2.8 * DEG;
+    const p = swiftAtTrueAnomaly(PERSEID_NODE_NU + u);
+    const width = 0.006 + Math.abs(u) * 0.05;
+    const off = normal.clone().multiplyScalar((rand() * 2 - 1) * width);
+    const cross = new THREE.Vector3(p.x, p.y, p.z).normalize().cross(normal).normalize()
+      .multiplyScalar((rand() * 2 - 1) * width);
+    positions.push(...Object.values(sysPos({ x: p.x + off.x + cross.x, y: p.y + off.y + cross.y, z: p.z + off.z + cross.z })));
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  const dust = new THREE.Points(geo, new THREE.PointsMaterial({ color: 0xffa24a, size: 0.055,
+    sizeAttenuation: true, transparent: true, opacity: 0.82, depthWrite: false, blending: THREE.AdditiveBlending }));
+  group.add(dust);
+  const anchor = new THREE.Object3D(); anchor.position.copy(sysPos(swiftAtTrueAnomaly(PERSEID_NODE_NU)));
+  group.add(anchor); label('PERSEID STREAM · EARTH CROSSING', anchor, 'spec');
+  return group;
 }
 
 // ════════════ Solar system (also the base for ʻOumuamua and Planet Nine) ════════════
@@ -340,6 +386,18 @@ function buildSystem(opts) {
   });
   planetsForPick = bodies;
 
+  let perseidCone = null;
+  if (opts.perseids) {
+    scene.add(makePerseidStream());
+    // Schematic flow cone: points from the Earth crossing toward the local
+    // Perseid radiant direction. The dust ribbon above is the orbital stream.
+    perseidCone = new THREE.Mesh(new THREE.ConeGeometry(0.44, 1.15, 32, 1, true),
+      new THREE.MeshBasicMaterial({ color: 0xff8c35, transparent: true, opacity: 0.2,
+        side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending }));
+    scene.add(perseidCone);
+    label('PERSEID ENTRY CORRIDOR · SCHEMATIC', perseidCone, 'spec');
+  }
+
   // Distance rings for scale
   [1, 10, 100, 1000].forEach(r => {
     const pts = [];
@@ -409,6 +467,15 @@ function buildSystem(opts) {
         if (b.name === 'Earth') { b.p.tilt.quaternion.copy(earthQuat(t, true)); b.p.spin.rotation.y = 0; }
       }
     });
+    if (perseidCone) {
+      const earth = bodies.find(b => b.name === 'Earth');
+      const crossing = sysPos(swiftAtTrueAnomaly(PERSEID_NODE_NU));
+      const source = new THREE.Vector3(crossing.x, crossing.y, crossing.z);
+      const outward = source.sub(earth.m.position).normalize();
+      perseidCone.position.copy(earth.m.position).addScaledVector(outward, 0.575);
+      perseidCone.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), outward.clone().negate());
+      perseidCone.visible = earth.m.position.distanceTo(new THREE.Vector3(crossing.x, crossing.y, crossing.z)) < 1.4;
+    }
     const o = oumuamuaAt(date);
     oum.position.copy(sysPos(o.p));
     followFocus();
@@ -560,6 +627,40 @@ VIEWS.system = () => {
       camera.position.copy(p.m.position).add(new THREE.Vector3(p.size * 2.5, p.size * 1.2, p.size * 4)); }
     params.delete('focus');
   }
+};
+
+VIEWS.perseids = () => {
+  if (!params.has('t')) {
+    const now = new Date(); let y = now.getUTCFullYear();
+    let peak = new Date(Date.UTC(y, 7, 12, 12));
+    if (peak < now) peak = new Date(Date.UTC(++y, 7, 12, 12));
+    date = peak;
+  }
+  playing = false;
+  document.getElementById('play').textContent = '▶';
+  buildSystem({ cam: new THREE.Vector3(0, 70, 95), perseids: true });
+  setSpeeds([['1 hour/s', 1 / 24], ['1 day/s', 1], ['1 month/s', 30]], 1);
+  const earth = () => planetsForPick.find(b => b.name === 'Earth');
+  update();
+  if (earth()) {
+    focus = earth(); fly = null;
+    controls.target.copy(earth().m.position);
+    camera.position.copy(earth().m.position).add(new THREE.Vector3(1.45, 1.05, 2.7));
+    lastEarthDist = camera.position.distanceTo(earth().m.position);
+  }
+  panel.innerHTML = `
+    <h1>Earth through the Perseid stream</h1>
+    <p>The orange ribbon marks Swift–Tuttle's orbit at the annual Earth crossing. The cone marks the incoming corridor around Earth. It is a schematic of the stream's direction; individual meteors do not converge on one ground point.</p>
+    <h2>What the view shows</h2>
+    <div class="readout">The stream returns each August. Earth rotates beneath the radiant, so the visible sky and best viewing location change through the night.</div>
+    <p style="margin-top:10px"><button class="btn" id="next-perseid">Next Perseid season</button> <button class="btn" id="share-perseid">Share this view</button></p>
+    <p class="muted">Stream geometry follows the published 109P/Swift–Tuttle orbital elements. The particle cloud is a visualization of the crossing corridor, not a calibrated meteoroid flux forecast.</p>`;
+  document.getElementById('next-perseid').onclick = () => {
+    let y = date.getUTCFullYear() + 1; date = new Date(Date.UTC(y, 7, 12, 12));
+    playing = false; document.getElementById('play').textContent = '▶';
+    syncShareURL();
+  };
+  document.getElementById('share-perseid').onclick = () => shareCurrentView();
 };
 
 VIEWS.oumuamua = () => {
@@ -912,6 +1013,46 @@ VIEWS.satellites = async () => {
 
 // ── View switching and main loop ──
 const tabs = document.getElementById('tabs');
+let restoredSharedCamera = false;
+function restoreSharedCamera() {
+  if (restoredSharedCamera) return;
+  restoredSharedCamera = true;
+  const q = new URLSearchParams(location.search);
+  const vec = key => {
+    const a = (q.get(key) || '').split(',').map(Number);
+    return a.length === 3 && a.every(Number.isFinite) ? new THREE.Vector3(...a) : null;
+  };
+  const cam = vec('cam'), look = vec('look');
+  if (cam && look) {
+    camera.position.copy(cam); controls.target.copy(look); controls.update();
+    focus = null; fly = null;
+  }
+}
+function syncShareURL() {
+  const u = new URL(location.href);
+  u.searchParams.set('view', view);
+  u.searchParams.set('t', String(Math.round(date.getTime())));
+  u.searchParams.set('cam', [camera.position.x, camera.position.y, camera.position.z].map(n => n.toFixed(4)).join(','));
+  u.searchParams.set('look', [controls.target.x, controls.target.y, controls.target.z].map(n => n.toFixed(4)).join(','));
+  if (view === 'perseids') u.searchParams.set('stream', 'perseids');
+  history.replaceState(null, '', u);
+}
+function shareCurrentView() {
+  syncShareURL();
+  const data = { title: 'FeistTech · ' + (view === 'perseids' ? 'Perseid crossing' : 'Space'),
+    text: 'The exact view I am looking at.', url: location.href };
+  if (navigator.share) navigator.share(data).catch(() => copyShareURL());
+  else copyShareURL();
+}
+function copyShareURL() {
+  const btn = document.getElementById('share-view');
+  if (!navigator.clipboard) return;
+  navigator.clipboard.writeText(location.href).then(() => {
+    const old = btn.textContent; btn.textContent = '✓ Link copied';
+    setTimeout(() => { btn.textContent = old; }, 1800);
+  });
+}
+document.getElementById('share-view').addEventListener('click', shareCurrentView);
 function show(v) {
   if (!VIEWS[v]) v = 'system';
   view = v;
@@ -923,8 +1064,10 @@ function show(v) {
   history.replaceState(null, '', u);
   update = () => {};
   VIEWS[v]();
+  restoreSharedCamera();
 }
 tabs.onclick = e => { const b = e.target.closest('button'); if (b) show(b.dataset.view); };
+setInterval(syncShareURL, 1000);
 
 let last = performance.now();
 function frame(now) {
