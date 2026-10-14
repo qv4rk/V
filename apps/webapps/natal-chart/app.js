@@ -31,6 +31,7 @@
 (function () {
   'use strict';
 
+  const START_SHOW_WHEEL=new URLSearchParams(location.search).get('showchart')==='1';
   const A = window.Astronomy;
   const d2r = Math.PI / 180, r2d = 180 / Math.PI;
   const norm = x => ((x % 360) + 360) % 360;
@@ -628,7 +629,8 @@
     $('#meta').textContent = `JD ${jdOf(date).toFixed(2)} · RAMC ${chart.angles.RAMC.toFixed(2)}° · ε ${chart.angles.eps.toFixed(4)}°`;
   }
 
-  function readForm() {
+  let selectedCityText = "";
+  function readForm(requireChoice=true) {
     const y = parseInt($('#f-year').value, 10);
     const mo = parseInt($('#f-month').value, 10);
     const d = parseInt($('#f-day').value, 10);
@@ -638,17 +640,23 @@
     const lat = parseFloat($('#f-lat').value);
     const lon = parseFloat($('#f-lon').value);
 
-    const localHours = hh + mm / 60;
-    const utcHours = localHours - utcOffset;
-    const date = new Date(Date.UTC(y, mo - 1, d, 0, 0, 0));
-    date.setUTCMilliseconds(utcHours * 3600000);
-
-    return { date, lat, lon, name: $('#f-name').value.trim() };
+    if (![y,mo,d,hh,mm,lat,lon].every(Number.isFinite)||Math.abs(lat)>90||Math.abs(lon)>180)throw Error('Choose a birthplace and enter a valid birth date and time.');
+    const city=$('#f-city').value.trim(),timezone=$('#f-zone').value.trim();
+    if(city&&city!==selectedCityText)throw Error('Choose your birthplace from the matching city suggestions.');
+    let date;
+    if(timezone){
+      const choices=window.AtlasTime.resolve({year:y,month:mo,day:d,hour:hh,minute:mm},timezone);
+      $('#f-fold').hidden=choices.length<2;
+      if(choices.length>1&&$('#f-fold').value===''&&requireChoice)throw Error('This local time occurs twice when the clocks move back. Choose the first or second occurrence.');
+      const c=choices[Number($('#f-fold').value)||0];date=c.date;$('#f-utc').value=c.offsetHours;
+      $('#timezone-preview').textContent=timezone+' · '+date.toISOString().replace('T',' ').replace('.000Z',' UTC')+(choices.length>1?' · This local time occurs twice.':'');
+    }else{date=new Date(0);date.setUTCFullYear(y,mo-1,d);date.setUTCHours(0,0,0,0);date.setUTCMilliseconds((hh+mm/60-utcOffset)*3600000);$('#f-fold').hidden=true;$('#timezone-preview').textContent='Using the manual UTC offset: '+utcOffset;}
+    return { date, lat, lon, city, timezone, name: $('#f-name').value.trim() };
   }
 
   function syncURL(params) {
     const url = new URLSearchParams();
-    url.set('name', params.name || '');
+    url.set('name', params.name || '');url.set('city',params.city||'');url.set('tz',params.timezone||'');url.set('fold',$('#f-fold').value);
     url.set('y', $('#f-year').value);
     url.set('mo', $('#f-month').value);
     url.set('d', $('#f-day').value);
@@ -663,7 +671,7 @@
   function restoreFromURL() {
     const p = new URLSearchParams(location.search);
     if (!p.has('y')) return false;
-    if (p.has('name')) $('#f-name').value = p.get('name');
+    if (p.has('name')) $('#f-name').value = p.get('name');$('#f-city').value=p.get('city')||'';selectedCityText=$('#f-city').value;$('#f-zone').value=p.get('tz')||'';$('#f-fold').value=p.get('fold')||'';
     $('#f-year').value = p.get('y');
     $('#f-month').value = p.get('mo');
     $('#f-day').value = p.get('d');
@@ -680,7 +688,7 @@
   let currentSkyMode = 'whole';
 
   function compute() {
-    const params = readForm();
+    let params;try{params=readForm();$('#form-error').textContent='';}catch(error){$('#form-error').textContent=error.message;return;}
     if (Number.isNaN(params.lat) || Number.isNaN(params.lon)) return;
     const chart = computeChart(params.date, params.lat, params.lon);
     renderChart(chart, params.date);
@@ -688,7 +696,14 @@
     lastParams = params;
     lastChart = chart;
     updateSky(chart, params.date);
-    if (currentSkyMode === 'literal') setSkyMode('literal', params.lat, params.lon, params.date);
+    if (currentSkyMode === 'literal') setSkyMode('literal', params.lat, params.lon, params.date);notifyAtlas('updated');return true;
+  }
+
+  function notifyAtlas(action){
+    if(!lastParams||window.parent===window)return;
+    let origin;try{origin=new URL(document.referrer).origin;}catch{return;}
+    if(!['https://qv4rk.github.io','https://feisttech.com','https://www.feisttech.com'].includes(origin)&&!(location.hostname==='127.0.0.1'&&origin.startsWith('http://127.0.0.1:')))return;
+    window.parent.postMessage({type:'feisttech:natal',action,date:lastParams.date.toISOString(),lat:lastParams.lat,lon:lastParams.lon,city:lastParams.city,timezone:lastParams.timezone,name:lastParams.name,url:location.href},origin);
   }
 
   function wireLocations() {
@@ -710,11 +725,13 @@
   function wireShare() {
     $('#share-btn').addEventListener('click', () => {
       const btn = $('#share-btn');
-      const data = { title: document.title, text: 'Natal Chart — ' + ($('#f-name').value || 'shared chart'), url: location.href };
+      let shareURL=location.href;
+      if(window.parent!==window&&lastParams){const u=new URL('https://feisttech.com/cosmos/'),chart=new URL(location.href);chart.searchParams.set('showchart','1');for(const [k,v]of Object.entries({view:'sky',t:lastParams.date.toISOString(),lat:lastParams.lat,lon:lastParams.lon,place:lastParams.city||lastParams.name,tz:lastParams.timezone,natal:chart.href,chart:'1'}))u.searchParams.set(k,v);shareURL=u.href;}
+      const data = { title: document.title, text: 'Natal Chart — ' + ($('#f-name').value || 'shared chart'), url: shareURL };
       if (navigator.share) {
         navigator.share(data).catch(() => {});
       } else if (navigator.clipboard) {
-        navigator.clipboard.writeText(location.href).then(() => {
+        navigator.clipboard.writeText(shareURL).then(() => {
           const orig = btn.textContent;
           btn.textContent = '✓ Link copied';
           setTimeout(() => { btn.textContent = orig; }, 1800);
@@ -922,7 +939,7 @@
     let debounceTimer = null;
 
     const isAbbrev = admin => admin && /^[A-Za-z]+$/.test(admin);
-    const displayName = c => isAbbrev(c[1]) ? `${c[0]}, ${c[1]}, ${c[2]}` : `${c[0]}, ${c[2]}`;
+    const displayName = c => window.AtlasPlaces.placeLabel(c);
 
     function render() {
       if (!results.length) {
@@ -938,7 +955,7 @@
     }
 
     function selectCity(c) {
-      input.value = displayName(c);
+      input.value = displayName(c);selectedCityText=input.value;try{$('#f-zone').value=window.tzlookup(c[3],c[4]);}catch{$('#f-zone').value='';}$('#f-fold').value='';
       $('#f-lat').value = c[3];
       $('#f-lon').value = c[4];
       dropdown.hidden = true;
@@ -946,24 +963,10 @@
       activeIdx = -1;
     }
 
-    function doSearch(q) {
-      q = q.trim().toLowerCase();
-      if (q.length < 2) { results = []; dropdown.hidden = true; return; }
-      // cities[] is pre-sorted by population descending, so within each
-      // bucket below the biggest matching places already sort first.
-      const starts = [], contains = [];
-      for (const c of cities) {
-        const name = c[0].toLowerCase();
-        if (name.startsWith(q)) starts.push(c);
-        else if (name.includes(q)) contains.push(c);
-      }
-      results = starts.concat(contains).slice(0, 8);
-      activeIdx = -1;
-      render();
-    }
+    function doSearch(q) {results=window.AtlasPlaces.searchPlaces(cities,q);activeIdx=-1;if(q.trim().length<2){dropdown.hidden=true;return;}render();}
 
     input.addEventListener('input', () => {
-      clearTimeout(debounceTimer);
+      selectedCityText='';clearTimeout(debounceTimer);
       const q = input.value;
       debounceTimer = setTimeout(() => doSearch(q), 120);
     });
@@ -999,6 +1002,8 @@
   }
 
   function init() {
+    if(window.parent!==window){$('#atlas-sky').hidden=false;$('#atlas-sky').onclick=()=>notifyAtlas('view-sky');}
+    for(const id of ['f-year','f-month','f-day','f-hour','f-minute','f-zone','f-fold'])$('#'+id).addEventListener('change',()=>{try{readForm(false);}catch(error){$('#timezone-preview').textContent=error.message;}});
     wireLocations();
     wireCitySearch();
     wireSkyToggle();
@@ -1014,7 +1019,7 @@
       // its epoch; yield a frame first so the button visibly updates
       // instead of appearing frozen during that synchronous work.
       setTimeout(() => {
-        compute();
+        if(compute())$('#wheel').scrollIntoView({behavior:'smooth',block:'start'});
         btn.disabled = false;
         btn.textContent = orig;
       }, 0);
@@ -1031,7 +1036,7 @@
       $('#f-lat').value = SAMPLE_LOCATIONS[0].lat;
       $('#f-lon').value = SAMPLE_LOCATIONS[0].lon;
     }
-    compute();
+    compute();if(START_SHOW_WHEEL)$('#wheel').scrollIntoView({block:'start'});
   }
 
   document.addEventListener('DOMContentLoaded', init);
