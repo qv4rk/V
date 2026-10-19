@@ -1,1 +1,141 @@
-PLACEHOLDER_INDEX
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FeistTech</title>
+<meta name="description" content="Independent research on history, law and geography, and the instruments built to study it.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='44' fill='%23050810'/%3E%3Ccircle cx='50' cy='50' r='36' fill='none' stroke='%23c9a84c' stroke-width='2'/%3E%3Ccircle cx='50' cy='50' r='6' fill='%23c9a84c'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="/vendor/google-fonts/fonts.css">
+<style>
+  :root {
+    --bg: #0b0c10; --line: #23262f; --text: #e4e2dc; --muted: #8d9099; --gold: #c9a84c;
+    --serif: "Cormorant Garamond", Georgia, serif;
+    --mono: "Space Mono", ui-monospace, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 15px; line-height: 1.55; }
+  main { max-width: 1040px; margin: 0 auto; padding: 56px 16px 40px; }
+  a { color: inherit; }
+  .intro { font-family: var(--serif); font-size: clamp(24px, 4vw, 32px); line-height: 1.25; margin: 0 0 40px; max-width: 30ch; }
+  .label { font-family: var(--mono); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--gold); margin: 0 0 10px; font-weight: 400; }
+  .spotlight { border: 1px solid var(--line); border-radius: 12px; padding: 18px; margin: 0 0 26px; background: linear-gradient(135deg, #10131b, #090b10); }
+  .spotlight h2 { font-family: var(--serif); font-weight: 400; font-size: 28px; margin: 0; line-height: 1.15; }
+  .spotlight h2 a { text-decoration: none; }
+  .spotlight h2 a:hover { color: var(--gold); }
+  .spotlight p { color: var(--muted); margin: 8px 0 14px; max-width: 68ch; }
+  .spotlight .go { display: flex; flex-wrap: wrap; gap: 16px; font-size: 13px; }
+  .spotlight .go a { color: var(--gold); text-decoration: none; }
+  .spotlight .go a:hover { text-decoration: underline; }
+  .latest { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 18px 0; margin-bottom: 44px; }
+  .latest h2 { font-family: var(--serif); font-weight: 400; font-size: 24px; margin: 0; line-height: 1.2; }
+  .latest h2 a { text-decoration: none; }
+  .latest h2 a:hover { color: var(--gold); }
+  .latest p { color: var(--muted); margin: 6px 0 12px; font-size: 14px; max-width: 64ch; }
+  .latest .go { display: flex; gap: 18px; font-size: 13px; }
+  .latest .go a { color: var(--gold); text-decoration: none; }
+  .latest .go a:hover { text-decoration: underline; }
+  .cols { display: grid; grid-template-columns: repeat(4, 1fr); gap: 28px; }
+  .cols ul { list-style: none; margin: 0; padding: 0; }
+  .cols li a { display: block; padding: 6px 0; text-decoration: none; font-size: 14px; }
+  .cols li a:hover { color: var(--gold); }
+  .cols li a small { display: block; color: var(--muted); font-size: 12px; }
+  .cols li.more a { color: var(--muted); font-size: 13px; }
+  footer { max-width: 880px; margin: 0 auto; padding: 24px 16px 40px; color: var(--muted); font-size: 12px; display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; border-top: 1px solid var(--line); }
+  footer a { text-decoration: none; }
+  footer a:hover { color: var(--gold); }
+  @media (max-width: 640px) {
+    main { padding-top: 32px; }
+    .cols { grid-template-columns: 1fr; gap: 28px; }
+  }
+</style>
+<script src="/site.js" defer></script>
+</head>
+<body>
+<main>
+  <p class="intro">Independent research on history, law and geography, and the instruments built to study it.</p>
+  <section class="spotlight" aria-labelledby="spotlight-title">
+    <h2 class="label">Featured instrument</h2>
+    <h2 id="spotlight-title"><a href="/orrery/">The Scale Orrery</a></h2>
+    <p>Explore the solar system at visible or true scale, with the Moon, Jupiter's moons, eclipse dates, and a view from Earth.</p>
+    <div class="go"><a href="/orrery/">Open the Scale Orrery →</a><a href="/orrery/about/">About the instrument →</a></div>
+  </section>
+  <section class="latest" aria-labelledby="latest-title">
+    <h2 class="label" id="latest-label">Latest</h2>
+    <h2 id="latest-title"><a href="/reader/">The Reading Room</a></h2>
+    <p id="latest-excerpt">Every article in one place, with voice narration and speed reading.</p>
+    <div class="go" id="latest-go"><a href="/reader/">Open the Reading Room →</a></div>
+  </section>
+  <div class="cols">
+    <section>
+      <h2 class="label">Read</h2>
+      <ul>
+        <li><a href="/reader/">Reading Room<small>Every article, read or listen</small></a></li>
+        <li><a href="/articles/">All articles<small>The full archive</small></a></li>
+        <li><a href="/hoffect/">Hoffect<small>Oncology research dossier</small></a></li>
+      </ul>
+    </section>
+    <section>
+      <h2 class="label">Explore</h2>
+      <ul>
+        <li><a href="/orrery/">Scale Orrery<small>True scale, Moon, Jupiter's moons, eclipses</small></a></li>
+        <li><a href="/sky/">Globe & sky<small>Stars from any node on its day, 5,000 years of eclipses</small></a></li>
+        <li><a href="/atlas/">Street map<small>Globe to street level</small></a></li>
+        <li><a href="/space/">Space<small>ʻOumuamua, satellites, Planet Nine, eclipses from the side</small></a></li>
+        <li><a href="/gaza/">Gaza damage<small>Building damage over time</small></a></li>
+        <li><a href="/gaspi/">The Great GASPI<small>West Bank and Gaza territories</small></a></li>
+      </ul>
+    </section>
+    <section>
+      <h2 class="label">Tools</h2>
+      <ul>
+        <li><a href="/techhub/">Tech Hub<small>Guides, troubleshooting, local apps</small></a></li>
+        <li><a href="/methionine/">Methionine<small>Meal builder and tracker</small></a></li>
+        <li><a href="/natal/">Natal chart<small>Planet positions for any birth sky</small></a></li>
+        <li><a href="/eigenstate/">Eigenstate Roll<small>Dice and probability oracle</small></a></li>
+        <li class="more"><a href="#" data-ft-search>All tools →</a></li>
+      </ul>
+    </section>
+    <section>
+      <h2 class="label">Kaleidoscope</h2>
+      <ul>
+        <li><a href="/kaleidoscope/">Studios<small>Eight instruments, plates from the bench</small></a></li>
+      </ul>
+    </section>
+  </div>
+</main>
+<footer>
+  <span>FeistTech · Public research ledger</span>
+  <span><a href="mailto:info@feisttech.com">info@feisttech.com</a></span>
+</footer>
+<script>
+  fetch('/data/reading-room/manifest.json').then(function (r) { return r.json(); }).then(function (ids) {
+    return Promise.all(ids.map(function (id) {
+      return fetch('/data/reading-room/articles/' + id + '.json').then(function (r) { return r.ok ? r.json() : null; });
+    }));
+  }).then(function (arts) {
+    var a = arts.filter(function (x) { return x && !x.lang || (x && x.lang === 'en'); })
+      .sort(function (x, y) { return (y.published || '').localeCompare(x.published || ''); })[0];
+    if (!a) return;
+    var read = document.createElement('a');
+    read.href = a.article_url ? '/' + a.article_url : '/reader/?article=' + encodeURIComponent(a.id);
+    read.textContent = a.title;
+    var h = document.getElementById('latest-title');
+    h.textContent = '';
+    h.appendChild(read);
+    document.getElementById('latest-excerpt').textContent = a.excerpt || '';
+    var go = document.getElementById('latest-go');
+    go.innerHTML = '';
+    [['Read', read.href], ['📖 Listen', '/reader/?article=' + encodeURIComponent(a.id)]]
+      .concat(a.location ? [['🌍 Globe & sky', '/sky/#node-' + encodeURIComponent(a.id)]] : [])
+      .forEach(function (l) {
+        var x = document.createElement('a');
+        x.href = l[1];
+        x.textContent = l[0] + ' →';
+        go.appendChild(x);
+      });
+  }).catch(function () {});
+</script>
+</body>
+</html>
