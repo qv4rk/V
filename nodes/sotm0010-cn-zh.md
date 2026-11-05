@@ -25,11 +25,12 @@ tags:
   - chinese-peasants
 
 connections:
-  - n02
-  - n03
+  - sotm0005-cn-zh
+  - sotm0002-cn-zh
 excerpt: "Once the habit took root, it didn't need foreign ships anymore. Domestic poppy fields in Yunnan and smoke dens in Guangzhou's Xiguan district show the same economy running on local soil, local hands, local family networks."
 references: []
 ---
+
 
 
 [NEEDS VERIFICATION PASS: this node's claims about specific clan names (He and Liang of Panyu's Jiaotang Division), the precise red-flag inscription, and the characterization of smoke-den demographics in Guangzhou's Xiguan district require independent sourcing before publication — see verification note on n03.]

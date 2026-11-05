@@ -22,7 +22,7 @@ tags:
   - cabinet-crisis
   - institution-eats-its-own
   - providentialism
-connections: [bt04, bt16]
+connections: [sotm0011-ie-ga, bt16]
 excerpt: "A Dublin botanist correctly diagnoses the blight and predicts famine within days of first seeing it. The government that could have used his warning takes two months to appoint a commission, and the prime minister who moves fastest against his own party's interests is out of office within ten months of the discovery."
 references:
   - title: "\"History.\" National Botanic Gardens of Ireland (David Moore's Aug 20, 1845 discovery and famine prediction at Glasnevin)."
@@ -40,6 +40,7 @@ references:
   - title: "\"How the Corn Laws Split the Ruling Class.\" Socialist Worker (Dec 11 1845 resignation, Russell's failed attempt to form government, Peel's return)."
     url: "https://socialistworker.co.uk/in-depth/how-the-corn-laws-split-the-ruling-class/"
 ---
+
 
 
 On August 20, 1845, David Moore, curator of the Royal Dublin Society's Botanic Gardens at Glasnevin, noticed something wrong with the potato plants growing under his own care. He recognized it immediately for what it was, or close enough — a disease, not weather damage, not soil exhaustion — and he said so at once, predicting to colleagues that the coming failure of the crop would mean famine in Ireland. He was not a politician making a rhetorical point. He was a working botanist looking at leaves in his own garden, three weeks before the disease had spread far enough for most of the country to notice it at all.

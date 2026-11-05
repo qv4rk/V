@@ -29,11 +29,12 @@ tags:
   - tanka
 
 connections:
-  - n02
-  - n04
+  - sotm0005-cn-zh
+  - sotm0010-cn-zh
 excerpt: What the Calcutta auction made legal on the Indian side had to become illegal again the moment it crossed into Chinese water — and a whole armed distribution economy grew up to manage that seam.
 references: []
 ---
+
 
 
 What the Calcutta auction made legal on the Indian side had to become illegal again the moment it touched Chinese water, and a whole distribution economy grew up around that seam. After an 1821 crackdown on opium stockpiled at Macau, the trade shifted to receiving ships anchored off Lintin Island. Chinese wholesale buyers rowed out, paid silver, and carried the chests inland in fast, heavily armed boats — fast crabs, sometimes called scrambling dragons — built to outrun the government's water patrols. Many of the men crewing them were Tanka boat people who had fished those waters for generations and found that one successful run paid more than months of honest work.

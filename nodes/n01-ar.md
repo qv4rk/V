@@ -3,7 +3,7 @@ id: n01-ar
 title: "ثورة 1834 في بلاد الشام: صفد بين إبراهيم باشا وقصف الجبل"
 source: manifold
 lang: ar
-translationOf: n01
+translationOf: sotm0006-ps-ar
 date:
   year: 1834
   month: 4

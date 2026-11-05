@@ -22,7 +22,7 @@ tags:
   - laissez-faire
   - christianity
   - named-testimony
-connections: [bt01, bt03]
+connections: [sotm0001-ie-en, sotm0009-ie-ga]
 excerpt: "A Treasury official writes that the famine is Providence's cure for Irish overpopulation. Two months later a Cork magistrate finds six people, alive, in a locked cottage, mistaken for corpses. Eight months after that, Parliament writes the doctrine into law: anyone holding more than a quarter acre gets no relief at all."
 references:
   - title: "\"October 9, 1846 - English Noble Charles Trevelyan Shuts Down Irish Famine Relief.\" Legal Legacy (full text of Trevelyan's letter to Lord Monteagle, Mount Trenchard, Oct 9 1846)."
@@ -38,6 +38,7 @@ references:
   - title: "\"Poor Law Amendment Act of 1847 and the Gregory Clause.\" Encyclopedia.com (Gregory Clause text, quarter-acre eligibility rule, June 1847 passage)."
   - title: "Deep-research famine synthesis and Structural Metamorphosis Pillar 1 (uploaded research; crowbar brigade eviction practice, poor-rate liability under four pounds rental value)."
 ---
+
 
 
 No occupier of more than a quarter acre of land could receive any relief whatsoever, whether inside the workhouse or out of it. That was the entire operative text of the clause a Member of Parliament named William Gregory would attach to the Poor Law Extension Act the following June, and it left any family holding even a small plot exactly one legal path to survival: surrender the land, in writing, to the landlord, before a workhouse bed or an ounce of relief meal could be had. The law did not spring from nowhere. Eight months before Gregory drafted it, on October 9, 1846, Charles Trevelyan — Assistant Secretary to the Treasury, and the man Lord John Russell's government had put in charge of Irish relief — wrote a letter that said, in essence, exactly what a clause like Gregory's would later say in the cold language of statute. Trevelyan wrote to Thomas Spring-Rice, Lord Monteagle, at his estate of Mount Trenchard in County Limerick, after Monteagle asked what more the government intended to do. Trevelyan's answer laid out, in full and with no apparent sense that he was saying anything extreme, the doctrine that would govern the crisis for the rest of its course: "It forms no part of the functions of government to provide supplies of food or to increase the productive powers of the land." The condition of a community, he continued, depended on the efforts each member of it made in his own private and individual capacity, and government's proper role was only to protect merchant and agriculturist alike in the free exercise of their trades, never to enter those trades itself. Then, of the blight specifically, in the sentence that would outlive every other line he ever wrote: he hoped he was not guilty of irreverence in thinking that, the overpopulation of Ireland being altogether beyond the power of man to correct, "the cure has been applied by the direct stroke of an all-wise Providence, in a manner as unexpected and as unthought of as it is likely to be effectual."

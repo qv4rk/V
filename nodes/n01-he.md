@@ -3,7 +3,7 @@ id: n01-he
 title: "מרד 1834 בבלאד א-שאם: צפת בין איברהים פאשה לרעש הגבעה"
 source: manifold
 lang: he
-translationOf: n01
+translationOf: sotm0006-ps-ar
 date:
   year: 1834
   month: 4

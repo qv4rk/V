@@ -28,11 +28,12 @@ tags:
   - bihar-farmers
 
 connections:
-  - n03
-  - n04
+  - sotm0002-cn-zh
+  - sotm0010-cn-zh
 excerpt: "A silver shortage in London gets solved by an opium monopoly in Bengal. The Company never touches the smuggling itself \u2014 it just auctions the product and lets the risk, and the profit, pass to someone else's hands before it crosses into China."
 references: []
 ---
+
 
 
 By the late eighteenth century, the East India Company had a problem with its own appetite. Tea, silk, and porcelain bought in China had to be paid for in silver, and silver was draining out of London faster than the Company could replace it. In 1773, Governor-General Warren Hastings answered that problem by declaring opium a state monopoly in Bengal. In 1797, the Company tightened its grip further, replacing a looser contractor system with two salaried Opium Agents, one at Patna and one at Ghazipur, who controlled cultivation directly.

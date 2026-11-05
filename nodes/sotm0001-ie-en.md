@@ -23,7 +23,7 @@ tags:
   - combination-laws
   - guild
   - philanthropy
-connections: [bt04]
+connections: [sotm0011-ie-ga]
 excerpt: "A customs clause phased in over eighteen years does what soldiers never had to. A Dublin guild that once carved a king's statue into its hall wall in loyalty finds the hall let out to Methodists within a generation, undone by nothing but equalized tariffs and a ban on the one thing that might have let it fight back."
 references:
   - title: "Union with Ireland Act 1800, Articles VI &amp; VII. legislation.gov.uk."
@@ -39,6 +39,7 @@ references:
   - title: "D'Arcy, Fergus. \"Irish Trade Unions before Congress.\" History Ireland (Combination Laws in Ireland, 1803-1824, comparative penalties)."
     url: "https://www.historyireland.com/18th-19th-century-history/irish-trade-unions-before-congress-by-fergus-darcy/"
 ---
+
 
 
 Eighteen years. That was the span Parliament allowed between announcing the end of Irish tariff protection in 1806 and its final removal in 1824 — a countdown long enough on paper to let a threatened industry adjust, and long enough in practice to watch a three-hundred-year-old trade guild die on schedule, one stage at a time, with everyone involved able to see the deadline coming the entire way. The Weavers' Guild of Dublin had been meeting on the Lower Coombe since 1446, one of the oldest trade corporations in the city, and by the middle of the eighteenth century it had something to show for the wait it did not yet know it would have to make again. A wave of Huguenot silk weavers had settled in the Liberties district after fleeing France, bringing skills that turned Dublin poplin into a genuine export trade, and in 1745 the guild built itself a new hall on the strength of that prosperity — fifty-six feet by twenty-one, wainscoted, hung with portraits of kings, financed in part by the Huguenot banker David Digges La Touche. Five years later the guild set a statue of George II into the front of the building, done up with a weaver's shuttle in hand, and recorded the gesture in its own minutes as a mark of their sincere loyalty. This was not a rebel trade. It was a Crown-facing, tariff-protected, proudly established institution that would shortly be given an eighteen-year clock to prepare for the loss of the only thing that had ever made it viable, and no clear sense yet of what those eighteen years would actually cost it.
