@@ -1,0 +1,82 @@
+---
+id: sotm0010-cn-zh
+title: "Poppies, Clans, and Smoke: Domestic Cultivation and Terminal Consumption in China, 1820s-1839"
+source: manifold
+date:
+  year: 1839
+  month: 6
+  day: 15
+location:
+  lat: 25.0454
+  lon: 102.7091
+  name: "Yunnan borderlands & Guangzhou Xiguan"
+type: Qing China
+empire: Qing China
+mechanism: ["domestic-cultivation", "addiction-economy", "clan-networks"]
+nodeColor: "#a67041"
+nodeSize: 0.78
+tags:
+  - addiction-economy
+  - domestic-cultivation
+  - clan-networks
+  - displacement
+  - resource-extraction
+  - qing-dynasty
+  - chinese-peasants
+
+connections:
+  - n02
+  - n03
+excerpt: "Once the habit took root, it didn't need foreign ships anymore. Domestic poppy fields in Yunnan and smoke dens in Guangzhou's Xiguan district show the same economy running on local soil, local hands, local family networks."
+references: []
+---
+
+
+[NEEDS VERIFICATION PASS: this node's claims about specific clan names (He and Liang of Panyu's Jiaotang Division), the precise red-flag inscription, and the characterization of smoke-den demographics in Guangzhou's Xiguan district require independent sourcing before publication — see verification note on n03.]
+
+What is independently well-documented: domestic poppy cultivation did spread inland over the 1820s and 1830s, particularly into Yunnan and Sichuan, as the habit became profitable enough that growing food crops lost out to growing poppy in some districts. Lin Zexu's 1839 crackdown, including the destruction of opium stocks at Humen, is extensively documented and targeted both the foreign supply chain and domestic trafficking and consumption alike.
+
+The pattern repeats from the coast inland: a habit that started as an import becomes, within a generation, something grown, processed, and consumed entirely on Chinese soil, by Chinese hands — while the capital that had originally primed the market, and the silver it had already extracted on the way in, never had to be local at all.
+
+## Voices
+
+**Chapter 3, Monologue 1 (_α_): A valley near Mengzi, southern Yunnan, the winter of 1838 to the spring of 1839**
+
+That field, my grandfather left-behind. Beans, wheat, cold-season plant, year-year plant. Beans carry-go Mengzi street on-top sell, wheat keep-give us ourselves eat. Good year, the beans hand-over-already grain-tax, still remain-get-down little-over. Bad year, not-enough.
+Five years already, plant poppy. My wife's-brother first plant, across-ditch that house follow-hold plant, follow-hold is me. Same one field, same one water, same one winter. The seed tiny-very, one whole year's seed, hold at one bowl inside. Sow thin-little, do-not let birds peck-already. The rest, the plant itself grow.
+Winter, the green-shoots come-up-already. Low-low, grey-green grey-green, leaves like grow-bad-already cabbage. This winter, provincial-city send-down proclamation come, stamp-up big red seal, the headman at temple door-mouth read-out. Plant poppy, boil paste, open smoke-house, carry-out province sell, all-all must seize must punish, no favour. He read-finish, fold-up come, stuff-return sleeve-tube inside, return-home go-already.
+Spring, open-flower. Whole valley, white, also have red, sun-underneath hurt-eyes-very. After-that, the petals drop-already, the head at stalk on-top stand-up come, green, hard, hen's-egg so big. This time, the work start-already.
+Prick the head. One small blade, stroke few lines, shallow-shallow, only break skin. The white-juice come-out, one bead, one line, slow-slow, hang at that-place turn-into brown-colour. After-that, use knife-edge scrape-enter bowl inside. Every one head, every one plant, whole field, bend-up waist-back, the back, the neck, my woman at next-door that row. Fingers on-top the juice turn-black-already, sticky-hand-very, wash also wash-not-off.
+After-that, is enter-pot. Boil, strain, again boil-dry, until boil-into paste, both thick and dark. That smell, both sweet and rotten mix-together, bore-enter earth-walls inside, bore-enter quilts inside. Left-right neighbours anything all not say. Their houses inside also is same smell.
+Sichuan merchant-man come take. Give silver. Compare-to plant rice ten-times more, people say. Ten-times, I not know. Compare-to beans more, much more. This year grain-tax hand-over-clear-already, still have over.
+Towns inside the paste cheap, compare-to anywhere all cheap, the Sichuan man say. Mengzi street on-top, the smoke-houses big-doors wide-open. Yamen inside the people go, clerks, runners, officials' relatives and servants. Book-reading men, shopkeepers, garrison-camp inside the soldiers, ordinary people. Ten men inside, have five-six, people say.
+My wife's-brother now also eat-up-already. Once reach evening, the lamp not-yet light, his that hand then start shake, the eyes look-reach other-place go, the person sit at table-side, the soul already not at table-side. His woman run-come find my woman, cry. Their house's buy-rice money, enter-already his that pipe. Himself boil-out the paste, enter-already his own pipe. Himself grow, himself boil, himself smoke, still owe-debt.
+Summer, provincial-city again pass-down news come. Peking come new law. Whoever grow poppy, gather juice, make paste go sell, the chief-offender, strangle-die. Not is at-once strangle, wait autumn-assizes pass-after. The helpers, banish-go fever-country at far-frontier. Give one year and half time stop-completely.
+That night, sleep-not-able. Lie at bed on-top, pitch-dark open-hold eyes. One rope loop at neck on-top, I think-up one rope loop at neck on-top, the knot at ear underneath. Climb-up come, walk-out go, stand at field-edge. The stalks, now dry-already, wind blow-pass, rattle-rattle sound. My own two hands, finger-creases inside still is black, no-need look all feel-get-to. Stand-already very long-time. After-that, walk-return house, at my woman beside lie-down, she also wake-hold at-there, we two, one word all have-not say.
+Next winter, the seed still is enter-ground again, with across-ditch that house same-like.
+
+**Chapter 3, Monologue 2 (_δ_): A roadside in Wuchang, the summer of 1838**
+
+The chair along the road come-pass, front the runners all-way call-clear road, I right at road-side the dust inside kneel-down go, forehead press-hold ground, stay. Our lane inside Old Mrs Wang at my beside, also kneel-hold. Further-along, still have other-people. Have-no anyone tell us come. We ourselves come.
+Twelve years already, his craving. River-side cloth-shop inside one clerk, a good hand, can write. Trade turn-bad-already, the shop cut his pay, after-that have one evening, a friend take him along go eat-smoke, say for company. From that after, evening-evening all go. The friend again bring other friends come. After-that, the shop then let him go.
+One day's eating, our house, five mouths, never pass few coppers. His that pipe, every day, eat-away more-than all of us. The pawnshop, my wedding hairpins, winter quilt, his good long-gown. Toward my sister borrow, toward his cousin borrow. Year-year New Year, the debts call-in, people at door-mouth, and him lie at bed on-top, face turn-toward wall.
+After-that, the notices paste-out-already. A death-law come-hold. The yamen give-out medicine-pills. I myself pull-hold his sleeve take him go the bureau inside, him hand-inside hold-hold use cloth wrap-up the pipe, hand-over go, they then give him the paper packets.
+After-that, is the days after.
+His face shrink-already. The layer skin pull-tight at bones on-top, the lips draw-back off the teeth, the teeth all-time show at outside, even sleep-hold also show. Water stream-down from the eyes. Cold, cold over whole body at summer-heat inside, shake under every cover we have left, and we have-not remain many. Ache, every part of him. The bowels, flow-water, one night many times, the stink of it at that one room, him too weak stand-up-not-able, me clean him like a baby so. Have-no strength even lift the head. And always beg-hold. One pipe, only one. He call me my childhood small-name, only his mother use that-one.
+Druggist say ginseng help. Druggist's price for ginseng, Korean, foreign, all of it, since the notices come-out, up and up, several times what it was. Whole city the people all buy-hold. I sell-already my last good jacket for one packet of it.
+After-that, have one morning, he eat-down rice. Half a bowl. Pass-already few days, he sit at doorway inside in the sun. Now he go the docks for work, any work, come-home tired and sleep at night. His face, fill-out a-little.
+What I twelve years do-not-able, what his own father do-not-able, the death-law do-already.
+So I kneel. Dust at my mouth inside. The chair go-by, I hear the poles creak, I have-not look-up. I toward the ground say, my husband, the habit, break-already, he is get-stronger-hold. Say-already again. Whether anybody hear-reached, I not know.
+
+**Chapter 3, Monologue 3 (_ε_): The parade ground at Wuchang, the tenth day of the ninth month, 1838**
+
+Morning. The parade-ground flat and grey, the dust pack-hard by the soldiers' feet. Governor-General himself at-there, and the Governor. We runners at the tables.
+Pipes, one mountain of them. Sacks and bundles tie-hold with string, from all-over the province. Plain pipes black with years. Pipes carve and fit so fine, so many kinds, no person count-clear-able. Bowls in heaps. All the little tools. The clerk call the count, I hand, the other-one write. At the end, one-thousand seven-hundred fifty-four, pipes.
+My job, the knife. Lay the pipe at the block on-top, set the blade along the stem, hit the back of the blade with the mallet. Crack. Split-open, two halves. Inside, black. Old oil, thick, shining, all down the bore. That is how you tell an old pipe from a new one, the clerk say, a new one is clean inside. These, none clean.
+And the smell come-up out of the wood when it split.
+My hands, the first hour, steady. After-that, not. Every crack it come-up again, enter the nose inside, enter the throat back, and the stomach turn-over and the mouth fill with water. Spit, wipe the mouth at the sleeve on-top, next pipe. Since the summer I have-not go to the place behind the dyer's. Since the summer, fifty-odd days. The eyes stream-water, the cold at the bones inside at the heat, the aching, the bowels, that is pass-already now, almost pass-already. And now this, a whole morning of it, the whole parade-ground.
+The runner next to me, same thing, I see-out-can. Lips wet. Neither of us look at the other.
+After-that, the scales. Raw opium, paste, weigh-out at the great-men in-front, the clerk call-hold it. Sixteen-thousand seven-hundred sixty-eight taels. The Jiangxia lot, throw-enter the middle of the river. Gone, all that money, under the brown water. The Hanyang lot, seal-up for the provincial treasury.
+The pipes, smash-broken, onto the fire. Oil at inside, they go-up fast, spit-hold, and the smoke is that smoke, sweet and heavy, roll-cross the ground. I keep my eyes at the fire on-top, and pinch the inside of my wrist with my nails until the skin break, and keep pinch-hold.
+The new law, people say, will be death for smoking. At the yamen inside everybody know who smoke. Eight of ten, nine of ten. Our own Governor-General write-already it to the Emperor, the clerk say. If it come, who arrest whom.
+End of the day, my hands black to the wrist. Wash-already them at the bank. The smell at them on-top still, walk-return home. At the dark inside, at the alley by the dyer's, I stop-already. Stand at-there. My feet know the way. After-that, walk-on.
