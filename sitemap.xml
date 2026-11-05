@@ -96,11 +96,6 @@
     <changefreq>weekly</changefreq>
   </url>
   <url>
-    <loc>https://feisttech.com/articles/n02.html</loc>
-    <lastmod>2026-11-05</lastmod>
-    <changefreq>weekly</changefreq>
-  </url>
-  <url>
     <loc>https://feisttech.com/articles/n04.html</loc>
     <lastmod>2026-11-05</lastmod>
     <changefreq>weekly</changefreq>
@@ -142,6 +137,11 @@
   </url>
   <url>
     <loc>https://feisttech.com/articles/sotm0004-ie-ga.html</loc>
+    <lastmod>2026-11-05</lastmod>
+    <changefreq>weekly</changefreq>
+  </url>
+  <url>
+    <loc>https://feisttech.com/articles/sotm0005-cn-zh.html</loc>
     <lastmod>2026-11-05</lastmod>
     <changefreq>weekly</changefreq>
   </url>
