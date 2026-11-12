@@ -1,0 +1,2319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>LivingTendril · FeistTech</title>
+<style>
+  html,body { margin:0; height:100%; background:transparent; }
+  body {
+    overflow:hidden;
+    background:radial-gradient(circle at 50% 50%, rgba(12,18,26,0.92) 0%, rgba(4,6,10,0.97) 100%);
+    color:#eee;
+    font-family:'Courier New',Courier,monospace;
+    touch-action:none;
+    user-select:none;
+    -webkit-user-select:none;
+  }
+  .icon-btn {
+    position:absolute; top:10px; z-index:100;
+    background:rgba(8,12,18,0.68); border:1px solid rgba(140,180,210,0.35);
+    color:#e6f2ff; font-size:20px; width:38px; height:38px;
+    border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center;
+    backdrop-filter:blur(6px); transition:all .18s;
+  }
+  .icon-btn:active { transform:scale(.9); background:rgba(0,243,255,0.25); }
+  #menuBtn { left:10px; }
+  #resetBtn { right:10px; border-color:rgba(255,90,90,0.45); color:#ff7777; }
+  #fsQuick { right:54px; font-size:18px; }
+
+  /* --- TOP BAR & LAYER SWITCHER --- */
+  #topBar {
+    position:absolute; top:10px; left:50%; transform:translateX(-50%);
+    z-index:100; display:flex; gap:5px; align-items:center;
+    max-width:calc(100vw - 160px); flex-wrap:wrap; justify-content:center;
+  }
+  #topBar .icon-btn {
+    position:static; width:auto; min-width:34px; height:32px;
+    padding:0 9px; border-radius:16px; font-size:12px; letter-spacing:0.5px;
+  }
+  #layerStrip {
+    display:flex; gap:4px; align-items:center;
+    background:rgba(6,10,15,0.72); border:1px solid rgba(0,243,255,0.28);
+    padding:3px 6px; border-radius:18px; backdrop-filter:blur(6px);
+  }
+  .lchip {
+    background:rgba(20,30,42,0.75); border:1px solid rgba(140,180,210,0.3);
+    color:#9bc2dc; font:bold 11px 'Courier New',monospace;
+    padding:4px 8px; border-radius:12px; cursor:pointer; display:flex; align-items:center; gap:4px;
+  }
+  .lchip.active {
+    background:rgba(0,243,255,0.22); border-color:#00f3ff; color:#fff;
+    box-shadow:0 0 10px rgba(0,243,255,0.35);
+  }
+  .lchip.hidden-layer { opacity:0.4; text-decoration:line-through; }
+  .lchip .eye { font-size:10px; opacity:0.75; padding-left:2px; }
+  #addLayerBtn {
+    background:rgba(0,243,255,0.15); border:1px dashed #00f3ff; color:#00f3ff;
+    font:bold 12px monospace; width:26px; height:24px; border-radius:12px; cursor:pointer;
+  }
+
+  /* --- SLIDE-OUT MENU --- */
+  #uiPanel {
+    position:absolute; top:56px; left:10px; width:300px;
+    max-height:calc(100vh - 70px); overflow-y:auto; touch-action:pan-y;
+    background:rgba(8,12,18,0.86); border:1px solid rgba(0,243,255,0.3);
+    border-radius:10px; padding:14px; z-index:99; display:none;
+    backdrop-filter:blur(12px); box-shadow:0 8px 28px rgba(0,0,0,0.85); box-sizing:border-box;
+  }
+  #uiPanel.active { display:block; }
+  .control-group { margin-bottom:12px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:8px; }
+  .control-group:last-child { border-bottom:none; }
+  .ttl { font-size:10px; color:#00f3ff; letter-spacing:2px; margin-bottom:6px; font-weight:bold; }
+  label { display:flex; justify-content:space-between; align-items:center; font-size:12px; color:#b8cad8; margin-bottom:4px; }
+  input[type=range] { width:100%; height:4px; background:#2b3948; outline:none; -webkit-appearance:none; margin:4px 0 8px; border-radius:2px; }
+  input[type=number] { background:#141d26; border:1px solid #3a4d60; color:#00f3ff; width:64px; padding:2px 4px; font-family:monospace; text-align:right; border-radius:4px; }
+  select { width:100%; background:#141d26; color:#e6f2ff; border:1px solid #3a4d60; padding:5px; margin-bottom:5px; border-radius:4px; font-family:inherit; font-size:12px; }
+  .action-btn {
+    width:100%; background:rgba(25,36,48,0.85); border:1px solid rgba(140,180,210,0.35);
+    color:#dbeaff; padding:9px; margin-top:5px; cursor:pointer;
+    text-transform:uppercase; font-size:11px; letter-spacing:1px; border-radius:5px; font-family:inherit;
+  }
+  .action-btn.active { background:rgba(0,110,90,0.55); border-color:#00ffcc; color:#00ffcc; }
+  .gold-btn { background:rgba(90,65,10,0.65); border-color:#ffbb33; color:#ffdd88; }
+
+  /* --- OVERSIZED SQUARE ARTBOARD CONTAINER --- */
+  #canvasContainer {
+    position:fixed; inset:0;
+    display:flex; justify-content:center; align-items:center;
+    overflow:hidden; pointer-events:none;
+  }
+  #artboard, #overlayCanvas {
+    position:absolute;
+    left:50%; top:50%;
+    transform:translate(-50%, -50%) rotate(0deg);
+    transform-origin:50% 50%;
+    display:block;
+  }
+  #artboard { pointer-events:auto; z-index:2; }
+  #overlayCanvas { pointer-events:none; z-index:12; }
+
+  #frame {
+    position:fixed; left:50%; top:50%; transform:translate(-50%,-50%);
+    pointer-events:none; z-index:5;
+    border:1px dashed rgba(0,243,255,0.22); box-sizing:border-box; display:none;
+  }
+  #frame.show { display:block; }
+
+  /* --- CENTRAL HUD --- */
+  #hud {
+    position:absolute; top:52px; left:50%; transform:translateX(-50%);
+    z-index:90; pointer-events:none; text-align:center; opacity:0;
+    transition:opacity .22s; background:rgba(4,10,18,0.86);
+    border:1px solid #00f3ff; border-radius:12px; padding:6px 16px; min-width:130px;
+    backdrop-filter:blur(8px);
+  }
+  #hud.on { opacity:1; }
+  #hud b { display:block; font-size:10px; color:#00f3ff; letter-spacing:2px; }
+  #hud span { font-size:15px; color:#fff; }
+
+  /* --- 4 DEDICATED 2-AXIS JOYSTICKS (UP/DOWN = 1 FEATURE, LEFT/RIGHT = 1 FEATURE) --- */
+  .knob {
+    position:absolute; width:126px; height:126px; border-radius:50%;
+    background:rgba(12,20,30,0.42); border:1.5px dashed rgba(176,196,222,0.32);
+    opacity:.68; z-index:60; touch-action:none; transition:opacity .2s, border-color .2s;
+    backdrop-filter:blur(4px);
+  }
+  .knob.active { opacity:1; background:rgba(0,243,255,0.12); border-color:#00f3ff; }
+  .knob.moving { border-color:#ffaa00; opacity:1; }
+  .knob .stick {
+    width:44px; height:44px; background:rgba(0,243,255,0.48);
+    border:1px solid rgba(255,255,255,0.45); border-radius:50%;
+    position:absolute; left:50%; top:50%; margin:-22px 0 0 -22px;
+    box-shadow:0 0 12px rgba(0,243,255,0.4); pointer-events:none;
+  }
+  .knob .d {
+    position:absolute; left:0; width:100%; text-align:center;
+    font-size:8px; line-height:9px; color:rgba(240,248,255,0.92);
+    pointer-events:none; white-space:nowrap; text-shadow:0 1px 2px #000;
+  }
+  .knob .d em { font-style:normal; color:#00f3ff; letter-spacing:.5px; font-weight:bold; }
+  .knob .dy { top:6px; }
+  .knob .dx { bottom:6px; }
+  .knob .arr { position:absolute; font-size:9px; color:rgba(0,243,255,0.55); pointer-events:none; }
+  .knob .al { left:5px; top:56px; } .knob .ar { right:5px; top:56px; }
+  .knob .au { left:59px; top:16px; } .knob .ad { left:59px; bottom:16px; }
+  #kBL { left:8px; bottom:8px; }
+  #kTL { left:8px; bottom:142px; }
+  #kBR { right:8px; bottom:8px; }
+  #kTR { right:8px; bottom:142px; }
+
+  /* --- TOP-LEFT FONT FORGE TENDRIL TOGGLE --- */
+  #forgeToggleWrap {
+    position:fixed; top:58px; left:10px; z-index:98;
+    display:flex; flex-direction:column; align-items:center; touch-action:none;
+  }
+  #forgeToggle {
+    width:64px; height:64px; background:rgba(12,18,26,0.86);
+    border:1.5px solid rgba(0,243,255,0.5); border-radius:50%;
+    cursor:grab; position:relative; box-shadow:0 4px 16px rgba(0,0,0,0.7);
+    transition:border-color .15s, box-shadow .15s; backdrop-filter:blur(6px);
+  }
+  #forgeToggle.mode-set { border-color:#ff00ff; box-shadow:0 0 18px rgba(255,0,255,0.75); }
+  #forgeToggle.mode-draw { border-color:#00f3ff; box-shadow:0 0 14px rgba(0,243,255,0.45); }
+  #forgeStick {
+    width:28px; height:28px; background:rgba(0,243,255,0.6);
+    border-radius:50%; position:absolute; top:50%; left:50%;
+    transform:translate(-50%,-50%); transition:transform 0.12s ease-out;
+    pointer-events:none; box-shadow:inset 0 0 10px rgba(0,0,0,0.8);
+  }
+  #forgeToggle.mode-set #forgeStick { background:rgba(255,0,255,0.85); }
+  #forgeStatus {
+    margin-top:5px; font-size:9px; font-weight:bold; color:#00f3ff;
+    background:rgba(4,8,14,0.82); padding:3px 7px; border-radius:5px;
+    text-transform:uppercase; letter-spacing:1px; border:1px solid rgba(0,243,255,0.3);
+    white-space:nowrap; text-align:center; pointer-events:none;
+  }
+  #forgeSubBtn {
+    margin-top:4px; font-size:9px; background:rgba(55,10,55,0.88);
+    color:#ffccff; border:1px solid #cc44cc; border-radius:4px;
+    padding:3px 7px; cursor:pointer; display:none; font-family:inherit;
+  }
+  #forgeToggleWrap.in-set #forgeSubBtn { display:block; }
+  #forgeHints { position:absolute; inset:0; pointer-events:none; font-size:7px; color:rgba(255,255,255,0.65); }
+  #forgeHints b { position:absolute; font-weight:bold; }
+  #forgeHints .hu { top:3px; left:50%; transform:translateX(-50%); color:#00f3ff; }
+  #forgeHints .hd { bottom:3px; left:50%; transform:translateX(-50%); color:#aaa; }
+  #forgeHints .hl { left:3px; top:50%; transform:translateY(-50%); color:#ff55ff; }
+  #forgeHints .hr { right:3px; top:50%; transform:translateY(-50%); color:#00f3ff; }
+
+  #loader {
+    position:fixed; inset:0; background:rgba(4,8,14,0.85);
+    color:#00f3ff; justify-content:center; align-items:center;
+    z-index:200; display:none; font-size:14px; letter-spacing:1px;
+  }
+</style>
+</head>
+<body>
+
+<div id="loader">Rendering vectors...</div>
+<div id="menuBtn" class="icon-btn" title="Menu">☰</div>
+<div id="resetBtn" class="icon-btn" title="Clear Active Layer">↻</div>
+<div id="fsQuick" class="icon-btn" title="Fullscreen">⛶</div>
+
+<div id="topBar">
+  <div id="undoBtn" class="icon-btn" title="Undo (Ctrl+Z)">↶</div>
+  <div id="redoBtn" class="icon-btn" title="Redo (Ctrl+Y)">↷</div>
+  <div id="layerStrip"></div>
+</div>
+
+<div id="hud"><b id="hudT"></b><span id="hudV"></span></div>
+
+<!-- Top-Left Font Forge Tendril Toggle -->
+<div id="forgeToggleWrap" title="Slide LEFT to add/edit tendrils (tap or drag); Slide UP to draw with them as virtual fingers; Slide DOWN for off">
+  <div id="forgeToggle" class="mode-draw">
+    <div id="forgeHints"><b class="hu">DRAW</b><b class="hd">OFF</b><b class="hl">EDIT</b><b class="hr">DRAW</b></div>
+    <div id="forgeStick"></div>
+  </div>
+  <div id="forgeStatus">FORGE: DRAW (0)</div>
+  <button id="forgeSubBtn">CLEAR RIG</button>
+</div>
+
+<div id="uiPanel">
+  <div class="control-group">
+    <div class="ttl">VECTOR CORE &amp; LAYERS</div>
+    <div id="vecInfo" style="font-size:11px;color:#88ffcc;margin-bottom:6px">0 stamps · 0 vector points</div>
+    <div style="display:flex;gap:5px">
+      <button id="newLayerMenuBtn" class="action-btn">+ New Layer</button>
+      <button id="delLayerMenuBtn" class="action-btn">Delete Layer</button>
+    </div>
+    <button id="fsBtn" class="action-btn gold-btn">Full Screen</button>
+    <button id="viewToggle" class="action-btn">Square Guide Frame: OFF</button>
+  </div>
+
+  <div class="control-group">
+    <div class="ttl">FONT FORGE VIRTUAL FINGERS</div>
+    <div style="font-size:10px;color:#9bc2dc;line-height:1.45;margin-bottom:6px">
+      • <b>Slide FORGE Left (EDIT):</b> Tap (stationary point) or drag (ping-pong motion path) to add tendrils <b>1, 2, 3… N</b>. They immediately battle for <i>sharedPrev</i> in consecutive order!<br>
+      • <b>Slide FORGE Up (DRAW):</b> Drag anywhere to move the entire living rig across the canvas while each tendril keeps moving relative to its own path.<br>
+      • <b>Slide Left again</b> anytime to edit or add to your current rig without losing it.
+    </div>
+    <button id="closePolyToggle" class="action-btn active">Close Polygon Loop (N→1): ON</button>
+    <button id="steerToggle" class="action-btn">Steer Rig By Drag Angle: OFF</button>
+    <button id="motionToggle" class="action-btn active">Motion Illusion: ON</button>
+    <button id="pingPongToggle" class="action-btn active">Stroke Ping-Pong Ghosts: ON</button>
+    <label>Persistence Fade <span id="fadeVal">0.014</span></label>
+    <input type="range" id="fadeRange" min="0" max="0.12" step="0.002" value="0.014">
+    <button id="clearClusterBtn" class="action-btn">Clear Tendril Rig</button>
+  </div>
+
+  <div class="control-group">
+    <label>Mirrors (1 = No Reflection) <input type="number" id="mirrorNum" step="1" min="1" max="120" value="1"></label>
+    <input type="range" id="mirrors" min="1" max="64" step="1" value="1">
+    <label>Thickness <input type="number" id="thickNum" step="0.1" value="2"></label>
+    <input type="range" id="thickness" min="0.2" max="40" step="0.1" value="2">
+    <label>Stamp Size <input type="number" id="sizeNum" value="50"></label>
+    <input type="range" id="stampSize" min="5" max="300" value="50">
+    <label>Canvas Rotation (deg) <span id="rotVal">0°</span></label>
+    <input type="range" id="rotationParams" min="0" max="360" value="0">
+  </div>
+
+  <div class="control-group">
+    <label>Pattern</label> <select id="pattern"></select>
+    <label>Line Style</label> <select id="lineStyle"></select>
+    <label>Mirror Mode</label> <select id="mirrorMode"></select>
+    <label>Palette</label> <select id="palette"></select>
+    <div id="palBar" style="display:flex;height:12px;margin-top:6px;border:1px solid #3a4d60;border-radius:3px;overflow:hidden"></div>
+  </div>
+
+  <div class="control-group">
+    <div class="ttl">EXTRA MODIFIERS</div>
+    <div id="advBox"></div>
+    <label>Vector Memory (stamps) <input type="number" id="histNum" value="50000"></label>
+    <input type="range" id="historyRange" min="500" max="200000" step="500" value="50000">
+  </div>
+
+  <div class="control-group">
+    <button id="meshToggle" class="action-btn">Shadow Mesh: OFF</button>
+    <button id="autoToggle" class="action-btn">Auto Orbit Mode: OFF</button>
+    <button id="loopToggle" class="action-btn">History Loop: OFF</button>
+    <button id="glowToggle" class="action-btn active">Glow: ON</button>
+    <button id="colorToggle" class="action-btn">Color: PER TOUCH / TENDRIL</button>
+    <button id="linkToggle" class="action-btn active">Stroke Link: SHARED LAST POINT</button>
+    <button id="gestureToggle" class="action-btn">Two Fingers: DRAW</button>
+    <button id="joyToggle" class="action-btn active">Corner Joysticks: ON</button>
+    <button id="moveKnobsBtn" class="action-btn">Reposition Joysticks: OFF</button>
+  </div>
+
+  <div class="control-group">
+    <div class="ttl">SHARE &amp; PRINT SQUARE EXPORT</div>
+    <button id="expJson" class="action-btn gold-btn">Export Session JSON</button>
+    <button id="impJson" class="action-btn gold-btn">Import Session JSON</button>
+    <button id="replayBtn" class="action-btn">Replay Drawing</button>
+    <input type="file" id="jsonIn" accept=".json,application/json" style="display:none">
+    <select id="exportSize" style="margin-top:6px">
+      <option value="1024">1024 x 1024</option>
+      <option value="2048">2048 x 2048</option>
+      <option value="4096" selected>4096 x 4096</option>
+      <option value="6144">6144 x 6144</option>
+      <option value="8192">8192 x 8192</option>
+    </select>
+    <button id="bgToggle" class="action-btn">Export BG: TRANSLUCENT DARK</button>
+    <button id="exportBtn" class="action-btn gold-btn">Export Print PNG</button>
+    <button id="svgBtn" class="action-btn gold-btn">Export SVG (Infinite Vector)</button>
+    <button id="clearBtn" class="action-btn">Clear Active Layer</button>
+  </div>
+</div>
+
+<div id="canvasContainer">
+  <canvas id="artboard"></canvas>
+  <canvas id="overlayCanvas"></canvas>
+</div>
+<div id="frame"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+
+/**
+ * PALETTES (Complimentary, high-contrast & translucent-friendly; starts on Tundra Dark)
+ */
+const colorPalettes = {
+  "Tundra Dark": ["#00F3FF", "#7B96B8", "#E0F7FA", "#3A6073", "#64DFDF", "#B0C4DE", "#5E60CE", "#A8DADC"],
+  "Tundra": ["#F0FFFF", "#ADD8E6", "#B0C4DE", "#778899", "#FFFFFF", "#E6E6FA", "#87CEEB", "#4682B4"],
+  "Cyberpunk": ["#00FFFF", "#FF00FF", "#00FF99", "#FFFF00", "#FF0055", "#7D00FF", "#0088FF", "#FF8800"],
+  "Neon Prismatic": ["#FF0044", "#FF7F00", "#FFEE00", "#00FF66", "#00F3FF", "#0066FF", "#8A2BE2", "#FF00CC"],
+  "Galactic Dust": ["#6A0dad", "#9B5DE5", "#F15BB5", "#FEE440", "#00BBF9", "#00F5D4", "#E6E6FA", "#C77DFF"],
+  "Fire & Ice": ["#FF3300", "#FF7700", "#FFCC00", "#FFFFFF", "#88EEFF", "#00BFFF", "#1E90FF", "#0044AA"],
+  "Ocean Abyss": ["#00F5D4", "#00BBF9", "#48CAE4", "#0077B6", "#90E0EF", "#2EC4B6", "#CBF3F0", "#3F37C9"],
+  "Solar Flare": ["#FF4500", "#FF8C00", "#FFD700", "#FF1493", "#00E5FF", "#FFF35E", "#FF5E5E", "#7B2CBF"],
+  "Emerald & Gold": ["#00FF87", "#60EFFF", "#FFD166", "#06D6A0", "#118AB2", "#EF476F", "#F4A261", "#E9C46A"],
+  "Sakura Night": ["#FF758F", "#FF8FA3", "#FFB3C1", "#FDE2E4", "#C9184A", "#7209B7", "#4CC9F0", "#FFF0F3"],
+  "Axial DNA": ["#FF00FF", "#00FFFF", "#FFFF00", "#FF3366", "#00FF66", "#3388FF", "#FF9933", "#CC66FF"],
+  "Earth & Ember": ["#E07A5F", "#F2CC8F", "#81B29A", "#F4F1DE", "#D4A373", "#E76F51", "#2A9D8F", "#E9C46A"],
+  "Monochrome Ice": ["#FFFFFF", "#D8E2DC", "#A9B4C2", "#7D8597", "#5C677D", "#00F3FF", "#90E0EF", "#CAF0F8"]
+};
+
+function shadeHex(color, percent) {
+  let f = parseInt(color.slice(1), 16), t = percent < 0 ? 0 : 255, p = percent < 0 ? -percent : percent,
+      R = f >> 16, G = f >> 8 & 0xFF, B = f & 0xFF;
+  return "#" + (0x1000000 + (Math.round((t - R) * p) + R) * 0x10000 + (Math.round((t - G) * p) + G) * 0x100 + (Math.round((t - B) * p) + B)).toString(16).slice(1);
+}
+Object.keys(colorPalettes).slice().forEach(n => {
+  colorPalettes[n + " Shadow"] = colorPalettes[n].map(c => shadeHex(c, -0.45));
+});
+const paletteNames = Object.keys(colorPalettes).filter(n => !n.endsWith(" Shadow"));
+
+/**
+ * STARTING CONDITIONS:
+ * - mirrors: 1 (1:1 direct touch drawing with no reflections until increased)
+ * - paletteIndex: 0 ("Tundra Dark")
+ * - background: translucent
+ */
+const CONFIG = {
+  mirrors: 1, patternIndex: 0, paletteIndex: 0, lineStyle: 0,
+  thickness: 2, stampSize: 50, rotation: 0, touchSpeed: 1,
+  shadowMesh: false, isLooping: false, interactiveGhost: true,
+  isAuto: false, glow: true, colorCycle: false,
+  twoFingerRotate: false, sharedPrev: true, joysticks: true, maxHistory: 50000,
+  glowAmt: 1, twist: 0, echo: 0, mirrorMode: 0, breath: 0, flow: 0,
+  autoR: 100, ghostSpeed: 1, spin: 0, showGuideFrame: false, exportBlack: true,
+  motionIllusion: true, pingPongGhosts: true, fadeRate: 0.014,
+  closeClusterPoly: true, steerCluster: false
+};
+
+const ENV = { cx: 0, cy: 0, t: 0 };
+const PHI = 1.61803398875;
+const WORLD = 1000;           // Full square world (-500 to +500); center third (-166 to +166) is the inner viewport
+const TAU = Math.PI * 2;
+const LINE_STYLES = ['Solid', 'Dotted', 'Dashed', 'Wavy', 'Quantum Cloud', 'Double Rail', 'Lightning', 'Beads'];
+const MIRROR_MODES = ['Kaleido (alternate flip)', 'Rotary (no flip)', 'Pairs (flip in twos)', 'Wave (flip by sine)'];
+
+/**
+ * FONT FORGE LIVING TENDRIL RIG
+ * Each tendril is a literal virtual finger:
+ *   { pts: [{dx, dy}, ...], cur: 0, dir: 1 }
+ * - In EDIT ('set') mode, all tendrils continuously ping-pong along their paths AND stamp live
+ *   onto the canvas fighting over `sharedPrev` in consecutive order (1 -> 2 -> ... -> N -> 1).
+ * - In DRAW ('draw') mode, your touch moves the whole rig while each tendril keeps moving
+ *   relative to its own path!
+ */
+const CLUSTER = {
+  mode: 'draw',     // 'off' | 'set' | 'draw'
+  origin: null,     // {x, y} world coordinate of Tendril #1's start
+  tendrils: [],     // array of { pts: [{dx, dy}, ...], cur: 0, dir: 1 }
+  building: null,   // tendril currently being dragged in 'set' mode
+  editPrev: null    // sharedPrev tracker for live EDIT mode weaving
+};
+
+/**
+ * NON-DESTRUCTIVE MULTI-LAYER ENGINE
+ * Each layer holds its own vector stamp history and ping-pong ghost strokes so you can switch
+ * between Layer 1..N and edit/clear/undo without erasing other layers.
+ */
+let layers = [];
+let activeLayerIdx = 0;
+let layerCounter = 1;
+
+function createLayer(name) {
+  return {
+    id: layerCounter++,
+    name: name || `L${layers.length + 1}`,
+    visible: true,
+    history: [],
+    gestures: [],
+    pointsCount: 0
+  };
+}
+layers.push(createLayer('L1'));
+const curLayer = () => layers[activeLayerIdx] || layers[0];
+
+let playbackIndex = 0, playbackDirection = 1;
+let fingers = [];             // active physical touches {id,x,y,colorIndex}
+let prevMap = {};
+let autoPrev = null;
+let sharedPrev = null;
+let globalColorStep = 0;
+let touchColorCounter = 0;
+let flowPhase = 0;
+let pointerKinematics = new Map();
+
+/** UNDO / REDO STACK (supports up to 100 steps across strokes, tendrils, and layers) */
+const undoStack = [], redoStack = [];
+function pushUndo(e) { undoStack.push(e); if (undoStack.length > 100) undoStack.shift(); redoStack.length = 0; }
+function undo() { const e = undoStack.pop(); if (!e) { hud('UNDO', 'Nothing to undo'); return; } e.undo(); redoStack.push(e); hud('UNDO', e.label || ''); }
+function redo() { const e = redoStack.pop(); if (!e) { hud('REDO', 'Nothing to redo'); return; } e.redo(); undoStack.push(e); hud('REDO', e.label || ''); }
+
+/**
+ * OVERSIZED SQUARE ARTBOARD SETUP
+ * The canvas is always a true square whose side is `Math.max(viewW, viewH) * 2`.
+ * The screen viewport sees the middle section, so rotating the canvas 360° never shows
+ * rectangular phone-screen cutoffs on the left or right!
+ */
+const canvas = $('artboard');
+const ctx = canvas.getContext('2d', { alpha: true });
+const overlayCanvas = $('overlayCanvas');
+const octx = overlayCanvas.getContext('2d', { alpha: true });
+const frame = $('frame');
+let viewW = window.innerWidth, viewH = window.innerHeight, DPR = 1, sqSide = 1600, innerSide = 400, K = 1;
+
+function applyView(targetCtx = ctx) {
+  targetCtx.setTransform(DPR * K, 0, 0, DPR * K, DPR * sqSide / 2, DPR * sqSide / 2);
+}
+let resizeTimer = null;
+function resizeCanvas() {
+  DPR = Math.min(window.devicePixelRatio || 1.5, 2);
+  viewW = window.innerWidth; viewH = window.innerHeight;
+  innerSide = Math.min(viewW, viewH);
+  // Square canvas is 2x the largest screen dimension (~3x the inner viewport), centered on screen
+  sqSide = Math.ceil(Math.max(viewW, viewH) * 2.0);
+  K = sqSide / WORLD;
+
+  canvas.width = overlayCanvas.width = Math.round(sqSide * DPR);
+  canvas.height = overlayCanvas.height = Math.round(sqSide * DPR);
+  canvas.style.width = overlayCanvas.style.width = sqSide + 'px';
+  canvas.style.height = overlayCanvas.style.height = sqSide + 'px';
+
+  frame.style.width = frame.style.height = innerSide + 'px';
+  applyView(ctx);
+  applyView(octx);
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(redrawAll, 90);
+}
+window.addEventListener('resize', resizeCanvas);
+
+function clearPixels() {
+  ctx.save();
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.restore();
+}
+
+/** ROTATION */
+const rotSlider = $('rotationParams');
+function setRotation(deg) {
+  CONFIG.rotation = ((deg % 360) + 360) % 360;
+  rotSlider.value = CONFIG.rotation;
+  $('rotVal').textContent = Math.round(CONFIG.rotation) + '°';
+  const t = `translate(-50%, -50%) rotate(${CONFIG.rotation}deg)`;
+  canvas.style.transform = t;
+  overlayCanvas.style.transform = t;
+}
+rotSlider.addEventListener('input', e => setRotation(parseFloat(e.target.value)));
+
+/* ================= LAYER UI ================= */
+function renderLayerStrip() {
+  const strip = $('layerStrip');
+  strip.innerHTML = layers.map((L, idx) =>
+    `<div class="lchip ${idx === activeLayerIdx ? 'active' : ''} ${L.visible ? '' : 'hidden-layer'}" data-idx="${idx}">
+      <span>${L.name}</span>
+      <span class="eye" data-eye="${idx}" title="Toggle visibility">${L.visible ? '●' : '○'}</span>
+    </div>`
+  ).join('') + `<button id="addLayerBtn" title="Add New Layer">+</button>`;
+
+  strip.querySelectorAll('.lchip').forEach(el => {
+    el.addEventListener('click', ev => {
+      if (ev.target.dataset.eye !== undefined) {
+        const i = +ev.target.dataset.eye;
+        layers[i].visible = !layers[i].visible;
+        renderLayerStrip();
+        redrawAll();
+        hud(layers[i].name, layers[i].visible ? 'Visible' : 'Hidden');
+        return;
+      }
+      activeLayerIdx = +el.dataset.idx;
+      sharedPrev = null;
+      renderLayerStrip();
+      hud('ACTIVE LAYER', curLayer().name);
+    });
+  });
+  $('addLayerBtn').addEventListener('click', addNewLayer);
+}
+
+function addNewLayer() {
+  const L = createLayer(`L${layers.length + 1}`);
+  const prevIdx = activeLayerIdx;
+  layers.push(L);
+  activeLayerIdx = layers.length - 1;
+  sharedPrev = null;
+  renderLayerStrip();
+  hud('NEW LAYER', L.name);
+  pushUndo({
+    label: `add ${L.name}`,
+    undo() { layers = layers.filter(x => x !== L); activeLayerIdx = Math.min(prevIdx, layers.length - 1); renderLayerStrip(); redrawAll(); },
+    redo() { layers.push(L); activeLayerIdx = layers.length - 1; renderLayerStrip(); redrawAll(); }
+  });
+}
+
+function deleteActiveLayer() {
+  if (layers.length <= 1) {
+    wipeActiveLayer();
+    return;
+  }
+  const idx = activeLayerIdx;
+  const removed = layers[idx];
+  layers.splice(idx, 1);
+  activeLayerIdx = Math.max(0, idx - 1);
+  renderLayerStrip();
+  redrawAll();
+  hud('DELETED', removed.name);
+  pushUndo({
+    label: `delete ${removed.name}`,
+    undo() { layers.splice(idx, 0, removed); activeLayerIdx = idx; renderLayerStrip(); redrawAll(); },
+    redo() { layers = layers.filter(x => x !== removed); activeLayerIdx = Math.max(0, idx - 1); renderLayerStrip(); redrawAll(); }
+  });
+}
+$('newLayerMenuBtn').addEventListener('click', addNewLayer);
+$('delLayerMenuBtn').addEventListener('click', deleteActiveLayer);
+
+/* ================= VECTOR RECORDER ================= */
+class Rec {
+  constructor(q) {
+    this.q = q || 1; this.ops = []; this.m = [1, 0, 0, 1, 0, 0]; this.stack = [];
+    this.path = []; this.cur = null; this.dash = null;
+    this.strokeStyle = '#fff'; this.fillStyle = '#fff'; this.lineWidth = 1; this.globalAlpha = 1;
+    this.shadowColor = 'transparent'; this.shadowBlur = 0; this.shadowOffsetX = 0; this.shadowOffsetY = 0;
+    this.lineCap = 'round'; this.lineJoin = 'round';
+  }
+  save() { this.stack.push({ m: this.m.slice(), s: this.strokeStyle, f: this.fillStyle, w: this.lineWidth, a: this.globalAlpha, d: this.dash }); }
+  restore() { const s = this.stack.pop(); if (s) { this.m = s.m; this.strokeStyle = s.s; this.fillStyle = s.f; this.lineWidth = s.w; this.globalAlpha = s.a; this.dash = s.d; } }
+  translate(x, y) { const m = this.m; m[4] += m[0] * x + m[2] * y; m[5] += m[1] * x + m[3] * y; }
+  rotate(a) {
+    const m = this.m, c = Math.cos(a), s = Math.sin(a);
+    const a0 = m[0], b0 = m[1], c0 = m[2], d0 = m[3];
+    m[0] = a0 * c + c0 * s; m[1] = b0 * c + d0 * s; m[2] = -a0 * s + c0 * c; m[3] = -b0 * s + d0 * c;
+  }
+  scale(x, y) { const m = this.m; m[0] *= x; m[1] *= x; m[2] *= y; m[3] *= y; }
+  det() { const m = this.m; return Math.sqrt(Math.abs(m[0] * m[3] - m[1] * m[2])) || 1e-9; }
+  pt(x, y) { const m = this.m; return [m[0] * x + m[2] * y + m[4], m[1] * x + m[3] * y + m[5]]; }
+  beginPath() { this.path = []; this.cur = null; }
+  moveTo(x, y) { this.cur = [this.pt(x, y)]; this.path.push(this.cur); }
+  lineTo(x, y) { if (!this.cur) { this.moveTo(x, y); return; } this.cur.push(this.pt(x, y)); }
+  closePath() { if (this.cur && this.cur.length) { this.cur.push(this.cur[0].slice()); this.cur = null; } }
+  rect(x, y, w, h) { this.moveTo(x, y); this.lineTo(x + w, y); this.lineTo(x + w, y + h); this.lineTo(x, y + h); this.closePath(); }
+  arc(x, y, r, a0, a1, ccw) {
+    let sw = a1 - a0;
+    if (!ccw && sw < 0) sw = (sw % TAU) + TAU;
+    if (ccw && sw > 0) sw = (sw % TAU) - TAU;
+    if (Math.abs(sw) > TAU) sw = TAU * Math.sign(sw);
+    const rw = r * this.det();
+    const n = Math.max(10, Math.min(720, Math.ceil(Math.sqrt(Math.max(rw, 0.05) * this.q) * 6 * Math.abs(sw) / TAU)));
+    for (let i = 0; i <= n; i++) {
+      const a = a0 + sw * i / n, px = x + r * Math.cos(a), py = y + r * Math.sin(a);
+      if (i === 0 && !this.cur) this.moveTo(px, py); else this.lineTo(px, py);
+    }
+  }
+  setLineDash(d) { this.dash = d && d.length ? d.slice() : null; }
+  glowInfo() { return (this.shadowColor && this.shadowColor !== 'transparent' && this.shadowBlur > 0) ? [this.shadowColor, this.shadowBlur, this.shadowOffsetX] : null; }
+  stroke() {
+    if (!this.path.length) return;
+    const sc = this.det();
+    this.ops.push({ k: 's', p: this.path, c: this.strokeStyle, w: this.lineWidth * sc, a: this.globalAlpha, g: this.glowInfo(), d: this.dash ? this.dash.map(v => v * sc) : null });
+  }
+  fill() {
+    if (!this.path.length) return;
+    this.ops.push({ k: 'f', p: this.path, c: this.fillStyle, a: this.globalAlpha, g: this.glowInfo() });
+  }
+}
+
+/* ================= LINE STYLE RENDERERS ================= */
+const hash = n => { const v = Math.sin(n * 127.1 + 311.7) * 43758.5453; return v - Math.floor(v); };
+
+function resample(sub, step) {
+  const out = []; let total = 0;
+  for (let i = 0; i < sub.length - 1; i++) total += Math.hypot(sub[i + 1][0] - sub[i][0], sub[i + 1][1] - sub[i][1]);
+  if (total / step > 2500) step = total / 2500;
+  let s = 0, nextS = 0, lastNx = 0, lastNy = 1;
+  for (let i = 0; i < sub.length - 1; i++) {
+    const x0 = sub[i][0], y0 = sub[i][1], x1 = sub[i + 1][0], y1 = sub[i + 1][1];
+    const L = Math.hypot(x1 - x0, y1 - y0); if (L === 0) continue;
+    const nx = -(y1 - y0) / L, ny = (x1 - x0) / L; lastNx = nx; lastNy = ny;
+    while (nextS <= s + L + 1e-9) {
+      const t = Math.min(1, (nextS - s) / L);
+      out.push({ x: x0 + (x1 - x0) * t, y: y0 + (y1 - y0) * t, nx, ny, s: nextS });
+      nextS += step;
+    }
+    s += L;
+  }
+  if (!out.length && sub.length) out.push({ x: sub[0][0], y: sub[0][1], nx: 0, ny: 1, s: 0 });
+  else if (out.length && total - out[out.length - 1].s > step * 0.3) {
+    const e = sub[sub.length - 1]; out.push({ x: e[0], y: e[1], nx: lastNx, ny: lastNy, s: total });
+  }
+  return out;
+}
+function tracePath(g, sub) {
+  g.moveTo(sub[0][0], sub[0][1]);
+  for (let i = 1; i < sub.length; i++) g.lineTo(sub[i][0], sub[i][1]);
+}
+function traceOffset(g, pts, off, wave) {
+  for (let i = 0; i < pts.length; i++) {
+    const p = pts[i], o = wave ? wave(p, i) : off;
+    const x = p.x + p.nx * o, y = p.y + p.ny * o;
+    if (i === 0) g.moveTo(x, y); else g.lineTo(x, y);
+  }
+}
+
+function paintStroke(g, op, style, sc) {
+  const w = Math.max(op.w, 0.02), col = op.c;
+  g.lineCap = 'round'; g.lineJoin = 'round';
+  g.strokeStyle = col; g.fillStyle = col;
+  const lbl = LINE_STYLES[style] || 'Solid';
+  const subs = op.p;
+  if (lbl === 'Solid') {
+    g.lineWidth = w; g.setLineDash(op.d || []);
+    g.beginPath(); for (const sub of subs) if (sub.length) tracePath(g, sub);
+    g.stroke(); g.setLineDash([]); return;
+  }
+  const a0 = op.a;
+  for (const sub of subs) {
+    if (!sub.length) continue;
+    const seed = sub[0][0] * 12.9898 + sub[0][1] * 78.233;
+    if (lbl === 'Dotted') {
+      const pts = resample(sub, Math.max(w * 2.3, 0.5)), r = Math.max(w * 0.55, 0.25);
+      g.beginPath(); for (const p of pts) { g.moveTo(p.x + r, p.y); g.arc(p.x, p.y, r, 0, TAU); }
+      g.fill();
+    } else if (lbl === 'Dashed') {
+      g.lineWidth = w; g.lineCap = 'butt'; g.setLineDash([w * 3.5 + 0.6, w * 2.4 + 0.6]);
+      g.beginPath(); tracePath(g, sub); g.stroke(); g.setLineDash([]);
+    } else if (lbl === 'Wavy') {
+      const wl = w * 8 + 6, amp = w * 1.5 + 0.6, pts = resample(sub, wl / 10);
+      g.lineWidth = w; g.beginPath();
+      traceOffset(g, pts, 0, p => Math.sin(p.s / wl * TAU) * amp); g.stroke();
+    } else if (lbl === 'Quantum Cloud') {
+      const pts = resample(sub, Math.max(w * 0.9, 0.5)), spread = w * 2.4 + 0.8;
+      g.globalAlpha = a0 * 0.55; g.lineWidth = Math.max(w * 0.3, 0.1);
+      g.beginPath(); tracePath(g, sub); g.stroke();
+      for (let pass = 0; pass < 2; pass++) {
+        g.globalAlpha = a0 * (pass ? 0.35 : 0.85); g.beginPath();
+        for (let i = 0; i < pts.length; i++) {
+          const p = pts[i];
+          for (let j = 0; j < 2; j++) {
+            const hs = seed + i * 3.17 + j * 11.3 + pass * 5.9;
+            const ang = hash(hs) * TAU, dist = hash(hs + 1.7) * spread, rr = Math.max(w * (0.12 + hash(hs + 2.9) * (pass ? 0.5 : 0.3)), 0.15);
+            const px = p.x + Math.cos(ang) * dist, py = p.y + Math.sin(ang) * dist;
+            g.moveTo(px + rr, py); g.arc(px, py, rr, 0, TAU);
+          }
+        }
+        g.fill();
+      }
+      g.globalAlpha = a0;
+    } else if (lbl === 'Double Rail') {
+      const pts = resample(sub, Math.max(w * 1.5, 1)), off = w * 0.95;
+      g.lineWidth = Math.max(w * 0.45, 0.1);
+      g.beginPath(); traceOffset(g, pts, off); g.stroke();
+      g.beginPath(); traceOffset(g, pts, -off); g.stroke();
+    } else if (lbl === 'Lightning') {
+      const pts = resample(sub, w * 2.6 + 1.6), amp = w * 1.6 + 1;
+      g.lineWidth = Math.max(w * 0.7, 0.1);
+      g.beginPath(); traceOffset(g, pts, 0, (p, i) => (i === 0 || i === pts.length - 1) ? 0 : (hash(seed + i * 1.91) - 0.5) * 2 * amp); g.stroke();
+    } else if (lbl === 'Beads') {
+      const pts = resample(sub, w * 2.5 + 0.8), r = w * 0.95 + 0.3;
+      g.lineWidth = Math.max(w * 0.35, 0.1);
+      g.beginPath(); for (const p of pts) { g.moveTo(p.x + r, p.y); g.arc(p.x, p.y, r, 0, TAU); } g.stroke();
+    }
+  }
+}
+function paintOp(g, op, style, sc) {
+  g.globalAlpha = op.a;
+  if (op.g) { g.shadowColor = op.g[0]; g.shadowBlur = op.g[1] * sc; g.shadowOffsetX = g.shadowOffsetY = op.g[2] * sc; }
+  else { g.shadowColor = 'transparent'; g.shadowBlur = 0; g.shadowOffsetX = g.shadowOffsetY = 0; }
+  if (op.k === 'f') {
+    g.fillStyle = op.c; g.beginPath();
+    for (const sub of op.p) if (sub.length) tracePath(g, sub);
+    g.fill();
+  } else paintStroke(g, op, style, sc);
+}
+
+/** MOTION PHASE HELPER */
+const motionAnim = (speed = 0.0025) => CONFIG.motionIllusion ? ((ENV.t * speed) % TAU) : 0;
+function rotPt(pt, ang) {
+  if (!ang) return pt;
+  const c = Math.cos(ang), s = Math.sin(ang);
+  return { x: pt.x * c - pt.y * s, y: pt.x * s + pt.y * c };
+}
+
+/** GEOMETRY HELPERS */
+function geomGoldenPhi(size) {
+  const pts = [], scale = size * 0.1, b = Math.log(PHI) / (Math.PI / 2), anim = motionAnim(0.0025);
+  for (let i = 0; i < 360 * 2.5; i += 5) {
+    const a = i * Math.PI / 180, r = scale * 0.1 * Math.exp(b * a);
+    pts.push({ x: r * Math.cos(a + anim), y: r * Math.sin(a + anim) });
+  }
+  return pts;
+}
+function geomTriangle(size) {
+  const r = size * 0.3, pts = [], anim = motionAnim(0.002);
+  for (let i = 0; i <= 3; i++) { const a = (Math.PI * 2 / 3) * i - Math.PI / 2 + anim; pts.push({ x: Math.cos(a) * r, y: Math.sin(a) * r }); }
+  return pts;
+}
+function geomNebula(size) {
+  const r = size * 0.2, pts = [], anim = motionAnim(0.002);
+  for (let i = 0; i < 360; i += 20) { const a = i * Math.PI / 180 + anim; pts.push({ x: Math.cos(a) * r, y: Math.sin(a) * r }); }
+  return pts;
+}
+function segStroke(c, pts, pal, ci, lw) {
+  c.lineWidth = lw;
+  const n = pts.length - 1; if (n < 1) return;
+  const per = Math.max(1, Math.ceil(n / pal.length));
+  for (let k = 0; k < n; k += per) {
+    c.strokeStyle = pal[(ci + Math.floor(k / per)) % pal.length];
+    c.beginPath(); c.moveTo(pts[k].x, pts[k].y);
+    for (let j = k + 1; j <= Math.min(k + per, n); j++) c.lineTo(pts[j].x, pts[j].y);
+    c.stroke();
+  }
+}
+function polyDraw(g) {
+  return (c, x, y, size, speed, pal, p, prev, ci) => {
+    segStroke(c, g(size).map(pt => ({ x: x + pt.x, y: y + pt.y })), pal, ci, p.thickness);
+  };
+}
+function lorenzPts(size) {
+  const pts = [], anim = motionAnim(0.0015); let lx = 0.1, ly = 0, lz = 0; const dt = 0.01, scale = size * 0.5;
+  for (let i = 0; i < 100; i++) {
+    const dx = 10 * (ly - lx), dy = lx * (28 - lz) - ly, dz = lx * ly - (8 / 3) * lz;
+    lx += dx * dt; ly += dy * dt; lz += dz * dt;
+    pts.push(rotPt({ x: lx * scale, y: ly * scale }, anim));
+  }
+  return pts;
+}
+
+const spread = (pal, ci, k, n) => pal[(ci + Math.floor(k * pal.length / n)) % pal.length];
+function lineSet(c, segs, pal, ci, lw) {
+  c.lineWidth = lw;
+  let cur = null;
+  c.beginPath();
+  segs.forEach((sg, k) => {
+    const col = spread(pal, ci, k, segs.length);
+    if (cur !== null && col !== cur) { c.stroke(); c.beginPath(); }
+    cur = col; c.strokeStyle = col;
+    c.moveTo(sg[0], sg[1]); c.lineTo(sg[2], sg[3]);
+  });
+  c.stroke();
+}
+function metatronPts(size) {
+  const r = size / 3, pts = [{ x: 0, y: 0 }], anim = motionAnim(0.0015);
+  for (let i = 0; i < 6; i++) { const a = i * Math.PI / 3 + anim; pts.push({ x: r * Math.cos(a), y: r * Math.sin(a) }); }
+  for (let i = 0; i < 6; i++) { const a = i * Math.PI / 3 + Math.PI / 6 + anim; pts.push({ x: r * 1.732 * Math.cos(a), y: r * 1.732 * Math.sin(a) }); }
+  return pts;
+}
+function kochPts(size, level) {
+  const r = size / 3, out = [], v = [], anim = motionAnim(0.0015);
+  for (let i = 0; i < 3; i++) { const a = i * Math.PI * 2 / 3 - Math.PI / 2 + anim; v.push([r * Math.cos(a), r * Math.sin(a)]); }
+  function seg(x1, y1, x2, y2, l) {
+    if (l === 0) { out.push({ x: x2, y: y2 }); return; }
+    const dx = x2 - x1, dy = y2 - y1;
+    const x3 = x1 + dx / 3, y3 = y1 + dy / 3, x5 = x1 + 2 * dx / 3, y5 = y1 + 2 * dy / 3;
+    const x4 = x3 + (dx / 3) * Math.cos(Math.PI / 3) - (dy / 3) * Math.sin(Math.PI / 3);
+    const y4 = y3 + (dx / 3) * Math.sin(Math.PI / 3) + (dy / 3) * Math.cos(Math.PI / 3);
+    seg(x1, y1, x3, y3, l - 1); seg(x3, y3, x4, y4, l - 1); seg(x4, y4, x5, y5, l - 1); seg(x5, y5, x2, y2, l - 1);
+  }
+  out.push({ x: v[0][0], y: v[0][1] });
+  for (let i = 0; i < 3; i++) { const n = (i + 1) % 3; seg(v[i][0], v[i][1], v[n][0], v[n][1], level); }
+  return out;
+}
+function fibShapes(size) {
+  const fib = [1, 1, 2, 3, 5, 8], sc = size / 20, items = [];
+  let px = 0, py = 0, dir = 0, minX = 1e9, maxX = -1e9, minY = 1e9, maxY = -1e9;
+  fib.forEach(f => {
+    const sz = f * sc; let ax, ay, a0, a1;
+    if (dir === 0) { ax = px; ay = py + sz; a0 = -Math.PI / 2; a1 = 0; }
+    else if (dir === 1) { ax = px; ay = py; a0 = 0; a1 = Math.PI / 2; }
+    else if (dir === 2) { ax = px + sz; ay = py; a0 = Math.PI / 2; a1 = Math.PI; }
+    else { ax = px + sz; ay = py + sz; a0 = Math.PI; a1 = Math.PI * 1.5; }
+    items.push({ x: px, y: py, s: sz, ax, ay, a0, a1 });
+    minX = Math.min(minX, px); maxX = Math.max(maxX, px + sz); minY = Math.min(minY, py); maxY = Math.max(maxY, py + sz);
+    if (dir === 0) px += sz; else if (dir === 1) py -= sz; else if (dir === 2) px -= sz; else py += sz;
+    dir = (dir + 1) % 4;
+  });
+  return { items, ox: (minX + maxX) / 2, oy: (minY + maxY) / 2 };
+}
+const MB = (() => {
+  const g = 30, maxIter = 20, zoom = 1.5, cells = [];
+  for (let i = 0; i < g; i++) for (let j = 0; j < g; j++) {
+    const cx = ((i / g) - 0.5) * zoom * 3, cy = ((j / g) - 0.5) * zoom * 2;
+    let zx = 0, zy = 0, it = 0;
+    while (zx * zx + zy * zy < 4 && it < maxIter) { const xt = zx * zx - zy * zy + cx; zy = 2 * zx * zy + cy; zx = xt; it++; }
+    if (it < maxIter) cells.push({ i, j, it });
+  }
+  cells.sort((a, b) => a.it - b.it);
+  cells.forEach((cl, k) => cl.r = k / cells.length);
+  return { g, cells };
+})();
+function bellPts(size) {
+  const pts = [], n = 100, anim = motionAnim(0.003);
+  for (let i = 0; i < n; i++) {
+    const t = ((i / n) - 0.5) * 4, g = Math.exp(-0.5 * t * t) / Math.sqrt(2 * Math.PI);
+    pts.push(rotPt({ x: (t / 4) * size, y: size * 0.33 - g * size * 1.667 }, anim * 0.25));
+  }
+  return pts;
+}
+function sierTris(size, level) {
+  const h = size / 3, out = [];
+  (function rec(x1, y1, x2, y2, x3, y3, l) {
+    if (l === 0) { out.push([x1, y1, x2, y2, x3, y3]); return; }
+    const mx1 = (x1 + x2) / 2, my1 = (y1 + y2) / 2, mx2 = (x2 + x3) / 2, my2 = (y2 + y3) / 2, mx3 = (x3 + x1) / 2, my3 = (y3 + y1) / 2;
+    rec(x1, y1, mx1, my1, mx3, my3, l - 1); rec(mx1, my1, x2, y2, mx2, my2, l - 1); rec(mx3, my3, mx2, my2, x3, y3, l - 1);
+  })(0, -h, -size / 3, h, size / 3, h, level);
+  return out;
+}
+function flowerHexCircles(size) {
+  const r = size / 4, out = [{ x: 0, y: 0, r }], anim = motionAnim(0.0018);
+  for (let i = 0; i < 6; i++) { const a = i * Math.PI / 3 + anim; out.push({ x: r * Math.cos(a), y: r * Math.sin(a), r }); }
+  for (let i = 0; i < 6; i++) { const a = i * Math.PI / 3 + anim; out.push({ x: 2 * r * Math.cos(a), y: 2 * r * Math.sin(a), r }); }
+  return out;
+}
+function goldenSlowPts(size) {
+  const pts = [], n = 200, anim = motionAnim(0.0025);
+  for (let i = 0; i < n; i++) { const t = (i / n) * 3 * Math.PI * 2, r = (size / 10) * Math.pow(PHI, t / (Math.PI * 2)); pts.push({ x: r * Math.cos(t + anim), y: r * Math.sin(t + anim) }); }
+  return pts;
+}
+function sineStampPts(size) {
+  const pts = [], n = 100, amp = size / 8, anim = motionAnim(0.005);
+  for (let i = 0; i < n; i++) { const t = (i / n - 0.5) * size; pts.push({ x: t, y: amp * Math.sin(t * 0.2 + anim) }); }
+  return pts;
+}
+function ladderGeom(size) {
+  const amp = size / 4, tw = ENV.t * 0.002, n = 50, rungs = 10;
+  const s1 = [], s2 = [], rg = [];
+  for (let i = 0; i < n; i++) {
+    const t = (i / n) * Math.PI * 4, py = (i / n - 0.5) * size;
+    s1.push({ x: amp * Math.cos(t + tw) - size / 2, y: py });
+    s2.push({ x: amp * Math.cos(t + tw + Math.PI) + size / 2, y: py });
+  }
+  for (let i = 0; i < rungs; i++) {
+    const t = (i / rungs) * Math.PI * 4, py = (i / rungs - 0.5) * size + size / (rungs * 2);
+    rg.push([amp * Math.cos(t + tw) - size / 2, py, amp * Math.cos(t + tw + Math.PI) + size / 2, py]);
+  }
+  return { s1, s2, rg };
+}
+
+/** PATTERNS */
+const PATTERNS = [
+  { name: "Font Forge (Cluster)", spacing: 0, isCluster: true,
+    geom: () => [{ x: 0, y: 0 }],
+    draw: (c, x, y, size, speed, pal, p, prev, ci) => {
+      const color = pal[ci % pal.length];
+      c.strokeStyle = color; c.lineWidth = p.thickness;
+      if (!prev) { c.fillStyle = color; c.beginPath(); c.arc(x, y, p.thickness / 2, 0, Math.PI * 2); c.fill(); return; }
+      c.beginPath(); c.moveTo(prev.x, prev.y); c.lineTo(x, y); c.stroke();
+    } },
+  { name: "Standard Line", spacing: 0, geom: () => [{ x: 0, y: 0 }],
+    draw: (c, x, y, size, speed, pal, p, prev, ci) => {
+      const color = pal[ci % pal.length];
+      c.strokeStyle = color; c.lineWidth = p.thickness;
+      if (!prev) { c.fillStyle = color; c.beginPath(); c.arc(x, y, p.thickness / 2, 0, Math.PI * 2); c.fill(); return; }
+      c.beginPath(); c.moveTo(prev.x, prev.y); c.lineTo(x, y); c.stroke();
+    } },
+  { name: "True Golden Spiral (Motion)", spacing: 0,
+    geom: geomGoldenPhi,
+    draw: (c, x, y, size, speed, pal, p, prev, ci) => {
+      const B = Math.log(PHI) / (Math.PI / 2);
+      const turns = 2.5, spreadVal = 0.06, angleStep = 0.15;
+      const anim = motionAnim(0.0025);
+      let lastX = x, lastY = y, colIdx = 0;
+      c.lineWidth = p.thickness;
+      for (let a = 0; a < Math.PI * turns * 4; a += angleStep) {
+        const r = size * spreadVal * Math.exp(B * a * 0.45);
+        const px = x + Math.cos(a + anim) * r;
+        const py = y + Math.sin(a + anim) * r;
+        if (a !== 0) {
+          c.strokeStyle = pal[(ci + colIdx++) % pal.length];
+          c.beginPath(); c.moveTo(lastX, lastY); c.lineTo(px, py); c.stroke();
+        }
+        lastX = px; lastY = py;
+      }
+    } },
+  { name: "Golden Spiral V1", spacing: 0,
+    geom: size => { const pts = [], anim = motionAnim(0.0025); for (let i = 0; i < 360; i += 5) { const a = i * Math.PI / 180, r = size * 0.1 * 0.5 * Math.exp(0.1 * a); pts.push({ x: r * Math.cos(a + anim), y: r * Math.sin(a + anim) }); } return pts; },
+    draw: (c, x, y, size, speed, pal, p, prev, ci, others) => {
+      let distortion = 0;
+      if (others.length > 0) {
+        const avgX = others.reduce((s, t) => s + t.x, 0) / others.length;
+        const avgY = others.reduce((s, t) => s + t.y, 0) / others.length;
+        distortion = Math.hypot(x - (avgX - ENV.cx), y - (avgY - ENV.cy)) * 0.002;
+      }
+      const a = 0.5, b = 0.1 + distortion, turns = 1 + (p.param3 || 0) * 5, scale = size * 0.1;
+      const pts = [], anim = motionAnim(0.0025);
+      for (let i = 0; i < 360 * turns; i += 5) {
+        const ar = i * Math.PI / 180, r = scale * a * Math.exp(b * ar);
+        pts.push({ x: x + r * Math.cos(ar + anim), y: y + r * Math.sin(ar + anim) });
+      }
+      segStroke(c, pts, pal, ci, p.thickness);
+    } },
+  { name: "Golden Spiral (Phi)", spacing: 0, sizeMul: 10, geom: geomGoldenPhi, draw: polyDraw(geomGoldenPhi) },
+  { name: "Triangle", spacing: 0, sizeMul: 10, geom: geomTriangle, draw: polyDraw(geomTriangle) },
+  { name: "Nebula", spacing: 0, sizeMul: 10, geom: geomNebula, draw: polyDraw(geomNebula) },
+  { name: "Flower of Life", spacing: 0.6,
+    geom: size => { const r = size * 0.5, pts = [{ x: 0, y: 0 }], anim = motionAnim(0.0018); for (let i = 0; i < 9; i++) { const a = Math.PI * 2 / 9 * i + anim; pts.push({ x: Math.cos(a) * r, y: Math.sin(a) * r }); } return pts; },
+    draw: (c, x, y, size, speed, pal, p, prev, ci) => {
+      const radius = size * 0.5, sides = 9, anim = motionAnim(0.0018);
+      c.lineWidth = p.thickness;
+      for (let i = 0; i < sides; i++) {
+        const a = Math.PI * 2 / sides * i + anim;
+        c.strokeStyle = pal[(ci + i) % pal.length];
+        c.beginPath(); c.arc(x + Math.cos(a) * radius, y + Math.sin(a) * radius, radius, 0, Math.PI * 2); c.stroke();
+      }
+      c.strokeStyle = pal[(ci + sides) % pal.length];
+      c.beginPath(); c.arc(x, y, radius, 0, Math.PI * 2); c.stroke();
+    } },
+  { name: "Phyllotaxis Web", spacing: 0.4,
+    geom: size => { const pts = [], cc = size * 0.05, n = Math.floor(size * 2), st = Math.max(1, Math.floor(n / 60)), anim = motionAnim(0.0015); for (let i = 0; i < n; i += st) { const a = i * 137.5 * Math.PI / 180 + anim, r = cc * Math.sqrt(i); pts.push({ x: r * Math.cos(a), y: r * Math.sin(a) }); } return pts; },
+    draw: (c, x, y, size, speed, pal, p, prev, ci) => {
+      const cc = size * 0.05, per = size * 2 / pal.length, anim = motionAnim(0.0015);
+      for (let i = 0; i < size * 2; i++) {
+        const a = i * 137.5 * Math.PI / 180 + anim, r = cc * Math.sqrt(i);
+        c.fillStyle = pal[(ci + Math.floor(i / per)) % pal.length];
+        c.beginPath(); c.arc(x + r * Math.cos(a), y + r * Math.sin(a), p.thickness, 0, Math.PI * 2); c.fill();
+      }
+    } },
+  { name: "Pyrotaxis", spacing: 0.4,
+    geom: size => { const pts = [], cc = size * 0.05, n = Math.floor(size * 2), st = Math.max(1, Math.floor(n / 60)), anim = motionAnim(0.0015); for (let i = 0; i < n; i += st) { const a = i * 137.5 * Math.PI / 180 + anim, r = cc * Math.sqrt(i); pts.push({ x: r * Math.cos(a), y: r * Math.sin(a) }); } return pts; },
+    draw: (c, x, y, size, speed, pal, p, prev, ci, others, shadowPal) => {
+      const cc = size * 0.05, per = size * 2 / pal.length, anim = motionAnim(0.0015);
+      for (let i = 0; i < size * 2; i++) {
+        const a = i * 137.5 * Math.PI / 180 + anim, r = cc * Math.sqrt(i);
+        const px = x + r * Math.cos(a), py = y + r * Math.sin(a);
+        c.fillStyle = pal[(ci + Math.floor(i / per)) % pal.length];
+        c.beginPath(); c.arc(px, py, p.thickness, 0, Math.PI * 2); c.fill();
+        if (others.length > 0) {
+          c.strokeStyle = shadowPal[ci % shadowPal.length];
+          c.lineWidth = Math.max(0.5, p.thickness * 0.5);
+          c.setLineDash([p.thickness * 2, p.thickness * 2]);
+          c.beginPath();
+          for (const ot of others) {
+            c.moveTo(px, py);
+            c.lineTo((ot.x - ENV.cx) + r * Math.cos(a), (ot.y - ENV.cy) + r * Math.sin(a));
+          }
+          c.stroke();
+          c.setLineDash([]);
+        }
+      }
+    } },
+  { name: "Lynchpin Star", spacing: 0.5,
+    geom: size => { const pts = [], anim = motionAnim(0.002); for (let i = 0; i < 10; i++) { const r = i % 2 === 0 ? size : size * 0.382, a = i * Math.PI / 5 + anim; pts.push({ x: r * Math.cos(a), y: r * Math.sin(a) }); } return pts; },
+    draw: (c, x, y, size, speed, pal, p, prev, ci) => {
+      const inner = size * 0.382, pts = [], anim = motionAnim(0.002);
+      for (let i = 0; i <= 10; i++) {
+        const r = i % 2 === 0 ? size : inner, a = i * Math.PI / 5 + anim;
+        pts.push({ x: x + r * Math.cos(a), y: y + r * Math.sin(a) });
+      }
+      segStroke(c, pts, pal, ci, p.thickness);
+    } },
+  { name: "Sine Wave", spacing: 0, geom: () => [{ x: 0, y: 0 }],
+    draw: (c, x, y, size, speed, pal, p, prev, ci) => {
+      if (!prev) return;
+      const dist = Math.hypot(x - prev.x, y - prev.y), angle = Math.atan2(y - prev.y, x - prev.x);
+      c.save(); c.translate(prev.x, prev.y); c.rotate(angle);
+      const pts = [];
+      for (let i = 0; i < dist; i += 2) pts.push({ x: i, y: Math.sin((i + ENV.t * 0.01) * 0.1) * size });
+      segStroke(c, pts, pal, ci, p.thickness);
+      c.restore();
+    } },
+  { name: "Axial DNA Helix", spacing: 0, geom: () => [{ x: 0, y: 0 }],
+    draw: (c, x, y, size, speed, pal, p, prev, ci) => {
+      if (!prev) return;
+      const dist = Math.hypot(x - prev.x, y - prev.y), angle = Math.atan2(y - prev.y, x - prev.x), anim = motionAnim(0.004);
+      c.save(); c.translate(prev.x, prev.y); c.rotate(angle);
+      const s1 = [], s2 = [];
+      for (let i = 0; i < dist; i += 2) { s1.push({ x: i, y: Math.sin(i * 0.05 + anim) * size }); s2.push({ x: i, y: Math.sin(i * 0.05 + anim + Math.PI) * size }); }
+      segStroke(c, s1, pal, ci, p.thickness);
+      segStroke(c, s2, pal, ci + Math.floor(pal.length / 2), p.thickness);
+      c.restore();
+    } },
+  { name: "Lorenz Attractor (2D)", spacing: 0, geom: lorenzPts,
+    draw: (c, x, y, size, speed, pal, p, prev, ci) => {
+      segStroke(c, lorenzPts(size).map(pt => ({ x: x + pt.x, y: y + pt.y })), pal, ci, p.thickness);
+    } },
+  { name: "Rotating Notch", spacing: 0.3,
+    geom: size => [{ x: -size / 2, y: 0 }, { x: size / 2, y: 0 }, { x: size / 4, y: -size / 4 }, { x: size / 4, y: size / 4 }],
+    draw: (c, x, y, size, speed, pal, p, prev, ci) => {
+      c.save(); c.translate(x, y); c.rotate(ENV.t * 0.002);
+      segStroke(c, [{ x: -size / 2, y: 0 }, { x: size / 2, y: 0 }, { x: size / 4, y: -size / 4 }, { x: size / 2, y: 0 }, { x: size / 4, y: size / 4 }], pal, ci, p.thickness);
+      c.restore();
+    } },
+  { name: "Metatron's Cube", spacing: 0.4, sizeMul: 4, geom: metatronPts,
+    draw: (c, x, y, size, speed, pal, p, prev, ci) => {
+      const pts = metatronPts(size), segs = [];
+      for (let i = 0; i < pts.length; i++) for (let j = i + 1; j < pts.length; j++)
+        segs.push([x + pts[i].x, y + pts[i].y, x + pts[j].x, y + pts[j].y]);
+      lineSet(c, segs, pal, ci, Math.max(0.5, p.thickness * 0.5));
+    } },
+  { name: "Koch Snowflake", spacing: 0.4, sizeMul: 4, geom: size => kochPts(size, 1),
+    draw: (c, x, y, size, speed, pal, p, prev, ci) => {
+      segStroke(c, kochPts(size, 3).map(pt => ({ x: x + pt.x, y: y + pt.y })), pal, ci, p.thickness);
+    } },
+  { name: "Fibonacci Squares", spacing: 0.5, sizeMul: 4,
+    geom: size => { const F = fibShapes(size); const pts = []; F.items.forEach(o => { pts.push({ x: o.x - F.ox, y: o.y - F.oy }); pts.push({ x: o.x + o.s - F.ox, y: o.y + o.s - F.oy }); }); return pts; },
+    draw: (c, x, y, size, speed, pal, p, prev, ci) => {
+      const F = fibShapes(size), anim = motionAnim(0.0018); c.lineWidth = p.thickness;
+      c.save(); c.translate(x, y); if (anim) c.rotate(anim);
+      F.items.forEach((o, k) => {
+        c.strokeStyle = spread(pal, ci, k, F.items.length);
+        c.beginPath();
+        c.rect(o.x - F.ox, o.y - F.oy, o.s, o.s);
+        c.moveTo(o.ax - F.ox + o.s * Math.cos(o.a0), o.ay - F.oy + o.s * Math.sin(o.a0));
+        c.arc(o.ax - F.ox, o.ay - F.oy, o.s, o.a0, o.a1);
+        c.stroke();
+      });
+      c.restore();
+    } },
+  { name: "Mandelbrot Grid", spacing: 0.5, sizeMul: 4,
+    geom: size => [{ x: -size / 2, y: -size / 2 }, { x: size / 2, y: -size / 2 }, { x: size / 2, y: size / 2 }, { x: -size / 2, y: size / 2 }, { x: 0, y: 0 }],
+    draw: (c, x, y, size, speed, pal, p, prev, ci) => {
+      const g = MB.g, d = size / g, n = pal.length, buckets = [];
+      for (let k = 0; k < n; k++) buckets.push([]);
+      MB.cells.forEach(cl => buckets[Math.min(n - 1, Math.floor(cl.r * n))].push(cl));
+      const prevA = c.globalAlpha;
+      buckets.forEach((cells, k) => {
+        if (!cells.length) return;
+        c.fillStyle = pal[(ci + k) % n];
+        c.globalAlpha = Math.max(0.3, (k + 1) / n);
+        c.beginPath();
+        cells.forEach(cl => c.rect(x + (cl.i / g - 0.5) * size, y + (cl.j / g - 0.5) * size, d, d));
+        c.fill();
+      });
+      c.globalAlpha = prevA;
+    } },
+  { name: "Bell Curve", spacing: 0.3, sizeMul: 4, geom: bellPts,
+    draw: (c, x, y, size, speed, pal, p, prev, ci) => {
+      segStroke(c, bellPts(size).map(pt => ({ x: x + pt.x, y: y + pt.y })), pal, ci, p.thickness);
+    } },
+  { name: "Sierpinski Triangle", spacing: 0.4, sizeMul: 4,
+    geom: size => { const h = size / 3; return [{ x: 0, y: -h }, { x: -size / 3, y: h }, { x: size / 3, y: h }]; },
+    draw: (c, x, y, size, speed, pal, p, prev, ci) => {
+      const T = sierTris(size, 4), anim = motionAnim(0.0018); c.lineWidth = p.thickness;
+      c.save(); c.translate(x, y); if (anim) c.rotate(anim);
+      let cur = null; c.beginPath();
+      T.forEach((t, k) => {
+        const col = spread(pal, ci, k, T.length);
+        if (cur !== null && col !== cur) { c.stroke(); c.beginPath(); }
+        cur = col; c.strokeStyle = col;
+        c.moveTo(t[0], t[1]); c.lineTo(t[2], t[3]); c.lineTo(t[4], t[5]); c.closePath();
+      });
+      c.stroke();
+      c.restore();
+    } },
+  { name: "DNA Ladder", spacing: 0.4, sizeMul: 3,
+    geom: size => ladderGeom(size).rg.map(r => ({ x: r[0], y: r[1] })).concat(ladderGeom(size).rg.map(r => ({ x: r[2], y: r[3] }))),
+    draw: (c, x, y, size, speed, pal, p, prev, ci) => {
+      const L = ladderGeom(size);
+      segStroke(c, L.s1.map(pt => ({ x: x + pt.x, y: y + pt.y })), pal, ci, p.thickness);
+      segStroke(c, L.s2.map(pt => ({ x: x + pt.x, y: y + pt.y })), pal, ci + Math.floor(pal.length / 2), p.thickness);
+      lineSet(c, L.rg.map(r => [x + r[0], y + r[1], x + r[2], y + r[3]]), pal, ci, Math.max(0.5, p.thickness * 0.75));
+    } },
+  { name: "Flower of Life Hex", spacing: 0.4, sizeMul: 4, geom: size => flowerHexCircles(size),
+    draw: (c, x, y, size, speed, pal, p, prev, ci) => {
+      const C = flowerHexCircles(size); c.lineWidth = p.thickness;
+      let cur = null; c.beginPath();
+      C.forEach((o, k) => {
+        const col = spread(pal, ci, k, C.length);
+        if (cur !== null && col !== cur) { c.stroke(); c.beginPath(); }
+        cur = col; c.strokeStyle = col;
+        c.moveTo(x + o.x + o.r, y + o.y); c.arc(x + o.x, y + o.y, o.r, 0, Math.PI * 2);
+      });
+      c.stroke();
+    } },
+  { name: "Golden Spiral (Slow)", spacing: 0.3, sizeMul: 4, geom: goldenSlowPts,
+    draw: (c, x, y, size, speed, pal, p, prev, ci) => {
+      segStroke(c, goldenSlowPts(size).map(pt => ({ x: x + pt.x, y: y + pt.y })), pal, ci, p.thickness);
+    } },
+  { name: "Sine Stamp", spacing: 0.3, sizeMul: 4, geom: sineStampPts,
+    draw: (c, x, y, size, speed, pal, p, prev, ci) => {
+      segStroke(c, sineStampPts(size).map(pt => ({ x: x + pt.x, y: y + pt.y })), pal, ci, p.thickness);
+    } }
+];
+
+const patSel = $('pattern'), palSel = $('palette'), lsSel = $('lineStyle'), mmSel = $('mirrorMode');
+PATTERNS.forEach((p, i) => { const o = document.createElement('option'); o.value = i; o.text = p.name; patSel.add(o); });
+paletteNames.forEach((n, i) => { const o = document.createElement('option'); o.value = i; o.text = n; palSel.add(o); });
+LINE_STYLES.forEach((n, i) => { const o = document.createElement('option'); o.value = i; o.text = n; lsSel.add(o); });
+MIRROR_MODES.forEach((n, i) => { const o = document.createElement('option'); o.value = i; o.text = n; mmSel.add(o); });
+patSel.addEventListener('change', e => CONFIG.patternIndex = +e.target.value);
+lsSel.addEventListener('change', e => CONFIG.lineStyle = +e.target.value);
+mmSel.addEventListener('change', e => CONFIG.mirrorMode = +e.target.value);
+function renderPalette() {
+  $('palBar').innerHTML = colorPalettes[paletteNames[CONFIG.paletteIndex]].map(c => `<span style="flex:1;background:${c}"></span>`).join('');
+}
+palSel.addEventListener('change', e => { CONFIG.paletteIndex = +e.target.value; renderPalette(); });
+renderPalette();
+
+/* ================= VECTOR STAMP PIPELINE ================= */
+const SNAP_KEYS = ['patternIndex', 'paletteIndex', 'lineStyle', 'thickness', 'stampSize', 'glow', 'glowAmt', 'colorCycle', 'twist', 'echo', 'mirrorMode', 'shadowMesh'];
+let snapCache = null, snapKey = '';
+function snap() {
+  const key = SNAP_KEYS.map(k => CONFIG[k]).join('|');
+  if (key !== snapKey) { snapKey = key; const o = {}; SNAP_KEYS.forEach(k => o[k] = CONFIG[k]); snapCache = Object.freeze(o); }
+  return snapCache;
+}
+const effMirrors = () => Math.max(1, CONFIG.mirrors + (CONFIG.breath ? Math.sin(Date.now() * 0.0015) * CONFIG.breath * CONFIG.mirrors * 0.5 : 0));
+
+function flipFor(mode, i, m) {
+  if (m < 2) return false;
+  if (mode === 0) return i % 2 === 1;
+  if (mode === 1) return false;
+  if (mode === 2) return Math.floor(i / 2) % 2 === 1;
+  return Math.sin(i * 1.3) > 0;
+}
+
+/** Turns one stamp record into vector ops (world-space points), at flatten quality q */
+function buildOps(rec, q) {
+  const S = rec.s, rc = new Rec(q);
+  ENV.cx = 0; ENV.cy = 0; ENV.t = rec.tm || 0;
+  const m = rec.m, loops = Math.max(1, Math.ceil(m)), slice = TAU / m;
+  const palName = paletteNames[S.paletteIndex] || paletteNames[0], pal = colorPalettes[palName];
+  const shadowPal = colorPalettes[palName + ' Shadow'] || pal;
+  const pat = PATTERNS[S.patternIndex] || PATTERNS[0];
+  const size = S.stampSize * (pat.sizeMul || 1);
+  const rel = rec.pv || null, others = rec.o || [];
+  const twist = S.twist * Math.PI / 180;
+  for (let i = 0; i < loops; i++) {
+    const ci = (S.colorCycle ? (rec.cc || 0) + i : (rec.ci || 0) + i) + (rec.fo || 0);
+    rc.save();
+    if (loops > 1) {
+      rc.rotate(i * slice + i * twist);
+      if (flipFor(S.mirrorMode, i, m)) rc.scale(1, -1);
+      if (S.echo > 0) { const e = Math.max(0.06, 1 - S.echo * 0.92 * (i / loops)); rc.scale(e, e); }
+    }
+    if (S.glow && S.glowAmt > 0) {
+      rc.shadowColor = shadowPal[ci % shadowPal.length]; rc.shadowBlur = S.thickness * 2 * S.glowAmt; rc.shadowOffsetX = 1; rc.shadowOffsetY = 1;
+    } else { rc.shadowColor = 'transparent'; rc.shadowBlur = 0; }
+    pat.draw(rc, rec.x, rec.y, size, 1, pal, S, rel, ci, others, shadowPal);
+
+    if (S.shadowMesh && rec.pr && others.length) {
+      rc.shadowColor = 'transparent'; rc.shadowBlur = 0;
+      const pts = (pat.geom || (() => [{ x: 0, y: 0 }]))(size);
+      others.forEach((sf, s) => {
+        rc.lineWidth = 0.5;
+        rc.strokeStyle = pal[(ci + (s + 1) * 5) % pal.length] + '88';
+        rc.beginPath();
+        for (let k = 0; k < pts.length; k += 2) { rc.moveTo(rec.x + pts[k].x, rec.y + pts[k].y); rc.lineTo(sf.x + pts[k].x, sf.y + pts[k].y); }
+        rc.stroke();
+      });
+    }
+    rc.restore();
+  }
+  return rc.ops;
+}
+function countPts(ops) { let n = 0; for (const o of ops) for (const s of o.p) n += s.length; return n; }
+
+function paintRec(g, rec, sc, layerRef) {
+  const ops = buildOps(rec, sc), st = rec.s.lineStyle;
+  if (rec.np === undefined) {
+    rec.np = countPts(ops);
+    if (layerRef) layerRef.pointsCount += rec.np;
+  }
+  for (const op of ops) paintOp(g, op, st, sc);
+  g.globalAlpha = 1; g.shadowColor = 'transparent'; g.shadowBlur = 0; g.shadowOffsetX = g.shadowOffsetY = 0;
+}
+
+function pushHistory(e, targetLayer) {
+  const L = targetLayer || curLayer();
+  L.history.push(e);
+  if (L.history.length > CONFIG.maxHistory + 600) {
+    const cut = L.history.splice(0, L.history.length - CONFIG.maxHistory);
+    for (const r of cut) if (r.np) L.pointsCount -= r.np;
+  }
+}
+function liveDrawingAllowed() { return !CONFIG.isLooping || CONFIG.interactiveGhost; }
+
+/* ================= TENDRIL PING-PONG & VIRTUAL FINGER ENGINE ================= */
+
+/** Advances every tendril's internal ping-pong playhead by 1 step */
+function stepTendrils(tendrilList) {
+  for (const t of tendrilList) {
+    if (!t.pts || t.pts.length <= 1) { t.cur = 0; continue; }
+    t.cur += t.dir;
+    if (t.cur >= t.pts.length - 1) { t.cur = t.pts.length - 1; t.dir = -1; }
+    else if (t.cur <= 0) { t.cur = 0; t.dir = 1; }
+  }
+}
+
+/** Returns the current world-space position of every tendril relative to (anchorX, anchorY) */
+function getVirtualFingerPositions(anchorX, anchorY, heading, pressure, tendrilList) {
+  if (!tendrilList || !tendrilList.length) return [{ x: anchorX, y: anchorY }];
+  const useSteer = CONFIG.steerCluster;
+  const cosH = useSteer ? Math.cos(heading || 0) : 1;
+  const sinH = useSteer ? Math.sin(heading || 0) : 0;
+  const sp = useSteer ? (0.4 + (pressure || 0.5) * 1.2) : 1;
+  return tendrilList.map(t => {
+    const idx = Math.min(t.pts.length - 1, Math.max(0, Math.round(t.cur || 0)));
+    const off = t.pts[idx] || { dx: 0, dy: 0 };
+    const rx = (off.dx * cosH - off.dy * sinH) * sp;
+    const ry = (off.dx * sinH + off.dy * cosH) * sp;
+    return { x: anchorX + rx, y: anchorY + ry };
+  });
+}
+
+function makeRec(uv, prev, others, primary) {
+  const m = effMirrors();
+  const rec = {
+    x: uv.x, y: uv.y, id: uv.id, ci: uv.colorIndex || 0, s: snap(), m,
+    pv: prev ? { x: prev.x, y: prev.y } : null,
+    o: others.map(f => ({ x: f.x, y: f.y })), pr: primary,
+    tm: Date.now(), cc: globalColorStep, fo: Math.floor(flowPhase)
+  };
+  if (CONFIG.colorCycle) globalColorStep += Math.max(1, Math.ceil(m));
+  return rec;
+}
+
+let curStroke = [];
+let curGhostPts = [];
+
+/**
+ * Stamps a physical finger `f`.
+ * When `CLUSTER.mode === 'draw'` and we have tendrils, each tendril acts as a literal
+ * virtual finger touching the screen in consecutive order (1 -> 2 -> 3 ... -> N, plus
+ * closing back to 1 when Close Polygon Loop is ON). Because they all fire through `sharedPrev`
+ * sequentially with their own distinct color index `(f.colorIndex + k)`, they battle over
+ * the last known position and weave a multi-colored polygon/zigzag!
+ */
+function stamp(f, start) {
+  if (!liveDrawingAllowed() || CLUSTER.mode === 'set') return;
+  const L = curLayer();
+  if (!L.visible) L.visible = true;
+  const pat = PATTERNS[CONFIG.patternIndex];
+  const own = start ? null : (prevMap[f.id] || null);
+  if (own) {
+    const th = (pat.spacing || 0) * CONFIG.stampSize * (pat.sizeMul || 1);
+    if (th > 0 && Math.hypot(f.x - own.x, f.y - own.y) < th) return;
+  }
+
+  const kin = pointerKinematics.get(f.id) || { heading: 0, pressure: 0.5 };
+  const hasCluster = CLUSTER.mode === 'draw' && CLUSTER.tendrils.length > 0;
+
+  if (hasCluster) {
+    stepTendrils(CLUSTER.tendrils);
+    const vPts = getVirtualFingerPositions(f.x, f.y, kin.heading, kin.pressure, CLUSTER.tendrils);
+    const allVirtual = vPts.map((p, idx) => ({ id: `${f.id}_v${idx}`, x: p.x, y: p.y, colorIndex: (f.colorIndex || 0) + idx }));
+
+    // Fire each tendril as a literal virtual finger in consecutive order: 1, 2, 3 ... N
+    for (let k = 0; k < allVirtual.length; k++) {
+      const vf = allVirtual[k];
+      const vOwn = start ? null : (prevMap[vf.id] || null);
+      const prev = CONFIG.sharedPrev ? sharedPrev : vOwn;
+      const others = allVirtual.filter((_, idx) => idx !== k);
+      const rec = makeRec(vf, prev, others, k === 0);
+      pushHistory(rec, L); curStroke.push(rec);
+      paintRec(ctx, rec, DPR * K, L);
+      prevMap[vf.id] = vf;
+      sharedPrev = vf;
+    }
+
+    // Close Polygon Loop (N -> 1) with distinct color for the Nth wall
+    if (CONFIG.closeClusterPoly && allVirtual.length >= 2 && CONFIG.sharedPrev) {
+      const first = allVirtual[0];
+      const closeFinger = {
+        id: `${f.id}_vClose`,
+        x: first.x,
+        y: first.y,
+        colorIndex: (f.colorIndex || 0) + allVirtual.length
+      };
+      const rec = makeRec(closeFinger, sharedPrev, allVirtual.slice(1), false);
+      pushHistory(rec, L); curStroke.push(rec);
+      paintRec(ctx, rec, DPR * K, L);
+      sharedPrev = first;
+    }
+
+    curGhostPts.push({
+      x: f.x, y: f.y,
+      h: kin.heading || 0,
+      p: kin.pressure || 0.5,
+      ci: f.colorIndex || 0
+    });
+    prevMap[f.id] = { x: f.x, y: f.y, id: f.id, colorIndex: f.colorIndex };
+    return;
+  }
+
+  // Standard (non-cluster) single or multi-finger stamp
+  const prev = CONFIG.sharedPrev ? sharedPrev : own;
+  const primary = fingers.length === 0 || fingers[0].id === f.id;
+  const uv = { x: f.x, y: f.y, id: f.id, colorIndex: f.colorIndex };
+  if (!(CONFIG.shadowMesh && !primary)) {
+    const rec = makeRec(uv, prev, fingers.filter(o => o.id !== f.id), primary);
+    pushHistory(rec, L); curStroke.push(rec);
+    paintRec(ctx, rec, DPR * K, L);
+    curGhostPts.push({
+      x: f.x, y: f.y,
+      h: kin.heading || 0,
+      p: kin.pressure || 0.5,
+      ci: f.colorIndex || 0
+    });
+  }
+  prevMap[f.id] = uv;
+  sharedPrev = uv;
+}
+
+function cloneTendrils(list) {
+  return list.map(t => ({
+    pts: t.pts.map(p => ({ dx: p.dx, dy: p.dy })),
+    cur: t.cur || 0,
+    dir: t.dir || 1
+  }));
+}
+
+function commitStroke() {
+  const L = curLayer();
+  const items = curStroke; curStroke = [];
+  const gPts = curGhostPts; curGhostPts = [];
+  if (!items.length) return;
+
+  let ghostLayer = null;
+  if (gPts.length > 1) {
+    ghostLayer = {
+      points: gPts,
+      curIdx: gPts.length - 1,
+      dir: -1,
+      snap: snap(),
+      mirrors: effMirrors(),
+      hasCluster: CLUSTER.mode === 'draw' && CLUSTER.tendrils.length > 0,
+      tendrils: cloneTendrils(CLUSTER.tendrils),
+      closePoly: CONFIG.closeClusterPoly
+    };
+    L.gestures.push(ghostLayer);
+  }
+
+  pushUndo({
+    label: `stroke (${L.name})`,
+    undo() {
+      const S = new Set(items);
+      L.history = L.history.filter(x => !S.has(x));
+      items.forEach(r => { if (r.np) L.pointsCount -= r.np; });
+      if (ghostLayer) L.gestures = L.gestures.filter(g => g !== ghostLayer);
+      redrawAll();
+    },
+    redo() {
+      items.forEach(r => { L.history.push(r); if (r.np) L.pointsCount += r.np; });
+      if (ghostLayer) L.gestures.push(ghostLayer);
+      redrawAll();
+    }
+  });
+}
+
+function endFinger(id) {
+  const idx = fingers.findIndex(f => f.id === id);
+  if (idx >= 0) fingers.splice(idx, 1);
+  delete prevMap[id];
+  pointerKinematics.delete(id);
+  // Keep consecutive color order intuitive when all physical fingers lift
+  if (!fingers.length) {
+    sharedPrev = null;
+    touchColorCounter = 0;
+  }
+  const em = { end: true, id };
+  pushHistory(em, curLayer());
+  curStroke.push(em);
+  if (!fingers.length) commitStroke();
+}
+
+let redrawToken = 0;
+function redrawAll() {
+  const tok = ++redrawToken;
+  clearPixels(); applyView(ctx);
+  const sc = DPR * K;
+  const allItems = [];
+  for (const L of layers) {
+    if (!L.visible) continue;
+    for (const e of L.history) if (e && !e.end) allItems.push({ e, L });
+  }
+  let i = 0;
+  (function step() {
+    if (tok !== redrawToken) return;
+    const t0 = performance.now();
+    while (i < allItems.length && performance.now() - t0 < 14) {
+      const item = allItems[i++];
+      paintRec(ctx, item.e, sc, item.L);
+    }
+    if (i < allItems.length) requestAnimationFrame(step);
+  })();
+}
+
+/* ================= TOP-LEFT FONT FORGE CLUSTER TOGGLE & SET-MODE EDITOR ================= */
+const forgeToggleWrap = $('forgeToggleWrap');
+const forgeToggle = $('forgeToggle');
+const forgeStick = $('forgeStick');
+const forgeStatus = $('forgeStatus');
+const forgeSubBtn = $('forgeSubBtn');
+
+function updateForgeToggleUI(dir) {
+  forgeToggle.classList.remove('mode-set', 'mode-draw');
+  forgeToggleWrap.classList.toggle('in-set', CLUSTER.mode === 'set');
+  if (CLUSTER.mode === 'set') forgeToggle.classList.add('mode-set');
+  else if (CLUSTER.mode === 'draw') forgeToggle.classList.add('mode-draw');
+  const labelMode = CLUSTER.mode === 'set' ? 'EDIT' : CLUSTER.mode.toUpperCase();
+  forgeStatus.textContent = `FORGE: ${labelMode} (${CLUSTER.tendrils.length})`;
+  let tx = 0, ty = 0; const amt = 14;
+  if (dir === 'up') ty = -amt;
+  if (dir === 'down') ty = amt;
+  if (dir === 'left') tx = -amt;
+  if (dir === 'right') tx = amt;
+  forgeStick.style.transform = `translate(-50%, -50%) translate(${tx}px, ${ty}px)`;
+}
+
+function setClusterMode(direction) {
+  if (direction === 'left') {
+    // Enter EDIT mode keeping existing tendrils intact so you can add/modify at will
+    CLUSTER.mode = 'set';
+    CLUSTER.editPrev = null;
+    hud('TENDRIL EDIT', CLUSTER.tendrils.length
+      ? `Editing ${CLUSTER.tendrils.length} tendrils · Tap/drag to add`
+      : 'Tap or drag to create Tendril #1');
+  } else if (direction === 'up' || direction === 'right') {
+    CLUSTER.mode = 'draw';
+    CLUSTER.editPrev = null;
+    if (CLUSTER.tendrils.length > 0) {
+      const idx = PATTERNS.findIndex(p => p.isCluster);
+      if (idx >= 0) {
+        CONFIG.patternIndex = idx;
+        patSel.value = idx;
+      }
+    }
+    hud('CLUSTER DRAW', `${CLUSTER.tendrils.length} virtual fingers active`);
+  } else if (direction === 'down') {
+    CLUSTER.mode = 'off';
+    CLUSTER.editPrev = null;
+    hud('CLUSTER MODE', 'OFF (Standard Drawing)');
+  }
+  updateForgeToggleUI(direction);
+}
+
+function clearClusterRig() {
+  if (!CLUSTER.tendrils.length && !CLUSTER.origin) return;
+  const oldOrigin = CLUSTER.origin ? { ...CLUSTER.origin } : null;
+  const oldTendrils = cloneTendrils(CLUSTER.tendrils);
+  CLUSTER.origin = null;
+  CLUSTER.tendrils = [];
+  CLUSTER.building = null;
+  CLUSTER.editPrev = null;
+  updateForgeToggleUI(null);
+  pushUndo({
+    label: 'clear tendrils',
+    undo() { CLUSTER.origin = oldOrigin; CLUSTER.tendrils = cloneTendrils(oldTendrils); updateForgeToggleUI(null); },
+    redo() { CLUSTER.origin = null; CLUSTER.tendrils = []; updateForgeToggleUI(null); }
+  });
+  hud('RIG CLEARED', '0 tendrils');
+}
+forgeSubBtn.addEventListener('click', e => { e.stopPropagation(); clearClusterRig(); });
+$('clearClusterBtn').addEventListener('click', clearClusterRig);
+
+let forgeDrag = null;
+forgeToggle.addEventListener('pointerdown', e => {
+  e.preventDefault(); e.stopPropagation();
+  forgeToggle.setPointerCapture(e.pointerId);
+  forgeDrag = { id: e.pointerId, x0: e.clientX, y0: e.clientY, triggered: false };
+});
+forgeToggle.addEventListener('pointermove', e => {
+  if (!forgeDrag || e.pointerId !== forgeDrag.id) return;
+  e.preventDefault(); e.stopPropagation();
+  const dx = e.clientX - forgeDrag.x0, dy = e.clientY - forgeDrag.y0;
+  const dist = Math.hypot(dx, dy);
+  if (dist > 14 && !forgeDrag.triggered) {
+    forgeDrag.triggered = true;
+    const dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
+    setClusterMode(dir);
+  }
+});
+function endForgeDrag(e) {
+  if (!forgeDrag || e.pointerId !== forgeDrag.id) return;
+  forgeDrag = null;
+  updateForgeToggleUI(null);
+}
+forgeToggle.addEventListener('pointerup', endForgeDrag);
+forgeToggle.addEventListener('pointercancel', endForgeDrag);
+
+/** Start recording a new stationary or moving tendril in EDIT ('set') mode */
+function startClusterTendril(id, uv) {
+  const wasNullOrigin = !CLUSTER.origin;
+  if (!CLUSTER.origin) CLUSTER.origin = { x: uv.x, y: uv.y };
+  const t = {
+    id,
+    wasNullOrigin,
+    pts: [{ dx: uv.x - CLUSTER.origin.x, dy: uv.y - CLUSTER.origin.y }],
+    cur: 0,
+    dir: 1
+  };
+  CLUSTER.building = t;
+}
+function moveClusterTendril(id, uv) {
+  const t = CLUSTER.building;
+  if (!t || t.id !== id || !CLUSTER.origin) return;
+  const dx = uv.x - CLUSTER.origin.x, dy = uv.y - CLUSTER.origin.y;
+  const last = t.pts[t.pts.length - 1];
+  if (Math.hypot(dx - last.dx, dy - last.dy) > 1.2) {
+    t.pts.push({ dx, dy });
+    t.cur = t.pts.length - 1;
+  }
+}
+function endClusterTendril(id) {
+  const t = CLUSTER.building;
+  if (!t || t.id !== id) return;
+  CLUSTER.building = null;
+  const newTendril = { pts: t.pts, cur: t.pts.length - 1, dir: -1 };
+  const prevOrigin = t.wasNullOrigin ? null : { ...CLUSTER.origin };
+  const savedOrigin = { ...CLUSTER.origin };
+  CLUSTER.tendrils.push(newTendril);
+  updateForgeToggleUI(null);
+
+  const num = CLUSTER.tendrils.length;
+  const kind = newTendril.pts.length > 1 ? `ping-pong motion (${newTendril.pts.length} pts)` : 'stationary point';
+  hud(`TENDRIL #${num} ADDED`, kind);
+
+  pushUndo({
+    label: `tendril #${num}`,
+    undo() {
+      CLUSTER.tendrils = CLUSTER.tendrils.filter(x => x !== newTendril);
+      if (!CLUSTER.tendrils.length) CLUSTER.origin = prevOrigin;
+      updateForgeToggleUI(null);
+    },
+    redo() {
+      if (!CLUSTER.origin) CLUSTER.origin = savedOrigin;
+      CLUSTER.tendrils.push(newTendril);
+      updateForgeToggleUI(null);
+    }
+  });
+}
+
+/**
+ * Renders the live overlay in EDIT ('set') mode AND stamps the virtual fingers fighting over
+ * `sharedPrev` directly onto the canvas so you see the zigzag/polygon weave while building!
+ */
+function updateAndRenderClusterEditMode(sc) {
+  octx.save();
+  octx.setTransform(1, 0, 0, 1, 0, 0);
+  octx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+  octx.restore();
+
+  if (CLUSTER.mode !== 'set' || !CLUSTER.origin) return;
+  applyView(octx);
+
+  // Step all completed tendrils along their ping-pong paths even while in EDIT mode!
+  stepTendrils(CLUSTER.tendrils);
+
+  const pal = colorPalettes[paletteNames[CONFIG.paletteIndex]];
+  const list = CLUSTER.building ? CLUSTER.tendrils.concat([CLUSTER.building]) : CLUSTER.tendrils;
+  if (!list.length) return;
+
+  const ox = CLUSTER.origin.x, oy = CLUSTER.origin.y;
+
+  // 1. Draw each tendril's motion path trail on the overlay
+  list.forEach((t, idx) => {
+    const col = pal[idx % pal.length];
+    if (t.pts.length > 1) {
+      octx.save();
+      octx.strokeStyle = col;
+      octx.globalAlpha = 0.55;
+      octx.lineWidth = 1.3;
+      octx.setLineDash([4, 4]);
+      octx.beginPath();
+      octx.moveTo(ox + t.pts[0].dx, oy + t.pts[0].dy);
+      for (let i = 1; i < t.pts.length; i++) octx.lineTo(ox + t.pts[i].dx, oy + t.pts[i].dy);
+      octx.stroke();
+      octx.restore();
+    }
+  });
+
+  // 2. Compute current live positions of all tendrils in the rig
+  const curPts = list.map(t => {
+    const i = Math.min(t.pts.length - 1, Math.max(0, Math.round(t.cur || 0)));
+    const p = t.pts[i] || t.pts[t.pts.length - 1];
+    return { x: ox + p.dx, y: oy + p.dy };
+  });
+
+  // 3. Have the tendrils battle over `CLUSTER.editPrev` live on the artboard so single-tendril
+  //    ping-pong or 2+ tendril zigzag/polygons actively weave while you design the rig!
+  const editSnap = Object.assign({}, snap(), { patternIndex: 0 });
+  const m = effMirrors();
+  const now = Date.now();
+  for (let k = 0; k < curPts.length; k++) {
+    const pt = curPts[k];
+    const rec = {
+      x: pt.x, y: pt.y, id: 'edit_v' + k, ci: k,
+      s: editSnap, m,
+      pv: CLUSTER.editPrev ? { x: CLUSTER.editPrev.x, y: CLUSTER.editPrev.y } : null,
+      o: [], pr: k === 0, tm: now, cc: globalColorStep, fo: Math.floor(flowPhase), np: 0
+    };
+    paintRec(ctx, rec, sc);
+    CLUSTER.editPrev = pt;
+  }
+  if (CONFIG.closeClusterPoly && curPts.length >= 2 && CLUSTER.editPrev) {
+    const first = curPts[0];
+    const rec = {
+      x: first.x, y: first.y, id: 'edit_vClose', ci: curPts.length,
+      s: editSnap, m,
+      pv: { x: CLUSTER.editPrev.x, y: CLUSTER.editPrev.y },
+      o: [], pr: false, tm: now, cc: globalColorStep, fo: Math.floor(flowPhase), np: 0
+    };
+    paintRec(ctx, rec, sc);
+    CLUSTER.editPrev = first;
+  }
+
+  // 4. Draw numbered virtual finger badges on the overlay canvas
+  curPts.forEach((p, idx) => {
+    const col = pal[idx % pal.length];
+    octx.fillStyle = col;
+    octx.strokeStyle = '#000';
+    octx.lineWidth = 1.2;
+    octx.beginPath();
+    octx.arc(p.x, p.y, 7, 0, TAU);
+    octx.fill();
+    octx.stroke();
+
+    octx.fillStyle = '#000';
+    octx.font = 'bold 9px Courier New';
+    octx.textAlign = 'center';
+    octx.textBaseline = 'middle';
+    octx.fillText(String(idx + 1), p.x, p.y);
+  });
+}
+
+/* ================= EXPORTS (PRINT SQUARE + SVG + JSON) ================= */
+function download(blob, name) {
+  const a = document.createElement('a');
+  a.download = name; a.href = URL.createObjectURL(blob);
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 4000);
+}
+const nextTick = () => new Promise(r => setTimeout(r, 0));
+
+async function renderSquare(N) {
+  const c = document.createElement('canvas'); c.width = c.height = N;
+  const g = c.getContext('2d');
+  if (!g) return null;
+  if (CONFIG.exportBlack) { g.fillStyle = '#060a10'; g.fillRect(0, 0, N, N); }
+  const sc = N / WORLD;
+  g.translate(N / 2, N / 2); g.rotate(CONFIG.rotation * Math.PI / 180); g.scale(sc, sc);
+  const allItems = [];
+  for (const L of layers) if (L.visible) for (const e of L.history) if (e && !e.end) allItems.push(e);
+  let t0 = performance.now();
+  for (let i = 0; i < allItems.length; i++) {
+    paintRec(g, allItems[i], sc);
+    if (performance.now() - t0 > 40) { $('loader').textContent = `Rendering vectors ${Math.round(i / allItems.length * 100)}%`; await nextTick(); t0 = performance.now(); }
+  }
+  return c;
+}
+async function exportPrint() {
+  const loader = $('loader'); loader.style.display = 'flex'; loader.textContent = 'Rendering vectors...';
+  await nextTick();
+  let N = parseInt($('exportSize').value, 10), c = null, blob = null;
+  while (N >= 1024 && !blob) {
+    try { c = await renderSquare(N); blob = c ? await new Promise(r => c.toBlob(r, 'image/png')) : null; } catch (e) { blob = null; }
+    if (!blob) N = Math.floor(N / 2);
+  }
+  if (blob) download(blob, `symmetrr_square_${N}px_${Date.now()}.png`);
+  loader.style.display = 'none';
+}
+
+class SvgCtx {
+  constructor() { this.out = []; this.d = []; this.dash = null; this.strokeStyle = '#fff'; this.fillStyle = '#fff'; this.lineWidth = 1; this.globalAlpha = 1; this.lineCap = 'round'; this.lineJoin = 'round'; }
+  f(v) { return (+v.toFixed(2)).toString(); }
+  beginPath() { this.d = []; }
+  moveTo(x, y) { this.d.push('M' + this.f(x) + ' ' + this.f(y)); }
+  lineTo(x, y) { this.d.push('L' + this.f(x) + ' ' + this.f(y)); }
+  arc(x, y, r) { const R = this.f(r); this.d.push(`A${R} ${R} 0 1 1 ${this.f(x - r)} ${this.f(y)}A${R} ${R} 0 1 1 ${this.f(x + r)} ${this.f(y)}Z`); }
+  setLineDash(a) { this.dash = a && a.length ? a : null; }
+  stroke() {
+    if (!this.d.length) return;
+    let s = `<path d="${this.d.join('')}" fill="none" stroke="${this.strokeStyle}" stroke-width="${this.f(this.lineWidth)}" stroke-linecap="${this.lineCap}" stroke-linejoin="round"`;
+    if (this.globalAlpha < 1) s += ` stroke-opacity="${this.f(this.globalAlpha)}"`;
+    if (this.dash) s += ` stroke-dasharray="${this.dash.map(v => this.f(v)).join(' ')}"`;
+    this.out.push(s + '/>');
+  }
+  fill() {
+    if (!this.d.length) return;
+    let s = `<path d="${this.d.join('')}" fill="${this.fillStyle}"`;
+    if (this.globalAlpha < 1) s += ` fill-opacity="${this.f(this.globalAlpha)}"`;
+    this.out.push(s + '/>');
+  }
+}
+async function exportSVG() {
+  const loader = $('loader'); loader.style.display = 'flex'; loader.textContent = 'Writing SVG...';
+  await nextTick();
+  const sv = new SvgCtx();
+  const allItems = [];
+  for (const L of layers) if (L.visible) for (const e of L.history) if (e && !e.end) allItems.push(e);
+  let t0 = performance.now();
+  for (let i = 0; i < allItems.length; i++) {
+    const e = allItems[i];
+    const ops = buildOps(e, 6), st = e.s.lineStyle;
+    for (const op of ops) { sv.globalAlpha = op.a; paintOp(sv, op, st, 1); }
+    if (performance.now() - t0 > 40) { loader.textContent = `Writing SVG ${Math.round(i / allItems.length * 100)}%`; await nextTick(); t0 = performance.now(); }
+  }
+  const h = WORLD / 2;
+  const bg = CONFIG.exportBlack ? `<rect x="${-h}" y="${-h}" width="${WORLD}" height="${WORLD}" fill="#060a10"/>` : '';
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${-h} ${-h} ${WORLD} ${WORLD}" width="4000" height="4000"><defs><clipPath id="sq"><rect x="${-h}" y="${-h}" width="${WORLD}" height="${WORLD}"/></clipPath></defs>${bg}<g clip-path="url(#sq)"><g transform="rotate(${CONFIG.rotation})">${sv.out.join('')}</g></g></svg>`;
+  download(new Blob([svg], { type: 'image/svg+xml' }), `symmetrr_vector_${Date.now()}.svg`);
+  loader.style.display = 'none';
+}
+$('exportBtn').addEventListener('click', exportPrint);
+$('svgBtn').addEventListener('click', exportSVG);
+
+/* ================= INPUT & COORDINATE MAPPING ================= */
+function getUV(sx, sy) {
+  const dx = sx - viewW / 2, dy = sy - viewH / 2;
+  const rad = -CONFIG.rotation * Math.PI / 180, c = Math.cos(rad), s = Math.sin(rad);
+  return { x: (dx * c - dy * s) / K, y: (dx * s + dy * c) / K };
+}
+
+function updatePointerKinematics(id, uv, pressure) {
+  const now = performance.now();
+  const prev = pointerKinematics.get(id);
+  let heading = prev ? prev.heading : 0;
+  let velocity = 0;
+  if (prev) {
+    const dt = Math.max(1, now - prev.t);
+    const dx = uv.x - prev.x, dy = uv.y - prev.y;
+    const dist = Math.hypot(dx, dy);
+    if (dist > 0.25) {
+      heading = Math.atan2(dy, dx);
+      velocity = dist / dt;
+    }
+  }
+  const k = { x: uv.x, y: uv.y, t: now, heading, velocity, pressure: pressure || 0.5 };
+  pointerKinematics.set(id, k);
+  return k;
+}
+
+/* ================= 4 INTUITIVE 2-AXIS JOYSTICKS (NO BANKS) ================= */
+const wrap = (v, n) => ((v % n) + n) % n;
+let hudTimer = null;
+function hud(t, v) {
+  $('hudT').textContent = t; $('hudV').textContent = v;
+  $('hud').classList.add('on'); clearTimeout(hudTimer);
+  hudTimer = setTimeout(() => $('hud').classList.remove('on'), 950);
+}
+const short = (s, n) => s.length > n ? s.slice(0, n - 1) + '.' : s;
+const NUM = (name, get, set, min, max, o) => Object.assign({ name, type: 'num', get, set, min, max }, o || {});
+const CN = (name, key, min, max, o) => NUM(name, () => CONFIG[key], v => { CONFIG[key] = v; }, min, max, o);
+const LST = (name, count, get, set, label, def) => ({ name, type: 'list', count, get, set, label, def });
+
+// Every joystick permanently controls 1 Up/Down parameter and 1 Left/Right parameter:
+const KNOB_MAP = {
+  kTL: {
+    y: CN('MIRRORS', 'mirrors', 1, 48, { int: true }),
+    x: LST('PALETTE', paletteNames.length, () => CONFIG.paletteIndex, v => { CONFIG.paletteIndex = v; palSel.value = v; renderPalette(); }, v => short(paletteNames[v], 12))
+  },
+  kBL: {
+    y: CN('SIZE', 'stampSize', 5, 300, { log: true, int: true }),
+    x: LST('PATTERN', PATTERNS.length, () => CONFIG.patternIndex, v => { CONFIG.patternIndex = v; patSel.value = v; }, v => short(PATTERNS[v].name, 12))
+  },
+  kTR: {
+    y: NUM('ROTATE', () => CONFIG.rotation, v => setRotation(v), 0, 360, { int: true }),
+    x: CN('FADE', 'fadeRate', 0, 0.12, { after: () => { $('fadeRange').value = CONFIG.fadeRate; $('fadeVal').textContent = CONFIG.fadeRate.toFixed(3); } })
+  },
+  kBR: {
+    y: CN('THICK', 'thickness', 0.3, 40, { log: true }),
+    x: LST('LINE', LINE_STYLES.length, () => CONFIG.lineStyle, v => { CONFIG.lineStyle = v; lsSel.value = v; }, v => LINE_STYLES[v])
+  }
+};
+Object.values(KNOB_MAP).forEach(k => ['x', 'y'].forEach(ax => { const p = k[ax]; if (p.def === undefined) p.def = p.get(); }));
+
+const normP = (p, v) => p.log ? Math.log(Math.max(v, p.min) / p.min) / Math.log(p.max / p.min) : (v - p.min) / (p.max - p.min);
+const denormP = (p, t) => { let v = p.log ? p.min * Math.pow(p.max / p.min, t) : p.min + (p.max - p.min) * t; return p.int ? Math.round(v) : v; };
+const valStr = p => p.type === 'list' ? p.label(p.get()) : (p.int ? String(Math.round(p.get())) : (+p.get()).toFixed(Math.abs(p.get()) < 1 ? 3 : 1));
+const dead = v => Math.abs(v) < 0.14 ? 0 : Math.sign(v) * (Math.abs(v) - 0.14) / 0.86;
+const shape = d => Math.sign(d) * d * d;
+
+const KNOB_IDS = ['kBL', 'kTL', 'kBR', 'kTR'];
+const knobs = KNOB_IDS.map(id => {
+  const el = document.createElement('div'); el.className = 'knob'; el.id = id;
+  el.innerHTML = '<div class="d dy"></div><div class="d dx"></div><span class="arr au">▲</span><span class="arr ad">▼</span><span class="arr al">◀</span><span class="arr ar">▶</span><div class="stick"></div>';
+  document.body.appendChild(el);
+  return { id, el, tid: -1, cx: 0, cy: 0, x: 0, y: 0, nx: 0, ny: 0, stick: el.querySelector('.stick'), ly: el.querySelector('.dy'), lx: el.querySelector('.dx'), lastTap: 0, t0: 0, lastTxt: '' };
+});
+try { const sv = JSON.parse(localStorage.getItem('ssv_knobs_v2') || 'null'); if (sv) knobs.forEach(k => { const p = sv[k.id]; if (p) { k.el.style.left = p.l + 'px'; k.el.style.top = p.t + 'px'; k.el.style.right = 'auto'; k.el.style.bottom = 'auto'; } }); } catch (e) {}
+function saveKnobPos() { try { const o = {}; knobs.forEach(k => { const r = k.el.getBoundingClientRect(); o[k.id] = { l: r.left, t: r.top }; }); localStorage.setItem('ssv_knobs_v2', JSON.stringify(o)); } catch (e) {} }
+
+function refreshKnobLabels(force) {
+  knobs.forEach(k => {
+    const d = KNOB_MAP[k.id], tx = `<em>▲▼ ${d.y.name}</em> ${valStr(d.y)}`, bx = `<em>◀▶ ${d.x.name}</em> ${valStr(d.x)}`;
+    if (force || k.lastTxt !== tx + bx) { k.ly.innerHTML = tx; k.lx.innerHTML = bx; k.lastTxt = tx + bx; }
+  });
+}
+function isOnJoy(t) {
+  if (!CONFIG.joysticks) return false;
+  return knobs.some(k => { const r = k.el.getBoundingClientRect(); return Math.hypot(t.clientX - (r.left + r.width / 2), t.clientY - (r.top + r.height / 2)) < 65; });
+}
+function knobFor(t) {
+  for (const k of knobs) { const r = k.el.getBoundingClientRect(); if (Math.hypot(t.clientX - (r.left + r.width / 2), t.clientY - (r.top + r.height / 2)) < 65) return k; }
+  return null;
+}
+let moveKnobs = false, movingKnob = null;
+function checkJoyStart(t) {
+  if (!CONFIG.joysticks) return false;
+  const k = knobFor(t); if (!k || k.tid !== -1) return false;
+  const r = k.el.getBoundingClientRect();
+  k.tid = t.identifier; k.cx = r.left + r.width / 2; k.cy = r.top + r.height / 2; k.t0 = performance.now(); k.moved = false;
+  k.el.classList.add(moveKnobs ? 'moving' : 'active');
+  if (moveKnobs) { movingKnob = { k, dx: t.clientX - r.left, dy: t.clientY - r.top }; }
+  else updateJoy(t);
+  return true;
+}
+function updateJoy(t) {
+  const k = knobs.find(n => n.tid === t.identifier); if (!k) return false;
+  if (moveKnobs && movingKnob && movingKnob.k === k) {
+    k.el.style.left = (t.clientX - movingKnob.dx) + 'px'; k.el.style.top = (t.clientY - movingKnob.dy) + 'px'; k.el.style.right = 'auto'; k.el.style.bottom = 'auto'; return true;
+  }
+  const max = 40; let dx = t.clientX - k.cx, dy = t.clientY - k.cy;
+  const d = Math.hypot(dx, dy); if (d > max) { dx *= max / d; dy *= max / d; }
+  if (d > 8) k.moved = true;
+  // Lock softly to dominant axis so Up/Down and Left/Right never accidentally cross-trigger
+  if (Math.abs(dx) > Math.abs(dy) * 1.65) dy = 0;
+  else if (Math.abs(dy) > Math.abs(dx) * 1.65) dx = 0;
+  k.x = dx / max; k.y = dy / max;
+  k.stick.style.transform = `translate(${dx}px, ${dy}px)`;
+  return true;
+}
+function endJoy(t) {
+  const k = knobs.find(n => n.tid === t.identifier); if (!k) return false;
+  const now = performance.now();
+  if (moveKnobs) { saveKnobPos(); movingKnob = null; }
+  else if (!k.moved && now - k.t0 < 260) {
+    if (now - k.lastTap < 400) {
+      const d = KNOB_MAP[k.id];
+      ['x', 'y'].forEach(ax => { const p = d[ax]; p.set(p.def); if (p.after) p.after(); });
+      syncUI(); hud('RESET', `${d.y.name} & ${d.x.name}`); k.lastTap = 0;
+    } else k.lastTap = now;
+  }
+  k.tid = -1; k.x = k.y = 0; k.el.classList.remove('active', 'moving');
+  k.stick.style.transform = 'translate(0,0)';
+  return true;
+}
+function runAxis(k, ax, p, d, now, dt) {
+  if (!d) { k['n' + ax] = 0; return; }
+  if (p.type === 'num') {
+    let t = Math.min(1, Math.max(0, normP(p, p.get()) + d * dt * 0.55));
+    p.set(denormP(p, t)); if (p.after) p.after(); syncUI(); hud(p.name, valStr(p));
+  } else if (now >= k['n' + ax]) {
+    p.set(wrap(p.get() + (d > 0 ? 1 : -1), p.count)); if (p.after) p.after();
+    k['n' + ax] = now + 520 - 420 * Math.min(1, Math.abs(d)); hud(p.name, valStr(p));
+  }
+}
+function processKnobs(now, dt) {
+  if (moveKnobs) return;
+  for (const k of knobs) {
+    if (k.tid === -1) continue;
+    const d = KNOB_MAP[k.id];
+    runAxis(k, 'x', d.x, shape(dead(k.x)), now, dt);
+    runAxis(k, 'y', d.y, shape(dead(-k.y)), now, dt);
+  }
+}
+
+/* ================= TOUCH & MOUSE HANDLERS ================= */
+let initialAngle = null, initialRotation = 0;
+function gesture(e) {
+  if (!CONFIG.twoFingerRotate || e.touches.length !== 2) { initialAngle = null; return false; }
+  const a = e.touches[0], b = e.touches[1];
+  if (isOnJoy(a) || isOnJoy(b)) { initialAngle = null; return false; }
+  const ang = Math.atan2(b.clientY - a.clientY, b.clientX - a.clientX) * 180 / Math.PI;
+  if (initialAngle === null) { initialAngle = ang; initialRotation = CONFIG.rotation; }
+  else setRotation(initialRotation + (ang - initialAngle));
+  return true;
+}
+function handleTouchStart(e) {
+  e.preventDefault();
+  const rotating = gesture(e);
+  if (rotating) { prevMap = {}; sharedPrev = null; }
+  for (const t of e.changedTouches) {
+    if (checkJoyStart(t)) continue;
+    if (isOnJoy(t)) continue;
+    const uv = getUV(t.clientX, t.clientY);
+    if (CLUSTER.mode === 'set') {
+      startClusterTendril(t.identifier, uv);
+      continue;
+    }
+    updatePointerKinematics(t.identifier, uv, t.force || 0.5);
+    // Assign consecutive colorIndex based on order of fingers touching screen (0, 1, 2, 3...)
+    const f = { id: t.identifier, x: uv.x, y: uv.y, colorIndex: touchColorCounter++ };
+    fingers.push(f);
+    if (!rotating) stamp(f, true);
+  }
+}
+function handleTouchMove(e) {
+  e.preventDefault();
+  const rotating = gesture(e);
+  if (rotating) { prevMap = {}; sharedPrev = null; }
+  for (const t of e.changedTouches) {
+    if (updateJoy(t)) continue;
+    const uv = getUV(t.clientX, t.clientY);
+    if (CLUSTER.mode === 'set') {
+      moveClusterTendril(t.identifier, uv);
+      continue;
+    }
+    const f = fingers.find(x => x.id === t.identifier);
+    if (!f) continue;
+    updatePointerKinematics(t.identifier, uv, t.force || 0.5);
+    f.x = uv.x; f.y = uv.y;
+    if (!rotating) stamp(f, false);
+  }
+}
+function handleTouchEnd(e) {
+  e.preventDefault();
+  if (e.touches.length < 2) initialAngle = null;
+  for (const t of e.changedTouches) {
+    if (endJoy(t)) continue;
+    if (CLUSTER.mode === 'set' && CLUSTER.building && CLUSTER.building.id === t.identifier) {
+      endClusterTendril(t.identifier);
+      continue;
+    }
+    if (fingers.some(f => f.id === t.identifier)) endFinger(t.identifier);
+  }
+}
+canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+canvas.addEventListener('touchend', handleTouchEnd, { passive: false });
+canvas.addEventListener('touchcancel', handleTouchEnd, { passive: false });
+knobs.forEach(k => {
+  k.el.style.pointerEvents = 'auto';
+  k.el.addEventListener('touchstart', handleTouchStart, { passive: false });
+  k.el.addEventListener('touchmove', handleTouchMove, { passive: false });
+  k.el.addEventListener('touchend', handleTouchEnd, { passive: false });
+  k.el.addEventListener('touchcancel', handleTouchEnd, { passive: false });
+});
+
+canvas.addEventListener('mousedown', e => {
+  const uv = getUV(e.clientX, e.clientY);
+  if (CLUSTER.mode === 'set') {
+    startClusterTendril(999, uv);
+    const mmSet = ev => moveClusterTendril(999, getUV(ev.clientX, ev.clientY));
+    const muSet = () => {
+      window.removeEventListener('mousemove', mmSet);
+      window.removeEventListener('mouseup', muSet);
+      endClusterTendril(999);
+    };
+    window.addEventListener('mousemove', mmSet);
+    window.addEventListener('mouseup', muSet);
+    return;
+  }
+  if (!liveDrawingAllowed()) return;
+  updatePointerKinematics(999, uv, 0.5);
+  const f = { id: 999, x: uv.x, y: uv.y, colorIndex: 0 };
+  fingers = [f]; prevMap = {}; sharedPrev = null;
+  stamp(f, true);
+  const mm = ev => {
+    const p = getUV(ev.clientX, ev.clientY);
+    updatePointerKinematics(999, p, 0.5);
+    f.x = p.x; f.y = p.y;
+    stamp(f, false);
+  };
+  const mu = () => { window.removeEventListener('mousemove', mm); window.removeEventListener('mouseup', mu); endFinger(999); };
+  window.addEventListener('mousemove', mm);
+  window.addEventListener('mouseup', mu);
+});
+
+window.addEventListener('keydown', e => {
+  const t = e.target && e.target.tagName; if (t === 'INPUT' || t === 'SELECT' || t === 'TEXTAREA') return;
+  const k = e.key.toLowerCase();
+  if ((e.ctrlKey || e.metaKey) && k === 'z') { e.preventDefault(); e.shiftKey ? redo() : undo(); return; }
+  if ((e.ctrlKey || e.metaKey) && k === 'y') { e.preventDefault(); redo(); return; }
+});
+
+/* ================= CONTROL BINDINGS ================= */
+const syncers = [];
+function bindInput(rangeId, numId, key, isFloat) {
+  const range = $(rangeId), num = $(numId);
+  const set = val => { if (isNaN(val)) return; CONFIG[key] = val; sync(); };
+  const sync = () => { range.value = CONFIG[key]; num.value = isFloat ? (+CONFIG[key]).toFixed(1) : Math.round(CONFIG[key]); };
+  range.addEventListener('input', e => set(isFloat ? parseFloat(e.target.value) : parseInt(e.target.value)));
+  num.addEventListener('change', e => set(isFloat ? parseFloat(e.target.value) : parseInt(e.target.value)));
+  syncers.push(sync);
+}
+bindInput('mirrors', 'mirrorNum', 'mirrors', false);
+bindInput('thickness', 'thickNum', 'thickness', true);
+bindInput('stampSize', 'sizeNum', 'stampSize', false);
+bindInput('historyRange', 'histNum', 'maxHistory', false);
+
+$('fadeRange').addEventListener('input', e => {
+  CONFIG.fadeRate = parseFloat(e.target.value);
+  $('fadeVal').textContent = CONFIG.fadeRate.toFixed(3);
+});
+
+[['glowAmt', 'Glow Amount', 0, 4, 0.05], ['twist', 'Twist (deg/mirror)', 0, 40, 0.5], ['echo', 'Echo Shrink', 0, 1, 0.01],
+ ['breath', 'Mirror Breath', 0, 1, 0.01], ['flow', 'Color Flow', 0, 8, 0.1], ['autoR', 'Auto Orbit Radius', 0, 220, 1], ['ghostSpeed', 'Loop Speed', 1, 12, 0.5]
+].forEach(([key, label, min, max, step]) => {
+  const w = document.createElement('div');
+  w.innerHTML = `<label>${label} <span></span></label><input type="range" min="${min}" max="${max}" step="${step}">`;
+  $('advBox').appendChild(w);
+  const r = w.querySelector('input'), sp = w.querySelector('span');
+  const sync = () => { r.value = CONFIG[key]; sp.textContent = (+CONFIG[key]).toFixed(2); };
+  r.addEventListener('input', () => { CONFIG[key] = parseFloat(r.value); if (key === 'glowAmt') CONFIG.glow = CONFIG.glowAmt > 0.05; if (key === 'autoR') { CONFIG.isAuto = CONFIG.autoR > 8; autoPrev = null; renderToggles(); } sync(); });
+  syncers.push(sync);
+});
+function syncUI() { syncers.forEach(f => f()); }
+syncUI();
+
+const toggleRenders = [];
+function renderToggles() { toggleRenders.forEach(f => f()); }
+function toggle(id, key, labels, after) {
+  const b = $(id);
+  const render = () => { b.textContent = labels[CONFIG[key] ? 1 : 0]; b.classList.toggle('active', !!CONFIG[key]); };
+  b.addEventListener('click', () => { CONFIG[key] = !CONFIG[key]; render(); if (after) after(); });
+  toggleRenders.push(render);
+  render();
+}
+toggle('closePolyToggle', 'closeClusterPoly', ['Close Polygon Loop (N→1): OFF', 'Close Polygon Loop (N→1): ON']);
+toggle('steerToggle', 'steerCluster', ['Steer Rig By Drag Angle: OFF', 'Steer Rig By Drag Angle: ON']);
+toggle('motionToggle', 'motionIllusion', ['Motion Illusion: OFF', 'Motion Illusion: ON']);
+toggle('pingPongToggle', 'pingPongGhosts', ['Stroke Ping-Pong Ghosts: OFF', 'Stroke Ping-Pong Ghosts: ON']);
+toggle('meshToggle', 'shadowMesh', ['Shadow Mesh: OFF', 'Shadow Mesh: ON']);
+toggle('autoToggle', 'isAuto', ['Auto Orbit Mode: OFF', 'Auto Orbit Mode: ON'], () => { autoPrev = null; });
+toggle('loopToggle', 'isLooping', ['History Loop: OFF', 'History Loop: ON'], () => { if (CONFIG.isLooping) { playbackIndex = 0; playbackDirection = 1; } });
+toggle('glowToggle', 'glow', ['Glow: OFF', 'Glow: ON'], () => { if (CONFIG.glow && CONFIG.glowAmt < 0.05) CONFIG.glowAmt = 1; syncUI(); });
+toggle('colorToggle', 'colorCycle', ['Color: PER TOUCH / TENDRIL', 'Color: CYCLING']);
+toggle('linkToggle', 'sharedPrev', ['Stroke Link: PER FINGER', 'Stroke Link: SHARED LAST POINT']);
+toggle('gestureToggle', 'twoFingerRotate', ['Two Fingers: DRAW', 'Two Fingers: ROTATE']);
+toggle('joyToggle', 'joysticks', ['Corner Joysticks: OFF', 'Corner Joysticks: ON'], () => { knobs.forEach(k => k.el.style.display = CONFIG.joysticks ? 'block' : 'none'); });
+toggle('viewToggle', 'showGuideFrame', ['Square Guide Frame: OFF', 'Square Guide Frame: ON'], () => { frame.classList.toggle('show', CONFIG.showGuideFrame); });
+toggle('bgToggle', 'exportBlack', ['Export BG: TRANSPARENT', 'Export BG: TRANSLUCENT DARK']);
+
+$('menuBtn').addEventListener('click', () => $('uiPanel').classList.toggle('active'));
+
+function wipeActiveLayer() {
+  const L = curLayer();
+  const oldH = L.history.slice(), oldG = L.gestures.slice(), oldP = L.pointsCount;
+  L.history = []; L.gestures = []; L.pointsCount = 0;
+  fingers = []; prevMap = {}; sharedPrev = null; autoPrev = null; CLUSTER.editPrev = null;
+  redrawAll();
+  hud('CLEARED', L.name);
+  pushUndo({
+    label: `clear ${L.name}`,
+    undo() { L.history = oldH; L.gestures = oldG; L.pointsCount = oldP; redrawAll(); },
+    redo() { L.history = []; L.gestures = []; L.pointsCount = 0; redrawAll(); }
+  });
+}
+$('clearBtn').addEventListener('click', wipeActiveLayer);
+$('resetBtn').addEventListener('click', () => { wipeActiveLayer(); setRotation(0); });
+
+function toggleFS() {
+  if (!document.fullscreenElement) { (document.documentElement.requestFullscreen || (() => {})).call(document.documentElement); }
+  else if (document.exitFullscreen) document.exitFullscreen();
+}
+$('fsBtn').addEventListener('click', toggleFS);
+$('fsQuick').addEventListener('click', toggleFS);
+document.addEventListener('fullscreenchange', () => { $('fsBtn').textContent = document.fullscreenElement ? 'Exit Full Screen' : 'Full Screen'; setTimeout(resizeCanvas, 150); });
+
+$('undoBtn').addEventListener('click', undo);
+$('redoBtn').addEventListener('click', redo);
+$('moveKnobsBtn').addEventListener('click', () => {
+  moveKnobs = !moveKnobs;
+  $('moveKnobsBtn').textContent = 'Reposition Joysticks: ' + (moveKnobs ? 'ON (Drag them)' : 'OFF');
+  $('moveKnobsBtn').classList.toggle('active', moveKnobs);
+});
+
+/* ================= SESSION JSON EXPORT / IMPORT / REPLAY ================= */
+const rd = v => Math.round(v * 100) / 100;
+function sessionJSON() {
+  const snaps = [], idx = new Map();
+  const sid = s => { if (!idx.has(s)) { idx.set(s, snaps.length); snaps.push(s); } return idx.get(s); };
+  const encodeRecs = hist => hist.map(r => r.end ? [null, r.id] : [rd(r.x), rd(r.y), r.id, r.ci, sid(r.s), rd(r.m), r.pv ? rd(r.pv.x) : null, r.pv ? rd(r.pv.y) : null, r.pr ? 1 : 0, r.tm, r.cc, r.fo, r.o && r.o.length ? r.o.map(o => [rd(o.x), rd(o.y)]) : 0]);
+  return {
+    version: '4.0', app: 'SymmetrrLivingTendrilForge', world: WORLD, created: new Date().toISOString(),
+    config: { mirrors: CONFIG.mirrors, paletteIndex: CONFIG.paletteIndex, patternIndex: CONFIG.patternIndex, rotation: CONFIG.rotation },
+    cluster: {
+      mode: CLUSTER.mode,
+      origin: CLUSTER.origin,
+      tendrils: CLUSTER.tendrils.map(t => ({ pts: t.pts.map(p => [rd(p.dx), rd(p.dy)]) }))
+    },
+    snaps,
+    layers: layers.map(L => ({
+      name: L.name,
+      visible: L.visible,
+      recs: encodeRecs(L.history)
+    }))
+  };
+}
+
+function decodeRecs(recs, snaps) {
+  const out = [];
+  recs.forEach(a => {
+    if (a[0] === null) { out.push({ end: true, id: a[1] }); return; }
+    out.push({ x: a[0], y: a[1], id: a[2], ci: a[3], s: snaps[a[4]], m: a[5], pv: a[6] === null ? null : { x: a[6], y: a[7] }, pr: !!a[8], tm: a[9], cc: a[10], fo: a[11], o: a[12] ? a[12].map(p => ({ x: p[0], y: p[1] })) : [] });
+  });
+  return out;
+}
+
+function loadSession(o) {
+  if (!o) throw new Error('bad file');
+  const prevLayers = layers.slice();
+  const prevCluster = { mode: CLUSTER.mode, origin: CLUSTER.origin, tendrils: cloneTendrils(CLUSTER.tendrils) };
+
+  if (o.cluster) {
+    CLUSTER.mode = o.cluster.mode || 'draw';
+    CLUSTER.origin = o.cluster.origin || null;
+    if (Array.isArray(o.cluster.tendrils)) {
+      CLUSTER.tendrils = o.cluster.tendrils.map(t => ({
+        pts: (t.pts || []).map(p => Array.isArray(p) ? { dx: p[0], dy: p[1] } : { dx: p.dx, dy: p.dy }),
+        cur: 0, dir: 1
+      }));
+    } else if (Array.isArray(o.cluster.offsets)) {
+      CLUSTER.tendrils = o.cluster.offsets.map(off => ({ pts: [{ dx: off.dx, dy: off.dy }], cur: 0, dir: 1 }));
+    }
+    updateForgeToggleUI(null);
+  }
+
+  const rawSnaps = o.snaps || (o.drawing && o.drawing.snaps) || [];
+  const snaps = rawSnaps.map(s => Object.freeze(Object.assign({ twist: 0, echo: 0, mirrorMode: 0, glowAmt: 1, lineStyle: 0, shadowMesh: false }, s)));
+
+  if (Array.isArray(o.layers) && o.layers.length && o.layers[0].recs) {
+    layers = o.layers.map((ld, i) => {
+      const L = createLayer(ld.name || `L${i + 1}`);
+      L.visible = ld.visible !== false;
+      L.history = decodeRecs(ld.recs, snaps);
+      return L;
+    });
+    activeLayerIdx = layers.length - 1;
+  } else if (o.drawing && Array.isArray(o.drawing.recs)) {
+    const L = createLayer(`Imported`);
+    L.history = decodeRecs(o.drawing.recs, snaps);
+    layers.push(L);
+    activeLayerIdx = layers.length - 1;
+  }
+
+  renderLayerStrip();
+  redrawAll();
+  const importedLayers = layers.slice();
+  pushUndo({
+    label: 'import JSON',
+    undo() { layers = prevLayers; activeLayerIdx = 0; CLUSTER.mode = prevCluster.mode; CLUSTER.origin = prevCluster.origin; CLUSTER.tendrils = prevCluster.tendrils; renderLayerStrip(); updateForgeToggleUI(null); redrawAll(); },
+    redo() { layers = importedLayers; activeLayerIdx = layers.length - 1; renderLayerStrip(); redrawAll(); }
+  });
+  hud('IMPORTED', `${layers.length} layers · ${CLUSTER.tendrils.length} tendrils`);
+}
+$('expJson').addEventListener('click', () => {
+  download(new Blob([JSON.stringify(sessionJSON())], { type: 'application/json' }), `symmetrr_session_${Date.now()}.json`);
+});
+$('impJson').addEventListener('click', () => $('jsonIn').click());
+$('jsonIn').addEventListener('change', e => {
+  const f = e.target.files[0]; if (!f) return; const r = new FileReader();
+  r.onload = ev => { try { loadSession(JSON.parse(ev.target.result)); } catch (err) { hud('IMPORT FAILED', 'Invalid JSON file'); } };
+  r.readAsText(f); e.target.value = '';
+});
+
+let replayTok = 0;
+$('replayBtn').addEventListener('click', () => {
+  const tok = ++replayTok;
+  const items = [];
+  for (const L of layers) if (L.visible) for (const r of L.history) items.push(r);
+  redrawToken++; clearPixels(); applyView(ctx);
+  const cum = []; let c = 0, prevT = null;
+  items.forEach(r => { if (r.end) c += 120; else { if (prevT !== null) c += Math.min(60, Math.max(4, r.tm - prevT)); prevT = r.tm; } cum.push(c); });
+  const t0 = performance.now(), sc = DPR * K; let i = 0;
+  (function step() {
+    if (tok !== replayTok) return;
+    const vt = (performance.now() - t0) * 1.0, tb = performance.now();
+    while (i < items.length && cum[i] <= vt && performance.now() - tb < 12) { if (!items[i].end) paintRec(ctx, items[i], sc); i++; }
+    if (i < items.length) requestAnimationFrame(step); else hud('REPLAY', 'Complete');
+  })();
+  $('uiPanel').classList.remove('active'); hud('REPLAY', 'Replaying layers...');
+});
+
+/* ================= MAIN ANIMATION LOOP ================= */
+let lastT = performance.now(), frameNo = 0;
+function animate() {
+  const nowP = performance.now(), dt = Math.min(0.1, (nowP - lastT) / 1000); lastT = nowP;
+  const now = Date.now(); frameNo++;
+  processKnobs(now, dt);
+  if (CONFIG.spin) setRotation(CONFIG.rotation + CONFIG.spin * dt);
+  if (CONFIG.flow) flowPhase += CONFIG.flow * dt;
+  const sc = DPR * K;
+
+  const hasActiveGhosts = CONFIG.pingPongGhosts && layers.some(L => L.visible && L.gestures.length > 0);
+  const hasEditMotion = CLUSTER.mode === 'set' && CLUSTER.tendrils.length > 0;
+
+  // 1. TRANSLUCENT PERSISTENCE FADE (dims old frames slightly so rotating/ping-ponging geometry looks alive)
+  if (CONFIG.fadeRate > 0 && (hasActiveGhosts || hasEditMotion || CONFIG.isAuto || CONFIG.isLooping)) {
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.fillStyle = `rgba(0, 0, 0, ${CONFIG.fadeRate})`;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.restore();
+  }
+
+  // 2. FONT FORGE PING-PONG GHOST ENGINE (across all visible layers)
+  //    Each saved stroke ping-pongs along its path while its internal tendrils ALSO ping-pong
+  //    relative to their original points and battle over `ghostPrev`!
+  if (CONFIG.pingPongGhosts && CLUSTER.mode !== 'set') {
+    const steps = Math.max(1, Math.round(CONFIG.ghostSpeed));
+    for (let s = 0; s < steps; s++) {
+      for (const L of layers) {
+        if (!L.visible || !L.gestures.length) continue;
+        for (const g of L.gestures) {
+          if (!g.points.length) continue;
+          const prevPt = g.points[g.curIdx];
+          if (g.points.length > 1) {
+            g.curIdx += g.dir;
+            if (g.curIdx >= g.points.length - 1) { g.curIdx = g.points.length - 1; g.dir = -1; }
+            else if (g.curIdx <= 0) { g.curIdx = 0; g.dir = 1; }
+          }
+          const pt = g.points[g.curIdx];
+
+          if (g.hasCluster && g.tendrils && g.tendrils.length > 0) {
+            stepTendrils(g.tendrils);
+            const vPts = getVirtualFingerPositions(pt.x, pt.y, pt.h, pt.p, g.tendrils);
+            let gPrev = g.ghostPrev || null;
+            for (let k = 0; k < vPts.length; k++) {
+              const vp = vPts[k];
+              const ghostRec = {
+                x: vp.x, y: vp.y, id: 'ghost_v' + k, ci: pt.ci + k,
+                s: g.snap, m: effMirrors(),
+                pv: gPrev ? { x: gPrev.x, y: gPrev.y } : null,
+                o: vPts.filter((_, idx) => idx !== k), pr: k === 0,
+                tm: now, cc: globalColorStep, fo: Math.floor(flowPhase), np: 0
+              };
+              paintRec(ctx, ghostRec, sc);
+              gPrev = vp;
+            }
+            if (g.closePoly && vPts.length >= 2 && gPrev) {
+              const first = vPts[0];
+              const closeRec = {
+                x: first.x, y: first.y, id: 'ghost_vClose', ci: pt.ci + vPts.length,
+                s: g.snap, m: effMirrors(),
+                pv: { x: gPrev.x, y: gPrev.y },
+                o: vPts.slice(1), pr: false,
+                tm: now, cc: globalColorStep, fo: Math.floor(flowPhase), np: 0
+              };
+              paintRec(ctx, closeRec, sc);
+              gPrev = first;
+            }
+            g.ghostPrev = gPrev;
+          } else {
+            const ghostRec = {
+              x: pt.x, y: pt.y, id: 'ghost', ci: pt.ci,
+              s: g.snap, m: effMirrors(),
+              pv: prevPt ? { x: prevPt.x, y: prevPt.y } : null,
+              o: [], pr: true,
+              tm: now, cc: globalColorStep, fo: Math.floor(flowPhase), np: 0
+            };
+            paintRec(ctx, ghostRec, sc);
+          }
+        }
+      }
+    }
+  }
+
+  // 3. AUTO ORBIT MODE
+  if (CONFIG.isAuto && CLUSTER.mode !== 'set') {
+    const tt = now * 0.001;
+    const x = Math.sin(tt * 2) * CONFIG.autoR, y = Math.cos(tt * 2) * CONFIG.autoR;
+    const f = { id: 'auto', x, y, colorIndex: 0 };
+    stamp(f, !autoPrev);
+    autoPrev = { x, y };
+  }
+
+  // 4. HISTORY LOOP REPLAY
+  if (CONFIG.isLooping) {
+    const L = curLayer();
+    if (L.history.length > 0) {
+      const steps = Math.max(1, Math.round(CONFIG.ghostSpeed));
+      for (let s = 0; s < steps; s++) {
+        playbackIndex += playbackDirection;
+        if (playbackIndex >= L.history.length - 1) { playbackIndex = L.history.length - 1; playbackDirection = -1; }
+        else if (playbackIndex <= 0) { playbackIndex = 0; playbackDirection = 1; }
+        const e = L.history[playbackIndex];
+        if (e && !e.end) {
+          if (CONFIG.motionIllusion) e.tm = now;
+          paintRec(ctx, e, sc);
+        }
+      }
+    }
+  }
+
+  // 5. LIVE EDIT MODE OVERLAY & WEAVING
+  updateAndRenderClusterEditMode(sc);
+
+  if (frameNo % 6 === 0) refreshKnobLabels();
+  if (frameNo % 20 === 0) {
+    const totStamps = layers.reduce((s, l) => s + l.history.length, 0);
+    const totPts = layers.reduce((s, l) => s + l.pointsCount, 0);
+    $('vecInfo').textContent = `${layers.length} layers · ${totStamps.toLocaleString()} stamps · ${totPts.toLocaleString()} pts`;
+  }
+  requestAnimationFrame(animate);
+}
+
+renderLayerStrip();
+resizeCanvas();
+setTimeout(resizeCanvas, 150);
+refreshKnobLabels(true);
+updateForgeToggleUI(null);
+animate();
+</script>
+</body>
+</html>
