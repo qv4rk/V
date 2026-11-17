@@ -25,7 +25,8 @@
       ['Scale Orrery', '/orrery/', 'True scale, Moon, eclipses, mission paths'],
       ['Street map', '/atlas/', 'Globe to street level, Gaza building damage'],
       ['Gaza damage', '/gaza/', 'Building-level damage over time'],
-      ['The Great GASPI', '/gaspi/', 'West Bank and Gaza territories'],
+      ['The Great GASPI', '/gaspi/', '16 territories: Puerto Rico, Tibet, Crimea, West Bank, Gaza and more'],
+      ['GASPI 5.0', '/gaspi5/', 'West Bank and Gaza prototype with checkpoints and Gaza damage'],
       ['Globe & sky', '/sky/', 'Date dial, stars from any node, 5,000 years of eclipses'],
     ]},
     { title: 'Tools', items: [

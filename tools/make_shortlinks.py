@@ -17,7 +17,7 @@ SHORTLINKS = {
     'reader':     '/apps/webapps/tts/reader/',
     'readingroom': '/apps/webapps/tts/reader/',
     'gaza':       '/gaza-damage/',
-    'gaspi':      '/gaspi5/',
+    'gaspi':      '/thegreatgaspi/',
     'sky':        '/Manifold%20Atlas.html',
     'natal':      '/apps/webapps/natal-chart/',
     'eigenstate': '/apps/webapps/eigenstate-roll/',
