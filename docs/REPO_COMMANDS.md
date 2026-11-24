@@ -33,9 +33,10 @@ Written 24 November 2026, America/New_York. If a later change in the repo disagr
 15. [Generate an image with Pollinations](#15-generate-an-image-with-pollinations)
 16. [Convert a Word file with pandoc](#16-convert-a-word-file-with-pandoc)
 17. [JSON, pictures, and why some chapter uploads had no images](#17-json-pictures-and-why-some-chapter-uploads-had-no-images)
-18. [Encode and decode base64 (Termux APK scripts)](#18-encode-and-decode-base64-termux-apk-scripts)
-19. [What never to do](#19-what-never-to-do)
-20. [If something goes wrong](#20-if-something-goes-wrong)
+18. [The public tools page, APK builds, and extensions](#18-the-public-tools-page-apk-builds-and-extensions)
+19. [Encode and decode base64 (Termux APK scripts)](#19-encode-and-decode-base64-termux-apk-scripts)
+20. [What never to do](#20-what-never-to-do)
+21. [If something goes wrong](#21-if-something-goes-wrong)
 
 ---
 
@@ -83,6 +84,8 @@ pkg install python pandoc curl
 ```
 
 Installs Python (needed to build V locally), pandoc (needed to convert Word files), and curl (needed to download generated images). Skip any that Termux says are already installed.
+
+If this Termux install is already set up for on-phone APK builds, do not run `pkg upgrade` or `apt upgrade` just to install the tools above. The APK build guide warns that a broad upgrade can break a working environment. `pkg update` (refresh the package list) and `pkg install` for missing packages are the safer commands.
 
 ### Linux desktop (Debian or Ubuntu)
 
@@ -287,7 +290,7 @@ Always pull before you push, and use rebase so your new commit sits on top of wh
 git pull --rebase origin main
 ```
 
-Downloads the latest `main` from GitHub and places your unpushed commits on top of it. If there are no conflicts, you are ready to push. If git reports a conflict, see [section 20](#20-if-something-goes-wrong). Do not add `--force` to get past a conflict.
+Downloads the latest `main` from GitHub and places your unpushed commits on top of it. If there are no conflicts, you are ready to push. If git reports a conflict, see [section 21](#21-if-something-goes-wrong). Do not add `--force` to get past a conflict.
 
 ```bash
 git push origin main
@@ -695,6 +698,7 @@ Serves the current directory at http://localhost:8000. In Termux you can open th
 - `tools/alignment_finder.py` — a sky-alignment scanner for the atlas. Needs `pip install skyfield` and a large ephemeris download. Not part of the ordinary article build.
 - `tools/build_eclipses.js` — eclipse data helper for the atlas.
 - `tools/feisttech.sh` — the Termux helpers in the next section.
+- `tools/index.html`, `tools/android-on-device-build/`, and `tools/downloads/` — the public tools page, the Termux APK pipeline, and the downloadable zips. See [section 18](#18-the-public-tools-page-apk-builds-and-extensions).
 
 ---
 
@@ -939,7 +943,80 @@ Do not paste a huge base64 blob into a chat message or a commit message. Keep it
 
 ---
 
-## 18. Encode and decode base64 (Termux APK scripts)
+## 18. The public tools page, APK builds, and extensions
+
+As of 24 November 2026 (America/New_York), V has a public tools page at **https://feisttech.com/tools/**. The files live under `tools/` in the repo. The source for the APK pipeline and the batch image extension is also in **qv4rk/ftechbuilds**.
+
+This page is the display copy of the Termux APK build scripts and Chrome extensions you wanted on the site. Signing keys and API keys are not in the published files. Do not add them.
+
+### Download and build the test APK in Termux
+
+The published pipeline compiles, packages, signs, and aligns a small test APK on an ARM64 Android phone. It was checked end to end on 26 September 2026: the APK installed and launched on the device. The full guide is `tools/android-on-device-build/FEISTTECH_ANDROID_BUILD_GUIDE.md`. Read that before you change a customized Termux install. In particular, do not run `pkg upgrade` or `apt upgrade` just to reproduce the build.
+
+```bash
+curl -L -o android-on-device-build.zip https://feisttech.com/tools/downloads/android-on-device-build.zip
+```
+
+Downloads the folder as a zip into the current directory.
+
+```bash
+unzip android-on-device-build.zip -d android-on-device-build
+```
+
+Unpacks it into `android-on-device-build/`.
+
+```bash
+cd android-on-device-build
+```
+
+```bash
+chmod +x verify-environment.sh build-apk.sh
+```
+
+Marks the two scripts as executable.
+
+```bash
+./verify-environment.sh
+```
+
+Checks that the required tools (Java, the Android SDK pieces, `aapt2`, `apksigner`) are installed. If something is missing, the script or the build guide will say what to install. Fix that before the next step.
+
+```bash
+./build-apk.sh
+```
+
+Compiles the test app, packages it, signs it, and verifies the signature. The finished APK is `build/FeistTech-APK-Test.apk`. If no keystore exists yet, the script creates one at `~/.feisttech-test.keystore` and will prompt for a password. Keep that keystore and password on the phone. Never commit the keystore, and never put it in this repo.
+
+The same files are also browseable in the repo at `tools/android-on-device-build/`.
+
+### Chrome extensions
+
+The batch image extension zip is at https://feisttech.com/tools/downloads/batch_image_extension_v3.zip.
+
+```bash
+curl -L -o batch_image_extension_v3.zip https://feisttech.com/tools/downloads/batch_image_extension_v3.zip
+```
+
+Downloads the extension package.
+
+```bash
+unzip batch_image_extension_v3.zip -d batch_image_extension_v3
+```
+
+Unpacks it. In Chrome or Edge, open `chrome://extensions`, turn on Developer mode, choose Load unpacked, and select the unzipped folder. In Kiwi on Android: menu → Extensions → Developer mode → Load unpacked, then pick the same folder. API keys, if you use them, are entered in the extension and are not stored in this package.
+
+A tab-audio recorder extension also lives under `extension/` in V. Two packaging files, `recorder.html` and `offscreen.html`, are kept off the published site, so that folder alone is not a complete Load unpacked package. Use a local copy that still has those files, or add them back before loading it.
+
+### Adding another script or extension later
+
+1. Put secret-free files in `tools/` or a zip in `tools/downloads/`.
+2. Never commit a keystore, a password, or an API key.
+3. Add a short entry to `tools/index.html` with the name, what it does, how to run it, and a download link.
+4. If the item should appear in the site menu and search, add it to the Tools list in `site.js`.
+
+---
+
+## 19. Encode and decode base64 (Termux APK scripts)
 
 You have shell scripts stored as one long base64 string that, once decoded, build, sign, and align a working APK in Termux. The commands below only encode or decode a file you already have. They do not change what the script does.
 
@@ -1001,7 +1078,7 @@ Same commands; base64 does not care whether the file is text or binary.
 
 ---
 
-## 19. What never to do
+## 20. What never to do
 
 These rules are standing rules for qv4rk/V and qv4rk/GrokBotPlayground. They are not style tips; they prevent irreversible damage.
 
@@ -1035,7 +1112,7 @@ This throws away uncommitted work, and if you move `main` backwards and push, yo
 
 ---
 
-## 20. If something goes wrong
+## 21. If something goes wrong
 
 ### `git pull --rebase` reports a conflict
 
