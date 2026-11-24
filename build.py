@@ -852,6 +852,7 @@ def build():
         SITE_URL + '/atlas/',
         SITE_URL + '/articles/',
         SITE_URL + '/reader/',
+        SITE_URL + '/tools/',
     ]
     all_urls = static_urls + sitemap_urls
     sitemap_lines = ['<?xml version="1.0" encoding="UTF-8"?>',

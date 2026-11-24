@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Build scripts and extensions | FeistTech</title>
+<meta name="description" content="Termux APK build scripts and Chrome extensions from FeistTech.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='44' fill='%23050810'/%3E%3Ccircle cx='50' cy='50' r='36' fill='none' stroke='%23c9a84c' stroke-width='2'/%3E%3Ccircle cx='50' cy='50' r='6' fill='%23c9a84c'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="/vendor/google-fonts/fonts.css">
+<style>
+  :root {
+    --bg: #0b0c10; --line: #23262f; --text: #e4e2dc; --muted: #8d9099; --gold: #c9a84c;
+    --serif: "Cormorant Garamond", Georgia, serif;
+    --mono: "Space Mono", ui-monospace, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 15px; line-height: 1.55; }
+  main { max-width: 800px; margin: 0 auto; padding: 56px 16px 40px; }
+  a { color: var(--gold); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  h1 { font-family: var(--serif); font-weight: 400; font-size: clamp(32px, 5vw, 48px); margin: 0 0 8px; line-height: 1.1; }
+  .lead { color: var(--muted); margin: 0 0 36px; max-width: 62ch; }
+  .label { font-family: var(--mono); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--gold); margin: 0 0 14px; font-weight: 400; }
+  section.group { margin: 0 0 44px; }
+  article.item { border: 1px solid var(--line); border-radius: 10px; padding: 18px; margin: 0 0 16px; background: #10131b; }
+  article.item h2 { font-family: var(--serif); font-weight: 400; font-size: 26px; margin: 0 0 6px; line-height: 1.2; }
+  article.item .what { margin: 0 0 16px; }
+  .how h3, .files h3 { font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; font-weight: 400; }
+  pre { background: #090b10; border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; overflow-x: auto; font-family: var(--mono); font-size: 12px; line-height: 1.6; color: var(--text); margin: 0 0 14px; white-space: pre-wrap; word-break: break-word; }
+  code { font-family: var(--mono); font-size: 12px; }
+  ul.files { list-style: none; margin: 0; padding: 0; }
+  ul.files li { padding: 5px 0; border-top: 1px solid var(--line); font-size: 14px; }
+  ul.files li:first-child { border-top: 0; padding-top: 0; }
+  .note { color: var(--muted); font-size: 13px; margin: 0; }
+  footer { max-width: 800px; margin: 0 auto; padding: 24px 16px 40px; color: var(--muted); font-size: 12px; display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; border-top: 1px solid var(--line); }
+  footer a { text-decoration: none; }
+  footer a:hover { color: var(--gold); }
+  @media (max-width: 640px) { main { padding-top: 32px; } }
+</style>
+<script src="/site.js" defer></script>
+</head>
+<body>
+<main>
+  <h1>Build scripts and extensions</h1>
+  <p class="lead">Scripts that build and sign an Android APK on a phone in Termux, and Chrome extensions you can load locally. Signing keys and API keys are not published here.</p>
+
+  <section class="group" aria-labelledby="apk-heading">
+    <h2 class="label" id="apk-heading">Termux APK builds</h2>
+
+    <article class="item">
+      <h2>On-device Android APK build</h2>
+      <p class="what">A known-good Termux pipeline that compiles, packages, signs, and aligns a small test APK on an ARM64 Android phone. It was checked end to end on 26 September 2026: the APK installed and launched on the device. The published scripts do not include a keystore or a password. If a keystore is missing, <code>build-apk.sh</code> creates one at <code>~/.feisttech-test.keystore</code> and prompts for a password; keep that file and password on the phone.</p>
+      <div class="how">
+        <h3>How to run it</h3>
+        <p class="note">Install the Java and Android SDK tools first. The full environment notes are in the guide linked below. Then, in Termux:</p>
+<pre>curl -L -o android-on-device-build.zip https://feisttech.com/tools/downloads/android-on-device-build.zip
+unzip android-on-device-build.zip
+cd android-on-device-build
+chmod +x verify-environment.sh build-apk.sh
+./verify-environment.sh
+./build-apk.sh</pre>
+        <p class="note">The finished APK is written to <code>build/FeistTech-APK-Test.apk</code>. You can also clone the source repository: <a href="https://github.com/qv4rk/ftechbuilds/tree/main/apps/android-on-device-build">qv4rk/ftechbuilds</a>.</p>
+      </div>
+      <div class="files">
+        <h3>Download</h3>
+        <ul class="files">
+          <li><a href="/tools/downloads/android-on-device-build.zip">android-on-device-build.zip</a> — the full folder, ready to unpack in Termux</li>
+          <li><a href="/tools/android-on-device-build/build-apk.sh">build-apk.sh</a> — compile, package, sign, and verify</li>
+          <li><a href="/tools/android-on-device-build/verify-environment.sh">verify-environment.sh</a> — check that the required tools are installed</li>
+          <li><a href="/tools/android-on-device-build/FEISTTECH_ANDROID_BUILD_GUIDE.md">Build guide</a> — environment, commands, and safety notes</li>
+          <li><a href="/tools/android-on-device-build/README.md">README</a></li>
+          <li><a href="https://raw.githubusercontent.com/qv4rk/ftechbuilds/main/apps/android-on-device-build/build-apk.sh">Raw file on GitHub</a></li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item">
+      <h2>FeistTech site toolchain</h2>
+      <p class="what">A bash helper, written for Termux, for working on this site: starting and editing articles, building pages locally, and checking status before a publish.</p>
+      <div class="how">
+        <h3>How to run it</h3>
+        <p class="note">After the V repository is on the phone, add this line to <code>~/.bashrc</code> and open a new session. Adjust the path if the clone lives somewhere other than <code>~/v_project_fresh</code>.</p>
+<pre>source ~/v_project_fresh/tools/feisttech.sh
+ft</pre>
+      </div>
+      <div class="files">
+        <h3>Download</h3>
+        <ul class="files">
+          <li><a href="/tools/feisttech.sh">feisttech.sh</a></li>
+          <li><a href="https://raw.githubusercontent.com/qv4rk/V/main/tools/feisttech.sh">Raw file on GitHub</a></li>
+        </ul>
+      </div>
+    </article>
+  </section>
+
+  <section class="group" aria-labelledby="ext-heading">
+    <h2 class="label" id="ext-heading">Chrome extensions</h2>
+
+    <article class="item">
+      <h2>Batch Image Pipeline v3.0</h2>
+      <p class="what">A Chrome and Kiwi extension, and a standalone studio, for generating and saving batches of images. It keeps a local image vault, trims watermarks, rejects near-duplicate frames, and can write finished files to a folder you choose. API keys, if you use them, are entered in the extension and are not stored in this package.</p>
+      <div class="how">
+        <h3>How to load it</h3>
+<pre>curl -L -o batch_image_extension_v3.zip https://feisttech.com/tools/downloads/batch_image_extension_v3.zip
+unzip batch_image_extension_v3.zip -d batch_image_extension_v3</pre>
+        <p class="note">In Chrome or Edge: open <code>chrome://extensions</code>, turn on Developer mode, choose Load unpacked, and select the unzipped folder. In Kiwi on Android: menu → Extensions → Developer mode → Load unpacked, then pick the same folder.</p>
+      </div>
+      <div class="files">
+        <h3>Download</h3>
+        <ul class="files">
+          <li><a href="/tools/downloads/batch_image_extension_v3.zip">batch_image_extension_v3.zip</a></li>
+          <li><a href="https://github.com/qv4rk/ftechbuilds/blob/main/batch_image_extension_v3.zip">Copy on GitHub (ftechbuilds)</a></li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item">
+      <h2>Feist Doc Audio Capture</h2>
+      <p class="what">A Manifest V3 extension that records the audio playing in a browser tab — for example, Google Docs “Listen to this document” — and saves it as a <code>.webm</code> file. It was written for Kiwi on Android, where the toolbar popup is unreliable, so the controls live in a Recorder tab instead.</p>
+      <div class="how">
+        <h3>How to load it</h3>
+        <p class="note">The public source is in this repository under <code>extension/</code>. Two packaging files, <code>recorder.html</code> and <code>offscreen.html</code>, are kept off the published site, so this folder alone is not a complete Load unpacked package. Use a local copy that still has those files, or add them back before loading the extension.</p>
+      </div>
+      <div class="files">
+        <h3>Source</h3>
+        <ul class="files">
+          <li><a href="https://github.com/qv4rk/V/tree/main/extension">extension/ on GitHub</a></li>
+          <li><a href="/extension/README.md">README</a></li>
+          <li><a href="/extension/manifest.json">manifest.json</a></li>
+        </ul>
+      </div>
+    </article>
+  </section>
+
+  <section class="group" aria-labelledby="more-heading">
+    <h2 class="label" id="more-heading">Related</h2>
+    <article class="item">
+      <h2>Tech Hub</h2>
+      <p class="what">Guides, troubleshooting, and other local apps. New scripts and extensions can be added to this page later; the files belong in <code>tools/</code> or <code>tools/downloads/</code>.</p>
+      <p><a href="/techhub/">Open the Tech Hub →</a></p>
+    </article>
+  </section>
+</main>
+<footer>
+  <span>FeistTech · MJF</span>
+  <span><a href="/">Home</a> · <a href="mailto:info@feisttech.com">info@feisttech.com</a></span>
+</footer>
+</body>
+</html>

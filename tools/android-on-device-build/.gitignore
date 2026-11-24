@@ -1,0 +1,5 @@
+build/
+*.apk
+*.keystore
+*.jks
+environment-snapshot.txt

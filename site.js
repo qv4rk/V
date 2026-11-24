@@ -30,6 +30,8 @@
       ['Globe & sky', '/sky/', 'Date dial, stars from any node, 5,000 years of eclipses'],
     ]},
     { title: 'Tools', items: [
+      ['Build scripts and extensions', '/tools/', 'Termux APK builds and Chrome extensions'],
+      ['Tech Hub', '/techhub/', 'Guides, troubleshooting, local apps'],
       ['Methionine', '/methionine/', 'Meal builder and tracker'],
       ['Natal chart', '/natal/', 'Planet positions for any birth sky'],
       ['Eigenstate Roll', '/eigenstate/', 'Dice and probability oracle'],

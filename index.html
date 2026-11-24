@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FeistTech</title>
-<meta name="description" content="Independent research on history, law and geography, and the instruments built to study it.">
+<meta name="description" content="FeistTech, the public site of MJF: the Reading Room, including Smoke on the Mediterranean; The Great GASPI; maps and space tools; and other tools.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='44' fill='%23050810'/%3E%3Ccircle cx='50' cy='50' r='36' fill='none' stroke='%23c9a84c' stroke-width='2'/%3E%3Ccircle cx='50' cy='50' r='6' fill='%23c9a84c'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="/vendor/google-fonts/fonts.css">
 <style>
@@ -18,7 +18,15 @@
   body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 15px; line-height: 1.55; }
   main { max-width: 1040px; margin: 0 auto; padding: 56px 16px 40px; }
   a { color: inherit; }
-  .intro { font-family: var(--serif); font-size: clamp(24px, 4vw, 32px); line-height: 1.25; margin: 0 0 40px; max-width: 30ch; }
+  .ident { margin: 0 0 40px; max-width: 42rem; }
+  .ident h1 { font-family: var(--serif); font-weight: 400; font-size: clamp(36px, 6vw, 52px); margin: 0 0 6px; line-height: 1.05; letter-spacing: -0.02em; }
+  .ident .byline { margin: 0 0 22px; color: var(--muted); font-size: 15px; }
+  .ident .contents { list-style: none; margin: 0; padding: 0; }
+  .ident .contents li { padding: 9px 0; border-top: 1px solid var(--line); font-size: 15px; line-height: 1.5; }
+  .ident .contents li:last-child { border-bottom: 1px solid var(--line); }
+  .ident .contents a { color: var(--gold); text-decoration: none; }
+  .ident .contents a:hover { text-decoration: underline; }
+  .ident em { font-family: var(--serif); font-style: italic; }
   .label { font-family: var(--mono); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--gold); margin: 0 0 10px; font-weight: 400; }
   .spotlight { border: 1px solid var(--line); border-radius: 12px; padding: 18px; margin: 0 0 26px; background: linear-gradient(135deg, #10131b, #090b10); }
   .spotlight h2 { font-family: var(--serif); font-weight: 400; font-size: 28px; margin: 0; line-height: 1.15; }
@@ -54,14 +62,23 @@
 </head>
 <body>
 <main>
-  <p class="intro">Independent research on history, law and geography, and the instruments built to study it.</p>
+  <header class="ident">
+    <h1>FeistTech</h1>
+    <p class="byline">A site by MJF.</p>
+    <ul class="contents">
+      <li>The <a href="/reader/">Reading Room</a>, including <em>Smoke on the Mediterranean</em> and other articles</li>
+      <li><a href="/gaspi/">The Great GASPI</a>, a reference on disputed territories</li>
+      <li>Maps and space tools, including the <a href="/orrery/">Scale Orrery</a></li>
+      <li><a href="/tools/">Build scripts and browser extensions</a>, and the other tools listed below</li>
+    </ul>
+  </header>
   <section class="spotlight" aria-labelledby="spotlight-title">
-    <h2 class="label">Featured instrument</h2>
+    <h2 class="label">Featured</h2>
     <h2 id="spotlight-title"><a href="/orrery/">The Scale Orrery</a></h2>
-    <p>Explore the solar system at visible or true scale, with the Moon, Jupiter's moons, eclipse dates, and a view from Earth.</p>
-    <div class="go"><a href="/orrery/">Open the Scale Orrery →</a><a href="/orrery/about/">About the instrument →</a></div>
+    <p>The solar system at visible or true scale, with the Moon, Jupiter's moons, eclipse dates, and a view from Earth.</p>
+    <div class="go"><a href="/orrery/">Open the Scale Orrery →</a><a href="/orrery/about/">About the Scale Orrery →</a></div>
   </section>
-  <section class="latest" aria-labelledby="latest-title">
+    <section class="latest" aria-labelledby="latest-title">
     <h2 class="label" id="latest-label">Latest</h2>
     <h2 id="latest-title"><a href="/reader/">The Reading Room</a></h2>
     <p id="latest-excerpt">Every article in one place, with voice narration and speed reading.</p>
@@ -91,6 +108,7 @@
     <section>
       <h2 class="label">Tools</h2>
       <ul>
+        <li><a href="/tools/">Build scripts and extensions<small>Termux APK builds, Chrome extensions</small></a></li>
         <li><a href="/techhub/">Tech Hub<small>Guides, troubleshooting, local apps</small></a></li>
         <li><a href="/methionine/">Methionine<small>Meal builder and tracker</small></a></li>
         <li><a href="/natal/">Natal chart<small>Planet positions for any birth sky</small></a></li>
@@ -109,7 +127,7 @@
   </div>
 </main>
 <footer>
-  <span>FeistTech · Public research ledger</span>
+  <span>FeistTech · MJF</span>
   <span><a href="mailto:info@feisttech.com">info@feisttech.com</a></span>
 </footer>
 <script>
