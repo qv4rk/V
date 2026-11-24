@@ -1,0 +1,4 @@
+User-agent: *
+Disallow: /articles_consolidated/
+Disallow: /reading_room_inbox/_
+Sitemap: https://feisttech.com/sitemap.xml

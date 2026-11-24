@@ -1390,7 +1390,8 @@ async function loadArticleIntoReader(id, pushState) {
         }
         hideTTSStatus();
     }
-    const text = article.content || '';
+    const prepared = prepareLibraryText(article.content || '');
+    const text = prepared.text;
     currentStoryTitle = article.title || currentStoryTitle;
     // Each article carries the narrator accent for its place (Irish,
     // Arabic, Chinese, Hebrew...); fall back to the reader's default.
@@ -1400,7 +1401,7 @@ async function loadArticleIntoReader(id, pushState) {
     }
     detectSpkrs(text);
     const parsed = parseTextWithSpkrs(text);
-    const html = renderParsedSegments(parsed);
+    const html = insertLibraryImages(renderParsedSegments(parsed), prepared.images);
     initReader(html);
     const label_el = document.getElementById('inputPanelLabel');
     if (label_el) label_el.textContent = '📄 ' + article.title;
@@ -1412,6 +1413,68 @@ async function loadArticleIntoReader(id, pushState) {
         url.searchParams.set('article', id);
         history.pushState({ articleId: id }, '', url);
     }
+}
+
+// Library articles are Markdown that may hold pictures (Markdown ![alt](src),
+// <img>, or <figure>) and simple HTML tags. Pictures are pulled out before the
+// speaker parser runs (it would read "[alt]" as a speaker tag), shown as
+// figures that TTS skips, and leftover tags are dropped so they aren't read.
+const LIBRARY_IMG_TOKEN = '\u2063IMG';
+function resolveLibraryImageSrc(src) {
+    src = String(src || '').trim();
+    if (/^data:image\//i.test(src) || /^https?:\/\//i.test(src) || src.startsWith('/')) return src;
+    if (/^[a-z][a-z0-9+.-]*:/i.test(src)) return '';   // no javascript: etc.
+    return '/articles/' + src.replace(/^\.\//, '');   // node paths are relative to /articles/
+}
+function prepareLibraryText(raw) {
+    const images = [];
+    const keep = (src, alt, caption) => {
+        const url = resolveLibraryImageSrc(src);
+        if (!url) return '\n\n';
+        images.push({ src: url, alt: alt || '', caption: caption || '' });
+        return '\n\n' + LIBRARY_IMG_TOKEN + (images.length - 1) + '\n\n';
+    };
+    const attr = (tag, name) => { const m = tag.match(new RegExp('\\b' + name + '\\s*=\\s*(["\'])([\\s\\S]*?)\\1', 'i')); return m ? m[2] : ''; };
+    const strip = (h) => String(h || '').replace(/<[^>]+>/g, '').trim();
+    let text = String(raw || '');
+    text = text.replace(/<figure\b[^>]*>([\s\S]*?)<\/figure>/gi, (all, inner) => {
+        const img = inner.match(/<img\b[^>]*>/i);
+        if (!img) return all;
+        const cap = inner.match(/<figcaption\b[^>]*>([\s\S]*?)<\/figcaption>/i);
+        return keep(attr(img[0], 'src'), attr(img[0], 'alt'), cap ? strip(cap[1]) : '');
+    });
+    text = text.replace(/<img\b[^>]*>/gi, (tag) => keep(attr(tag, 'src'), attr(tag, 'alt'), ''));
+    text = text.replace(/!\[([^\]]*)\]\(\s*<?([^)\s>]+)>?(?:\s+"[^"]*")?\s*\)/g, (all, alt, src) => keep(src, alt, ''));
+    text = text.replace(/<\/(p|h[1-6]|li|blockquote|div)>/gi, '\n\n').replace(/<br\s*\/?>/gi, '\n').replace(/<hr\b[^>]*>/gi, '\n\n');
+    text = text.replace(/<\/?[a-z][a-z0-9]*\b[^>]*>/gi, '');
+    text = text.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&nbsp;/g, ' ');
+    text = text.replace(/\n{3,}/g, '\n\n');
+    return { text, images };
+}
+function insertLibraryImages(html, images) {
+    if (!images || !images.length) return html;
+    const wrap = document.createElement('div');
+    wrap.innerHTML = html;
+    wrap.querySelectorAll('p').forEach(p => {
+        const m = (p.textContent || '').trim().match(new RegExp('^' + LIBRARY_IMG_TOKEN + '(\\d+)$'));
+        if (!m || !images[+m[1]]) return;
+        const info = images[+m[1]];
+        const fig = document.createElement('figure');
+        fig.className = 'library-figure';
+        fig.style.cssText = 'margin:1.5rem 0;text-align:center';
+        const img = document.createElement('img');
+        img.src = info.src; img.alt = info.alt; img.loading = 'lazy';
+        img.style.cssText = 'max-width:100%;height:auto;display:block;margin:0 auto;border-radius:4px';
+        fig.appendChild(img);
+        if (info.caption || info.alt) {
+            const cap = document.createElement('figcaption');
+            cap.textContent = info.caption || info.alt;
+            cap.style.cssText = 'font-size:.85em;opacity:.7;margin-top:.4rem';
+            fig.appendChild(cap);
+        }
+        p.replaceWith(fig);
+    });
+    return wrap.innerHTML;
 }
 
 function toggleLibrary() { document.getElementById('libraryPanel')?.classList.toggle('open'); }

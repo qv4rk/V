@@ -18,6 +18,8 @@ import datetime
 import yaml
 import markdown as md_lib
 
+import inbox  # reading_room_inbox/ -> published articles (see inbox.py)
+
 # ── Paths ────────────────────────────────────────────────────────────────────
 
 SCRIPT_DIR   = os.path.dirname(os.path.abspath(__file__))
@@ -266,6 +268,9 @@ article {
 #article-content h3 { font-size: 1.2rem; color: var(--ink-dim); }
 #article-content strong { color: var(--ink); }
 #article-content em { font-style: italic; color: var(--ink-dim); }
+#article-content img { max-width: 100%; height: auto; display: block; margin: 1.5rem auto; }
+#article-content figure { margin: 1.5rem 0; }
+#article-content figcaption { font-size: .85em; color: var(--ink-dim); text-align: center; margin-top: .4rem; }
 #article-content code { font-family: 'Space Mono', monospace; font-size: .82em; background: rgba(255,255,255,.05); padding: 1px 5px; border-radius: 2px; }
 
 /* ── Works Cited (outside main, never TTS-read) ── */
@@ -728,6 +733,7 @@ def build():
         return
 
     all_events = []
+    index_only = []
     sitemap_urls = []
     tag_keywords = load_tag_keywords()
 
@@ -743,6 +749,11 @@ def build():
             continue
         eid = fm.get('id') or fname[:-3]
         parsed[eid] = (fm, body)
+
+    # Articles dropped into reading_room_inbox/ (md, docx, json). They are
+    # added in memory only; nodes/ is never written. A nodes/ file with the
+    # same id always wins.
+    parsed.update(inbox.collect(SCRIPT_DIR, set(parsed)))
 
     families = {}  # canonical_id -> [(eid, lang), ...]
     for eid, (fm, _body) in parsed.items():
@@ -793,7 +804,12 @@ def build():
                 if k in fm:
                     event[k] = fm[k]
 
-            all_events.append(event)
+            if fm.get('atlas', True) is False:
+                # Inbox article without coordinates: listed and readable,
+                # but no dot on the Atlas globe.
+                index_only.append(event)
+            else:
+                all_events.append(event)
 
         # ── Generate article HTML ────────────────────────────────────────────
         content_html = md_to_html_segments(body)
@@ -841,8 +857,8 @@ def build():
         json.dump(all_events, f, ensure_ascii=False, indent=2)
     print(f'\nWrote {len(all_events)} events to {events_path}')
 
-    sync_reading_room(parsed, all_events)
-    write_article_index(all_events)
+    sync_reading_room(parsed, all_events + index_only)
+    write_article_index(all_events + index_only)
 
     # ── Write sitemap.xml ────────────────────────────────────────────────────
     today = datetime.date.today().isoformat()
