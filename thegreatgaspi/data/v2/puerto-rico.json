@@ -1,0 +1,1072 @@
+{
+  "schema_version": "2.0.0",
+  "territory_key": "puerto-rico",
+  "migrated_from": [
+    "GrokBotPlayground/gaspi-3/data/puerto-rico.json (GASPI 3.0 Puerto Rico record, generated 2026-11-22)"
+  ],
+  "actors": [
+    {
+      "id": "actor:new-progressive-party",
+      "name": "Partido Nuevo Progresista (PNP) (New Progressive Party)",
+      "actor_type": "political_party",
+      "jurisdiction": "Puerto Rico",
+      "notes": "Represented here by Governor Pedro Pierluisi's 2021 written testimony to Congress."
+    },
+    {
+      "id": "actor:popular-democratic-party",
+      "name": "Partido Popular Democrático (PPD) (Popular Democratic Party)",
+      "actor_type": "political_party",
+      "jurisdiction": "Puerto Rico",
+      "notes": "Represented here by party president José Luis Dalmau's 2021 letter to Congress."
+    },
+    {
+      "id": "actor:puerto-rican-independence-party",
+      "name": "Partido Independentista Puertorriqueño (PIP) (Puerto Rican Independence Party)",
+      "actor_type": "political_party",
+      "jurisdiction": "Puerto Rico",
+      "notes": "Represented here by Senator María de Lourdes Santiago's 2021 testimony to Congress."
+    },
+    {
+      "id": "actor:nationalist-party-of-puerto-rico",
+      "name": "Partido Nacionalista de Puerto Rico (Nationalist Party of Puerto Rico)",
+      "actor_type": "political_party_historic",
+      "jurisdiction": "Puerto Rico",
+      "notes": "Led by Pedro Albizu Campos from 1930. Quoted through published compilations and scholarship; see source notes."
+    },
+    {
+      "id": "actor:u-s-executive-branch-department-of-justice",
+      "name": "U.S. Executive Branch (Department of Justice)",
+      "actor_type": "government",
+      "jurisdiction": "United States",
+      "notes": "Represented here by the 2017 Justice Department letter on the plebiscite ballot."
+    },
+    {
+      "id": "actor:u-s-congress",
+      "name": "U.S. Congress",
+      "actor_type": "legislature",
+      "jurisdiction": "United States",
+      "notes": "Represented here by statutory text (PROMESA) and recorded votes."
+    },
+    {
+      "id": "actor:president-donald-trump-2018",
+      "name": "President Donald Trump (2018)",
+      "actor_type": "government_official",
+      "jurisdiction": "United States",
+      "notes": "Statement of September 13, 2018."
+    },
+    {
+      "id": "actor:government-of-puerto-rico",
+      "name": "Government of Puerto Rico",
+      "actor_type": "government",
+      "jurisdiction": "Puerto Rico",
+      "notes": "Includes the State Elections Commission (CEE) and AAFAF as producers of figures."
+    },
+    {
+      "id": "actor:financial-oversight-and-management-board-for-puerto-rico",
+      "name": "Financial Oversight and Management Board for Puerto Rico",
+      "actor_type": "federal_statutory_board",
+      "jurisdiction": "United States",
+      "notes": "Created by PROMESA (2016)."
+    },
+    {
+      "id": "actor:u-s-supreme-court",
+      "name": "U.S. Supreme Court",
+      "actor_type": "judicial_body",
+      "jurisdiction": "United States",
+      "notes": "Court of record"
+    },
+    {
+      "id": "actor:un-general-assembly",
+      "name": "UN General Assembly",
+      "actor_type": "international_body",
+      "jurisdiction": "United Nations",
+      "notes": "General Assembly resolutions"
+    },
+    {
+      "id": "actor:un-special-committee-on-decolonization-c-24",
+      "name": "UN Special Committee on Decolonization (C-24)",
+      "actor_type": "international_body",
+      "jurisdiction": "United Nations",
+      "notes": "Committee resolutions; not binding on the United States"
+    },
+    {
+      "id": "actor:u-s-environmental-protection-agency",
+      "name": "U.S. Environmental Protection Agency",
+      "actor_type": "government",
+      "jurisdiction": "United States",
+      "notes": "Superfund site record for Vieques"
+    }
+  ],
+  "perspectives": [
+    {
+      "id": "perspective:puerto-rico:partido-nacionalista-de-puerto-rico-albizu-campos",
+      "territory": "puerto-rico",
+      "represented_actor": "actor:nationalist-party-of-puerto-rico",
+      "label": "Partido Nacionalista de Puerto Rico (Albizu Campos)",
+      "research_language": "es",
+      "source_language_reason": "Primary documentary language of the quoted statements",
+      "years_of_scope": "1856-2025",
+      "original_text_preserved": true,
+      "literal_translation": true,
+      "contextual_translation": true
+    },
+    {
+      "id": "perspective:puerto-rico:partido-nuevo-progresista-pnp-statehood",
+      "territory": "puerto-rico",
+      "represented_actor": "actor:new-progressive-party",
+      "label": "Partido Nuevo Progresista (PNP) — Statehood",
+      "research_language": "en",
+      "source_language_reason": "Primary documentary language of the quoted statements",
+      "years_of_scope": "1856-2025",
+      "original_text_preserved": true,
+      "literal_translation": false,
+      "contextual_translation": false
+    },
+    {
+      "id": "perspective:puerto-rico:partido-popular-democr-tico-ppd-commonwealth",
+      "territory": "puerto-rico",
+      "represented_actor": "actor:popular-democratic-party",
+      "label": "Partido Popular Democrático (PPD) — Commonwealth",
+      "research_language": "en",
+      "source_language_reason": "Primary documentary language of the quoted statements",
+      "years_of_scope": "1856-2025",
+      "original_text_preserved": true,
+      "literal_translation": false,
+      "contextual_translation": false
+    },
+    {
+      "id": "perspective:puerto-rico:partido-independentista-puertorrique-o-pip-independence",
+      "territory": "puerto-rico",
+      "represented_actor": "actor:puerto-rican-independence-party",
+      "label": "Partido Independentista Puertorriqueño (PIP) — Independence",
+      "research_language": "en",
+      "source_language_reason": "Primary documentary language of the quoted statements",
+      "years_of_scope": "1856-2025",
+      "original_text_preserved": true,
+      "literal_translation": false,
+      "contextual_translation": false
+    },
+    {
+      "id": "perspective:puerto-rico:u-s-department-of-justice",
+      "territory": "puerto-rico",
+      "represented_actor": "actor:u-s-executive-branch-department-of-justice",
+      "label": "U.S. Department of Justice",
+      "research_language": "en",
+      "source_language_reason": "Primary documentary language of the quoted statements",
+      "years_of_scope": "1856-2025",
+      "original_text_preserved": true,
+      "literal_translation": false,
+      "contextual_translation": false
+    },
+    {
+      "id": "perspective:puerto-rico:u-s-congress",
+      "territory": "puerto-rico",
+      "represented_actor": "actor:u-s-congress",
+      "label": "U.S. Congress",
+      "research_language": "en",
+      "source_language_reason": "Primary documentary language of the quoted statements",
+      "years_of_scope": "1856-2025",
+      "original_text_preserved": true,
+      "literal_translation": false,
+      "contextual_translation": false
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim:puerto-rico:partido-nacionalista-de-puerto-rico-albizu-campos:1",
+      "territory": "puerto-rico",
+      "perspective": "perspective:puerto-rico:partido-nacionalista-de-puerto-rico-albizu-campos",
+      "subject": "perspective:A-PNPR",
+      "claim_type": "characterization",
+      "text": "Pedro Albizu Campos: Los imperios ocupan pueblos indefensos a cañonazos, a metralla, con gases venenosos o con vacuna, la cuestión es posesionarse de la riqueza del país y matar a sus habitantes. Literal translation: Empires occupy defenceless peoples with cannon fire, with grapeshot, with poison gas or with vaccine; the point is to take possession of the country's wealth and kill its inhabitants. Working translation: Empires take over defenceless nations with artillery, gunfire, poison gas or vaccination. What they want is the country's wealth, and they kill its people to get it. (GASPI working translation) Context: Quoted by philosopher Carlos Rojas Osorio, who cites it as \"Acosta, 123.\" Rojas Osorio adds that Albizu believed there was a will to exterminate the island's population and denounced the federal government's Malthusian policy in Puerto Rico.",
+      "sources": [
+        "source:puerto-rico:S24"
+      ],
+      "status": "documented"
+    },
+    {
+      "id": "claim:puerto-rico:partido-nacionalista-de-puerto-rico-albizu-campos:2",
+      "territory": "puerto-rico",
+      "perspective": "perspective:puerto-rico:partido-nacionalista-de-puerto-rico-albizu-campos",
+      "subject": "perspective:A-PNPR",
+      "claim_type": "characterization",
+      "text": "Pedro Albizu Campos: Es una insensatez creer que los invasores tengan otro interés que no sea la explotación de Puerto Rico. Literal translation: It is foolishness to believe that the invaders have any interest other than the exploitation of Puerto Rico. Working translation: It is foolish to think the occupiers want anything from Puerto Rico except to exploit it. (GASPI working translation) Context: Quoted by Rojas Osorio from Albizu's collected writings (cited as \"Albizu, I, 196\").",
+      "sources": [
+        "source:puerto-rico:S24"
+      ],
+      "status": "documented"
+    },
+    {
+      "id": "claim:puerto-rico:partido-nacionalista-de-puerto-rico-albizu-campos:3",
+      "territory": "puerto-rico",
+      "perspective": "perspective:puerto-rico:partido-nacionalista-de-puerto-rico-albizu-campos",
+      "subject": "perspective:A-PNPR",
+      "claim_type": "characterization",
+      "text": "Pedro Albizu Campos: When our women lose the transcendental and divine concept that they are not only mothers of their children but mothers of all future generations of Puerto Rico, … Puerto Rico will disappear within a generation. (English as published in Laura Briggs, Reproducing Empire (2002). The Spanish original was not available to this project.) Context: Presented in the Dartmouth course essay (S26) as Albizu's answer to writers who blamed Puerto Rico's poverty on overpopulation.",
+      "sources": [
+        "source:puerto-rico:S25",
+        "source:puerto-rico:S26"
+      ],
+      "status": "documented"
+    },
+    {
+      "id": "claim:puerto-rico:partido-nuevo-progresista-pnp-statehood:1",
+      "territory": "puerto-rico",
+      "perspective": "perspective:puerto-rico:partido-nuevo-progresista-pnp-statehood",
+      "subject": "perspective:A-PNP",
+      "claim_type": "characterization",
+      "text": "Gov. Pedro R. Pierluisi (PNP): There should be no room in the American family for colonialism, especially when on three occasions in the last decade, a clear majority of the U.S. citizens in Puerto Rico have exercised their right of self-determination in favor of becoming a state of this Union. Context: Written statement to the House Natural Resources Committee, April 14, 2021.",
+      "sources": [
+        "source:puerto-rico:S15"
+      ],
+      "status": "documented"
+    },
+    {
+      "id": "claim:puerto-rico:partido-nuevo-progresista-pnp-statehood:2",
+      "territory": "puerto-rico",
+      "perspective": "perspective:puerto-rico:partido-nuevo-progresista-pnp-statehood",
+      "subject": "perspective:A-PNP",
+      "claim_type": "characterization",
+      "text": "Gov. Pedro R. Pierluisi (PNP): After almost one hundred and twenty-five years of colonial status as a U.S. territory, the American citizens of Puerto Rico favor equality in all respects with their fellow Americans in the fifty states and are ready to begin their own transition to statehood. Context: Same statement.",
+      "sources": [
+        "source:puerto-rico:S15"
+      ],
+      "status": "documented"
+    },
+    {
+      "id": "claim:puerto-rico:partido-nuevo-progresista-pnp-statehood:3",
+      "territory": "puerto-rico",
+      "perspective": "perspective:puerto-rico:partido-nuevo-progresista-pnp-statehood",
+      "subject": "perspective:A-PNP",
+      "claim_type": "characterization",
+      "text": "Gov. Pedro R. Pierluisi (PNP): In Puerto Rico's case, this is not about the mechanism of voting but the denial of that right altogether. Context: On the absence of a vote for President and of voting representation in Congress.",
+      "sources": [
+        "source:puerto-rico:S15"
+      ],
+      "status": "documented"
+    },
+    {
+      "id": "claim:puerto-rico:partido-popular-democr-tico-ppd-commonwealth:1",
+      "territory": "puerto-rico",
+      "perspective": "perspective:puerto-rico:partido-popular-democr-tico-ppd-commonwealth",
+      "subject": "perspective:A-PPD",
+      "claim_type": "characterization",
+      "text": "José Luis Dalmau, President, PPD: by excluding the Commonwealth option and its official representatives from the Popular Democratic Party, almost half of the electorate is being excluded from the process, raising doubts about the legitimacy of any future vote. Context: Letter to the House Natural Resources Committee, April 13, 2021.",
+      "sources": [
+        "source:puerto-rico:S16"
+      ],
+      "status": "documented"
+    },
+    {
+      "id": "claim:puerto-rico:partido-popular-democr-tico-ppd-commonwealth:2",
+      "territory": "puerto-rico",
+      "perspective": "perspective:puerto-rico:partido-popular-democr-tico-ppd-commonwealth",
+      "subject": "perspective:A-PPD",
+      "claim_type": "characterization",
+      "text": "José Luis Dalmau, President, PPD: the position of the Popular Democratic Party is that this bill is a very defective one. It would grant admission of the island as a state by a simple, uninformed majority vote Context: On H.R. 1522, the Puerto Rico Statehood Admission Act. The letter goes on to cite the effect of federal taxes on local revenue and jobs.",
+      "sources": [
+        "source:puerto-rico:S16"
+      ],
+      "status": "documented"
+    },
+    {
+      "id": "claim:puerto-rico:partido-independentista-puertorrique-o-pip-independence:1",
+      "territory": "puerto-rico",
+      "perspective": "perspective:puerto-rico:partido-independentista-puertorrique-o-pip-independence",
+      "subject": "perspective:A-PIP",
+      "claim_type": "characterization",
+      "text": "Sen. María de Lourdes Santiago (PIP): Puerto Rico's status problem cannot be attributed to Puerto Rico. Puerto Rico has been the victim and the United States has been the perpetrator. Context: Testimony to the House Natural Resources Committee, April 14, 2021.",
+      "sources": [
+        "source:puerto-rico:S17"
+      ],
+      "status": "documented"
+    },
+    {
+      "id": "claim:puerto-rico:partido-independentista-puertorrique-o-pip-independence:2",
+      "territory": "puerto-rico",
+      "perspective": "perspective:puerto-rico:partido-independentista-puertorrique-o-pip-independence",
+      "subject": "perspective:A-PIP",
+      "claim_type": "characterization",
+      "text": "Sen. María de Lourdes Santiago (PIP): never once has the United States provided the people of Puerto Rico – a distinct Caribbean and Latin American nation- the opportunity to enter into a process that would permit the exercise of the right to self-determination and independence as required by international law Context: Same testimony, citing the ICCPR and General Assembly resolution 1514.",
+      "sources": [
+        "source:puerto-rico:S17"
+      ],
+      "status": "documented"
+    },
+    {
+      "id": "claim:puerto-rico:u-s-department-of-justice:1",
+      "territory": "puerto-rico",
+      "perspective": "perspective:puerto-rico:u-s-department-of-justice",
+      "subject": "perspective:A-USEXEC",
+      "claim_type": "characterization",
+      "text": "Acting Deputy Attorney General Dana Boente: The Department has concluded that the plebiscite ballot is not compatible with these policies, as it is not drafted in a way that ensures that its result will accurately reflect the current popular will of the people of Puerto Rico. Context: Letter of April 13, 2017. \"These policies\" refers to Executive Order 13183 and the President's Task Force reports of 2005, 2007 and 2011.",
+      "sources": [
+        "source:puerto-rico:S14"
+      ],
+      "status": "documented"
+    },
+    {
+      "id": "claim:puerto-rico:u-s-department-of-justice:2",
+      "territory": "puerto-rico",
+      "perspective": "perspective:puerto-rico:u-s-department-of-justice",
+      "subject": "perspective:A-USEXEC",
+      "claim_type": "characterization",
+      "text": "Acting Deputy Attorney General Dana Boente: under current law, Puerto Ricans have an unconditional statutory right to birthright citizenship. Context: Same letter, objecting to ballot text that called statehood the only option that guarantees citizenship by birth.",
+      "sources": [
+        "source:puerto-rico:S14"
+      ],
+      "status": "documented"
+    },
+    {
+      "id": "claim:puerto-rico:u-s-congress:1",
+      "territory": "puerto-rico",
+      "perspective": "perspective:puerto-rico:u-s-congress",
+      "subject": "perspective:A-USCONG",
+      "claim_type": "characterization",
+      "text": "PROMESA, 48 U.S.C. § 2121(b)(2): Congress enacts this chapter pursuant to article IV, section 3 of the Constitution of the United States, which provides Congress the power to dispose of and make all needful rules and regulations for territories. Context: Statutory text, 2016.",
+      "sources": [
+        "source:puerto-rico:S19"
+      ],
+      "status": "documented"
+    }
+  ],
+  "measurements": [
+    {
+      "id": "measurement:puerto-rico:population:2020",
+      "territory": "puerto-rico",
+      "metric": "population",
+      "unit": "persons",
+      "value": 3285874,
+      "population": {
+        "group": "Residents of Puerto Rico, 2020 Census",
+        "actor": "actor:government-of-puerto-rico"
+      },
+      "period": "2020-04-01",
+      "reported_by": [],
+      "sources": [
+        "source:puerto-rico:S30"
+      ],
+      "corroboration": "U.S. Census Bureau 2020 count",
+      "who_reference_standard": null
+    },
+    {
+      "id": "measurement:puerto-rico:population:2010",
+      "territory": "puerto-rico",
+      "metric": "population",
+      "unit": "persons",
+      "value": 3725789,
+      "population": {
+        "group": "Residents of Puerto Rico, 2010 Census",
+        "actor": "actor:government-of-puerto-rico"
+      },
+      "period": "2010-04-01",
+      "reported_by": [],
+      "sources": [
+        "source:puerto-rico:S29"
+      ],
+      "corroboration": "U.S. Census Bureau 2010 count",
+      "who_reference_standard": null
+    },
+    {
+      "id": "measurement:puerto-rico:hurricane-maria-official-initial",
+      "territory": "puerto-rico",
+      "metric": "hurricane_maria_deaths",
+      "unit": "deaths",
+      "value": 64,
+      "population": {
+        "group": "Government of Puerto Rico, initial count",
+        "actor": "actor:government-of-puerto-rico"
+      },
+      "period": "2017-09",
+      "reported_by": [],
+      "sources": [
+        "source:puerto-rico:S37"
+      ],
+      "corroboration": "initial official count, later replaced",
+      "who_reference_standard": null
+    },
+    {
+      "id": "measurement:puerto-rico:hurricane-maria-gwu",
+      "territory": "puerto-rico",
+      "metric": "hurricane_maria_excess_deaths",
+      "unit": "excess_deaths",
+      "value": 2975,
+      "population": {
+        "group": "GWU Milken Institute SPH estimate, later adopted as official",
+        "actor": "actor:government-of-puerto-rico"
+      },
+      "period": "2017-09 to 2018-02",
+      "reported_by": [],
+      "sources": [
+        "source:puerto-rico:S36",
+        "source:puerto-rico:S39"
+      ],
+      "corroboration": "commissioned study; 95% CI 2,658–3,290; adopted Aug 28, 2018",
+      "who_reference_standard": null
+    },
+    {
+      "id": "measurement:puerto-rico:hurricane-maria-harvard",
+      "territory": "puerto-rico",
+      "metric": "hurricane_maria_excess_deaths",
+      "unit": "excess_deaths",
+      "value": 4645,
+      "population": {
+        "group": "Kishore et al., Harvard-led survey (NEJM)",
+        "actor": ""
+      },
+      "period": "2017-09-20 to 2017-12-31",
+      "reported_by": [],
+      "sources": [
+        "source:puerto-rico:S38"
+      ],
+      "corroboration": "survey estimate; 95% CI 793–8,498",
+      "who_reference_standard": null
+    }
+  ],
+  "sources": [
+    {
+      "id": "source:puerto-rico:S01",
+      "title": "S01 — 48 U.S. Code § 1411, Guano districts; claim by United States",
+      "publisher": "Legal Information Institute, Cornell Law School. https://www.law.cornell.edu/uscode/text/48/1411",
+      "source_type": "statute",
+      "date_published": "codified text of the Act of Aug. 18, 1856",
+      "date_accessed": "2026-11-22",
+      "url": "https://www.law.cornell.edu/uscode/text/48/1411",
+      "language": "en",
+      "reliability_notes": ""
+    },
+    {
+      "id": "source:puerto-rico:S02",
+      "title": "S02 — Downes v. Bidwell, 182 U.S. 244 (1901), full text with all opinions",
+      "publisher": "Legal Information Institute, Cornell Law School. https://www.law.cornell.edu/supremecourt/text/182/244",
+      "source_type": "judicial_opinion",
+      "date_published": "1901-05-27",
+      "date_accessed": "2026-11-22",
+      "url": "https://www.law.cornell.edu/supremecourt/text/182/244",
+      "language": "en",
+      "reliability_notes": ""
+    },
+    {
+      "id": "source:puerto-rico:S03",
+      "title": "S03 — Treaty of Peace Between the United States and Spain; December 10, 1898",
+      "publisher": "Avalon Project, Yale Law School. https://avalon.law.yale.edu/19th_century/sp1898.asp",
+      "source_type": "treaty",
+      "date_published": "1898-12-10",
+      "date_accessed": "2026-11-22",
+      "url": "https://avalon.law.yale.edu/19th_century/sp1898.asp",
+      "language": "en",
+      "reliability_notes": ""
+    },
+    {
+      "id": "source:puerto-rico:S04",
+      "title": "S04 — Foraker Act (Organic Act of 1900), World of 1898 research guide",
+      "publisher": "Library of Congress. https://guides.loc.gov/world-of-1898/foraker-act",
+      "source_type": "reference",
+      "date_published": "guide updated 2026",
+      "date_accessed": "2026-11-22",
+      "url": "https://guides.loc.gov/world-of-1898/foraker-act",
+      "language": "en",
+      "reliability_notes": ""
+    },
+    {
+      "id": "source:puerto-rico:S05",
+      "title": "S05 — Jones Act, World of 1898 research guide",
+      "publisher": "Library of Congress. https://guides.loc.gov/world-of-1898/jones-act",
+      "source_type": "reference",
+      "date_published": "guide updated 2026",
+      "date_accessed": "2026-11-22",
+      "url": "https://guides.loc.gov/world-of-1898/jones-act",
+      "language": "en",
+      "reliability_notes": ""
+    },
+    {
+      "id": "source:puerto-rico:S06",
+      "title": "S06 — Puerto Rico v. Sanchez Valle, 579 U.S. 59 (2016)",
+      "publisher": "Legal Information Institute, Cornell Law School. https://www.law.cornell.edu/supremecourt/text/15-108",
+      "source_type": "judicial_opinion",
+      "date_published": "2016-06-09",
+      "date_accessed": "2026-11-22",
+      "url": "https://www.law.cornell.edu/supremecourt/text/15-108",
+      "language": "en",
+      "reliability_notes": ""
+    },
+    {
+      "id": "source:puerto-rico:S07",
+      "title": "S07 — General Assembly resolution 748 (VIII), Cessation of the transmission of information under Article 73 e of the Charter in respect of Puerto Rico",
+      "publisher": "United Nations. https://documents.un.org/doc/resolution/gen/nr0/086/13/pdf/nr008613.pdf",
+      "source_type": "international_document",
+      "date_published": "1953-11-27",
+      "date_accessed": "2026-11-22",
+      "url": "https://documents.un.org/doc/resolution/gen/nr0/086/13/pdf/nr008613.pdf",
+      "language": "en",
+      "reliability_notes": ""
+    },
+    {
+      "id": "source:puerto-rico:S08",
+      "title": "S08 — Draft resolution A/AC.109/2025/L.7, Special Committee decision of 20 June 2024 concerning Puerto Rico",
+      "publisher": "United Nations Special Committee on Decolonization. https://digitallibrary.un.org/record/4083556",
+      "source_type": "international_document",
+      "date_published": "2025-06-05",
+      "date_accessed": "2026-11-22",
+      "url": "https://digitallibrary.un.org/record/4083556",
+      "language": "en",
+      "reliability_notes": ""
+    },
+    {
+      "id": "source:puerto-rico:S09",
+      "title": "S09 — UN approves new resolution supporting Puerto Rico's right to self-determination and independence",
+      "publisher": "El Nuevo Día (José A. Delgado). https://www.elnuevodia.com/english/news/story/puerto-rico-at-the-un-calls-will-be-made-in-favor-of-self-determination-and-against-trumps-immigration-policy/",
+      "source_type": "news",
+      "date_published": "2025-06-16",
+      "date_accessed": "2026-11-22",
+      "url": "https://www.elnuevodia.com/english/news/story/puerto-rico-at-the-un-calls-will-be-made-in-favor-of-self-determination-and-against-trumps-immigration-policy/",
+      "language": "en",
+      "reliability_notes": ""
+    },
+    {
+      "id": "source:puerto-rico:S10",
+      "title": "S10 — Circular of the Chilean Ministry of Foreign Relations on the occupation of the Chincha islands, May 4, 1864 (Papers Relating to Foreign Affairs, 1864, Part IV, doc. 132)",
+      "publisher": "U.S. Department of State, Office of the Historian. https://history.state.gov/historicaldocuments/frus1864p4/d132",
+      "source_type": "archive",
+      "date_published": "1864-05-04",
+      "date_accessed": "2026-11-22",
+      "url": "https://history.state.gov/historicaldocuments/frus1864p4/d132",
+      "language": "en",
+      "reliability_notes": ""
+    },
+    {
+      "id": "source:puerto-rico:S11",
+      "title": "S11 — Political Status of Puerto Rico: Brief Background and Recent Developments for Congress (R44721)",
+      "publisher": "Congressional Research Service. https://www.congress.gov/crs-product/R44721",
+      "source_type": "official_document",
+      "date_published": "2024-06-06",
+      "date_accessed": "2026-11-22",
+      "url": "https://www.congress.gov/crs-product/R44721",
+      "language": "en",
+      "reliability_notes": ""
+    },
+    {
+      "id": "source:puerto-rico:S12",
+      "title": "S12 — Certification: Final results on the plebiscite held on Tuesday, November 5, 2024",
+      "publisher": "Comisión Estatal de Elecciones de Puerto Rico. https://ww2.ceepur.org/sites/ComisionEE/es-pr/Certificaciones/Certification%20of%20final%20results%20-%20Plebiscite%202024.pdf",
+      "source_type": "official_document",
+      "date_published": "2025-01-17",
+      "date_accessed": "2026-11-22",
+      "url": "https://ww2.ceepur.org/sites/ComisionEE/es-pr/Certificaciones/Certification%20of%20final%20results%20-%20Plebiscite%202024.pdf",
+      "language": "en",
+      "reliability_notes": ""
+    },
+    {
+      "id": "source:puerto-rico:S13",
+      "title": "S13 — Escrutinio General 2024, Plebiscito: resultados isla (turnout table)",
+      "publisher": "Comisión Estatal de Elecciones de Puerto Rico. https://elecciones2024.ceepur.org/Escrutinio_General_121/index.html#es/default/PLEBISCITO_Resumen.xml",
+      "source_type": "official_document",
+      "date_published": "canvass page dated 2024-12-31",
+      "date_accessed": "2026-11-22",
+      "url": "https://elecciones2024.ceepur.org/Escrutinio_General_121/index.html#es/default/PLEBISCITO_Resumen.xml",
+      "language": "es",
+      "reliability_notes": ""
+    },
+    {
+      "id": "source:puerto-rico:S14",
+      "title": "S14 — Letter from the Acting Deputy Attorney General to Governor Ricardo Rosselló Nevares on the plebiscite ballot",
+      "publisher": "U.S. Department of Justice, Office of the Deputy Attorney General. https://puertoricoreport.com/wp-content/uploads/2017/04/Hon-Ricardo-Rossello-Nevares-Letter-DOJ-Apr-13-2.pdf",
+      "source_type": "official_document",
+      "date_published": "2017-04-13",
+      "date_accessed": "2026-11-22",
+      "url": "https://puertoricoreport.com/wp-content/uploads/2017/04/Hon-Ricardo-Rossello-Nevares-Letter-DOJ-Apr-13-2.pdf",
+      "language": "en",
+      "reliability_notes": ""
+    },
+    {
+      "id": "source:puerto-rico:S15",
+      "title": "S15 — Written statement of Gov. Pedro R. Pierluisi, House Natural Resources Committee hearing on Puerto Rico's political status",
+      "publisher": "U.S. House Committee on Natural Resources. https://democrats-naturalresources.house.gov/imo/media/doc/Testimony,%20Hon.%20Pedro%20Pierluisi%20-%20FC%20OIA%20Leg%20Hrg%204.14.21.pdf",
+      "source_type": "testimony",
+      "date_published": "2021-04-14",
+      "date_accessed": "2026-11-22",
+      "url": "https://democrats-naturalresources.house.gov/imo/media/doc/Testimony,%20Hon.%20Pedro%20Pierluisi%20-%20FC%20OIA%20Leg%20Hrg%204.14.21.pdf",
+      "language": "en",
+      "reliability_notes": ""
+    },
+    {
+      "id": "source:puerto-rico:S16",
+      "title": "S16 — Letter of José Luis Dalmau, President, Popular Democratic Party, to Chairman Raúl Grijalva (for the record)",
+      "publisher": "U.S. House Committee Repository. https://docs.house.gov/meetings/II/II00/20210414/111433/HHRG-117-II00-20210414-SD005.pdf",
+      "source_type": "testimony",
+      "date_published": "2021-04-13",
+      "date_accessed": "2026-11-22",
+      "url": "https://docs.house.gov/meetings/II/II00/20210414/111433/HHRG-117-II00-20210414-SD005.pdf",
+      "language": "en",
+      "reliability_notes": ""
+    },
+    {
+      "id": "source:puerto-rico:S17",
+      "title": "S17 — Testimony of María de Lourdes Santiago, Vice President and Senator, Puerto Rican Independence Party",
+      "publisher": "U.S. House Committee Repository. https://docs.house.gov/meetings/II/II00/20210414/111433/HHRG-117-II00-Wstate-SantiagoM-20210414.pdf",
+      "source_type": "testimony",
+      "date_published": "2021-04-14",
+      "date_accessed": "2026-11-22",
+      "url": "https://docs.house.gov/meetings/II/II00/20210414/111433/HHRG-117-II00-Wstate-SantiagoM-20210414.pdf",
+      "language": "en",
+      "reliability_notes": ""
+    },
+    {
+      "id": "source:puerto-rico:S18",
+      "title": "S18 — Roll Call 529, H.R. 8393, Puerto Rico Status Act, On Passage",
+      "publisher": "Office of the Clerk, U.S. House of Representatives. https://clerk.house.gov/Votes/2022529",
+      "source_type": "official_document",
+      "date_published": "2022-12-15",
+      "date_accessed": "2026-11-22",
+      "url": "https://clerk.house.gov/Votes/2022529",
+      "language": "en",
+      "reliability_notes": ""
+    },
+    {
+      "id": "source:puerto-rico:S19",
+      "title": "S19 — 48 U.S. Code § 2121, Financial Oversight and Management Board (PROMESA § 101)",
+      "publisher": "Legal Information Institute, Cornell Law School. https://www.law.cornell.edu/uscode/text/48/2121",
+      "source_type": "statute",
+      "date_published": "enacted 2016-06-30",
+      "date_accessed": "2026-11-22",
+      "url": "https://www.law.cornell.edu/uscode/text/48/2121",
+      "language": "en",
+      "reliability_notes": ""
+    },
+    {
+      "id": "source:puerto-rico:S20",
+      "title": "S20 — Debt",
+      "publisher": "Financial Oversight and Management Board for Puerto Rico. https://oversightboard.pr.gov/debt/",
+      "source_type": "official_document",
+      "date_published": "page read 2026-11-22",
+      "date_accessed": "2026-11-22",
+      "url": "https://oversightboard.pr.gov/debt/",
+      "language": "en",
+      "reliability_notes": ""
+    },
+    {
+      "id": "source:puerto-rico:S21",
+      "title": "S21 — The Government of Puerto Rico puts an end to bankruptcy after restructuring its debt (press release)",
+      "publisher": "Puerto Rico Fiscal Agency and Financial Advisory Authority (AAFAF). https://docs.pr.gov/files/Estado/Prensa/Comunicados/2022-03-15%20-%20Press%20Release%20The%20Government%20of%20Puerto%20Rico%20puts%20an%20end%20to%20bankruptcy%20after%20restructuring%20its%20debt.pdf",
+      "source_type": "official_document",
+      "date_published": "2022-03-15",
+      "date_accessed": "2026-11-22",
+      "url": "https://docs.pr.gov/files/Estado/Prensa/Comunicados/2022-03-15%20-%20Press%20Release%20The%20Government%20of%20Puerto%20Rico%20puts%20an%20end%20to%20bankruptcy%20after%20restructuring%20its%20debt.pdf",
+      "language": "en",
+      "reliability_notes": ""
+    },
+    {
+      "id": "source:puerto-rico:S22",
+      "title": "S22 — La persecución por razones políticas en Puerto Rico y la génesis y el desarrollo de la Comisión de Derechos Civiles",
+      "publisher": "Academia Puertorriqueña de Jurisprudencia y Legislación. https://www.academiajurisprudenciapr.org/la-persecucion-por-razones-politicas-en-puerto-rico-y-la-genesis-y-el-desarrollo/",
+      "source_type": "scholarship",
+      "date_published": "n.d.",
+      "date_accessed": "2026-11-22",
+      "url": "https://www.academiajurisprudenciapr.org/la-persecucion-por-razones-politicas-en-puerto-rico-y-la-genesis-y-el-desarrollo/",
+      "language": "es",
+      "reliability_notes": ""
+    },
+    {
+      "id": "source:puerto-rico:S23",
+      "title": "S23 — Ley 53 de 1948 (Ley de la Mordaza)",
+      "publisher": "El Archivo de Borinquen. https://archivodeborinquen.org/es/territories/puerto-rico/documents/gag-law-1948.html",
+      "source_type": "reference",
+      "date_published": "n.d.",
+      "date_accessed": "2026-11-22",
+      "url": "https://archivodeborinquen.org/es/territories/puerto-rico/documents/gag-law-1948.html",
+      "language": "es",
+      "reliability_notes": ""
+    },
+    {
+      "id": "source:puerto-rico:S24",
+      "title": "S24 — Hostos, Martí y Albizu: su crítica del imperialismo",
+      "publisher": "Biblioteca Virtual Miguel de Cervantes. https://www.cervantesvirtual.com/obra-visor/hostos-marti-y-albizu-su-critica-del-imperialismo/html/7d206cde-9524-4d52-86af-13d8723431df_2.html",
+      "source_type": "scholarship",
+      "date_published": "n.d.",
+      "date_accessed": "2026-11-22",
+      "url": "https://www.cervantesvirtual.com/obra-visor/hostos-marti-y-albizu-su-critica-del-imperialismo/html/7d206cde-9524-4d52-86af-13d8723431df_2.html",
+      "language": "es",
+      "reliability_notes": ""
+    },
+    {
+      "id": "source:puerto-rico:S25",
+      "title": "S25 — Reproducing Empire: Race, Sex, Science, and U.S. Imperialism in Puerto Rico",
+      "publisher": "University of California Press. https://books.google.com/books?id=uGON8GXlZjEC",
+      "source_type": "scholarship",
+      "date_published": "2002",
+      "date_accessed": "2026-11-22",
+      "url": "https://books.google.com/books?id=uGON8GXlZjEC",
+      "language": "en",
+      "reliability_notes": ""
+    },
+    {
+      "id": "source:puerto-rico:S26",
+      "title": "S26 — Population Control in Puerto Rico (course essay quoting Briggs 2002)",
+      "publisher": "Dartmouth College, LATS 3 course site. https://journeys.dartmouth.edu/lats3naren/population-control-in-puerto-rico-in-the-1950s-and-1960s/",
+      "source_type": "secondary",
+      "date_published": "n.d.",
+      "date_accessed": "2026-11-22",
+      "url": "https://journeys.dartmouth.edu/lats3naren/population-control-in-puerto-rico-in-the-1950s-and-1960s/",
+      "language": "en",
+      "reliability_notes": ""
+    },
+    {
+      "id": "source:puerto-rico:S27",
+      "title": "S27 — Choice, Sterilization, and Eugenics in Twentieth Century Puerto Rico",
+      "publisher": "Dig: A History Podcast. https://digpodcast.org/2019/05/12/choice-sterilization-and-eugenics-in-twentieth-century-puerto-rico/",
+      "source_type": "secondary",
+      "date_published": "2019-05-12",
+      "date_accessed": "2026-11-22",
+      "url": "https://digpodcast.org/2019/05/12/choice-sterilization-and-eugenics-in-twentieth-century-puerto-rico/",
+      "language": "en",
+      "reliability_notes": ""
+    },
+    {
+      "id": "source:puerto-rico:S28",
+      "title": "S28 — The role of sterilization in controlling Puerto Rican fertility (abstract)",
+      "publisher": "Population Studies, via PubMed. https://pubmed.ncbi.nlm.nih.gov/22073953/",
+      "source_type": "scholarship",
+      "date_published": "1969",
+      "date_accessed": "2026-11-22",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/22073953/",
+      "language": "en",
+      "reliability_notes": ""
+    },
+    {
+      "id": "source:puerto-rico:S29",
+      "title": "S29 — 2010 Census: Puerto Rico Profile",
+      "publisher": "U.S. Census Bureau. https://www2.census.gov/geo/maps/dc10_thematic/2010_Profile/2010_Profile_Map_Puerto_Rico.pdf",
+      "source_type": "census",
+      "date_published": "2011",
+      "date_accessed": "2026-11-22",
+      "url": "https://www2.census.gov/geo/maps/dc10_thematic/2010_Profile/2010_Profile_Map_Puerto_Rico.pdf",
+      "language": "en",
+      "reliability_notes": ""
+    },
+    {
+      "id": "source:puerto-rico:S30",
+      "title": "S30 — 2020 Census: Puerto Rico Profile",
+      "publisher": "U.S. Census Bureau. https://www2.census.gov/geo/maps/DC2020/Profiles20/2020_State_Profile_Puerto_Rico.pdf",
+      "source_type": "census",
+      "date_published": "2023",
+      "date_accessed": "2026-11-22",
+      "url": "https://www2.census.gov/geo/maps/DC2020/Profiles20/2020_State_Profile_Puerto_Rico.pdf",
+      "language": "en",
+      "reliability_notes": ""
+    },
+    {
+      "id": "source:puerto-rico:S31",
+      "title": "S31 — Improved Race and Ethnicity Measures Reveal U.S. Population Is Much More Multiracial",
+      "publisher": "U.S. Census Bureau. https://www.census.gov/library/stories/2021/08/improved-race-ethnicity-measures-reveal-united-states-population-much-more-multiracial.html",
+      "source_type": "census",
+      "date_published": "2021-08-12",
+      "date_accessed": "2026-11-22",
+      "url": "https://www.census.gov/library/stories/2021/08/improved-race-ethnicity-measures-reveal-united-states-population-much-more-multiracial.html",
+      "language": "en",
+      "reliability_notes": ""
+    },
+    {
+      "id": "source:puerto-rico:S32",
+      "title": "S32 — Puerto Rico's 2020 Race/Ethnicity Decennial Analysis",
+      "publisher": "Center for Puerto Rican Studies (CentroPR), Hunter College. https://centropr.hunter.cuny.edu/reports/puerto-ricos-2020-decennial-analysis-datasheet-series/",
+      "source_type": "scholarship",
+      "date_published": "2022-07-20",
+      "date_accessed": "2026-11-22",
+      "url": "https://centropr.hunter.cuny.edu/reports/puerto-ricos-2020-decennial-analysis-datasheet-series/",
+      "language": "en",
+      "reliability_notes": ""
+    },
+    {
+      "id": "source:puerto-rico:S33",
+      "title": "S33 — Scripts of Blackness: Race, Cultural Nationalism, and U.S. Colonialism in Puerto Rico (publisher's description)",
+      "publisher": "University of Illinois Press. https://www.press.uillinois.edu/books/?id=p080456",
+      "source_type": "scholarship",
+      "date_published": "2015",
+      "date_accessed": "2026-11-22",
+      "url": "https://www.press.uillinois.edu/books/?id=p080456",
+      "language": "en",
+      "reliability_notes": ""
+    },
+    {
+      "id": "source:puerto-rico:S34",
+      "title": "S34 — Scripts of Blackness and the Racial Dynamics of Nationalism in Puerto Rico (Papers of the Institute for Interdisciplinary Research, UPR Cayey, vol. 6)",
+      "publisher": "Mixed Race Studies (reproduction). https://mixedracestudies.org/wp/?p=34912",
+      "source_type": "scholarship",
+      "date_published": "2009",
+      "date_accessed": "2026-11-22",
+      "url": "https://mixedracestudies.org/wp/?p=34912",
+      "language": "en",
+      "reliability_notes": ""
+    },
+    {
+      "id": "source:puerto-rico:S35",
+      "title": "S35 — Comments to the U.S. Census Bureau on the Proposed Rule for the 2030 Census",
+      "publisher": "Center for a New Economy (CNE). https://grupocne.org/2026/10/23/comments-to-the-us-census-bureau-on-the-proposed-rule-for-the-2030-census/",
+      "source_type": "policy",
+      "date_published": "2026-10-23",
+      "date_accessed": "2026-11-22",
+      "url": "https://grupocne.org/2026/10/23/comments-to-the-us-census-bureau-on-the-proposed-rule-for-the-2030-census/",
+      "language": "en",
+      "reliability_notes": ""
+    },
+    {
+      "id": "source:puerto-rico:S36",
+      "title": "S36 — Ascertainment of the Estimated Excess Mortality from Hurricane María in Puerto Rico",
+      "publisher": "Milken Institute School of Public Health, George Washington University. https://publichealth.gwu.edu/sites/g/files/zaxdzs4586/files/downloads/projects/PRstudy/Acertainment%20of%20the%20Estimated%20Excess%20Mortality%20from%20Hurricane%20Maria%20in%20Puerto%20Rico.pdf",
+      "source_type": "scholarship",
+      "date_published": "2018-08",
+      "date_accessed": "2026-11-22",
+      "url": "https://publichealth.gwu.edu/sites/g/files/zaxdzs4586/files/downloads/projects/PRstudy/Acertainment%20of%20the%20Estimated%20Excess%20Mortality%20from%20Hurricane%20Maria%20in%20Puerto%20Rico.pdf",
+      "language": "en",
+      "reliability_notes": ""
+    },
+    {
+      "id": "source:puerto-rico:S37",
+      "title": "S37 — GW Researchers: 2,975 Excess Deaths Linked to Hurricane Maria",
+      "publisher": "GW Today, George Washington University. https://gwtoday.gwu.edu/gw-researchers-2975-excess-deaths-linked-hurricane-maria",
+      "source_type": "news",
+      "date_published": "2018-08-29",
+      "date_accessed": "2026-11-22",
+      "url": "https://gwtoday.gwu.edu/gw-researchers-2975-excess-deaths-linked-hurricane-maria",
+      "language": "en",
+      "reliability_notes": ""
+    },
+    {
+      "id": "source:puerto-rico:S38",
+      "title": "S38 — Study Estimates Prolonged Increase in Puerto Rican Death Rate After Hurricane Maria (on Kishore et al., NEJM, doi:10.1056/NEJMsa1803972)",
+      "publisher": "Harvard FXB Center for Health and Human Rights. https://fxb.harvard.edu/blog/2018/05/29/study-estimates-prolonged-increase-in-puerto-rican-death-rate-after-hurricane-maria/",
+      "source_type": "scholarship",
+      "date_published": "2018-05-29",
+      "date_accessed": "2026-11-22",
+      "url": "https://fxb.harvard.edu/blog/2018/05/29/study-estimates-prolonged-increase-in-puerto-rican-death-rate-after-hurricane-maria/",
+      "language": "en",
+      "reliability_notes": ""
+    },
+    {
+      "id": "source:puerto-rico:S39",
+      "title": "S39 — Hurricane Maria Caused 2,975 Deaths In Puerto Rico, Independent Study Estimates",
+      "publisher": "NPR. https://www.npr.org/2018/08/28/642615337/hurricane-maria-caused-2-975-deaths-in-puerto-rico-independent-study-estimates",
+      "source_type": "news",
+      "date_published": "2018-08-28",
+      "date_accessed": "2026-11-22",
+      "url": "https://www.npr.org/2018/08/28/642615337/hurricane-maria-caused-2-975-deaths-in-puerto-rico-independent-study-estimates",
+      "language": "en",
+      "reliability_notes": ""
+    },
+    {
+      "id": "source:puerto-rico:S40",
+      "title": "S40 — Trump Denies Nearly 3,000 Died In Puerto Rico As A Result Of Maria And Irma",
+      "publisher": "NPR. https://www.npr.org/2018/09/13/647377915/trump-denies-death-toll-in-puerto-rico-falsely-claims-done-by-the-democrats",
+      "source_type": "news",
+      "date_published": "2018-09-13",
+      "date_accessed": "2026-11-22",
+      "url": "https://www.npr.org/2018/09/13/647377915/trump-denies-death-toll-in-puerto-rico-falsely-claims-done-by-the-democrats",
+      "language": "en",
+      "reliability_notes": ""
+    },
+    {
+      "id": "source:puerto-rico:S41",
+      "title": "S41 — Atlantic Fleet Weapons Training Area – Vieques, Superfund site profile",
+      "publisher": "U.S. Environmental Protection Agency. https://cumulis.epa.gov/supercpad/cursites/csitinfo.cfm?id=0204694",
+      "source_type": "official_document",
+      "date_published": "page read 2026-11-22",
+      "date_accessed": "2026-11-22",
+      "url": "https://cumulis.epa.gov/supercpad/cursites/csitinfo.cfm?id=0204694",
+      "language": "en",
+      "reliability_notes": ""
+    },
+    {
+      "id": "source:puerto-rico:S42",
+      "title": "S42 — Parliamentary Rights of the Delegates and Resident Commissioner from Puerto Rico (R40170)",
+      "publisher": "Congressional Research Service. https://www.congress.gov/crs-product/R40170",
+      "source_type": "official_document",
+      "date_published": "2022-02-02",
+      "date_accessed": "2026-11-22",
+      "url": "https://www.congress.gov/crs-product/R40170",
+      "language": "en",
+      "reliability_notes": ""
+    },
+    {
+      "id": "source:puerto-rico:S43",
+      "title": "S43 — Cartographic Boundary File, States, 1:5,000,000 (cb_2023_us_state_5m), feature STATEFP 72",
+      "publisher": "U.S. Census Bureau. https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_state_5m.zip",
+      "source_type": "geodata",
+      "date_published": "2023",
+      "date_accessed": "2026-11-22",
+      "url": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_state_5m.zip",
+      "language": "en",
+      "reliability_notes": ""
+    },
+    {
+      "id": "source:puerto-rico:S44",
+      "title": "S44 — History of Chile, chapter 14 (on the war with Spain)",
+      "publisher": "Luis Galdames, transl. I. J. Cox (1941), via Bill Thayer's site, University of Chicago. https://penelope.uchicago.edu/Thayer/E/Gazetteer/Places/America/Chile/_Topics/history/_Texts/GALHOC/14*.html",
+      "source_type": "scholarship",
+      "date_published": "1941",
+      "date_accessed": "2026-11-22",
+      "url": "https://penelope.uchicago.edu/Thayer/E/Gazetteer/Places/America/Chile/_Topics/history/_Texts/GALHOC/14*.html",
+      "language": "en",
+      "reliability_notes": ""
+    },
+    {
+      "id": "source:puerto-rico:S45",
+      "title": "S45 — 2012 Plebiscite Canvass, islandwide totals",
+      "publisher": "Elections in Puerto Rico (electionspuertorico.org), compiled from CEE canvass results. https://www.electionspuertorico.org/2012/plebiscite.vote.php",
+      "source_type": "official_document",
+      "date_published": "2012",
+      "date_accessed": "2026-11-22",
+      "url": "https://www.electionspuertorico.org/2012/plebiscite.vote.php",
+      "language": "en",
+      "reliability_notes": ""
+    }
+  ],
+  "findings": [
+    {
+      "id": "finding:puerto-rico:downes-v-bidwell",
+      "territory": "puerto-rico",
+      "issuing_body": "actor:u-s-supreme-court",
+      "subject": "legal:puerto-rico:downes-v-bidwell",
+      "finding_type": "judicial",
+      "text": "Justice White, concurring: Puerto Rico \"was foreign to the United States in a domestic sense, because the island had not been incorporated into the United States, but was merely appurtenant thereto as a possession.\"",
+      "date": "1901-05-27",
+      "sources": [
+        "source:puerto-rico:S02"
+      ],
+      "binding_status": "Judgment binding; the incorporation theory came from a concurring opinion",
+      "accepted_by": [],
+      "rejected_by": []
+    },
+    {
+      "id": "finding:puerto-rico:resolution-748-viii",
+      "territory": "puerto-rico",
+      "issuing_body": "actor:un-general-assembly",
+      "subject": "legal:puerto-rico:resolution-748-viii",
+      "finding_type": "international",
+      "text": "Recognised that the people of Puerto Rico \"have effectively exercised their right to self-determination\" and found that Chapter XI \"can no longer be applied\"; the U.S. could stop transmitting information.",
+      "date": "1953-11-27",
+      "sources": [
+        "source:puerto-rico:S07"
+      ],
+      "binding_status": "General Assembly resolution",
+      "accepted_by": [],
+      "rejected_by": []
+    },
+    {
+      "id": "finding:puerto-rico:puerto-rico-v-sanchez-valle",
+      "territory": "puerto-rico",
+      "issuing_body": "actor:u-s-supreme-court",
+      "subject": "legal:puerto-rico:puerto-rico-v-sanchez-valle",
+      "finding_type": "judicial",
+      "text": "Going back to the \"ultimate source\" of Puerto Rico's prosecutorial power \"reveals, once again, the U. S. Congress.\"",
+      "date": "2016-06-09",
+      "sources": [
+        "source:puerto-rico:S06"
+      ],
+      "binding_status": "Binding",
+      "accepted_by": [],
+      "rejected_by": []
+    },
+    {
+      "id": "finding:puerto-rico:decision-concerning-puerto-rico-draft-a-ac-109-2025-l-7-approved-june-16-2025",
+      "territory": "puerto-rico",
+      "issuing_body": "actor:un-special-committee-on-decolonization-c-24",
+      "subject": "legal:puerto-rico:decision-concerning-puerto-rico-draft-a-ac-109-2025-l-7-approved-june-16-2025",
+      "finding_type": "international",
+      "text": "\"Reaffirms the inalienable right of the people of Puerto Rico to self-determination and independence in conformity with General Assembly resolution 1514 (XV)\" and \"Calls again upon the Government of the United States of America to assume its responsibility to promote a process\" for exercising that right.",
+      "date": "2025-06-16",
+      "sources": [
+        "source:puerto-rico:S08",
+        "source:puerto-rico:S09"
+      ],
+      "binding_status": "Committee resolution; not binding on the United States",
+      "accepted_by": [],
+      "rejected_by": []
+    }
+  ],
+  "disputes": [
+    {
+      "id": "dispute:puerto-rico:d1-how-many-people-died-because-of-hurrican",
+      "territory": "puerto-rico",
+      "subject": "How many people died because of Hurricane María?",
+      "relationship": "contradicts",
+      "parties": [
+        {
+          "claim": "Government of Puerto Rico, initial count: 64",
+          "position": "documented"
+        },
+        {
+          "claim": "Kishore et al., Harvard-led survey (NEJM): 4,645 excess deaths, Sep 20–Dec 31, 2017 (95% CI 793–8,498)",
+          "position": "documented"
+        },
+        {
+          "claim": "GWU Milken Institute SPH, commissioned by the Government of Puerto Rico: 2,975 excess deaths, Sep 2017–Feb 2018 (95% CI 2,658–3,290); adopted as the official figure Aug 28, 2018",
+          "position": "documented"
+        },
+        {
+          "claim": "President Donald Trump, Sep 13, 2018: \"3000 people did not die in the two hurricanes that hit Puerto Rico.\"",
+          "position": "documented"
+        }
+      ],
+      "status": "unresolved",
+      "notes": "How many people died because of Hurricane María? Government of Puerto Rico, initial count: 64 (S37) | Kishore et al., Harvard-led survey (NEJM): 4,645 excess deaths, Sep 20–Dec 31, 2017 (95% CI 793–8,498) (S38) | GWU Milken Institute SPH, commissioned by the Government of Puerto Rico: 2,975 excess deaths, Sep 2017–Feb 2018 (95% CI 2,658–3,290); adopted as the official figure Aug 28, 2018 (S36, S39) | President Donald Trump, Sep 13, 2018: \"3000 people did not die in the two hurricanes that hit Puerto Rico.\" (S40)"
+    },
+    {
+      "id": "dispute:puerto-rico:d2-what-do-the-plebiscite-results-show",
+      "territory": "puerto-rico",
+      "subject": "What do the plebiscite results show?",
+      "relationship": "contradicts",
+      "parties": [
+        {
+          "claim": "Statehood supporters (as summarised by CRS): Statehood has won in multiple recent plebiscites",
+          "position": "documented"
+        },
+        {
+          "claim": "Opponents (as summarised by CRS): Plebiscite methods predetermined the statehood outcome, participation was insufficient, or both",
+          "position": "documented"
+        },
+        {
+          "claim": "Puerto Rico legislature, with PPD Governor García Padilla (2012–13): The 2012 result was \"inconclusive\"; debate centred on almost 500,000 blank second-question answers",
+          "position": "documented"
+        }
+      ],
+      "status": "unresolved",
+      "notes": "What do the plebiscite results show? Statehood supporters (as summarised by CRS): Statehood has won in multiple recent plebiscites (S11) | Opponents (as summarised by CRS): Plebiscite methods predetermined the statehood outcome, participation was insufficient, or both (S11) | Puerto Rico legislature, with PPD Governor García Padilla (2012–13): The 2012 result was \"inconclusive\"; debate centred on almost 500,000 blank second-question answers (S11)"
+    },
+    {
+      "id": "dispute:puerto-rico:d3-why-did-puerto-rico-s-census-race-answer",
+      "territory": "puerto-rico",
+      "subject": "Why did Puerto Rico's census race answers change between 2010 and 2020?",
+      "relationship": "contradicts",
+      "parties": [
+        {
+          "claim": "U.S. Census Bureau: Largely improvements to question design, processing and coding; compare with caution",
+          "position": "documented"
+        },
+        {
+          "claim": "Others cited by CNE: Partly changing self-identification, including campaigns urging residents to embrace African heritage",
+          "position": "documented"
+        }
+      ],
+      "status": "unresolved",
+      "notes": "Why did Puerto Rico's census race answers change between 2010 and 2020? U.S. Census Bureau: Largely improvements to question design, processing and coding; compare with caution (S31) | Others cited by CNE: Partly changing self-identification, including campaigns urging residents to embrace African heritage (S35)"
+    },
+    {
+      "id": "dispute:puerto-rico:d4-was-sterilization-in-puerto-rico-coerced",
+      "territory": "puerto-rico",
+      "subject": "Was sterilization in Puerto Rico coerced or chosen?",
+      "relationship": "contradicts",
+      "parties": [
+        {
+          "claim": "La Operación (1982), as described by its critics: Presents the women as victims of sterilization abuse",
+          "position": "documented"
+        },
+        {
+          "claim": "Iris López (as quoted by Dig): In her New York research, women who sought the operation were more representative",
+          "position": "documented"
+        }
+      ],
+      "status": "unresolved",
+      "notes": "Was sterilization in Puerto Rico coerced or chosen? La Operación (1982), as described by its critics: Presents the women as victims of sterilization abuse (S27) | Iris López (as quoted by Dig): In her New York research, women who sought the operation were more representative (S27)"
+    }
+  ]
+}
