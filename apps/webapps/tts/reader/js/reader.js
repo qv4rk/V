@@ -1373,7 +1373,11 @@ function escapeLibraryHtml(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 
+// Chapter 22 was first published as sotm0022-ps-ar; its text now lives under sotm0006-ps-ar.
+const LIBRARY_ARTICLE_ALIASES = { 'sotm0022-ps-ar': 'sotm0006-ps-ar' };
+
 async function loadArticleIntoReader(id, pushState) {
+    id = LIBRARY_ARTICLE_ALIASES[id] || id;
     closeAllPanels();
     let article = libraryArticles[id];
     if (!article) {
@@ -1448,6 +1452,10 @@ function prepareLibraryText(raw) {
     text = text.replace(/<\/(p|h[1-6]|li|blockquote|div)>/gi, '\n\n').replace(/<br\s*\/?>/gi, '\n').replace(/<hr\b[^>]*>/gi, '\n\n');
     text = text.replace(/<\/?[a-z][a-z0-9]*\b[^>]*>/gi, '');
     text = text.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&nbsp;/g, ' ');
+    // Editorial brackets inside a quotation ("[as the mutasallim of their town]")
+    // are not speaker tags; the speaker parser would otherwise swallow them and
+    // hand every later paragraph to a bogus "speaker". Only [SPKR: Name] stays a tag.
+    text = text.replace(/\[(?!\s*(?:SPKR|SPEAKER)\s*:)([^\]\n]*)\]/gi, '($1)');
     text = text.replace(/\n{3,}/g, '\n\n');
     return { text, images };
 }
