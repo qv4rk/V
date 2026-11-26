@@ -177,8 +177,13 @@ async function synthesizeSegmentAudio(text, voice, opts) {
     for(const chunk of chunks) {
         try {
             const resolvedVoice = String(voice || 'en-US-AriaNeural');
-            const tts = new window.EdgeTTS(String(chunk), resolvedVoice, opts || {});
-            const result = await tts.synthesize();
+            let result;
+            try { result = await new window.EdgeTTS(String(chunk), resolvedVoice, opts || {}).synthesize(); }
+            catch(first) {
+                if(!isEdgeBrowser()) throw first;          // a 403 won't change on retry
+                await new Promise(r => setTimeout(r, 600));  // one retry for a network blip
+                result = await new window.EdgeTTS(String(chunk), resolvedVoice, opts || {}).synthesize();
+            }
             const audio = result?.audio || null;
             const bytes = audio instanceof Blob ? audio.size : (audio?.byteLength || 0);
             console.info('Edge manuscript direct', { voice: resolvedVoice, audioBytes: bytes, chunkChars: String(chunk).length });
@@ -297,7 +302,9 @@ async function synthesizeSegmentForExport(seg) {
     // Deliberately conservative: the chunk synthesizer performs one retry only.
     // Export never silently substitutes a browser/robot voice.
     const blob = await synthesizeSegmentAudio(seg.text, voice, edgeTTSOpts());
-    if(!blob) throw new Error('NoAudioReceived for segment ' + (seg.index + 1));
+    if(!blob) throw new Error(isEdgeBrowser()
+        ? 'No audio for segment ' + (seg.index + 1) + ' — check your connection'
+        : 'MP3 export needs the Microsoft Edge browser');
     return { blob, voice };
 }
 
@@ -323,7 +330,8 @@ async function writeBlobFile(dir, name, blob) {
 
 async function exportSegmentsToFolder(targetSegments, btn) {
     if(!targetSegments.length) return;
-    if(settings.useBrowserTTS) throw new Error('Switch to Edge or local neural TTS before MP3 export.');
+    if(settings.useBrowserTTS && !isEdgeBrowser()) throw new Error('MP3 export needs the Microsoft Edge browser');
+    if(settings.useBrowserTTS) throw new Error('Switch to Edge-TTS (Studio panel) before MP3 export');
 
     let dir = null;
     try { dir = await chooseStoryExportDirectory(); }
@@ -336,12 +344,9 @@ async function exportSegmentsToFolder(targetSegments, btn) {
         const {blob, voice} = await synthesizeSegmentForExport(seg);
         const name = exportSegmentFilename(seg, i, voice);
 
+        // With a folder (desktop Chrome/Edge) every segment is saved; without one
+        // (phones) only the stitched chapter MP3 below is downloaded.
         if(dir) await writeBlobFile(dir, name, blob);
-        else {
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a'); a.href=url; a.download=name; a.click();
-            setTimeout(()=>URL.revokeObjectURL(url), 10000);
-        }
         const key = String(seg.chapter);
         if(!chapterBlobs.has(key)) chapterBlobs.set(key, []);
         chapterBlobs.get(key).push(blob);
@@ -353,6 +358,12 @@ async function exportSegmentsToFolder(targetSegments, btn) {
         const chapterBlob = new Blob(blobs, {type:'audio/mp3'});
         const name = safeFilePart(storyTitleFromContent()) + '_chapter_' + safeFilePart(chapter) + '_FULL.mp3';
         if(dir) await writeBlobFile(dir, name, chapterBlob);
+        else {
+            const url = URL.createObjectURL(chapterBlob);
+            const a = document.createElement('a'); a.href=url; a.download=name; a.click();
+            setTimeout(()=>URL.revokeObjectURL(url), 60000);
+            await new Promise(resolve => setTimeout(resolve, 400));
+        }
     }
 }
 
@@ -390,13 +401,59 @@ async function saveAllChaptersAudio() {
     }
 }
 
+// Microsoft only serves its neural (Edge) voices to the Microsoft Edge browser;
+// Chrome/Safari/Firefox get HTTP 403, so those fall back to the device's own voices.
+function isEdgeBrowser() { return /\bEdg(e|A|iOS)?\//.test(navigator.userAgent || ''); }
+
+function localeOfVoice(name) {
+    const m = String(name || '').match(/^([a-z]{2,3})-([A-Z]{2})/);
+    return m ? m[1] + '-' + m[2] : '';
+}
+// Exact browser voice by name, else one speaking the same language (ar-SY -> any ar-*).
+function browserVoiceFor(voiceName) {
+    if(!window.speechSynthesis) return null;
+    const all = speechSynthesis.getVoices();
+    const exact = all.find(v => v.name === voiceName);
+    if(exact) return exact;
+    const loc = localeOfVoice(voiceName);
+    if(!loc) return null;
+    const norm = l => String(l || '').replace('_', '-');
+    return all.find(v => norm(v.lang) === loc) || all.find(v => norm(v.lang).split('-')[0] === loc.split('-')[0]) || null;
+}
+
+// Voice menu order: English (en-GB, en-US first), Chinese, Arabic, Hebrew, then A-Z.
+const VOICE_LANG_ORDER = ['en', 'zh', 'ar', 'he'];
+function voiceLangRank(locale) {
+    const lang = String(locale || '').toLowerCase().split(/[-_]/)[0];
+    const i = VOICE_LANG_ORDER.indexOf(lang);
+    return i === -1 ? VOICE_LANG_ORDER.length : i;
+}
+function voiceLocaleRank(locale) {
+    const l = String(locale || '').replace('_', '-');
+    return l === 'en-GB' ? 0 : l === 'en-US' ? 1 : 2;
+}
+
+// Preview text in the voice's own language.
+const PREVIEW_SAMPLES = {
+    zh: '你好，欢迎来到阅读室。这是这个声音的试听。',
+    ar: 'مرحباً بكم في غرفة القراءة. هذا مثال قصير لهذا الصوت.',
+    he: 'שלום וברוכים הבאים לחדר הקריאה. זו דוגמה קצרה של הקול הזה.'
+};
+function previewTextFor(voiceName) {
+    const lang = localeOfVoice(voiceName).split('-')[0] ||
+        String((speechSynthesis.getVoices().find(v => v.name === voiceName) || {}).lang || '').split(/[-_]/)[0];
+    if(lang === 'en') return pickRandomSentence();
+    return PREVIEW_SAMPLES[lang] || 'Welcome to the Reading Room. This is a short sample of this voice.';
+}
+
 async function playWithBrowserTTS(seg, generation) {
     return new Promise((resolve, reject) => {
         if(speechSynthesis.speaking || speechSynthesis.pending) speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(seg.text);
         const voiceName = voiceMapping[seg.spkr] || voiceMapping.narrator;
-        const selectedVoice = speechSynthesis.getVoices().find(v => v.name === voiceName);
+        const selectedVoice = browserVoiceFor(voiceName);
         if(selectedVoice) utterance.voice = selectedVoice;
+        else if(localeOfVoice(voiceName)) utterance.lang = localeOfVoice(voiceName);
         utterance.rate = parseFloat(settings.speed);
         utterance.volume = parseFloat(settings.volume);
         const browserSegIndex = currentSegmentIndex;
@@ -458,7 +515,7 @@ async function play() {
             settings.useBrowserTTS = true;
             loadBrowserVoices();
             renderVoiceMapping();
-            showTTSStatus('⚠ Edge-TTS failed, switched to browser voices — Export needs Edge-TTS again', 5000);
+            showTTSStatus(isEdgeBrowser() ? '⚠ Edge voices unreachable — using this device\'s voices for now' : '⚠ Neural voices & MP3 export need the Microsoft Edge browser — using this device\'s voices', 6000);
             try { await playWithBrowserTTS(seg, generation); }
             catch(e2) { handlePlayError(e2, generation); }
         } else {
@@ -797,11 +854,16 @@ function renderReaderVoicePicker() {
     }
     const groups = {};
     available.forEach(v => {
-        const labels = voiceLocaleLabels(v.Locale);
-        const key = labels.country + ' — ' + labels.language;
+        const key = voiceLocaleLabels(v.Locale).language;
         (groups[key] || (groups[key] = [])).push(v);
     });
-    const keys = Object.keys(groups).sort((a,b)=>a.localeCompare(b));
+    const groupLocale = key => groups[key][0].Locale;
+    const keys = Object.keys(groups).sort((a,b) =>
+        (voiceLangRank(groupLocale(a)) - voiceLangRank(groupLocale(b))) || a.localeCompare(b));
+    keys.forEach(key => groups[key].sort((a,b) =>
+        (voiceLocaleRank(a.Locale) - voiceLocaleRank(b.Locale)) ||
+        String(a.Locale).localeCompare(String(b.Locale)) ||
+        cleanVoiceActorName(a).localeCompare(cleanVoiceActorName(b))));
     const visible = readerVpShowAll ? keys : keys.slice(0,12);
     visible.forEach(key => {
         const head = document.createElement('div');
@@ -840,7 +902,7 @@ function renderReaderVoicePicker() {
     if(!readerVpShowAll && keys.length > visible.length) {
         const more = document.createElement('button');
         more.className = 'vp-showmore';
-        more.textContent = 'Show ' + (keys.length-visible.length) + ' more country/language groups ▾';
+        more.textContent = 'Show ' + (keys.length-visible.length) + ' more languages ▾';
         more.onclick = () => { readerVpShowAll=true; renderReaderVoicePicker(); };
         body.appendChild(more);
     }
@@ -884,7 +946,7 @@ function pickRandomSentence() {
 }
 
 async function previewVoice(voiceName, spkr) {
-    const previewText = pickRandomSentence();
+    const previewText = previewTextFor(voiceName);
     const looksLikeEdgeVoice = /^[a-z]{2,3}-[A-Z]{2}-.+Neural$/.test(String(voiceName || ''));
     const useEdgePreview = !!window.EdgeTTS && looksLikeEdgeVoice;
     console.info('Voice preview route', { voice: voiceName, engine: useEdgePreview ? 'edge' : 'browser', browserMode: settings.useBrowserTTS, edgeLoaded: !!window.EdgeTTS });
@@ -892,8 +954,8 @@ async function previewVoice(voiceName, spkr) {
         if(!useEdgePreview) {
             console.info('Voice preview using browser speechSynthesis', { voice: voiceName });
             const u = new SpeechSynthesisUtterance(previewText);
-            const v = speechSynthesis.getVoices().find(v => v.name === voiceName);
-            if(v) u.voice = v;
+            const v = browserVoiceFor(voiceName);
+            if(v) u.voice = v; else if(localeOfVoice(voiceName)) u.lang = localeOfVoice(voiceName);
             u.rate = settings.speed;
             u.volume = settings.volume;
             let started = false;
@@ -922,7 +984,18 @@ async function previewVoice(voiceName, spkr) {
                     await tmp.play();
                 } catch(e) {
                     console.warn('Edge voice preview failed', { voice: voiceName, error: e?.message || String(e) });
-                    resolve(false);
+                    // Not Microsoft Edge (or offline): say the sample with this device's voice for that language.
+                    showTTSStatus('Neural voices need the Microsoft Edge browser — previewing with this device\'s voice', 3500);
+                    try {
+                        const u = new SpeechSynthesisUtterance(previewText);
+                        const bv = browserVoiceFor(voiceName);
+                        if(bv) u.voice = bv; else if(localeOfVoice(voiceName)) u.lang = localeOfVoice(voiceName);
+                        u.onend = () => resolve(false);
+                        u.onerror = () => resolve(false);
+                        speechSynthesis.cancel();
+                        speechSynthesis.speak(u);
+                        setTimeout(() => resolve(false), 8000);
+                    } catch(e2) { resolve(false); }
                 }
             })();
         }

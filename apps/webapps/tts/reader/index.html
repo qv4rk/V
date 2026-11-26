@@ -368,14 +368,10 @@ You shouldn't have come here alone.</pre>
 </div>
 
 <script src="js/voice-catalog.js"></script>
-<script type="module">
-    import { EdgeTTS, VoicesManager } from 'https://unpkg.com/edge-tts-universal@1.4.0/dist/browser.js';
-    window.EdgeTTS = EdgeTTS;
-    window.VoicesManager = VoicesManager;
-    window.appReady = true;
-</script>
+<!-- Edge neural TTS client (replaces edge-tts-universal@1.4.0, whose Sec-MS-GEC token Microsoft now rejects) -->
+<script src="js/edge-tts-v2.js?v=1"></script>
 
-<script src="js/reader.js?v=10.5-20261126-t182"></script>
+<script src="js/reader.js?v=10.6-20261126-t184"></script>
 <script src="js/leather-skin.js"></script>
 
 <!-- ========== DEBUGGER (hidden by default -- Ctrl+Shift+D, or the
