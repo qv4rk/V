@@ -1,0 +1,241 @@
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: 1.0\n"
+"Last-Translator: Stellarium's developers\n"
+"Language-Team: Russian (https://www.transifex.com/stellarium/teams/80998/ru/)\n"
+"Language: ru\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Sky culture name
+msgid "Boorong"
+msgstr "Буронгская"
+
+#. Sky culture introduction section in markdown format
+msgid ""
+"The Boorong are indigenous Australians who were very much acquainted with the\n"
+"night sky. William Stanbridge wrote in 1857 that they \"Pride themselves upon\n"
+"knowing more of Astronomy than any other tribe\"."
+msgstr ""
+"Boorong - коренные австралийцы, которые были очень знакомы с ночным небом. В"
+" 1857 году Уильям Стэнбридж писал, что они «гордятся тем, что знают больше "
+"об астрономии, чем любое другое племя»."
+
+#. Sky culture description section in markdown format
+msgid ""
+"One hundred and forty years ago, a Boorong family at Lake Tyrrell\n"
+"(North-Western Victoria, Australia) told William Stanbridge something of their\n"
+"stories relating to the night sky. Some forty stars, constellations and other\n"
+"celestial phenomena were named and located. He wrote them down and related this\n"
+"information to the Philosophical Institute in Melbourne in 1857. In his paper\n"
+"he wrote down the Aboriginal term and gave its European equivalent.\n"
+"\n"
+"What John Morieson has done is look closely at these celestial phenomena,\n"
+"attempt to satisfactorily identity them and to imitate the way the Boorong\n"
+"people may have seen them. John's interpretation was used to create the\n"
+"constellation figures in Stellarium."
+msgstr ""
+"Сто сорок лет назад семья бурунгов на озере Тиррелл (северо-запад Виктории, Австралия) рассказала Уильяму Стэнбриджу что-то из их историй, касающихся ночного неба. Было названо и расположено около сорока звезд, созвездий и других небесных явлений. Он записал их и связал эту информацию с Философским институтом в Мельбурне в 1857 году. В своей статье он записал термин аборигенов и дал его европейский эквивалент.\n"
+"\n"
+"Джон Морисон сделал то, что внимательно посмотрел на эти небесные явления, попытался удовлетворительно идентифицировать их и подражать тому, как их могли увидеть жители Бурунга. Интерпретация Джона была использована для создания фигур созвездия в Stellarium."
+
+#. Sky culture extras section in markdown format
+msgid ""
+"### Constellations and other celestial objects\n"
+"\n"
+"| Name       | Explanation           | Celestial Clue |\n"
+"|------------|-----------------------|----------------|\n"
+"|Boorong     | Night; small mallee; starry firmament | Starry firmament at night |\n"
+"|Bittur      | Larvae of the woodant |  |\n"
+"|Millee      | Murray River          | Part of the Milky Way |\n"
+"|Mindi       | The maned snake       | Part of the Milky Way |\n"
+"|Neilloan    | Mallee fowl           | Lyra |\n"
+"|Nurrumbunguttias | Old man, black faced mallee kangaroo |White aura of the Milky Way|\n"
+"|Otchocut    | Great fish            | Delphinus |\n"
+"|Porkelong toute | Loss of tooth | Shooting star |\n"
+"|Pupperimbul |Diamond firetail finch or shy hylacola | Carried the emu egg to become the Sun|\n"
+"|Purra       |Red kangaroo           | Capella |\n"
+"|Tchingal    |The tall one; emu      | Dark space near Cross|\n"
+"|Totyarguil  |Purple crowned lorikeet | Altair |\n"
+"|Tourchingboiongerra | Needlewood hakea and willie wagtails | Coma Berenices |\n"
+"|Tourte      | Star                  | Any star |\n"
+"|Tyrille     |Space; night sky       | Space; night sky |\n"
+"|Unurgunite  | Jacky lizard          | Sigma Canis Majoris |\n"
+"|Wanjel      | Long-necked tortoise  | Pollux |\n"
+"|War         | Crow                  | Canopus |\n"
+"|Warepil     | Wedge tailed eagle    | Sirius |\n"
+"|Warring     | Galaxy                | Milky Way |\n"
+"|Weetkurrk   |Singing bushlark       | Star in Bootes west of Arcturus |\n"
+"|Won         | Boomerang             | Corona Australis |\n"
+"|Yerredetkurrk | Owlet nightjar      | Achernar|\n"
+"|Yurree      | Fan-tailed cockatoo   | Castor |"
+msgstr ""
+"### Созвездия и другие небесные объекты\n"
+"\n"
+"| Имя | Объяснение | Небесная Подсказка |\n"
+"|--------------|-------------------------|-------------------|\n"
+"| Буронг | Ночь; Малый Малли; звездный небосвод | Звездный небосвод ночью |\n"
+"| Биттур | Личинки лесоруба | |\n"
+"| Милли | Река Мюррей | Часть Млечного Пути |\n"
+"| Минди | Змей с гривой | Часть Млечного Пути |\n"
+"| Neilloan | Мясо птицы | Лира |\n"
+"| Nurrumbunguttias | Старик, чернолицый кенгуру с черным лицом | Белая аура Млечного Пути |\n"
+"| Отрезать | Великая рыба | Дельфинус |\n"
+"| Porkelong Toute | Потеря зуба | Падающая звезда |\n"
+"| Pupperimbul | Алмазный зяблик или застенчивый hylacola | Нес эму яйцо, чтобы стать солнцем |\n"
+"| Пурра | Красный кенгуру | Капелла |\n"
+"| Чингал | Высокий; эму | Темное пространство возле Креста |\n"
+"| Тотяргуил | Фиолетовый венценосный лорикет | Альтаир |\n"
+"| Tourchingboiongerra | Хакея из хвои и трясогузки Вилли | Кома Беренис |\n"
+"| Tourte | Звезда | Любая звезда |\n"
+"| Тайрил | Космос; ночное небо | Космос; ночное небо |\n"
+"| Унургунит | Джеки Ящерица | Сигма Canis Majoris |\n"
+"| Ванджел | Черепаха с длинной шеей | Поллукс |\n"
+"| Война | Ворона | Канопус |\n"
+"| Warepil | Клинохвостый орел | Сириус |\n"
+"| Воюющий | Галактика | Млечный Путь |\n"
+"| Weetkurrk | Поющий кустарник | Звезда в сапогах к западу от Арктура |\n"
+"| Выиграл | Бумеранг | Corona Australis |\n"
+"| Yerredetkurrk | Owlet Nightjar | Achernar |\n"
+"| Юрре | Какаду с веерным хвостом | Кастор |"
+
+#. Sky culture references section in markdown format
+msgid ""
+" - [#1]: Morieson, John: The Night Sky of the Boorong, Partial Reconstruction of a Disappeared Culture in North-West Victoria, Master Thesis (MA of Arts), University of Melbourne, 1966\n"
+" - [#2]: [Aboriginal Astronomy](http://www.aboriginalastronomy.com.au/)"
+msgstr ""
+" - [#1]: Морисон, Джон: Ночное небо Бурунга, Частичная реконструкция исчезнувшей культуры на северо-западе Виктории, Магистерская диссертация (магистр искусств), Мельбурнский университет, 1966 г.\n"
+" - [#2]: [Астрономия аборигенов](http://www.aboriginalastronomy.com.au/)"
+
+#. Sky culture authors section in markdown format
+msgid ""
+"This sky culture was contributed by John Morieson and [Alex\n"
+"Cherney](http://www.terrastro.com).\n"
+"\n"
+"Technical rework by Susanne M Hoffmann"
+msgstr ""
+"Эту культуру неба внесли Джон Морисон и [Алекс Черни](http://www.terrastro.com).\n"
+"\n"
+"Техническая переделка Сюзанны М. Хоффманн"
+
+#. Sky culture license section in markdown format
+msgid "Data and illustrations: CC-BY SA"
+msgstr "Данные и иллюстрации: CC-BY SA"
+
+#. Boorong constellation, native: Wanjel
+msgid "Long-necked tortoise"
+msgstr "Змеиношеяя черепаха"
+
+#. Boorong constellation, native: Yurree
+msgid "Fan-tailed cockatoo"
+msgstr "Веерохвостый какаду"
+
+#. Boorong constellation, native: Kulkunbulla
+msgid "Two teenage boys"
+msgstr "Два подростка"
+
+#. Boorong constellation, native: Lamankurrk
+msgid "Girls"
+msgstr "Девушки"
+
+#. Boorong constellation, native: Purra
+msgid "Red kangaroo"
+msgstr "Большой рыжий кенгуру"
+
+#. Boorong constellation, native: Bunya
+msgid "Ring-tail possum"
+msgstr "Кольцехвостый кускус"
+
+#. Boorong constellation, native: Djuit
+msgid "Red-rumped parrot"
+msgstr "Певчий попугай"
+
+#. Boorong constellation, native: War
+msgid "Crow"
+msgstr "Ворон"
+
+#. Boorong constellation, native: Collowgulloric War
+msgid "Female crow, wife of War"
+msgstr "Ворона, жена Вара"
+
+#. Boorong constellation, native: Yerredetkurrk
+msgid "Owlet nightjar"
+msgstr "Совиный козодой"
+
+#. Boorong constellation, native: Tourtchinboiongerra
+msgid "Needlewood hakea and willie wagtails"
+msgstr "Игольчатое дерево и чёрно-белые веерохвостки"
+
+#. Boorong constellation, native: Berm-Berm-Gle
+msgid "Red-kneed dotterel"
+msgstr "Черногрудый зуёк"
+
+#. Boorong constellation, native: Karik Karik
+msgid "Australian kestrel"
+msgstr "Седобородая пустельга"
+
+#. Boorong constellation, native: Neilloan
+msgid "Mallee fowl"
+msgstr "Глазчатая курица"
+
+#. Boorong constellation, native: Unurgunite
+msgid "Jacky lizard"
+msgstr "Длиннохвостая древесная ящерица"
+
+#. Boorong constellation, native: Kourt-chin
+msgid "Female brolga"
+msgstr "Женская бролга"
+
+#. Boorong constellation, native: Kourt-chin
+msgid "Male brolga"
+msgstr "Кобель бролга"
+
+#. Boorong constellation, native: Otchocut
+msgid "Great fish"
+msgstr "Огромная рыбина"
+
+#. Boorong constellation, native: Warepil
+msgid "Wedge tailed eagle"
+msgstr "Клинохвостый орёл"
+
+#. Boorong constellation, native: Collowgulloric Warepil
+msgid "Female eagle, wife of Warepil"
+msgstr "Орлица, жена Варепила"
+
+#. Boorong constellation, native: Tchingal
+msgid "Emu"
+msgstr "Эму"
+
+#. Boorong constellation, native: Totyarguil
+msgid "Purple crowned lorikeet"
+msgstr "Королевский пурпурный попугайчик"
+
+#. Boorong constellation, native: Marpeankurrk
+msgid "Meat ant"
+msgstr "Мясной муравей"
+
+#. Boorong constellation, native: Warring
+msgid "Galaxy"
+msgstr "Галактика"
+
+#. Boorong constellation, native: Weetkurrk
+msgid "Singing bushlark"
+msgstr "Певчий яванский жаворонок"
+
+#. Boorong constellation, native: Gellarlec
+msgid "Pink cockatoo"
+msgstr "Какаду-инка"
+
+#. Boorong constellation, native: Collenbitchick
+msgid "Species of ant"
+msgstr "Виды муравьёв"
+
+#. Boorong constellation, native: Won
+msgid "Boomerang"
+msgstr "Бумеранг"
+
+#. Boorong constellation, native: Mindi
+msgid "The maned snake"
+msgstr "Гривистый змей"

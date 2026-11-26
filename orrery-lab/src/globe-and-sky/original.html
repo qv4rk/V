@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>The Atlas</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Cinzel:wght@400;700&family=Share+Tech+Mono&family=Noto+Sans+Symbols+2&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="app/themes.css">
+<style>
+  /* ── Persistent sky backdrop layering ── */
+  #sky-bg {
+    position: fixed; inset: 0;
+    width: 100%; height: 100%;
+    z-index: 0; pointer-events: none;
+  }
+  #app  { position: relative; z-index: 1; background: transparent !important; }
+  #atrium { background: transparent !important; }
+  #atlas  { background: transparent !important; }
+  /* ── Node search ── */
+  .nl-search-wrap {
+    display: flex; align-items: center; gap: 4px;
+    padding: 6px 8px; border-bottom: 1px solid var(--panel-edge);
+  }
+  .nl-search {
+    flex: 1; background: transparent;
+    border: none; outline: none;
+    font-family: 'Space Mono', monospace;
+    font-size: 9px; letter-spacing: 1.5px;
+    color: var(--ink); caret-color: var(--ink);
+  }
+  .nl-search::placeholder { color: var(--ink-mute); }
+  .nl-search-clear {
+    background: transparent; border: none;
+    color: var(--ink-mute); cursor: pointer; font-size: 10px; padding: 0 2px;
+  }
+  .nl-search-clear:hover { color: var(--ink-dim); }
+  .nl-item.dim { opacity: .22; pointer-events: none; }
+
+  /* Node jump dropdown */
+  .node-jump {
+    background: var(--panel); color: var(--ink-dim);
+    border: 1px solid var(--panel-edge); border-radius: 2px;
+    padding: 7px 12px;
+    font-family: 'Space Mono', monospace;
+    font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+    max-width: 220px; cursor: pointer;
+    pointer-events: auto;
+  }
+  .node-jump:hover { color: var(--ink); border-color: var(--ink-dim); }
+  .node-jump option { background: #0c0a07; color: #d4c39a; }
+
+  /* ── Consistent home link (used inside the chrome menu) ── */
+  .home-link {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--ink-dim); text-decoration: none;
+    background: var(--panel); border: 1px solid var(--panel-edge);
+    padding: 7px 12px; border-radius: 2px;
+    transition: color .2s, border-color .2s;
+    pointer-events: auto;
+    white-space: nowrap;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  .home-link:hover { color: var(--ink); border-color: var(--ink-dim); }
+
+  /* ── Mobile: ensure Enter button clears browser chrome ── */
+  @media (max-width: 780px) {
+    /* themes.css raises .footer, but also ensure Atrium home is reachable */
+    #atrium .enter-btn {
+      padding: 14px 32px;
+      font-size: 12px;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+  }
+</style>
+<script src="/site.js" data-mode="tab" defer></script>
+<script src="/portal.js"></script>
+<style>
+  .nl-item { position: relative; }
+  .nl-go { position: absolute; top: 6px; right: 6px; display: flex; gap: 4px; }
+  .nl-go a, .nl-go button { font-size: 14px; line-height: 1; padding: 3px 4px; border-radius: 4px;
+    background: transparent; border: 1px solid transparent; cursor: pointer; text-decoration: none; }
+  .nl-go a:hover, .nl-go button:hover { border-color: currentColor; }
+  .eclipse-line { display: flex; gap: 6px; align-items: center; margin: 6px 0 2px; }
+  .eclipse-line .ecl-label { font: 9px 'Space Mono', monospace; letter-spacing: .12em; opacity: .7; white-space: nowrap; }
+  .eclipse-line select { flex: 1; min-width: 0; }
+</style>
+</head>
+<body>
+
+<!-- Persistent starfield backdrop — always rendering, behind everything -->
+<canvas id="sky-bg"></canvas>
+
+<div id="app">
+
+  <!-- ════════════════ ATRIUM (homepage) ════════════════ -->
+  <section id="atrium" class="view on" data-screen-label="00 Atrium">
+    <!-- Home link now lives in the persistent hamburger menu (#chrome-menu),
+         which is visible here too — no separate corner link needed. -->
+    <div class="marquee">
+      <h1>The Atlas</h1>
+    </div>
+
+    <div class="dial-stage" id="atrium-dial"></div>
+
+    <div class="footer">
+      <div class="date-readout">
+        EPOCH<br>
+        <span class="d" id="atrium-date">—</span>
+      </div>
+      <button class="enter-btn" id="enter-btn">✕ Back to the globe</button>
+      <div class="date-readout" style="font-size:8px;letter-spacing:4px;color:var(--ink-mute);">
+        <a href="index.html" style="color:var(--ink-mute);text-decoration:none;letter-spacing:3px;">← FEISTTECH</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════ ATLAS (Earth) ════════════════ -->
+  <section id="atlas" class="view" data-screen-label="01 Atlas">
+    <canvas id="earth-canvas"></canvas>
+  </section>
+
+  <!-- ════════════════ SKY (full-bleed) ════════════════ -->
+  <section id="sky" class="view" data-screen-label="02 Sky">
+    <canvas id="sky-canvas"></canvas>
+  </section>
+
+  <!-- ════════════════ CHROME — persistent hamburger nav ════════════════
+       Always present (all three views, including Atrium). Collapsed to
+       just the toggle button until clicked; the revealed menu stacks
+       vertically on narrow viewports and lays out horizontally once
+       there's room, matching the toggle button's fixed top-left anchor. -->
+  <div class="chrome-bar" id="chrome-bar">
+    <button class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="chrome-menu">
+      <span></span><span></span><span></span>
+    </button>
+    <nav class="chrome-menu" id="chrome-menu">
+      <a href="index.html" class="home-link">← Home</a>
+      <div class="brand">
+        THE
+        <span class="dot">·</span>
+        ATLAS
+      </div>
+      <select id="node-jump" class="node-jump"><option value="">◇ JUMP TO NODE…</option></select>
+      <div class="view-tabs">
+        <button data-view="atrium">Atrium</button>
+        <button data-view="atlas" class="on">Atlas</button>
+        <button data-view="sky">Sky</button>
+      </div>
+      <div class="theme-picker">
+        <span class="lbl">THEME</span>
+        <div class="theme-swatch on" data-theme="patina"   style="--col:#a67041" title="Patina"></div>
+        <div class="theme-swatch"    data-theme="cyan"     style="--col:#00e5ff" title="Cyan Blueprint"></div>
+        <div class="theme-swatch"    data-theme="imperial" style="--col:#e8c46a" title="Imperial Gold"></div>
+        <div class="theme-swatch"    data-theme="night"    style="--col:#88c0d0" title="Night Plate"></div>
+      </div>
+      <button class="home-link" id="share-btn" style="width:100%;text-align:left;background:transparent;border:none;cursor:pointer;font:inherit;">⤴ Share this view</button>
+    </nav>
+  </div>
+
+  <!-- HUD (atlas only by default; visible in sky too) -->
+  <div class="hud atlas-only" style="display:none">
+    <div class="h-head">CHRONOMETER</div>
+    <div class="h-sub">DIGITAL ANTIKYTHERA · J2000 EPOCH</div>
+    <div class="row"><span>DATE</span><span class="v" id="hud-date">—</span></div>
+    <div class="row"><span>YEAR</span><span class="v" id="hud-year">—</span></div>
+    <div class="row"><span>VIEW</span><span class="v" id="hud-view">ATLAS</span></div>
+    <div class="row"><span>SYZYGY</span><span class="v" id="hud-eclipse">—</span></div>
+  </div>
+
+  <!-- Corner dial -->
+  <div class="corner-dial" id="corner-dial" style="display:none">
+    <div id="corner-dial-svg"></div>
+    <div class="hint">TAP TO SWITCH VIEW · DRAG TO CRANK</div>
+  </div>
+
+  <!-- Node list (atlas) -->
+  <div class="node-list atlas-only" style="display:none">
+    <div class="nl-head">DOSSIERS · NODES</div>
+    <div class="nl-search-wrap">
+      <input type="text" id="node-search" class="nl-search"
+             placeholder="Search tags, topics…" autocomplete="off" spellcheck="false">
+      <button class="nl-search-clear" id="node-search-clear" title="Clear">✕</button>
+    </div>
+    <div id="nl-list"></div>
+  </div>
+
+  <!-- Sky locator -->
+  <div class="sky-locator sky-only" style="display:none">
+    <div class="l-head">OBSERVER</div>
+    <div class="loc-grid" id="loc-grid"></div>
+  </div>
+
+  <!-- Time bar (shown in atlas + sky) -->
+  <div class="timebar" id="timebar" style="display:none">
+    <div class="date-line">
+      <div class="date" id="date-display">—</div>
+      <input type="date" id="date-input" class="date-input" title="Jump to any exact date — a birthday, an eclipse, anything" min="0100-01-01" max="9999-12-31">
+      <div class="meta"><span class="span-pill">RANGE −3000 / +1000</span></div>
+    </div>
+    <input type="range" id="date-slider" min="-3026" max="1000" value="0" step="1">
+    <div class="eclipse-line">
+      <span class="ecl-label">◐ ECLIPSES</span>
+      <button class="ctrl" id="ecl-prev" title="Previous eclipse">◀</button>
+      <select id="ecl-select" class="date-input" title="Every solar and lunar eclipse, 2000 BCE – 3000 CE"><option value="">Pick an eclipse…</option></select>
+      <button class="ctrl" id="ecl-next" title="Next eclipse">▶</button>
+      <button class="ctrl" id="culture-btn" title="Star figures: Western, Chinese, or both">✶ WESTERN</button>
+    </div>
+    <div class="ctrls">
+      <button class="ctrl" data-speed="1">¼×</button>
+      <button class="ctrl" data-speed="7">7×</button>
+      <button class="ctrl on" data-speed="30">30×</button>
+      <button class="ctrl" data-speed="365">YR</button>
+      <button class="ctrl" data-speed="3650">10YR</button>
+      <button class="ctrl play" id="play-btn">▶</button>
+      <button class="ctrl" id="now-btn">NOW</button>
+    </div>
+  </div>
+
+  <!-- Node tooltip -->
+  <div class="node-tip" id="node-tip">
+    <div class="nt-date">—</div>
+    <div class="nt-title">—</div>
+    <div class="nt-loc">—</div>
+  </div>
+
+  <!-- Dossier panel — only the buttons + title are truly fixed; every
+       other section (classification, date/location, the article itself,
+       linked articles, prev/next) scrolls together in .dossier-scroll,
+       so the fixed chrome stays small on every screen size instead of
+       claiming a flat 50% of it regardless of how little is actually in it. -->
+  <aside class="dossier" id="dossier">
+    <div class="top">
+      <div style="display:flex;justify-content:flex-end;gap:6px;margin-bottom:10px;">
+      <button id="doss-tts" title="Read aloud" style="background:transparent;border:1px solid var(--panel-edge);color:var(--ink-dim);padding:4px 10px;cursor:pointer;font-size:12px;font-family:inherit;border-radius:2px;">🔊</button>
+      <button id="doss-reader" title="Open in FeistTech Reader" style="background:transparent;border:1px solid var(--panel-edge);color:var(--ink-dim);padding:4px 10px;cursor:pointer;font-size:11px;font-family:inherit;border-radius:2px;letter-spacing:1px;">READER</button>
+      <button class="close" id="doss-close">✕</button>
+    </div>
+      <div class="doss-title">—</div>
+    </div>
+    <div class="dossier-scroll scroll">
+      <div class="classification">—</div>
+      <div class="meta-line">—</div>
+      <div class="body"></div>
+      <div class="connections">
+        <div class="conn-head">—</div>
+        <div class="conn-chips"></div>
+      </div>
+      <div class="doss-nav">
+        <button class="doss-nav-btn" id="doss-prev" title="Previous in this reading trail">◄ PREV</button>
+        <span class="doss-nav-label" id="doss-nav-label">—</span>
+        <button class="doss-nav-btn" id="doss-next" title="Next in this reading trail">NEXT ►</button>
+      </div>
+    </div>
+  </aside>
+
+</div>
+
+<!-- Show chrome whenever we're not in the atrium -->
+<style>
+  /* timebar is shown in atlas + sky */
+  .atlas-only, .sky-only { /* default hidden, JS toggles */ }
+</style>
+
+<!-- ── Libraries (pinned) ── -->
+<script src="/vendor/d3/d3.v7.min.js"></script>
+<script src="/vendor/topojson-client/topojson-client.min.js"></script>
+
+<!-- ── Modules ── -->
+<script src="/vendor/astronomy-engine/astronomy-engine.min.js"></script>
+<script src="app/data.js"></script>
+<script src="app/dial.js"></script>
+<script src="app/earth.js"></script>
+<script src="app/sky.js"></script>
+<script src="app/atlas.js"></script>
+
+<script>
+  // Boot
+  const _atlas = new MA.ManifoldAtlas();
+
+  // ── Timebar visibility: hide in atrium, show in atlas/sky ──
+  const tb = document.getElementById('timebar');
+  const refreshChrome = () => {
+    const v = document.querySelector('.view.on');
+    if (!v) return;
+    tb.style.display = (v.id === 'atrium') ? 'none' : '';
+  };
+  refreshChrome();
+  const observer = new MutationObserver(refreshChrome);
+  observer.observe(document.body, { attributes:true, subtree:true, attributeFilter:['class'] });
+</script>
+
+</body>
+</html>

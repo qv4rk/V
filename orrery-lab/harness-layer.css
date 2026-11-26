@@ -1,0 +1,18 @@
+/* Applied inside copied apps so layers can stack and chrome can hide. */
+html.orrery-transparent, html.orrery-transparent body {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+html.orrery-hide-chrome header,
+html.orrery-hide-chrome #dock,
+html.orrery-hide-chrome #ui,
+html.orrery-hide-chrome .hud,
+html.orrery-hide-chrome .topbar,
+html.orrery-hide-chrome .top-bar,
+html.orrery-hide-chrome #mode-bar,
+html.orrery-hide-chrome aside:not(#book-reader),
+html.orrery-hide-chrome #controls,
+html.orrery-hide-chrome .ft-nav,
+html.orrery-hide-chrome nav {
+  display: none !important;
+}

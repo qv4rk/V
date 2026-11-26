@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The Atlas · Solar System & Sky</title><meta name="atlas-build" content="2026-10-14-places-book"><link rel="stylesheet" href="./style.css"></head>
+<body>
+<canvas id="space" aria-label="Interactive solar system, Earth shadow and sky"></canvas>
+<div id="constellation-labels" aria-hidden="true"></div>
+<header><h1>The Atlas · Solar System & Sky</h1><nav>
+<button id="birth-chart">Birth chart</button><button id="book-toggle">Book</button><button id="share" title="Share this exact Atlas view">Share view</button><button id="png" title="Save transparent PNG">Save PNG</button><button id="sources">Sources</button>
+</nav></header>
+<div id="selection" role="status" hidden></div><p id="error" role="alert" hidden></p>
+<aside id="dock"><div class="dock-head"><div class="views" aria-label="View">
+<button data-view="orrery">Solar system</button><button data-view="earth" class="active">Earth & shadow</button><button data-view="sky">Sky</button>
+</div><button id="collapse" aria-label="Collapse controls" aria-expanded="true">−</button></div>
+<div id="controls">
+<div id="eclipse-picker"><div class="row"><select id="event" aria-label="Eclipse event"></select><button id="peak">Greatest eclipse</button></div>
+<p id="event-info" class="readout" aria-live="polite"></p></div>
+<div class="row"><label>Date & time · UTC<input id="date" type="datetime-local" step="1"></label></div>
+<div class="row"><button id="back" aria-label="Back one minute">−1 min</button><button id="play">Play</button>
+<select id="speed" aria-label="Time speed"><option value="1">1 second/s</option><option value="60" selected>1 minute/s</option><option value="600">10 minutes/s</option><option value="86400">1 day/s</option><option value="2592000">1 month/s</option><option value="31557600">1 year/s</option><option value="315576000">10 years/s</option></select><button id="forward" aria-label="Forward one minute">+1 min</button></div>
+<label id="eclipse-timeline" class="scrub-label">Eclipse timeline <span id="offset"></span><input id="scrub" type="range" min="-120" max="120" step="0.05" value="0" aria-label="Minutes from greatest eclipse"></label>
+<div class="row" id="earth-tools"><select id="vantage" aria-label="Earth camera"><option value="oblique">Oblique · ground footprint</option><option value="overhead">Above the shadow</option><option value="orbital">400 km orbital viewpoint</option><option value="moon">From the Moon</option><option value="alignment">Earth–Moon shadow cones</option></select><button id="track-center">Follow shadow</button></div>
+<div id="orrery-tools" hidden>
+<div class="row"><select id="focus" aria-label="Focus celestial body"><option value="">Whole system</option></select><button id="scale">Show true scale</button></div>
+<div class="row extras" aria-label="Solar system layers">
+<label><input id="layer-oumuamua" type="checkbox"> ʻOumuamua</label>
+<label><input id="layer-nine" type="checkbox"> Planet Nine · hypothesis</label>
+<label><input id="layer-perseids" type="checkbox"> Perseid stream</label>
+<label><input id="layer-satellites" type="checkbox"> Satellites</label>
+</div><div class="row"><button id="perseid-season">Jump to next Perseid crossing</button></div><p id="extras-status" class="readout" aria-live="polite">Perseids are tiny dust grains. This sparse orbital ribbon is a schematic with dust enlarged for visibility; it is not a planet or a fireball. Meteors glow when grains enter Earth's atmosphere. Planet Nine's orbit is hypothetical.</p>
+</div>
+<div class="place-search"><label for="place">City or birthplace</label><input id="place" type="search" placeholder="For example: Bronx, New York or Dublin, Ireland" autocomplete="off"><div id="place-results" role="listbox" hidden></div><p id="place-status" class="readout" aria-live="polite">Type a place name and choose the matching city.</p></div>
+<details><summary>Coordinates (optional)</summary><div class="row"><label>Latitude<input id="lat" type="number" min="-90" max="90" step="0.0001" inputmode="decimal"></label><label>Longitude · east<input id="lon" type="number" min="-180" max="180" step="0.0001" inputmode="decimal"></label></div></details><button id="observer">View sky from this place</button>
+<div id="book-tools" hidden><h2>Read history on Earth</h2><div class="row"><select id="chapter" aria-label="Book chapter"></select><button id="chapter-jump">Read & visit</button></div><div class="row"><label>History year<input id="history-year" type="number" step="1" value="1801"></label><label><input id="book-all" type="checkbox"> Show all chapter places</label></div><input id="history-time" type="range" min="-200" max="2050" step="1" value="1801" aria-label="History timeline"><p class="readout">Places brighten near the selected year. Tap a globe node or choose any chapter. Chapter dates use noon UTC when no time is recorded.</p></div>
+<div class="row" id="sky-tools" hidden><button id="sun">Look at Sun</button><button id="zenith">Wide sky</button><label>Field of view<input id="fov" type="range" min="0.65" max="100" step="0.05" value="70"></label></div>
+<div class="row settings"><label>Constellations<select id="culture"><option value="both">Western + Chinese</option><option value="western">Western</option><option value="chinese">Chinese</option><option value="off">Off</option></select></label><label><input id="names" type="checkbox" checked> Names</label><label><input id="cones" type="checkbox"> Shadow cones</label><label><input id="track" type="checkbox" checked> Ground track</label></div>
+<p id="clock" class="readout"></p><p id="shadow" class="readout"></p><p id="sky-status" class="readout"></p><p id="catalog" class="readout"></p>
+</div></aside>
+<aside id="book-reader" hidden><button id="book-close" aria-label="Close chapter">Close</button><h2 id="book-title"></h2><p id="book-meta"></p><div class="row"><button id="book-prev">Previous</button><button id="book-date">Visit chapter date</button><button id="book-next">Next</button></div><div id="book-content"></div><a id="book-source" target="_blank" rel="noopener">Published chapter</a></aside>
+<dialog id="natal-dialog"><div class="row"><h2>Birth chart & birth sky</h2><button id="close-natal">Back to Atlas</button></div><iframe id="natal-frame" title="The Atlas natal chart" allow="clipboard-write; web-share"></iframe></dialog>
+<dialog id="about"><button id="close-about" aria-label="Close sources">Close</button><h2>Shared clock, shared geometry</h2>
+<p>The Sun, Moon, Earth rotation, surface shadow and observer camera share one UTC epoch. Earth is a WGS84 ellipsoid. Solar obscuration is calculated at every surface fragment from the angular overlap of the Sun and Moon.</p>
+<p>The uploaded eclipse catalogs contribute 620 events: the historical collection and the new 1999–2050 collection. At greatest eclipse, the stored Sun/Moon vectors and Earth rotation place the catalog shadow at its computed site. The catalog has no between-event ground-track samples, so those tracks are not invented. The Solar system globe shows an enlarged shadow marker; Earth & shadow shows the physical footprint.</p>
+<p>Stars and Western/Chinese constellation figures reuse <a href="https://github.com/qv4rk/V/blob/main/space/cosmos.js">FeistTech’s Globe & Sky backdrop</a>, with the bundled <a href="https://github.com/ofrohn/d3-celestial">d3-celestial catalog</a>. The star field stays visible as a celestial reference even in daylight.</p>
+<p><a href="https://github.com/cosinekitty/astronomy">Astronomy Engine · Don Cross · MIT</a> supplies positions, true sidereal time and eclipse searches. <a href="https://threejs.org/">Three.js · MIT</a> supplies the renderer and orbit controls. Planet maps: <a href="https://www.solarsystemscope.com/textures/">Solar System Scope · CC BY 4.0</a>. Earth and lunar maps are bundled from the existing three-globe/globe.gl example assets.</p>
+<p><a id="nasa-source" href="https://eclipse.gsfc.nasa.gov/SEmono/TSE1999/TSE1999.html">NASA eclipse reference</a>. Smooth lunar limbs are used; this view does not predict individual Baily’s beads. The corona is a visual effect. The 400 km camera is an orbital viewpoint, not a reconstruction of the ISS’s historical flight path.</p>
+<p>Visible scale enlarges planets and compresses moon spacing. Earth & Shadow and Sky keep the Sun, Earth and Moon at true scale; other planets appear as direction markers in these views. The existing Galilean moon models and orbital guide curves are retained.</p>
+<a href="./README.md">Project notes & local launch</a> · <a href="./CREDITS.md">Credits & validation</a>
+</dialog><script src="./vendor/satellite.min.js"></script><script src="https://feisttech.com/apps/webapps/natal-chart/lib/cities.js"></script><script src="https://feisttech.com/apps/webapps/natal-chart/lib/tz-lookup.js"></script><script type="module" src="./main.js?v=places-book-20261014-v2"></script>
+</body></html>

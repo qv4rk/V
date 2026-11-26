@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Scale Orrery Proposal</title>
+  <meta name="description" content="Staged proposal: The Scale Orrery's Kepler solve, ecliptic mapping, maps and scale toggle, rebuilt to plug into the Atlas & Cosmogram." />
+  <link rel="stylesheet" href="../../css/styles.css" />
+  <style>
+    .panel-orrery { left: 1rem; bottom: 1rem; }
+    .row { display: flex; gap: 0.4rem; margin-bottom: 0.5rem; align-items: center; }
+    .row > * { flex: 1; }
+    .row input, .row select {
+      font-family: var(--font-mono); font-size: 0.75rem; background: rgba(0,0,0,0.35);
+      border: 1px solid var(--border); color: var(--ink); border-radius: 3px; padding: 0.35rem 0.45rem; width: 100%;
+    }
+    .row input:focus, .row select:focus { outline: 1px solid var(--cyan); border-color: var(--cyan); }
+    .note { font-family: var(--font-mono); font-size: 0.62rem; line-height: 1.5; color: var(--ink-mute); margin-top: 0.4rem; }
+    .warn { color: var(--gold-hi); }
+    .stage-tag {
+      position: fixed; top: 0.9rem; right: 1.2rem; z-index: 20; font-family: var(--font-mono); font-size: 0.62rem;
+      letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-mute);
+    }
+    @media (max-width: 720px) {
+      .panel-orrery { left: 0.6rem; right: 0.6rem; bottom: 0.6rem; width: auto; }
+      .stage-tag { display: none; }
+    }
+  </style>
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <canvas id="globe-canvas" aria-label="Orrery canvas"></canvas>
+  <header class="top-bar">
+    <h1 class="title">The Scale Orrery · proposal</h1>
+  </header>
+  <p class="stage-tag">Staged for review · not on the atlas</p>
+  <p id="boot-error" class="boot-error" hidden></p>
+
+  <aside id="panel-orrery" class="panel panel-orrery">
+    <div class="panel-head">
+      <h2>Orrery</h2>
+      <button type="button" class="icon-btn" id="collapse" aria-label="Collapse panel">▾</button>
+    </div>
+    <div class="panel-body">
+      <p id="date-label" class="dial-date">—</p>
+      <div class="row">
+        <input id="when" type="datetime-local" step="60" aria-label="Date and time (UT)" />
+      </div>
+      <div class="row">
+        <button type="button" id="play" class="ghost">Play</button>
+        <select id="speed" aria-label="Days per second">
+          <option value="1">1 day/s</option>
+          <option value="10" selected>10 days/s</option>
+          <option value="100">100 days/s</option>
+          <option value="1000">1000 days/s</option>
+        </select>
+      </div>
+      <div class="row">
+        <button type="button" id="scale" class="primary">Show true scale</button>
+      </div>
+      <div class="row">
+        <button type="button" id="sunview" class="ghost">From Earth, look at the Sun</button>
+      </div>
+      <div class="row">
+        <select id="eclipse" aria-label="Eclipse presets"><option value="">Eclipse presets…</option></select>
+      </div>
+      <div class="row">
+        <select id="focus" aria-label="Focus on body">
+          <option value="">Whole system</option>
+          <option value="sun">Sun</option>
+          <option value="mercury">Mercury</option>
+          <option value="venus">Venus</option>
+          <option value="earth">Earth</option>
+          <option value="moon">Moon</option>
+          <option value="mars">Mars</option>
+          <option value="jupiter">Jupiter</option>
+          <option value="io">Io</option>
+          <option value="europa">Europa</option>
+          <option value="ganymede">Ganymede</option>
+          <option value="callisto">Callisto</option>
+          <option value="saturn">Saturn</option>
+          <option value="uranus">Uranus</option>
+          <option value="neptune">Neptune</option>
+        </select>
+      </div>
+      <p id="moon-label" class="note"></p>
+      <p id="mode-label" class="note"></p>
+      <p id="range-label" class="note"></p>
+      <p class="note">Opens on the 1882 transit of Venus. “From Earth, look at the Sun” switches to true scale and a 1° field: Venus is the dot on the disc. Pick a solar eclipse and do the same to see the Moon on the Sun, seen from Earth's centre. Drag to orbit, scroll to zoom. Times are UT.</p>
+    </div>
+  </aside>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { ScaleOrrery } from './orrery.js';
+    import { inValidRange } from './elements.js';
+    import { eclipseGeometry } from './moon.js';
+    import { dateToJulianDay, jdToCalendar } from '../../js/ephemeris.js';
+    import { MAPS } from '../../js/textures.js';
+
+    const $ = (id) => document.getElementById(id);
+    const pad = (n, w = 2) => String(n).padStart(w, '0');
+
+    try {
+      const canvas = $('globe-canvas');
+      const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, logarithmicDepthBuffer: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(window.innerWidth, window.innerHeight);
+
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x050810);
+      new THREE.TextureLoader().load(MAPS.nightSky, (tex) => {
+        tex.mapping = THREE.EquirectangularReflectionMapping;
+        tex.colorSpace = THREE.SRGBColorSpace;
+        scene.background = tex;
+      });
+
+      // Near plane small enough for Earth at true scale (0.00064 units).
+      const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1e-6, 20000);
+      const controls = new OrbitControls(camera, canvas);
+      controls.enableDamping = true;
+
+      const orrery = new ScaleOrrery();
+      scene.add(orrery.group);
+
+      const OVERVIEW = new THREE.Vector3(0, 70, 120);
+      camera.position.copy(OVERVIEW);
+      controls.target.set(0, 0, 0);
+
+      let jd = dateToJulianDay(1882, 12, 6, 17, 6);
+      let playing = false;
+      let focus = '';
+      let mode = 'visible';
+      const lastFocusPos = new THREE.Vector3();
+
+      function showDate() {
+        const c = jdToCalendar(jd + 0.5 / 86400); // the atlas floors minutes; round instead
+        const y = c.year < 1 ? `${1 - c.year} BCE` : `${c.year}`;
+        $('date-label').textContent = `${y}-${pad(c.month)}-${pad(c.day)} ${pad(c.hour)}:${pad(c.minute)} UT · JD ${jd.toFixed(2)}`;
+        if (document.activeElement !== $('when')) {
+          // The date box takes years 1-9999 only; leave it empty for BCE dates.
+          $('when').value = c.year >= 1 && c.year <= 9999
+            ? `${pad(c.year, 4)}-${pad(c.month)}-${pad(c.day)}T${pad(c.hour)}:${pad(c.minute)}`
+            : '';
+        }
+        const ok = inValidRange(jd);
+        $('range-label').textContent = ok
+          ? 'Elements valid 1800–2050 (JPL Table 1).'
+          : 'Outside 1800–2050: planets drift and are illustration. Sun, Earth and Moon follow Meeus and stay within about 0.1°.';
+        $('range-label').classList.toggle('warn', !ok);
+        const g = eclipseGeometry(jd);
+        const phase = g.phaseAngle < 180 ? 'waxing' : 'waning';
+        const illum = Math.round(50 * (1 - Math.cos(g.phaseAngle * Math.PI / 180)));
+        $('moon-label').textContent =
+          `Moon ${illum}% lit, ${phase} · ${g.solarSep.toFixed(2)}° from the Sun · ${g.lunarSep.toFixed(2)}° from Earth's shadow` +
+          (g.solarSep < 1.58 ? ' · solar eclipse' : g.lunarSep < 1.6 ? ' · lunar eclipse' : '');
+      }
+
+      function setJd(next) {
+        jd = next;
+        orrery.setJulianDay(jd);
+        showDate();
+      }
+
+      function setFov(deg) {
+        camera.fov = deg;
+        camera.updateProjectionMatrix();
+      }
+
+      function frameFocus() {
+        setFov(45);
+        if (!focus) {
+          controls.target.set(0, 0, 0);
+          camera.position.copy(OVERVIEW);
+          return;
+        }
+        const p = orrery.bodyPosition(focus);
+        const r = orrery.bodyRadius(focus);
+        // Look from the Sun's side for planets so the lit face shows.
+        const dir = focus === 'sun' ? new THREE.Vector3(0, 0.4, 1) : p.clone().normalize().negate().add(new THREE.Vector3(0, 0.25, 0));
+        controls.target.copy(p);
+        camera.position.copy(p).add(dir.normalize().multiplyScalar(r * 6));
+        lastFocusPos.copy(p);
+      }
+
+      // From Earth's centre toward the Sun, true scale, a 1 degree field. The
+      // globe's faces point outward, so from inside it draws nothing. The
+      // centre matters: two Earth radii up moves the Moon by about 2 degrees.
+      function earthTowardSun() {
+        if (mode !== 'true') $('scale').click();
+        focus = '';
+        $('focus').value = '';
+        const e = orrery.bodyPosition('earth');
+        camera.position.copy(e);
+        controls.target.set(0, 0, 0);
+        setFov(1);
+      }
+
+      setJd(jd);
+      $('mode-label').textContent = orrery.setScaleMode(mode);
+
+      $('when').addEventListener('change', (ev) => {
+        const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(ev.target.value);
+        if (!m) return;
+        setJd(dateToJulianDay(+m[1], +m[2], +m[3], +m[4], +m[5]));
+        if (focus) frameFocus();
+      });
+      $('play').addEventListener('click', () => {
+        playing = !playing;
+        $('play').textContent = playing ? 'Pause' : 'Play';
+      });
+      $('scale').addEventListener('click', () => {
+        mode = mode === 'visible' ? 'true' : 'visible';
+        $('mode-label').textContent = orrery.setScaleMode(mode);
+        $('scale').textContent = mode === 'visible' ? 'Show true scale' : 'Show visible scale';
+        frameFocus();
+      });
+      $('focus').addEventListener('change', (ev) => {
+        focus = ev.target.value;
+        frameFocus();
+      });
+      $('sunview').addEventListener('click', earthTowardSun);
+      fetch('../../data/eclipses.json').then((r) => r.json()).then((list) => {
+        for (const e of list) {
+          const o = document.createElement('option');
+          o.value = String(e.jd);
+          const y = e.year < 1 ? `${1 - e.year} BCE` : `${e.year}`;
+          o.textContent = `${e.name} (${y}, ${e.type})`;
+          $('eclipse').appendChild(o);
+        }
+      }).catch(() => {});
+      $('eclipse').addEventListener('change', (ev) => {
+        if (!ev.target.value) return;
+        setJd(Number(ev.target.value));
+        playing = false;
+        $('play').textContent = 'Play';
+        if (focus) frameFocus();
+      });
+      $('collapse').addEventListener('click', () => $('panel-orrery').classList.toggle('collapsed'));
+      window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+
+      // Review hooks: ?focus=earth&mode=true&view=sun
+      const q = new URLSearchParams(location.search);
+      if (q.get('jd')) setJd(Number(q.get('jd')));
+      if (q.get('mode') === 'true') $('scale').click();
+      if (q.get('focus')) { $('focus').value = q.get('focus'); focus = q.get('focus'); frameFocus(); }
+      if (q.get('view') === 'sun') earthTowardSun();
+      window.__orrery = { orrery, camera, controls, setJd, frameFocus, earthTowardSun };
+
+      const clock = new THREE.Clock();
+      renderer.setAnimationLoop(() => {
+        const dt = Math.min(clock.getDelta(), 0.1);
+        if (playing) setJd(jd + dt * Number($('speed').value));
+        if (focus) {
+          // Carry the camera along with the focused body.
+          const p = orrery.bodyPosition(focus);
+          const delta = p.clone().sub(lastFocusPos);
+          camera.position.add(delta);
+          controls.target.add(delta);
+          lastFocusPos.copy(p);
+        }
+        controls.update();
+        renderer.render(scene, camera);
+      });
+    } catch (err) {
+      console.error(err);
+      const el = $('boot-error');
+      el.textContent = `Orrery failed to start: ${err.message}`;
+      el.hidden = false;
+    }
+  </script>
+</body>
+</html>

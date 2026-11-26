@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Orrery layer harness · FeistTech</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <div id="layers" aria-hidden="true"></div>
+  <canvas id="culture-sky" aria-hidden="true"></canvas>
+  <div id="nav-overlay" aria-label="Shared camera. Drag to orbit, pinch to zoom, two-finger twist to roll, two-finger drag to pan. Double-tap zooms in. Single tap tags bodies."></div>
+  <div id="tags"></div>
+  <aside id="menu">
+    <div class="menu-bar">
+      <h1>Orrery layers</h1>
+      <button type="button" id="btn-reset" title="Reset shared camera">Reset view</button>
+      <button type="button" id="btn-report" title="Download and copy a debug report">Debug report</button>
+      <button type="button" id="btn-collapse" aria-expanded="true">Menu</button>
+    </div>
+    <div class="menu-body" id="menu-body"></div>
+  </aside>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

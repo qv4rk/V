@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Atlas & Cosmogram</title>
+  <meta name="description" content="Client-side planetary clock and spatial article atlas — dual camera, Antikythera dial, natal freeze." />
+  <link rel="stylesheet" href="./css/styles.css" />
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+<link rel="stylesheet" href="../../harness-layer.css">
+<script src="../../guest-bridge.js"></script>
+</head>
+<body>
+  <canvas id="globe-canvas" aria-label="Atlas globe canvas"></canvas>
+  <div id="rr-backdrop" class="rr-backdrop"></div>
+
+  <header class="top-bar">
+    <h1 class="title">The Atlas & Cosmogram</h1>
+    <div class="cam-toggle" role="group" aria-label="Camera mode">
+      <button type="button" id="cam-planetary" class="cam-btn active">Planetary</button>
+      <button type="button" id="cam-observer" class="cam-btn">Observer</button>
+    </div>
+  </header>
+
+  <p id="boot-error" class="boot-error" hidden></p>
+  <p id="observer-hint" class="observer-hint" hidden>
+    Local horizon · zenith (cyan) · nadir (violet) · rising (gold cone). Set lat/lon below.
+  </p>
+
+  <!-- Time dial -->
+  <aside id="panel-dial" class="panel panel-dial">
+    <div class="panel-head">
+      <h2>Time dial</h2>
+      <button type="button" class="icon-btn" data-toggle-panel="panel-dial" aria-label="Collapse dial">▾</button>
+    </div>
+    <div class="panel-body">
+      <p id="dial-date-label" class="dial-date">—</p>
+      <input id="jd-slider" class="jd-slider" type="range" min="0" max="1" step="0.00001" value="0.5" aria-label="Scrub Julian Day" />
+      <div class="scrub-grid">
+        <span class="scrub-label">Century</span>
+        <button type="button" data-scrub="century" data-dir="-1">−</button>
+        <button type="button" data-scrub="century" data-dir="1">+</button>
+        <span class="scrub-label">Decade</span>
+        <button type="button" data-scrub="decade" data-dir="-1">−</button>
+        <button type="button" data-scrub="decade" data-dir="1">+</button>
+        <span class="scrub-label">Year</span>
+        <button type="button" data-scrub="year" data-dir="-1">−</button>
+        <button type="button" data-scrub="year" data-dir="1">+</button>
+        <span class="scrub-label">Day</span>
+        <button type="button" data-scrub="day" data-dir="-1">−</button>
+        <button type="button" data-scrub="day" data-dir="1">+</button>
+        <span class="scrub-label">Hour</span>
+        <button type="button" data-scrub="hour" data-dir="-1">−</button>
+        <button type="button" data-scrub="hour" data-dir="1">+</button>
+      </div>
+      <label class="field">
+        <span>Eclipse preset</span>
+        <select id="eclipse-select"></select>
+      </label>
+    </div>
+  </aside>
+
+  <!-- Natal + observer -->
+  <aside id="panel-natal" class="panel panel-natal">
+    <div class="panel-head">
+      <h2>Natal freeze</h2>
+      <button type="button" class="icon-btn" data-toggle-panel="panel-natal" aria-label="Collapse natal">▾</button>
+    </div>
+    <div class="panel-body">
+      <form id="natal-form" autocomplete="off">
+        <div class="form-row">
+          <label>Year <input name="year" type="number" value="1922" required /></label>
+          <label>Month <input name="month" type="number" min="1" max="12" value="6" required /></label>
+          <label>Day <input name="day" type="number" min="1" max="31" value="15" required /></label>
+        </div>
+        <div class="form-row">
+          <label>Hour <input name="hour" type="number" min="0" max="23" value="12" required /></label>
+          <label>Minute <input name="minute" type="number" min="0" max="59" value="0" required /></label>
+        </div>
+        <div class="form-row">
+          <label>Latitude <input name="lat" type="number" step="0.0001" value="40.827" required /></label>
+          <label>Longitude <input name="lon" type="number" step="0.0001" value="-73.644" required /></label>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="primary">Lock T0</button>
+          <button type="button" id="natal-clear" class="ghost">Clear</button>
+        </div>
+      </form>
+      <pre id="natal-result" class="natal-result" hidden></pre>
+      <hr class="sep" />
+      <p class="muted">Observer site (horizon view)</p>
+      <div class="form-row">
+        <label>Lat <input id="obs-lat" type="number" step="0.0001" value="40.7" /></label>
+        <label>Lon <input id="obs-lon" type="number" step="0.0001" value="-74" /></label>
+      </div>
+    </div>
+  </aside>
+
+  <p class="legend">
+    Article nodes light within ±50 years of the dial. Click a node for the reading room.
+    Drag to orbit · scroll to zoom.
+  </p>
+
+  <!-- Reading room drawer -->
+  <aside id="reading-room" class="reading-room" aria-hidden="true">
+    <div class="rr-inner">
+      <button type="button" class="rr-close" data-rr-close aria-label="Close">×</button>
+      <h2 data-rr-title></h2>
+      <p class="rr-meta" data-rr-meta></p>
+      <div class="rr-excerpt" data-rr-excerpt></div>
+    </div>
+  </aside>
+
+  <script type="module" src="./js/main.js"></script>
+</body>
+</html>

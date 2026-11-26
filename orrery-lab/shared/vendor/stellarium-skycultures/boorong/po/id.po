@@ -1,0 +1,241 @@
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: 1.0\n"
+"Last-Translator: Stellarium's developers\n"
+"Language-Team: Indonesian (https://www.transifex.com/stellarium/teams/80998/id/)\n"
+"Language: id\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Sky culture name
+msgid "Boorong"
+msgstr "boorong"
+
+#. Sky culture introduction section in markdown format
+msgid ""
+"The Boorong are indigenous Australians who were very much acquainted with the\n"
+"night sky. William Stanbridge wrote in 1857 that they \"Pride themselves upon\n"
+"knowing more of Astronomy than any other tribe\"."
+msgstr ""
+"Boorong adalah penduduk asli Australia yang sangat mengenal langit malam. "
+"William Stanbridge menulis pada tahun 1857 bahwa mereka \"Sombong karena "
+"mengetahui lebih banyak tentang Astronomi daripada suku lainnya\"."
+
+#. Sky culture description section in markdown format
+msgid ""
+"One hundred and forty years ago, a Boorong family at Lake Tyrrell\n"
+"(North-Western Victoria, Australia) told William Stanbridge something of their\n"
+"stories relating to the night sky. Some forty stars, constellations and other\n"
+"celestial phenomena were named and located. He wrote them down and related this\n"
+"information to the Philosophical Institute in Melbourne in 1857. In his paper\n"
+"he wrote down the Aboriginal term and gave its European equivalent.\n"
+"\n"
+"What John Morieson has done is look closely at these celestial phenomena,\n"
+"attempt to satisfactorily identity them and to imitate the way the Boorong\n"
+"people may have seen them. John's interpretation was used to create the\n"
+"constellation figures in Stellarium."
+msgstr ""
+"Seratus empat puluh tahun yang lalu, sebuah keluarga Boorong di Danau Tyrrell (Victoria Barat Laut, Australia) memberi tahu William Stanbridge tentang kisah mereka yang berkaitan dengan langit malam. Sekitar empat puluh bintang, rasi bintang, dan fenomena langit lainnya diberi nama dan lokasi. Dia menuliskannya dan menghubungkan informasi ini dengan Philosophical Institute di Melbourne pada tahun 1857. Dalam makalahnya dia menuliskan istilah Aborigin dan memberikan padanannya di Eropa.\n"
+"\n"
+"Apa yang telah dilakukan John Morieson adalah mengamati secara dekat fenomena langit ini, mencoba mengidentifikasinya dengan memuaskan dan meniru cara orang Boorong melihatnya. Interpretasi John digunakan untuk membuat angka-angka konstelasi di Stellarium."
+
+#. Sky culture extras section in markdown format
+msgid ""
+"### Constellations and other celestial objects\n"
+"\n"
+"| Name       | Explanation           | Celestial Clue |\n"
+"|------------|-----------------------|----------------|\n"
+"|Boorong     | Night; small mallee; starry firmament | Starry firmament at night |\n"
+"|Bittur      | Larvae of the woodant |  |\n"
+"|Millee      | Murray River          | Part of the Milky Way |\n"
+"|Mindi       | The maned snake       | Part of the Milky Way |\n"
+"|Neilloan    | Mallee fowl           | Lyra |\n"
+"|Nurrumbunguttias | Old man, black faced mallee kangaroo |White aura of the Milky Way|\n"
+"|Otchocut    | Great fish            | Delphinus |\n"
+"|Porkelong toute | Loss of tooth | Shooting star |\n"
+"|Pupperimbul |Diamond firetail finch or shy hylacola | Carried the emu egg to become the Sun|\n"
+"|Purra       |Red kangaroo           | Capella |\n"
+"|Tchingal    |The tall one; emu      | Dark space near Cross|\n"
+"|Totyarguil  |Purple crowned lorikeet | Altair |\n"
+"|Tourchingboiongerra | Needlewood hakea and willie wagtails | Coma Berenices |\n"
+"|Tourte      | Star                  | Any star |\n"
+"|Tyrille     |Space; night sky       | Space; night sky |\n"
+"|Unurgunite  | Jacky lizard          | Sigma Canis Majoris |\n"
+"|Wanjel      | Long-necked tortoise  | Pollux |\n"
+"|War         | Crow                  | Canopus |\n"
+"|Warepil     | Wedge tailed eagle    | Sirius |\n"
+"|Warring     | Galaxy                | Milky Way |\n"
+"|Weetkurrk   |Singing bushlark       | Star in Bootes west of Arcturus |\n"
+"|Won         | Boomerang             | Corona Australis |\n"
+"|Yerredetkurrk | Owlet nightjar      | Achernar|\n"
+"|Yurree      | Fan-tailed cockatoo   | Castor |"
+msgstr ""
+"### Rasi bintang dan benda langit lainnya\n"
+"\n"
+"| Nama | Penjelasan | Petunjuk Surgawi |\n"
+"|------------|-----------------------|-----------------|\n"
+"|Boorong | Malam; mallee kecil; cakrawala berbintang | Cakrawala berbintang di malam hari |\n"
+"|Bittur | Larva kayu | |\n"
+"|Millee | Sungai Murray | Bagian dari Bima Sakti |\n"
+"|Mindi | Ular bersurai | Bagian dari Bima Sakti |\n"
+"|Neilloan | Ayam jantan | Lyra |\n"
+"|Nurrumbunguttias | Orang tua, kanguru mallee berwajah hitam |Aura putih Bima Sakti|\n"
+"|Otchocut | Ikan besar | Delphinus |\n"
+"| Porkelong toute | Kehilangan gigi | Bintang jatuh |\n"
+"|Pupperimbul |Finch firetail berlian atau hylacola pemalu | Membawa telur emu untuk menjadi Matahari|\n"
+"|Purra |Kanguru merah | Capella |\n"
+"| Tchingal | Yang tinggi; emu | Ruang gelap dekat Cross|\n"
+"|Totyarguil |Perkici mahkota ungu | Altair |\n"
+"|Tourchingboiongerra | Needlewood hakea dan willie wagtails | Koma Berenice |\n"
+"|Tur | Bintang | Bintang apa saja |\n"
+"|Tyrille |Ruang; langit malam | Ruang angkasa; langit malam |\n"
+"|Tidak Berguna | kadal jacky | Sigma Canis Majoris |\n"
+"|Wanjel | Kura-kura berleher panjang | Pollux |\n"
+"|Perang | Gagak | Kanopi |\n"
+"|Warepil | Elang ekor baji | Sirius |\n"
+"|Perang | Galaksi | Bima Sakti |\n"
+"|Weetkurrk |Singing bushlark | Bintangi Bootes di sebelah barat Arcturus |\n"
+"|Menang | Bumerang | Corona Australia |\n"
+"|Yerredetkurrk | Burung hantu nightjar | Achernar|\n"
+"|Yurree | Kakatua ekor kipas | jarak |"
+
+#. Sky culture references section in markdown format
+msgid ""
+" - [#1]: Morieson, John: The Night Sky of the Boorong, Partial Reconstruction of a Disappeared Culture in North-West Victoria, Master Thesis (MA of Arts), University of Melbourne, 1966\n"
+" - [#2]: [Aboriginal Astronomy](http://www.aboriginalastronomy.com.au/)"
+msgstr ""
+" - [#1]: Morieson, John: Langit Malam Boorong, Rekonstruksi Sebagian dari Budaya yang Hilang di Victoria Barat Laut, Tesis Master (MA of Arts), University of Melbourne, 1966\n"
+" - [#2]: [Aboriginal Astronomy](http://www.aboriginalastronomy.com.au/)"
+
+#. Sky culture authors section in markdown format
+msgid ""
+"This sky culture was contributed by John Morieson and [Alex\n"
+"Cherney](http://www.terrastro.com).\n"
+"\n"
+"Technical rework by Susanne M Hoffmann"
+msgstr ""
+"Budaya langit ini disumbangkan oleh John Morieson dan [Alex Cherney](http://www.terrastro.com).\n"
+"\n"
+"Pengerjaan ulang teknis oleh Susanne M Hoffmann"
+
+#. Sky culture license section in markdown format
+msgid "Data and illustrations: CC-BY SA"
+msgstr "Data dan ilustrasi: CC-BY SA"
+
+#. Boorong constellation, native: Wanjel
+msgid "Long-necked tortoise"
+msgstr "Kura-Kura Berleher Panjang"
+
+#. Boorong constellation, native: Yurree
+msgid "Fan-tailed cockatoo"
+msgstr "Kakatua Berekor Kipas"
+
+#. Boorong constellation, native: Kulkunbulla
+msgid "Two teenage boys"
+msgstr "Dua Remaja Laki-laki"
+
+#. Boorong constellation, native: Lamankurrk
+msgid "Girls"
+msgstr "Anak-anak Perempuan"
+
+#. Boorong constellation, native: Purra
+msgid "Red kangaroo"
+msgstr "Kanguru Merah"
+
+#. Boorong constellation, native: Bunya
+msgid "Ring-tail possum"
+msgstr "Possum berekor Cincin"
+
+#. Boorong constellation, native: Djuit
+msgid "Red-rumped parrot"
+msgstr "Burung Beo Berpantat Merah"
+
+#. Boorong constellation, native: War
+msgid "Crow"
+msgstr "Gagak"
+
+#. Boorong constellation, native: Collowgulloric War
+msgid "Female crow, wife of War"
+msgstr "Gagak Betina, Istri dari Perang"
+
+#. Boorong constellation, native: Yerredetkurrk
+msgid "Owlet nightjar"
+msgstr "Burung Owlet Nightjar"
+
+#. Boorong constellation, native: Tourtchinboiongerra
+msgid "Needlewood hakea and willie wagtails"
+msgstr "Hakea Pohon Jarum dan Willie Ekor Lucu"
+
+#. Boorong constellation, native: Berm-Berm-Gle
+msgid "Red-kneed dotterel"
+msgstr "Burung Dotterel berlutut Merah"
+
+#. Boorong constellation, native: Karik Karik
+msgid "Australian kestrel"
+msgstr "Burung Elang Kecil Kestrel Australia"
+
+#. Boorong constellation, native: Neilloan
+msgid "Mallee fowl"
+msgstr "Unggas Mallee"
+
+#. Boorong constellation, native: Unurgunite
+msgid "Jacky lizard"
+msgstr "Kadal Jacky"
+
+#. Boorong constellation, native: Kourt-chin
+msgid "Female brolga"
+msgstr "Brolga wanita"
+
+#. Boorong constellation, native: Kourt-chin
+msgid "Male brolga"
+msgstr "Pria brolga"
+
+#. Boorong constellation, native: Otchocut
+msgid "Great fish"
+msgstr "Ikan Besar"
+
+#. Boorong constellation, native: Warepil
+msgid "Wedge tailed eagle"
+msgstr "Elang Berekor Jepit"
+
+#. Boorong constellation, native: Collowgulloric Warepil
+msgid "Female eagle, wife of Warepil"
+msgstr "Elang Betina, Istri dari Warepil"
+
+#. Boorong constellation, native: Tchingal
+msgid "Emu"
+msgstr "Burung Emu"
+
+#. Boorong constellation, native: Totyarguil
+msgid "Purple crowned lorikeet"
+msgstr "lorikeet bermahkota ungu"
+
+#. Boorong constellation, native: Marpeankurrk
+msgid "Meat ant"
+msgstr "Semut daging"
+
+#. Boorong constellation, native: Warring
+msgid "Galaxy"
+msgstr "Galaksi"
+
+#. Boorong constellation, native: Weetkurrk
+msgid "Singing bushlark"
+msgstr "Bushlark yang bernyanyi"
+
+#. Boorong constellation, native: Gellarlec
+msgid "Pink cockatoo"
+msgstr "Kakatua Merah Muda"
+
+#. Boorong constellation, native: Collenbitchick
+msgid "Species of ant"
+msgstr "Spesies dari Semut"
+
+#. Boorong constellation, native: Won
+msgid "Boomerang"
+msgstr "Bumerang"
+
+#. Boorong constellation, native: Mindi
+msgid "The maned snake"
+msgstr "Ular BerBulu tengkuk"

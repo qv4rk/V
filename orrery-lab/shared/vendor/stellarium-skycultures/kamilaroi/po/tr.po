@@ -1,0 +1,304 @@
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: 1.0\n"
+"Last-Translator: Stellarium's developers\n"
+"Language-Team: Turkish (https://www.transifex.com/stellarium/teams/80998/tr/)\n"
+"Language: tr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Sky culture name
+msgid "Kamilaroi/Euahlayi"
+msgstr "Kamilaroi/Euahlayi"
+
+#. Sky culture introduction section in markdown format
+msgid ""
+"The Kamilaroi (also known as Gomeroi) and Euahlayi peoples are Australian\n"
+"Aboriginal cultural groups located in the northern part of New South Wales.\n"
+"They have survived European invasion and loss of much of their country. Their\n"
+"culture and connection to country remains strong, including an extensive\n"
+"cultural astronomy first recorded in the 1860s."
+msgstr ""
+"Kamilaroi (Gomeroi olarak da bilinir) ve Euahlayi halkları, Yeni Güney "
+"Galler'in kuzey kesiminde bulunan Avustralyalı Aborjin kültürel gruplarıdır."
+" Avrupa işgalinden ve ülkelerinin çoğunu kaybetmekten kurtuldular. İlk kez "
+"1860'larda kaydedilen kapsamlı bir kültürel astronomi de dahil olmak üzere, "
+"kültürleri ve ülkeyle olan bağlantıları güçlü kalmaya devam ediyor."
+
+#. Sky culture description section in markdown format
+msgid ""
+"This Sky Culture is the result of a Higher Degree Research project by\n"
+"Robert Fuller at Macquarie University, Sydney, finished in 2014 [#1].\n"
+"Stellarium was chosen as a part of the project for giving back the collected\n"
+"knowledge to the Kamilaroi and Euahlayi communities in the form of a\n"
+"documentary video (Star Stories of the Dreaming) and a Study Guide. Clips from\n"
+"Stellarium were used in the documentary to illustrate certain sky objects."
+msgstr ""
+"Bu Gökyüzü Kültürü, Sidney'deki Macquarie Üniversitesi'nde Robert Fuller "
+"tarafından yürütülen ve 2014'te tamamlanan Yüksek Dereceli Araştırma "
+"projesinin bir sonucudur [#1]. Stellarium, toplanan bilgileri Kamilaroi ve "
+"Euahlayi topluluklarına bir belgesel video (Rüya Görmenin Yıldız Öyküleri) "
+"ve bir Çalışma Kılavuzu biçiminde geri vermek için projenin bir parçası "
+"olarak seçildi. Belgeselde belirli gökyüzü nesnelerini göstermek için "
+"Stellarium'dan klipler kullanıldı."
+
+#. Sky culture references section in markdown format
+msgid ""
+" - [#1]: Robert Fuller. Astronomy of the Kamilaroi and Euahlayi peoples: "
+"[link](https://unsw.academia.edu/RobertFuller)"
+msgstr ""
+" - [#1]: Robert Fuller. Kamilaroi ve Euahlayi halklarının astronomisi: "
+"[link](https://unsw.academia.edu/RobertFuller)"
+
+#. Sky culture authors section in markdown format
+msgid ""
+"Text and lines: Robert S. Fuller from [Australian Indigenous Astronomy](http://www.aboriginalastronomy.com.au/)\n"
+"\n"
+"Illustrations: Ghillar Michael Anderson\n"
+"\n"
+"Technical re-work by Susanne M Hoffmann"
+msgstr ""
+"Metin ve satırlar: [Avustralya Yerli Astronomisi]'nden Robert S. Fuller(http://www.aborijinastronomy.com.au/)\n"
+"\n"
+"İllüstrasyonlar: Ghillar Michael Anderson\n"
+"\n"
+"Susanne M Hoffmann tarafından teknik yeniden çalışma"
+
+#. Sky culture license section in markdown format
+msgid "Text, lines and illustrations: CC BY-NC-ND 4.0"
+msgstr "Metin, çizgiler ve çizimler: CC BY-NC-ND 4.0"
+
+#. Kamilaroi/Euahlayi constellation
+msgid "Gawaargay"
+msgstr "Gawaargay"
+
+#. Description of Kamilaroi/Euahlayi constellation Gawaargay
+msgid ""
+"Gawaargay is the spirit Emu in the Sky, located with its head in the Coal Sack,\n"
+"and its neck and body stretching out through the dust lanes of the Milky Way\n"
+"(Warrambul) past Scorpius. The Euahlayi and the Kamilaroi see it with legs in\n"
+"April and May, when it is female and chasing the males. From June to August it\n"
+"is male and sitting on its nest without legs (the males brood the chicks), and\n"
+"this is a signal to collect the eggs. In the evening in late August it is\n"
+"vertical in the sky, and the head and body form two \"eggs\", meaning the eggs\n"
+"should not be collected. Later in the year, it appears on the horizon, so it is\n"
+"believed to be sitting in a waterhole, meaning the waterholes are full. When it\n"
+"is below the horizon, then it is on Earth as the Black Emu, which is rarely\n"
+"seen."
+msgstr ""
+"Gawaargay, başı Kömür Çuvalı'nda bulunan ve boynu ve vücudu Samanyolu'nun "
+"(Warrambul) Scorpius'u geçen toz şeritleri boyunca uzanan Gökyüzündeki ruh "
+"Emu'dur. Euahlayi ve Kamilaroi, onu dişi olduğu ve erkekleri kovaladığı "
+"Nisan ve Mayıs aylarında bacaklı olarak görür. Haziran'dan Ağustos'a kadar "
+"erkektir ve yuvasında bacaksız oturur (erkekler civcivleri kuluçkaya "
+"yatırır) ve bu yumurtaları toplamak için bir işarettir. Ağustos ayının "
+"sonlarında akşamları gökyüzünde dikeydir ve baş ve gövde iki \"yumurta\" "
+"oluşturur, yani yumurtalar toplanmamalıdır. Yılın ilerleyen saatlerinde "
+"ufukta belirir, bu nedenle bir su birikintisinde oturduğuna inanılır, bu da "
+"su kuyularının dolu olduğu anlamına gelir. Ufkun altında olduğunda, nadiren "
+"görülen Kara Emu olarak Dünya'dadır."
+
+#. Kamilaroi/Euahlayi constellation
+msgid "Birray Birray"
+msgstr "Birray Birray"
+
+#. Description of Kamilaroi/Euahlayi constellation Birray Birray
+msgid ""
+"The Birray Birray are a group of uninitiated boys who are in love with the\n"
+"seven young women (sisters), Miyay Miyay, who make up the Pleiades star\n"
+"cluster. They chased the Miyay Miyay, who ended up in the sky, and for this\n"
+"they were placed in Orion, as the three stars that make up the belt of Orion.\n"
+"Rigel is their fire, and the sword of Orion is their fire poker. They are kept\n"
+"from the Miyay Miyay by the Wiringin, Old Dthillar, who is Aldebaran."
+msgstr ""
+"Birray Birray, Pleiades yıldız kümesini oluşturan yedi genç kadına (kız "
+"kardeş), Miyay Miyay'a aşık olan bir grup genç erkektir. Sonunda gökyüzüne "
+"çıkan Miyay Miyay'ı kovaladılar ve bunun için Orion'un kuşağını oluşturan üç"
+" yıldız olarak Orion'a yerleştirildiler. Rigel onların ateşidir ve Orion'un "
+"kılıcı onların ateş maşasıdır. Aldebaran olan Wiringin, Old Dthillar "
+"tarafından Miyay Miyay'dan tutulurlar."
+
+#. Kamilaroi/Euahlayi constellation
+msgid "Birringoloo"
+msgstr "Birringoloo"
+
+#. Description of Kamilaroi/Euahlayi constellation Birringoloo
+msgid ""
+"Birringoloo is the second wife of Byaame, the creator/culture hero. She sits by\n"
+"the campfire of Byaame's camp (the star Alpha Muscae), and all women with girl\n"
+"children who die come to this camp before going on to Bulimah (Heaven behind\n"
+"Warrambul). They wait at this camp until all their girl children have died and\n"
+"come to the camp, and then they can proceed to Bulimah."
+msgstr ""
+"Birringoloo, yaratıcı/kültür kahramanı Byaame'nin ikinci karısıdır. "
+"Byaame'nin kampının (Alpha Muscae yıldızı) kamp ateşinin yanında oturuyor ve"
+" ölen kız çocukları olan tüm kadınlar Bulimah'a (Warrambul'un arkasındaki "
+"Cennet) gitmeden önce bu kampa geliyor. Kız çocukları ölene kadar bu kampta "
+"beklerler ve kampa gelirler ve sonra Bulimah'a gidebilirler."
+
+#. Kamilaroi/Euahlayi constellation
+msgid "Yarran"
+msgstr "Yarran"
+
+#. Description of Kamilaroi/Euahlayi constellation Yarran
+msgid ""
+"Yarran (also called mingga) is the roots of the Yarran tree, an Acacia, which\n"
+"is the tree that Byaame took up to the Warrambul with the first man to die (and\n"
+"the Cockatoos). It is actually centred on the Coal Sack, and the dark nebula is\n"
+"the hollow of the tree seen from below, with the roots spreading around. When\n"
+"someone dies and goes to Bulimah, they go through the hollow of the Yarran."
+msgstr ""
+"Yarran (mingga olarak da bilinir), Byaame'nin ilk ölen insanla (ve "
+"Kakadularla) Warrambul'a götürdüğü ağaç olan bir Akasya olan Yarran ağacının"
+" kökleridir. Aslında Kömür Çuvalı'nın merkezindedir ve karanlık bulutsu, "
+"köklerin etrafa yayıldığı, aşağıdan görülen ağacın oyukudur. Biri ölüp "
+"Bulime'ye gittiğinde Yarran çukurundan geçerler."
+
+#. Kamilaroi/Euahlayi constellation
+msgid "Old Wiringin"
+msgstr "Eski Kablolama"
+
+#. Description of Kamilaroi/Euahlayi constellation Old Wiringin
+msgid ""
+"A Wiringin is a \"Clever Man\" or Aboriginal doctor. This Wiringin located in the\n"
+"Small Magellanic Cloud is there because he controls who can go on to Bulimah.\n"
+"If the person who died is not initiated, they are not allowed, because they\n"
+"don't know the rules, so he sends them to Wadhaagudjaaylwan in the Large\n"
+"Magellanic Cloud. This birth spirit will send the unitiated back to Earth as a\n"
+"new baby, so they can be initiated. This Wiringin is represented in every\n"
+"Aboriginal cemetary as the Wilga tree (Native Willow)."
+msgstr ""
+"Bir Wiringin \"Akıllı Adam\" veya Aborijin doktordur. Küçük Macellan "
+"Bulutunda bulunan bu Wiringin orada çünkü Bulimah'a kimin gidebileceğini "
+"kontrol ediyor. Ölen kişi inisiye edilmezse, kuralları bilmedikleri için "
+"izin verilmez, bu yüzden onları Büyük Macellan Bulutu'ndaki "
+"Wadhaagudjaaylwan'a gönderir. Bu doğum ruhu, birleşmiş kişiyi yeni bir bebek"
+" olarak Dünya'ya geri gönderecek, böylece inisiye edilebilirler. Bu "
+"Wiringin, her Aborijin mezarlığında Wilga ağacı (Yerli Söğüt) olarak temsil "
+"edilir."
+
+#. Kamilaroi/Euahlayi constellation
+msgid "Old Dthillar and gunya"
+msgstr "Eski Dthillar ve gunya"
+
+#. Description of Kamilaroi/Euahlayi constellation Old Dthillar and gunya
+msgid ""
+"Old Dthillar is a Wiringin, in this case the Wiringin of the Birray Birray, the\n"
+"unitiated boys in Orion who pine for the Miyaay Miyaay (Seven Sisters) in the\n"
+"Pleiades. Old Dthillar is the star Aldebaran, which is also Alpha Tauri, and he\n"
+"stands there to protect the Miyaay Miyaay from the Birray Birray. The inverted\n"
+"\"V\" shape made up by Alpha, Epsilon, and Gamma Tauri is Old Dthillar's gunya\n"
+"(hut)."
+msgstr ""
+"Yaşlı Dthillar bir Wiringin'dir, bu durumda Birray Birray'in Wiringin'idir, "
+"Orion'da Ülker'deki Miyaay Miyaay'ı (Yedi Kızkardeş) bekleyen birleşik "
+"çocuklar. Old Dthillar, aynı zamanda Alpha Tauri olan Aldebaran yıldızıdır "
+"ve Miyaay Miyaay'ı Birray Birray'den korumak için orada durur. Alpha, "
+"Epsilon ve Gamma Tauri'den oluşan ters çevrilmiş \"V\" şekli, Old "
+"Dthillar'ın gunya'sıdır (kulübe)."
+
+#. Kamilaroi/Euahlayi constellation
+msgid "Wamba Wamba"
+msgstr "Wamba Wamba"
+
+#. Description of Kamilaroi/Euahlayi constellation Wamba Wamba
+msgid ""
+"\"Wamba\" means \"crazy\" or \"mad\". In this case, the star Canopus is called Wamba\n"
+"Wamba because of various reasons, depending on whose story is told. The planet\n"
+"Venus is also called Wamba. One speculation is that both Canopus and Venus are\n"
+"seen close to the horizon in the summer, and due to atmospheric defraction, can\n"
+"\"scintillate\" (twinkle srongly), which results in rapid changes in colour. This\n"
+"might be interpreted as madness."
+msgstr ""
+"\"Wamba\", \"çılgın\" veya \"deli\" anlamına gelir. Bu durumda, Canopus "
+"yıldızı, kimin hikayesinin anlatıldığına bağlı olarak çeşitli nedenlerle "
+"Wamba Wamba olarak adlandırılır. Venüs gezegenine Wamba da denir. Bir "
+"spekülasyon, hem Canopus'un hem de Venüs'ün yaz aylarında ufka yakın "
+"görüldüğü ve atmosferik kırılma nedeniyle \"parıldadığı\" (parıldadığı) ve "
+"bunun sonucunda renkte hızlı değişikliklere neden olduğudur. Bu delilik "
+"olarak yorumlanabilir."
+
+#. Kamilaroi/Euahlayi constellation
+msgid "Miyay Miyay"
+msgstr "Miyay Miyay"
+
+#. Description of Kamilaroi/Euahlayi constellation Miyay Miyay
+msgid ""
+"The Miyay Miyay are the seven young women (sisters) who were chased into the\n"
+"sky, depending on the story, by the Birray Birray, or by various Wiringins or\n"
+"other bad persons. They form the Pleiades star cluster, and as one sister is\n"
+"shy, normally we only see six stars. They are protected from the Birray Birray\n"
+"in Orion by the Wiringin, Old Dthillar, who is Aldebaran."
+msgstr ""
+"Miyay Miyay, hikayeye bağlı olarak Birray Birray veya çeşitli Wiringins veya"
+" diğer kötü kişiler tarafından gökyüzüne kovalanan yedi genç kadın (kız "
+"kardeş). Ülker yıldız kümesini oluştururlar ve bir kız kardeş utangaç olduğu"
+" için normalde sadece altı yıldız görürüz. Orion'daki Birray Birray'den "
+"Aldebaran olan Wiringin, Old Dthillar tarafından korunurlar."
+
+#. Kamilaroi/Euahlayi constellation
+msgid "Wadhaagudjaaylwan"
+msgstr "Wadhaagudjaaylwan"
+
+#. Description of Kamilaroi/Euahlayi constellation Wadhaagudjaaylwan
+msgid ""
+"Wadhaagudjaaylwan is Byaame's third wife, who is in the Large Magellanic Cloud,\n"
+"and sings to women who are going to have babies. She \"sings\" the babies to the\n"
+"women on Earth, and she takes the persons that the Old Wiringin in the Small\n"
+"Magellanic Cloud sends to her, and sends them back to Earth as babies."
+msgstr ""
+"Wadhaagudjaaylwan, Byaame'nin Büyük Macellan Bulutu'ndaki üçüncü karısıdır "
+"ve bebek sahibi olacak kadınlara şarkı söyler. Bebekleri Dünyadaki kadınlara"
+" \"şarkı söyler\" ve Küçük Macellan Bulutu'ndaki Eski Wiringin'in kendisine "
+"gönderdiği kişileri alır ve onları bebek olarak Dünya'ya geri gönderir."
+
+#. Kamilaroi/Euahlayi constellation
+msgid "Bandaarr"
+msgstr "Bandarr"
+
+#. Description of Kamilaroi/Euahlayi constellation Bandaarr
+msgid ""
+"Bandaarr is Kamilaroi/Euahlayi for Kangaroo, and this kangaroo is located under\n"
+"the belly of the Emu in the Milky Way, looking away from the Emu. Bandaarr is\n"
+"either a grey or red kangaroo, depending on the culture, and has significance\n"
+"in ceremony."
+msgstr ""
+"Bandaarr, Kanguru için Kamilaroi/Euahlayi'dir ve bu kanguru, Samanyolu'nda "
+"Emu'nun karnının altında, Emu'dan uzağa bakar. Bandaarr, kültüre bağlı "
+"olarak gri veya kırmızı bir kangurudur ve törende önemi vardır."
+
+#. Kamilaroi/Euahlayi constellation
+msgid "Muraay Muyaay"
+msgstr "muraay muyaay"
+
+#. Description of Kamilaroi/Euahlayi constellation Muraay Muyaay
+msgid ""
+"Muraay is Kamilaroi, and Muyaay is Euahlayi for the sulfur-crested cockatoo,\n"
+"who are the Pointer stars (Alpha Centauri and Hadar/Beta Centauri). They ended\n"
+"up in the constellation Crux when their tree, the Yarran, was dragged into the\n"
+"sky with the first man to die, and they are always chasing Yarran."
+msgstr ""
+"Muraay Kamilaroi'dir ve Muyaay, Pointer yıldızları olan kükürt tepeli kakadu"
+" için Euahlayi'dir (Alpha Centauri ve Hadar/Beta Centauri). Ağaçları Yarran,"
+" ilk ölen insanla birlikte gökyüzüne sürüklendiğinde kendilerini Crux "
+"takımyıldızında buldular ve her zaman Yarran'ın peşindeler."
+
+#. Kamilaroi/Euahlayi constellation
+msgid "Warrawilbaarru"
+msgstr "Warrawilbaarru"
+
+#. Description of Kamilaroi/Euahlayi constellation Warrawilbaarru
+msgid ""
+"Warrawilbaarru is the whirlwind spirit who lives in the constellation Scorpius.\n"
+"Byaame normally keeps him from coming to Earth, but in September he comes out\n"
+"of one of three holes (dark nebulae) in Scorpius during September, and doesn't\n"
+"go back until around March. During this time he is on earth as the \"willy\n"
+"willy\" or whirlwind, and can be dangerous to children and uninitiated men."
+msgstr ""
+"Warrawilbaarru, Akrep takımyıldızında yaşayan kasırga ruhudur. Byaame "
+"normalde onun Dünya'ya gelmesini engeller, ancak Eylül ayında Scorpius'taki "
+"üç delikten (karanlık bulutsular) birinden çıkar ve Mart ayına kadar geri "
+"dönmez. Bu süre zarfında, o \"gereksiz\" veya kasırga olarak yeryüzündedir "
+"ve çocuklar ve acemi erkekler için tehlikeli olabilir."

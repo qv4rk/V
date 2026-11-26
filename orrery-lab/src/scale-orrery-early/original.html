@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Scale Orrery</title>
+  <style>
+    body { margin: 0; overflow: hidden; background: #000; font-family: monospace; color: white; }
+    canvas { display: block; width: 100vw; height: 100vh; }
+    #ui { position: absolute; top: 20px; left: 20px; background: rgba(0,0,0,0.7); padding: 15px; border: 1px solid #445; border-radius: 8px; }
+    button { background: #223; color: #fff; border: 1px solid #556; padding: 8px 12px; cursor: pointer; font-family: monospace; margin-top: 10px;}
+    button:hover { background: #445; }
+    .note { font-size: 11px; color: #aaa; margin-top: 5px; max-width: 250px; line-height: 1.4; }
+  </style>
+  <!-- No build step required: Import Three.js directly via ES Modules -->
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://esm.sh/three@0.160.0",
+        "three/addons/": "https://esm.sh/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <div id="ui">
+    <h3>The Scale Orrery</h3>
+    <div id="date-display">Date: </div>
+    <button id="toggle-scale">Mode: Visible Scale</button>
+    <div class="note"><b>Visible Scale:</b> Planets enlarged so you can see them.<br><b>True Scale:</b> Real sizes (Earth is tiny compared to Sun/Jupiter).<br><br>Drag to orbit, scroll to zoom.</div>
+  </div>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+    // --- 1. ASTRONOMICAL MATH (from your snippet) ---
+    const J2000 = 2451545.0;
+    const d2r = Math.PI / 180;
+    const julianCenturies = (jdt) => (jdt - J2000) / 36525;
+    
+    function kepler(M, e) {
+      let E = M;
+      for (let k = 0; k < 60; k++) {
+        const d = (M - E + e * Math.sin(E)) / (1 - e * Math.cos(E));
+        E += d;
+        if (Math.abs(d) < 1e-12) break;
+      }
+      return E;
+    }
+
+    function orb2ecl(r, nu, i_d, Om_d, om_d) {
+      const i = i_d * d2r, Om = Om_d * d2r, om = om_d * d2r;
+      const xo = r * Math.cos(nu), yo = r * Math.sin(nu);
+      const cO = Math.cos(Om), sO = Math.sin(Om);
+      const co = Math.cos(om), so = Math.sin(om);
+      const ci = Math.cos(i),  si = Math.sin(i);
+      return {
+        x: (cO*co-sO*so*ci)*xo + (-cO*so-sO*co*ci)*yo,
+        y: (sO*co+cO*so*ci)*xo + (-sO*so+cO*co*ci)*yo,
+        z: si*(so*xo + co*yo)
+      };
+    }
+
+    function getPlanetPos(p, jdt) {
+      const T = julianCenturies(jdt);
+      const a = p.a + p.da*T;
+      const e = p.e + p.de*T;
+      const i = p.i + p.di*T;
+      const L = ((p.L + p.dL*T) % 360 + 360) % 360;
+      const W = p.W + p.dW*T;
+      const N = p.N + p.dN*T;
+      const om = ((W - N) % 360 + 360) % 360;
+      const M  = ((L - W) % 360 + 360) % 360;
+      const E  = kepler(M * d2r, e);
+      const nu = 2 * Math.atan2(Math.sqrt(1+e)*Math.sin(E/2), Math.sqrt(1-e)*Math.cos(E/2));
+      const r = a * (1 - e * Math.cos(E));
+      return orb2ecl(r, nu, i, N, om);
+    }
+
+    // --- 2. PLANET DATA (with real radius in km) ---
+    const EARTH_RADIUS_KM = 6371;
+    // Public texture URLs for demonstration
+    const TEX_URL = "https://unpkg.com/three-globe/example/img/"; 
+
+    const PLANETS = [
+      { id:'mer', name:'Mercury', radiusKm: 2439, a:0.387099, e:0.20563, i:7.004, L:252.25, W:77.45, N:48.33, da:3.7e-7, de:0.000019, di:-0.0059, dL:149472.67, dW:0.16, dN:-0.125, 
+        tex: 'https://upload.wikimedia.org/wikipedia/commons/9/92/Mercury_symbol.png' }, // fallback
+      { id:'ven', name:'Venus', radiusKm: 6051, a:0.723335, e:0.00677, i:3.394, L:181.97, W:131.60, N:76.67, da:3.9e-6, de:-0.000041, di:-0.00078, dL:58517.81, dW:0.0026, dN:-0.277, 
+        tex: 'https://upload.wikimedia.org/wikipedia/commons/1/1c/Venus_map_NASA_JPL_Magellan.jpg' },
+      { id:'ter', name:'Earth', radiusKm: EARTH_RADIUS_KM, a:1.000002, e:0.01671, i:-0.000015, L:100.46, W:102.93, N:0, da:0.000005, de:-0.000043, di:-0.0129, dL:35999.37, dW:0.32, dN:0, 
+        tex: TEX_URL + 'earth-blue-marble.jpg', bump: TEX_URL + 'earth-topology.png' },
+      { id:'mar', name:'Mars', radiusKm: 3389, a:1.523710, e:0.09339, i:1.849, L:-4.55, W:-23.94, N:49.55, da:0.000018, de:0.000078, di:-0.0081, dL:19140.30, dW:0.44, dN:-0.29, 
+        tex: 'https://upload.wikimedia.org/wikipedia/commons/f/f0/Mars_map.jpg' },
+      { id:'jup', name:'Jupiter', radiusKm: 71492, a:5.202887, e:0.04838, i:1.304, L:34.39, W:14.72, N:100.47, da:-0.00011, de:-0.00013, di:-0.0018, dL:3034.74, dW:0.21, dN:0.20, 
+        tex: 'https://upload.wikimedia.org/wikipedia/commons/e/e2/Jupiter.jpg' }
+    ];
+
+    // --- 3. THREE.JS SETUP ---
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x050510);
+    
+    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 10000);
+    camera.position.set(0, 30, 80);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    document.body.appendChild(renderer.domElement);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+
+    // Lighting
+    scene.add(new THREE.AmbientLight(0x222222));
+    const sunLight = new THREE.PointLight(0xffffff, 3, 500);
+    scene.add(sunLight);
+
+    // Sun (Textured)
+    const textureLoader = new THREE.TextureLoader();
+    const sunGeom = new THREE.SphereGeometry(3, 64, 64);
+    const sunMat = new THREE.MeshBasicMaterial({ 
+      map: textureLoader.load('https://upload.wikimedia.org/wikipedia/commons/b/b4/The_Sun_by_the_Atmospheric_Imaging_Assembly_of_NASA%27s_Solar_Dynamics_Observatory_-_20100819.jpg')
+    });
+    const sun = new THREE.Mesh(sunGeom, sunMat);
+    scene.add(sun);
+
+    // Distance Scale: 1 AU = 15 units in 3D space
+    const AU_SCALE = 15;
+    
+    // Create Planet Meshes
+    const planetMeshes = [];
+    PLANETS.forEach(p => {
+      // Base scale: Earth = 1 unit radius in "True Scale"
+      const trueScale = p.radiusKm / EARTH_RADIUS_KM;
+      
+      // Load detailed textures
+      const matParams = { 
+        map: p.tex ? textureLoader.load(p.tex) : null,
+        roughness: 0.8,
+        metalness: 0.1
+      };
+      
+      // Add bump map for Earth
+      if (p.bump) {
+        matParams.bumpMap = textureLoader.load(p.bump);
+        matParams.bumpScale = 0.05;
+      }
+
+      const mat = new THREE.MeshStandardMaterial(matParams);
+      const mesh = new THREE.Mesh(new THREE.SphereGeometry(1, 64, 64), mat);
+      
+      scene.add(mesh);
+      
+      // Save reference with scale factors
+      planetMeshes.push({ 
+        mesh: mesh, 
+        data: p, 
+        trueScale: trueScale * 0.1, // scaled down slightly so they fit better 
+        visibleScale: Math.max(0.3, trueScale * 0.2) // Minimum size so smaller planets are visible
+      });
+    });
+
+    // Starfield (Background)
+    const starsGeo = new THREE.BufferGeometry();
+    const starsArray = new Float32Array(3000 * 3);
+    for(let i=0; i < 3000; i++) {
+      starsArray[i*3] = (Math.random() - 0.5) * 1000;
+      starsArray[i*3+1] = (Math.random() - 0.5) * 1000;
+      starsArray[i*3+2] = (Math.random() - 0.5) * 1000;
+    }
+    starsGeo.setAttribute('position', new THREE.BufferAttribute(starsArray, 3));
+    scene.add(new THREE.Points(starsGeo, new THREE.PointsMaterial({color: 0xffffff, size: 0.5})));
+
+    // --- 4. UI & ANIMATION LOOP ---
+    let useTrueScale = false;
+    document.getElementById('toggle-scale').addEventListener('click', (e) => {
+      useTrueScale = !useTrueScale;
+      e.target.innerText = useTrueScale ? "Mode: True Scale" : "Mode: Visible Scale";
+    });
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    let currentJD = J2000; // Start at J2000 epoch
+    const dateDisplay = document.getElementById('date-display');
+
+    function animate() {
+      requestAnimationFrame(animate);
+      
+      // Advance time (approx 1 day per frame)
+      currentJD += 1;
+      const date = new Date((currentJD - 2440587.5) * 86400000);
+      dateDisplay.innerText = "Date: " + date.toISOString().split('T')[0];
+
+      // Update planets using Keplerian math
+      planetMeshes.forEach(pm => {
+        // Apply math
+        const pos = getPlanetPos(pm.data, currentJD);
+        
+        // Map Ecliptic (x, y, z) to Three.js (X, Z, -Y)
+        pm.mesh.position.set(pos.x * AU_SCALE, pos.z * AU_SCALE, -pos.y * AU_SCALE);
+        
+        // Rotate planet on its axis
+        pm.mesh.rotation.y += 0.01;
+
+        // Apply scaling mode
+        const targetScale = useTrueScale ? pm.trueScale : pm.visibleScale;
+        pm.mesh.scale.setScalar(targetScale);
+      });
+
+      sun.rotation.y += 0.002;
+      controls.update();
+      renderer.render(scene, camera);
+    }
+
+    animate();
+  </script>
+</body>
+</html>

@@ -1,0 +1,83 @@
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: 1.0\n"
+"Last-Translator: Stellarium's developers\n"
+"Language-Team: Portuguese (https://www.transifex.com/stellarium/teams/80998/pt/)\n"
+"Language: pt\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Sky culture name
+msgid "Navajo"
+msgstr "Navajo"
+
+#. Sky culture introduction section in markdown format
+msgid ""
+"The Navajo are the largest Native American tribe in the United States; the\n"
+"Navajo Nation extends across northeastern Arizona, southeastern Utah, and\n"
+"northwestern New Mexico."
+msgstr ""
+"Os navajos são a maior tribo nativa americana dos Estados Unidos; a nação "
+"navajo se estende pelo nordeste do Arizona, sudeste de Utah e noroeste do "
+"Novo México."
+
+#. Sky culture description section in markdown format
+msgid ""
+"This sky culture is contributed for educational purposes and based on the\n"
+"findings dissiminated by the Clark Foundation."
+msgstr ""
+"Essa cultura do céu é contribuída para fins educacionais e com base nas "
+"descobertas discriminadas pela Clark Foundation."
+
+#. Sky culture references section in markdown format
+msgid ""
+" - [#1]: The Navajo Nation: [official website](https://www.navajo-nsn.gov/)"
+msgstr " - [#1]: Nação Navajo: [site oficial](https://www.navajo-nsn.gov/)"
+
+#. Sky culture authors section in markdown format
+msgid ""
+"This sky culture was contributed by _Karrie Berglund_ of Digitalis Education\n"
+"Solutions, Inc. based primarily on the book __Star Trails-Navajo__ by Don\n"
+"Childrey."
+msgstr ""
+"Essa cultura do céu foi contribuída por _Karrie Berglund_ da Digitalis "
+"Education Solutions, Inc., baseada principalmente no livro __Star Trails-"
+"Navajo__ de Don Childrey."
+
+#. Sky culture license section in markdown format
+msgid "GNU GPL v2.0"
+msgstr "GNU GPL v2.0"
+
+#. Navajo constellation
+msgid "Revolving Male"
+msgstr "Ursa Maior"
+
+#. Navajo constellation
+msgid "Revolving Female"
+msgstr "Cassiopeia"
+
+#. Navajo constellation
+msgid "Man with Feet Apart"
+msgstr "Homem com os pés afastados (Corvus)"
+
+#. Navajo constellation
+msgid "Lizard"
+msgstr "Lagarto"
+
+#. Navajo constellation
+msgid "Dilyehe"
+msgstr "Dilyehe (Casa do deus Negro)"
+
+#. Navajo constellation
+msgid "First Big One"
+msgstr "Primeiro Grande (Escorpião)"
+
+#. Navajo constellation
+msgid "Rabbit Tracks"
+msgstr "Trilhas do Coelho"
+
+#. Navajo constellation
+msgid "First Slim One"
+msgstr "Primeira magra (Orion)"
