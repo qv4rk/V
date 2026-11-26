@@ -74,7 +74,7 @@
     window.XMLHttpRequest = PatchedXHR;
   } catch (e) { console.warn("orrery: path rewrite", e); }
 
-  const NAV_FIX = "2026-11-25-nav2";
+  const NAV_FIX = "2026-11-25-nav3";
   const state = {
     id: null,
     api: {},
@@ -461,8 +461,12 @@
       if (typeof A.cam.centerOn === "function") {
         const dim = Math.min(A.W || 800, A.H || 800);
         const sc = Math.max(4, Math.min(dim / 2, dim / (70 * (cam.heightKm / 90000))));
-        const x = (cam.lon / 180) * 30 + ((cam.yaw || 0) * 10);
-        const y = (cam.lat / 90) * 20 + ((cam.pitch || 0) * 10);
+        const worldW = (A.W || dim) / sc;
+        const span = Math.min(22, worldW * 0.28);
+        const ang = ((cam.lon * Math.PI) / 180) + (cam.yaw || 0);
+        const x = Math.sin(ang) * span;
+        const y = Math.sin((cam.lat * Math.PI) / 180) * span * 0.6
+          + Math.sin(cam.pitch || 0) * span * 0.4;
         A.cam.centerOn(x, y, sc);
       }
       return true;
@@ -523,6 +527,17 @@
     } else if (lastCam) {
       applySharedCamera(lastCam);
     }
+  }
+
+  if (!window.__orreryRafHook) {
+    window.__orreryRafHook = true;
+    (function tick() {
+      if (!driveNative && lastCam) {
+        applyGlobe(lastCam);
+        applySolsys(lastCam);
+      }
+      requestAnimationFrame(tick);
+    })();
   }
 
   // Re-discover renderers / scene handles as apps boot.
