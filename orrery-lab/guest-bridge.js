@@ -74,6 +74,7 @@
     window.XMLHttpRequest = PatchedXHR;
   } catch (e) { console.warn("orrery: path rewrite", e); }
 
+  const NAV_FIX = "2026-11-25-nav2";
   const state = {
     id: null,
     api: {},
@@ -276,9 +277,202 @@
     return Math.max(0, Math.min(22, zoom));
   }
 
-  function setCamera(cam) {
+  let lastCam = null;
+  let driveNative = false;
+
+  function vec3Ctor(camera) {
+    if (window.THREE && window.THREE.Vector3) return window.THREE.Vector3;
+    if (camera && camera.position && camera.position.constructor) return camera.position.constructor;
+    return null;
+  }
+
+  function earthMesh(a) {
+    try {
+      const b = a && a.orrery && a.orrery.bodies && a.orrery.bodies.earth;
+      return b && (b.mesh || b);
+    } catch (e) { return null; }
+  }
+
+  function inferUnitsPerKm(a, camera, Vector3) {
+    try {
+      const mesh = earthMesh(a);
+      if (mesh && mesh.geometry) {
+        if (!mesh.geometry.boundingSphere) mesh.geometry.computeBoundingSphere();
+        const r = mesh.geometry.boundingSphere && mesh.geometry.boundingSphere.radius;
+        let s = 1;
+        if (mesh.getWorldScale && Vector3) {
+          const v = new Vector3();
+          mesh.getWorldScale(v);
+          s = v.x || 1;
+        } else if (mesh.scale) s = mesh.scale.x || 1;
+        if (r && r * s > 0) return (r * s) / 6371;
+      }
+    } catch (e) {}
+    return null;
+  }
+
+  function captureHome(camera, controls, Vector3) {
+    if (!camera || camera.__orreryHomeDist || !Vector3) return;
+    try {
+      const t = (controls && controls.target)
+        ? controls.target.clone()
+        : new Vector3(0, 0, 0);
+      const d = camera.position.distanceTo(t);
+      if (d > 1e-4) {
+        camera.__orreryHomeDist = d;
+        camera.__orreryHomeTarget = t;
+      }
+    } catch (e) {}
+  }
+
+  function applyThreeEarthCamera(camera, cam, a) {
+    const Vector3 = vec3Ctor(camera);
+    if (!camera || !Vector3 || !cam) return false;
+    const controls = (a && a.controls) || (sceneHandle() && sceneHandle().controls);
+    captureHome(camera, controls, Vector3);
+    const lat = (cam.lat * Math.PI) / 180;
+    const lon = (cam.lon * Math.PI) / 180;
+    const n = new Vector3(Math.cos(lat) * Math.cos(lon), Math.sin(lat), Math.cos(lat) * Math.sin(lon));
+    const east = new Vector3(-Math.sin(lon), 0, Math.cos(lon));
+    const north = new Vector3(-Math.sin(lat) * Math.cos(lon), Math.cos(lat), -Math.sin(lat) * Math.sin(lon));
+    let earthPos = new Vector3();
+    const mesh = earthMesh(a);
+    try { if (mesh && mesh.getWorldPosition) mesh.getWorldPosition(earthPos); } catch (e) {}
+    let unitsPerKm = inferUnitsPerKm(a, camera, Vector3);
+    if (unitsPerKm == null) {
+      const home = camera.__orreryHomeDist || 80;
+      unitsPerKm = home / 90000;
+      if (camera.__orreryHomeTarget) earthPos.copy(camera.__orreryHomeTarget);
+    }
+    const dist = Math.max(1e-9, cam.heightKm * unitsPerKm);
+    const pitch = cam.pitch || 0;
+    const yaw = cam.yaw || 0;
+    const offset = n.clone().multiplyScalar(Math.cos(pitch) * dist)
+      .add(north.clone().multiplyScalar(Math.sin(pitch) * Math.cos(yaw) * dist))
+      .add(east.clone().multiplyScalar(Math.sin(pitch) * Math.sin(yaw) * dist));
+    const lookAt = cam.heightKm > 20000
+      ? earthPos.clone()
+      : earthPos.clone().add(n.clone().multiplyScalar(6371 * unitsPerKm));
+    if (cam.fov && camera.fov !== cam.fov && camera.updateProjectionMatrix) {
+      camera.fov = cam.fov;
+    }
+    camera.near = Math.max(1e-8, dist / 1e6);
+    camera.far = Math.max(camera.far || 1000, dist * 100 + 10);
+    if (camera.updateProjectionMatrix) camera.updateProjectionMatrix();
+    camera.position.copy(lookAt).add(offset);
+    camera.up.copy(n);
+    camera.lookAt(lookAt);
+    if (cam.roll) camera.rotateZ(cam.roll);
+    if (camera.updateMatrixWorld) camera.updateMatrixWorld();
+    return true;
+  }
+
+  function sceneHandle() {
+    return window.__orreryScene || null;
+  }
+
+  function allControlObjects() {
+    const list = [];
+    const a = atlas();
+    ["orbitControls", "earthControls", "controls"].forEach(function (k) {
+      if (a && a[k]) list.push(a[k]);
+    });
+    const s = sceneHandle();
+    if (s && s.controls) list.push(s.controls);
+    const o = window.__orrery;
+    if (o && o.controls && o.controls !== window.__orrery.setCamera) list.push(o.controls);
+    if (window.__orreryControls) {
+      window.__orreryControls.forEach(function (c) { list.push(c); });
+    }
+    return list;
+  }
+
+  function setControlsEnabled(on) {
+    allControlObjects().forEach(function (c) {
+      try {
+        c.enabled = !!on;
+        if (!on && c.update) {
+          // Prevent damping from walking the camera after we disable it.
+          try { c.enableDamping = false; } catch (e) {}
+        }
+      } catch (e) {}
+    });
+  }
+
+  function setMapInteractive(on) {
+    const m = mapInstance();
+    if (!m) return;
+    ["dragPan", "dragRotate", "scrollZoom", "touchZoomRotate", "touchPitch", "keyboard", "boxZoom", "doubleClickZoom"].forEach(function (k) {
+      try {
+        if (m[k] && m[k].enable) { on ? m[k].enable() : m[k].disable(); }
+      } catch (e) {}
+    });
+  }
+
+  function hookRenderer(renderer) {
+    if (!renderer || !renderer.render || renderer.__orreryHooked) return;
+    renderer.__orreryHooked = true;
+    const orig = renderer.render;
+    renderer.render = function (scene, camera) {
+      if (camera) {
+        const src = atlas() || sceneHandle() || {};
+        captureHome(camera, src.controls, vec3Ctor(camera));
+      }
+      if (!driveNative && lastCam && camera) {
+        applyThreeEarthCamera(camera, lastCam, atlas() || sceneHandle());
+      }
+      return orig.apply(this, arguments);
+    };
+  }
+
+  function hookKnownRenderers() {
+    const a = atlas();
+    if (a && a.renderer) hookRenderer(a.renderer);
+    const s = sceneHandle();
+    if (s && s.renderer) hookRenderer(s.renderer);
+    const o = window.__orrery;
+    if (o && o.renderer) hookRenderer(o.renderer);
+  }
+
+  function applyGlobe(cam) {
+    try {
+      const app = window.__manifold || window.__manifoldAtlas;
+      const earth = app && app.earth;
+      if (!earth || !earth.rotation) return false;
+      const yawDeg = ((cam.yaw || 0) * 180) / Math.PI;
+      const pitchDeg = ((cam.pitch || 0) * 180) / Math.PI;
+      earth.rotation[0] = -(cam.lon + yawDeg);
+      earth.rotation[1] = -(cam.lat + pitchDeg * 0.6);
+      if (earth.rotation.length > 2) earth.rotation[2] = ((cam.roll || 0) * 180) / Math.PI;
+      if (typeof earth.setSpin === "function") earth.setSpin(false);
+      earth.spin = false;
+      if (typeof earth.setZoom === "function") {
+        const z = Math.max(0.4, Math.min(24, 90000 / Math.max(200, cam.heightKm)));
+        earth.setZoom(z);
+      }
+      return true;
+    } catch (e) { return false; }
+  }
+
+  function applySolsys(cam) {
+    try {
+      const A = window.__solsys;
+      if (!A || !A.cam) return false;
+      if (typeof A.cam.centerOn === "function") {
+        const dim = Math.min(A.W || 800, A.H || 800);
+        const sc = Math.max(4, Math.min(dim / 2, dim / (70 * (cam.heightKm / 90000))));
+        const x = (cam.lon / 180) * 30 + ((cam.yaw || 0) * 10);
+        const y = (cam.lat / 90) * 20 + ((cam.pitch || 0) * 10);
+        A.cam.centerOn(x, y, sc);
+      }
+      return true;
+    } catch (e) { return false; }
+  }
+
+  function applySharedCamera(cam) {
+    if (driveNative || !cam) return;
     wrapMapLibre();
-    if (!cam) return;
+    hookKnownRenderers();
     if (state.api.setCamera) {
       try { state.api.setCamera(cam); } catch (e) { console.warn(e); }
     }
@@ -294,56 +488,48 @@
       } catch (e) { console.warn(e); }
     }
     const a = atlas();
-    if (a && a.camera && window.THREE) {
-      try { applyThreeEarthCamera(a.camera(), cam, a); } catch (e) { console.warn(e); }
+    if (a && a.camera) {
+      try {
+        const c = typeof a.camera === "function" ? a.camera() : a.camera;
+        applyThreeEarthCamera(c, cam, a);
+      } catch (e) { console.warn(e); }
     }
-    // Disable leftover orbit controls so only the overlay drives the view
-    disableControls();
+    const s = sceneHandle();
+    if (s && s.camera) {
+      try { applyThreeEarthCamera(s.camera, cam, s); } catch (e) { console.warn(e); }
+    }
+    const o = window.__orrery;
+    if (o && o.camera && o.camera.isCamera) {
+      try { applyThreeEarthCamera(o.camera, cam, o); } catch (e) { console.warn(e); }
+    }
+    applyGlobe(cam);
+    applySolsys(cam);
+    setControlsEnabled(false);
+    setMapInteractive(false);
   }
 
-  function applyThreeEarthCamera(camera, cam, a) {
-    const THREE = window.THREE;
-    if (!camera || !THREE) return;
-    const lat = (cam.lat * Math.PI) / 180;
-    const lon = (cam.lon * Math.PI) / 180;
-    const n = new THREE.Vector3(Math.cos(lat) * Math.cos(lon), Math.sin(lat), Math.cos(lat) * Math.sin(lon));
-    const east = new THREE.Vector3(-Math.sin(lon), 0, Math.cos(lon));
-    const north = new THREE.Vector3(-Math.sin(lat) * Math.cos(lon), Math.cos(lat), -Math.sin(lat) * Math.sin(lon));
-    let earthPos = new THREE.Vector3();
-    let unitsPerKm = 15 / 149597870.7; // Scale Orrery default: 15 units / AU
-    try {
-      if (a && a.orrery && a.orrery.bodies && a.orrery.bodies.earth) {
-        const mesh = a.orrery.bodies.earth.mesh || a.orrery.bodies.earth;
-        mesh.getWorldPosition(earthPos);
-      }
-    } catch (e) {}
-    const dist = Math.max(1e-9, cam.heightKm * unitsPerKm);
-    const pitch = cam.pitch || 0;
-    const yaw = cam.yaw || 0;
-    const offset = n.clone().multiplyScalar(Math.cos(pitch) * dist)
-      .add(north.clone().multiplyScalar(Math.sin(pitch) * Math.cos(yaw) * dist))
-      .add(east.clone().multiplyScalar(Math.sin(pitch) * Math.sin(yaw) * dist));
-    const lookAt = cam.heightKm > 20000 ? earthPos.clone() : earthPos.clone().add(n.clone().multiplyScalar(6371 * unitsPerKm));
-    camera.fov = cam.fov || 45;
-    camera.near = Math.max(1e-8, dist / 1e6);
-    camera.far = Math.max(camera.far || 1000, dist * 100);
-    camera.updateProjectionMatrix();
-    camera.position.copy(lookAt).add(offset);
-    camera.up.copy(n);
-    camera.lookAt(lookAt);
-    if (cam.roll) camera.rotateZ(cam.roll);
+  function setCamera(cam) {
+    if (!cam) return;
+    lastCam = cam;
+    if (driveNative) return;
+    applySharedCamera(cam);
   }
 
-  function disableControls() {
-    const a = atlas();
-    ["orbitControls", "earthControls", "controls"].forEach(function (k) {
-      const c = a && a[k];
-      if (c) c.enabled = false;
-    });
-    if (window.__orreryControls) {
-      window.__orreryControls.forEach(function (c) { try { c.enabled = false; } catch (e) {} });
+  function setDriveMode(native) {
+    driveNative = !!native;
+    if (driveNative) {
+      setControlsEnabled(true);
+      setMapInteractive(true);
+    } else if (lastCam) {
+      applySharedCamera(lastCam);
     }
   }
+
+  // Re-discover renderers / scene handles as apps boot.
+  setInterval(function () {
+    hookKnownRenderers();
+    if (!driveNative && lastCam) applySharedCamera(lastCam);
+  }, 1000);
 
   function setTime(iso) {
     if (!iso) return;
@@ -443,12 +629,19 @@
     state.api = api || {};
   };
 
-  window.__orrery = {
-    setFeature: setFeature,
-    setCamera: setCamera,
-    setTime: setTime,
-    pick: pick,
-  };
+  function publishApi() {
+    const prev = window.__orrery || {};
+    window.__orrery = Object.assign(prev, {
+      setFeature: setFeature,
+      setCamera: setCamera,
+      setTime: setTime,
+      pick: pick,
+    });
+  }
+  try { window.__orreryNavFix = NAV_FIX; } catch (e) {}
+  publishApi();
+  // Re-attach if an app later replaces window.__orrery (e.g. scale-orrery).
+  setInterval(publishApi, 2000);
 
   window.addEventListener("message", function (e) {
     const d = e.data;
@@ -469,6 +662,7 @@
     if (d.type === "orrery:setFeature") setFeature(d.name, d.on);
     if (d.type === "orrery:setCamera") setCamera(d.camera);
     if (d.type === "orrery:setTime") setTime(d.iso);
+    if (d.type === "orrery:drive") setDriveMode(!!d.native);
     if (d.type === "orrery:pick") {
       post({ type: "orrery:pick-result", hits: pick(d.nx, d.ny) });
     }

@@ -60,6 +60,10 @@ export function createCameraController(overlay, { onChange, onTap, onDoubleTap }
     const k = 0.005;
     cam.yaw -= dx * k;
     cam.pitch += dy * k;
+    // Near nadir, yaw barely moves an Earth-mapped view, so also orbit the
+    // look-at point: horizontal drag changes longitude, vertical changes latitude.
+    cam.lon -= (dx * k * 180) / Math.PI;
+    cam.lat -= (dy * k * 180) / Math.PI;
     emit();
   }
 
@@ -107,19 +111,22 @@ export function createCameraController(overlay, { onChange, onTap, onDoubleTap }
   }
 
   function onPointerDown(e) {
-    overlay.setPointerCapture?.(e.pointerId);
+    // preventDefault stops Android Chrome from cancelling the pointer
+    // (scroll/pinch takeover) and firing pointercancel mid-drag.
+    if (e.cancelable) e.preventDefault();
+    if (e.pointerType === "mouse") {
+      try { overlay.setPointerCapture?.(e.pointerId); } catch (err) {}
+    }
     pointers.set(e.pointerId, { x: e.clientX, y: e.clientY, t: performance.now() });
     moved = false;
     dragging = true;
     twoPrev = null;
     threePrevY = null;
-    if (pendingTap) {
-      /* may become a double-tap; leave timer */
-    }
   }
 
   function onPointerMove(e) {
     if (!pointers.has(e.pointerId)) return;
+    if (e.cancelable) e.preventDefault();
     const prev = pointers.get(e.pointerId);
     const dx = e.clientX - prev.x;
     const dy = e.clientY - prev.y;
@@ -204,12 +211,54 @@ export function createCameraController(overlay, { onChange, onTap, onDoubleTap }
 
   function onContext(e) { e.preventDefault(); }
 
-  overlay.addEventListener("pointerdown", onPointerDown);
-  overlay.addEventListener("pointermove", onPointerMove);
-  overlay.addEventListener("pointerup", onPointerUp);
-  overlay.addEventListener("pointercancel", onPointerUp);
-  overlay.addEventListener("wheel", onWheel, { passive: false });
+  const opts = { passive: false };
+  overlay.addEventListener("pointerdown", onPointerDown, opts);
+  overlay.addEventListener("pointermove", onPointerMove, opts);
+  overlay.addEventListener("pointerup", onPointerUp, opts);
+  // Treat cancel as end, but preventDefault on down/move should make this rare.
+  overlay.addEventListener("pointercancel", onPointerUp, opts);
+  overlay.addEventListener("wheel", onWheel, opts);
   overlay.addEventListener("contextmenu", onContext);
+
+  // Touch fallback for browsers that drop pointer events.
+  // If a pointerdown already started the gesture, ignore native touches.
+  let ignoreTouch = false;
+  function eachTouch(e, fn) {
+    for (let i = 0; i < e.changedTouches.length; i++) {
+      const t = e.changedTouches[i];
+      fn({
+        pointerId: "t" + t.identifier,
+        clientX: t.clientX,
+        clientY: t.clientY,
+        pointerType: "touch",
+        buttons: 1,
+        ctrlKey: false,
+        shiftKey: false,
+        cancelable: false,
+        preventDefault() {},
+      });
+    }
+  }
+  overlay.addEventListener("pointerdown", () => { ignoreTouch = true; }, opts);
+  overlay.addEventListener("touchstart", (e) => {
+    if (ignoreTouch) return;
+    if (e.cancelable) e.preventDefault();
+    eachTouch(e, onPointerDown);
+  }, opts);
+  overlay.addEventListener("touchmove", (e) => {
+    if (ignoreTouch) return;
+    if (e.cancelable) e.preventDefault();
+    eachTouch(e, onPointerMove);
+  }, opts);
+  overlay.addEventListener("touchend", (e) => {
+    if (ignoreTouch) { if (!e.touches.length) ignoreTouch = false; return; }
+    if (e.cancelable) e.preventDefault();
+    eachTouch(e, onPointerUp);
+  }, opts);
+  overlay.addEventListener("touchcancel", (e) => {
+    if (ignoreTouch) { ignoreTouch = false; return; }
+    eachTouch(e, onPointerUp);
+  }, opts);
 
   return {
     getState: () => cloneCamera(cam),

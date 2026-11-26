@@ -259,7 +259,8 @@
       if (q.get('mode') === 'true') $('scale').click();
       if (q.get('focus')) { $('focus').value = q.get('focus'); focus = q.get('focus'); frameFocus(); }
       if (q.get('view') === 'sun') earthTowardSun();
-      window.__orrery = { orrery, camera, controls, setJd, frameFocus, earthTowardSun };
+      window.__orreryScene = { orrery, camera, controls, renderer };
+      window.__orrery = Object.assign(window.__orrery || {}, window.__orreryScene, { setJd, frameFocus, earthTowardSun });
 
       const clock = new THREE.Clock();
       renderer.setAnimationLoop(() => {

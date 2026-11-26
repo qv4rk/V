@@ -14,6 +14,7 @@ function $(sel) {
 async function boot() {
   const canvas = document.getElementById('globe-canvas');
   const scene = new CosmogramScene(canvas);
+  window.__orreryScene = scene;
   const dial = new TimeDial(dateToJulianDay(1922, 6, 15, 12, 0));
   const room = new ReadingRoom(document.getElementById('reading-room'));
   let articles = [];

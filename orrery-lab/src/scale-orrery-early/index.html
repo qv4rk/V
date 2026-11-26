@@ -111,6 +111,7 @@
     document.body.appendChild(renderer.domElement);
 
     const controls = new OrbitControls(camera, renderer.domElement);
+    window.__orreryScene = { camera, controls, renderer };
     controls.enableDamping = true;
 
     // Lighting

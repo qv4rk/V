@@ -23,7 +23,7 @@ A plain `python3 -m http.server` from this folder also works. Termux: `sh run-te
 
 - Turn any number of versions **on at once**. They stack as transparent layers (overlapping Earths are intended).
 - Per-layer **opacity** and **feature toggles** are in the menu. State is saved in `localStorage` under `feisttech.orrery.layer-state/1`.
-- **One shared camera** on the top overlay (Google Earth–style): one-finger / left-drag orbit; pinch or wheel zoom, continuously down toward street level where a MapLibre layer is on; two-finger twist roll; two-finger / right-drag pan; three-finger vertical or Shift-drag tilt; Ctrl-drag roll; double-tap zoom toward the point; **Reset view** restores the default.
+- **One shared camera** on the top overlay (Google Earth–style): one-finger / left-drag orbit; pinch or wheel zoom, continuously down toward street level where a MapLibre layer is on; two-finger twist roll; two-finger / right-drag pan; three-finger vertical or Shift-drag tilt; Ctrl-drag roll; double-tap zoom toward the point; **Reset view** restores the default. On a phone the menu starts collapsed so the map can be dragged. If a layer cannot follow the shared camera, use **Drive** in the menu to hand input to that layer's own controls.
 - **Single tap** asks every visible layer to pick what is under the point and draws a **color-coded name tag** per layer (see the color key). Tap empty space to hide tags.
 - **Shared clock** sends one UTC instant to layers that implement `setTime`.
 - **Debug report** downloads a JSON file and copies it to the clipboard.
@@ -94,10 +94,10 @@ Dunhuang and Suzhou maps are cited in the research file; they are not imported a
 
 | Class | Versions | Follows |
 |---|---|---|
-| `three-earth` | Atlas preview, Scale Orrery, early stub, Cosmogram, Space, Solar Experience (if built) | Adapter aims the existing Three camera at Earth; runtime still **unresolved** until you try it |
+| `three-earth` | Atlas preview, Scale Orrery, early stub, Cosmogram, Space, Solar Experience (if built) | Guest-bridge hooks `renderer.render` and re-applies the shared camera every frame (OrbitControls would otherwise overwrite it). Native controls stay off unless **Drive** is set to that layer. Solar Experience still needs its Vite build. |
 | `maplibre` | Street map, Gaza damage | lat/lon/height → zoom, yaw → bearing, pitch → tilt. **No roll** |
-| `partial-2d` | Globe & Sky, solsys | Pan/zoom or globe rotation only |
-| `none` | Natal chart, Eigenstate | No shared 3D camera |
+| `partial-2d` | Globe & Sky, solsys | Globe rotation follows lon+yaw / lat+pitch and zoom follows height; solsys pan/zoom follows the same state. |
+| `none` | Natal chart, Eigenstate | No shared 3D camera — use **Drive: &lt;layer&gt;** so the app’s own UI receives input. |
 
 Several WebGL layers at once may hit the browser’s context limit. If a layer goes black, turn others off and note it in a debug report.
 

@@ -113,6 +113,7 @@ renderer.setSize(innerWidth, innerHeight);
 document.body.prepend(renderer.domElement);
 const camera = new THREE.PerspectiveCamera(45, innerWidth / innerHeight, 0.01, 1e7);
 const controls = new OrbitControls(camera, renderer.domElement);
+window.__orreryScene = { camera, controls, renderer };
 controls.enableDamping = true;
 // Let momentum from the previous page die out before zoom responds here
 if (window.FTPortal && FTPortal.arrived) {

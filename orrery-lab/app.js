@@ -22,6 +22,7 @@ function loadState() {
     playing: false,
     layers: {},
     skyCultures: {},
+    drive: "shared",
   };
   CULTURES.forEach((c) => {
     if (c.hostOverlay) base.skyCultures[c.hostOverlay] = false;
@@ -39,6 +40,7 @@ function loadState() {
     const saved = JSON.parse(raw);
     if (saved.camera) base.camera = { ...base.camera, ...saved.camera };
     if (saved.time) base.time = saved.time;
+    if (saved.drive) base.drive = saved.drive;
     if (saved.skyCultures) {
       Object.keys(base.skyCultures).forEach((k) => {
         if (k in saved.skyCultures) base.skyCultures[k] = !!saved.skyCultures[k];
@@ -69,6 +71,7 @@ function save() {
       time: state.time,
       layers: state.layers,
       skyCultures: state.skyCultures,
+      drive: state.drive,
     }));
   } catch (e) {}
 }
@@ -190,11 +193,41 @@ function setLayerVisible(id, on) {
     }
   } else if (hosts[id]) {
     hosts[id].setVisible(false);
+    if (state.drive === id) setDrive("shared");
   }
+  applyDrive();
   save();
 }
 
+function applyDrive() {
+  const native = state.drive && state.drive !== "shared";
+  overlay.classList.toggle("drive-native", !!native);
+  APPS.forEach((a) => {
+    const host = hosts[a.id];
+    if (!host) return;
+    const isActive = native && a.id === state.drive;
+    host.wrap.classList.toggle("drive-native", isActive);
+    if (host.setDrive) host.setDrive(isActive);
+  });
+}
+
+function setDrive(id) {
+  state.drive = id || "shared";
+  if (state.drive !== "shared") {
+    if (!state.layers[state.drive]) state.drive = "shared";
+    else if (!state.layers[state.drive].visible) {
+      setLayerVisible(state.drive, true);
+    }
+  }
+  applyDrive();
+  if (state.drive === "shared") broadcastCamera();
+  save();
+  const sel = document.getElementById("drive-select");
+  if (sel) sel.value = state.drive;
+}
+
 function renderMenu() {
+
   const legend = APPS.map((a) =>
     `<span class="swatch"><i class="dot" style="background:${a.color}"></i>${escapeHtml(a.title)}</span>`
   ).join("");
@@ -224,7 +257,17 @@ function renderMenu() {
     </div>`;
   }).join("");
 
+  const driveOpts = [`<option value="shared">Shared camera</option>`].concat(
+    APPS.map((a) => `<option value="${a.id}" ${state.drive === a.id ? "selected" : ""}>${escapeHtml(a.title)}</option>`)
+  ).join("");
   menuBody.innerHTML = `
+    <div class="legend drive-row">
+      <h2>Drive</h2>
+      <label class="note">Input goes to
+        <select id="drive-select" aria-label="Which camera to drive">${driveOpts}</select>
+      </label>
+      <p class="note">Shared camera orbits every layer that can follow. If a layer cannot follow, pick it here to use its own controls.</p>
+    </div>
     <div class="legend">
       <h2>Color key</h2>
       <div>${legend}</div>
@@ -280,6 +323,13 @@ function renderMenu() {
         menuBody.querySelectorAll(`[data-feat$=":${c.feature}"]`).forEach((box) => { box.checked = el.checked; });
       });
     });
+  }
+
+
+  const driveSel = document.getElementById("drive-select");
+  if (driveSel) {
+    driveSel.value = state.drive || "shared";
+    driveSel.addEventListener("change", () => setDrive(driveSel.value));
   }
 
   const clock = document.getElementById("clock-input");
@@ -368,6 +418,7 @@ function buildReport() {
     time: state.time,
     tagColors: Object.fromEntries(APPS.map((a) => [a.id, { title: a.title, color: a.color }])),
     visibleLayers: APPS.filter((a) => state.layers[a.id].visible).map((a) => a.id),
+    drive: state.drive,
     versions,
     accountedButNotMounted: ACCOUNTED,
     hostErrors: errorsHost.slice(-50),
@@ -412,5 +463,14 @@ window.__orreryHarness = {
   getCamera() { return { ...state.camera }; },
 };
 
+
+if (window.matchMedia && window.matchMedia("(max-width: 720px)").matches) {
+  menu.classList.add("collapsed");
+  const bc = document.getElementById("btn-collapse");
+  if (bc) bc.setAttribute("aria-expanded", "false");
+}
+applyDrive();
+
 renderMenu();
 APPS.forEach((a) => { if (state.layers[a.id].visible) ensureHost(a.id); });
+applyDrive();

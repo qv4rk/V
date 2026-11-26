@@ -50,6 +50,7 @@ export function createLayer({ id, frame, color, container }) {
     setFeature(name, on) { send({ type: "orrery:setFeature", name, on }); },
     setCamera(camera) { send({ type: "orrery:setCamera", camera }); },
     setTime(iso) { send({ type: "orrery:setTime", iso }); },
+    setDrive(native) { send({ type: "orrery:drive", native: !!native }); },
     pick(nx, ny) { send({ type: "orrery:pick", nx, ny }); },
     setVisible(on) { wrap.classList.toggle("off", !on); },
     setOpacity(v) { wrap.style.opacity = String(v); },

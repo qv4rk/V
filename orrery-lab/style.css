@@ -9,13 +9,25 @@
   --menu-w: 22rem;
 }
 * { box-sizing: border-box; }
-html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); font-family: var(--sans); overflow: hidden; }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); font-family: var(--sans); overflow: hidden; overscroll-behavior: none; }
 #layers { position: fixed; inset: 0; }
 .layer { position: absolute; inset: 0; pointer-events: none; }
 .layer.off { visibility: hidden; }
 .layer iframe { width: 100%; height: 100%; border: 0; background: transparent; pointer-events: none; }
 #culture-sky { position: fixed; inset: 0; z-index: 4; pointer-events: none; }
-#nav-overlay { position: fixed; inset: 0; z-index: 5; touch-action: none; }
+#nav-overlay {
+  position: fixed; inset: 0; z-index: 5;
+  pointer-events: auto;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  /* Non-zero alpha so Android WebView hit-tests this empty overlay. */
+  background: rgba(0, 0, 0, 0.01);
+}
+#nav-overlay.drive-native { pointer-events: none; }
+.layer.drive-native { z-index: 6; pointer-events: auto; }
+.layer.drive-native iframe { pointer-events: auto; }
 #tags { position: fixed; inset: 0; z-index: 6; pointer-events: none; }
 .tag {
   position: absolute; transform: translate(-50%, 8px);
@@ -55,8 +67,11 @@ button:hover, .btn:hover { border-color: var(--gold); }
 .clock input, .clock button { min-height: 40px; }
 .clock-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
 @media (max-width: 720px) {
-  #menu { width: 100%; top: auto; height: 48%; border-left: 0; border-top: 1px solid var(--line); }
-  #menu.collapsed { height: auto; width: 100%; }
+  #menu { width: 100%; top: auto; height: 42%; max-height: 42%; border-left: 0; border-top: 1px solid var(--line); }
+  #menu.collapsed { height: auto; max-height: none; width: 100%; }
+  #menu.collapsed .menu-bar { border-bottom: 0; }
 }
+.drive-row { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
+.drive-row select { min-height: 44px; background: #161a24; color: var(--text); border: 1px solid var(--line); border-radius: 6px; font: inherit; padding: 8px; }
 .features label.pending { opacity: 0.78; }
 .features label.pending input { cursor: not-allowed; }
